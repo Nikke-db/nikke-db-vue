@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import Header from '@/components/common/Header.vue'
+import Header from '@/components/common/Header/HeaderSelector.vue'
 </script>
 
 <template>
   <Header />
-  <RouterView />
+  <!-- if increase/decrease margin top of scroll bar, need to update the calc of max height -->
+  <n-scrollbar style="max-height: calc(100vh - 120px); margin-top: 20px;"> 
+    <RouterView />
+  </n-scrollbar>
 </template>
 
 <style lang="less">

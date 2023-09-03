@@ -14,6 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vicons/material": "^0.12.0",
     "less": "^4.2.0",
     "naive-ui": "^2.34.4",
     "pinia": "^2.1.6",

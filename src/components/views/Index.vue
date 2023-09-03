@@ -1,6 +1,6 @@
 <template>
     <div class="body">
-        <n-card title="Nikke: Database of Victory" size="medium">
+        <n-card title="Nikke: Database of Victory" size="medium" :class="checkMobile()">
             <n-p>Last Update: August 25th 2023</n-p>
             <RouterLink to="/notice"><n-a>Check out the new notice where I talk about the recent google form.</n-a></RouterLink>
             <n-p>
@@ -8,7 +8,7 @@
             </n-p>
         </n-card>
 
-        <n-card title="Update log:" class="card-spacer">
+        <n-card title="Update log:" class="card-spacer" :class="checkMobile()">
             <n-p>
                 A listing of the updates ( copy paste from legacy website )
             </n-p>
@@ -17,8 +17,11 @@
 </template>
 
 <script lang="ts" setup>
-import { useLoaderStore } from '@/stores/loaderStore';
-import { onMounted, onBeforeMount, onUnmounted } from 'vue';
+import { useLoaderStore } from '@/stores/loaderStore'
+import { onMounted, onBeforeMount, onUnmounted } from 'vue'
+
+import { useGlobalParamsStore } from '@/stores/globalParamsStore'
+const globalParamStore = useGlobalParamsStore()
 
 const loaderStore = useLoaderStore()
 
@@ -36,6 +39,10 @@ onMounted(() => {
 onUnmounted(() => {
     document.body.classList.remove("poli-bg")
 })
+
+const checkMobile = () => {
+    return globalParamStore.isMobile ? "isMobile" : ""
+}
 
 </script>
 
@@ -59,6 +66,10 @@ onUnmounted(() => {
 
 .card-spacer {
     margin-top: 100px;
+}
+
+.isMobile {
+    width:95%
 }
 
 </style>

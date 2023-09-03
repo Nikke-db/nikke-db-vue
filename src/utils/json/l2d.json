@@ -1,0 +1,1069 @@
+[
+    {
+        "name": "Rapi",
+        "id": "c010"
+    },
+    {
+        "name": "Rapi_old",
+        "id": "c010_01"
+    },
+    {
+        "name": "Rapi White Promise",
+        "id": "c010_02"
+    },
+    {
+        "name": "Rapi Classic Vacation",
+        "id": "c010_03",
+        "version": 4.1
+    },
+    {
+        "name": "Neon",
+        "id": "c011"
+    },
+    {
+        "name": "Neon Blind Bullet",
+        "id": "c011_01"
+    },
+    {
+        "name": "Anis",
+        "id": "c012"
+    },
+    {
+        "name": "Marian",
+        "id": "c013"
+    },
+    {
+        "name": "Neon: Blue Ocean",
+        "id": "c014",
+        "version": 4.1
+    },
+    {
+        "name": "Anis: Sparkling Summer",
+        "id": "c015",
+        "version": 4.1
+    },
+    {
+        "name": "Delta",
+        "id": "c020"
+    },
+    {
+        "name": "Signal",
+        "id": "c022"
+    },
+    {
+        "name": "Signal Dramatic Chocolate",
+        "id": "c022_01"
+    },
+    {
+        "name": "Poli",
+        "id": "c030"
+    },
+    {
+        "name": "Poli Sweet Holic",
+        "id": "c030_01"
+    },
+    {
+        "name": "Miranda",
+        "id": "c032"
+    },
+    {
+        "name": "D",
+        "id": "c040"
+    },
+    {
+        "name": "K",
+        "id": "c041"
+    },
+    {
+        "name": "liqueur",
+        "id": "c053"
+    },
+    {
+        "name": "Belorta",
+        "id": "c060"
+    },
+    {
+        "name": "Mica",
+        "id": "c061"
+    },
+    {
+        "name": "Brid",
+        "id": "c070"
+    },
+    {
+        "name": "Brid Model Worker",
+        "id": "c070_01"
+    },
+    {
+        "name": "Brid Black Moon",
+        "id": "c070_02",
+        "version": 4.1
+    },
+    {
+        "name": "Soline",
+        "id": "c071"
+    },
+    {
+        "name": "Diesel",
+        "id": "c072"
+    },
+    {
+        "name": "Diesel Black Sunday",
+        "id": "c072_01"
+    },
+    {
+        "name": "Centi",
+        "id": "c080"
+    },
+    {
+        "name": "Centi Supreme Holiday",
+        "id": "c080_01"
+    },
+    {
+        "name": "Acre",
+        "id": "c081"
+    },
+    {
+        "name": "Liter",
+        "id": "c082"
+    },
+    {
+        "name": "Liter Guardfish",
+        "id": "c082_01",
+        "version": 4.1
+    },
+    {
+        "name": "Emma",
+        "id": "c090"
+    },
+    {
+        "name": "Emma Color Me Red",
+        "id": "c090_01"
+    },
+    {
+        "name": "Emma Office Therapy",
+        "id": "c090_02",
+        "version": 4.1
+    },
+    {
+        "name": "Vesti",
+        "id": "c091"
+    },
+    {
+        "name": "Eunhwa",
+        "id": "c092"
+    },
+    {
+        "name": "Laplace",
+        "id": "c100"
+    },
+    {
+        "name": "Drake",
+        "id": "c101"
+    },
+    {
+        "name": "Drake Villain Racer",
+        "id": "c101_01",
+        "version": 4.1
+    },
+    {
+        "name": "Maxwell",
+        "id": "c102"
+    },
+    {
+        "name": "Maxwell Mechanic White",
+        "id": "c102_01"
+    },
+    {
+        "name": "Crow",
+        "id": "c110"
+    },
+    {
+        "name": "Jackal",
+        "id": "c111"
+    },
+    {
+        "name": "Viper",
+        "id": "c112"
+    },
+    {
+        "name": "Viper Toxic Rabbit",
+        "id": "c112_01"
+    },
+    {
+        "name": "N102",
+        "id": "c120"
+    },
+    {
+        "name": "Anne: Miracle Fairy",
+        "id": "c121"
+    },
+    {
+        "name": "c122",
+        "id": "c122"
+    },
+    {
+        "name": "Mary",
+        "id": "c130"
+    },
+    {
+        "name": "Pepper",
+        "id": "c131"
+    },
+    {
+        "name": "Pepper Ocean Vitamin",
+        "id": "c131_01",
+        "version": 4.1
+    },
+    {
+        "name": "Mary: Bay Goddess",
+        "id": "c132",
+        "version": 4.1
+    },
+    {
+        "name": "Sugar",
+        "id": "c140"
+    },
+    {
+        "name": "Sugar Hard-Boiled",
+        "id": "c140_01"
+    },
+    {
+        "name": "Milk",
+        "id": "c141"
+    },
+    {
+        "name": "Milk Extreme Fighter",
+        "id": "c141_01"
+    },
+    {
+        "name": "Frima",
+        "id": "c142"
+    },
+    {
+        "name": "Frima Sea of Sloth",
+        "id": "c142_01",
+        "version": 4.1
+    },
+    {
+        "name": "Julia",
+        "id": "c150"
+    },
+    {
+        "name": "Julia Mild Nocturne",
+        "id": "c150_01"
+    },
+    {
+        "name": "Yuni",
+        "id": "c160"
+    },
+    {
+        "name": "Yuni Pretty In Pink",
+        "id": "c160_01"
+    },
+    {
+        "name": "Mihara",
+        "id": "c161"
+    },
+    {
+        "name": "Privaty",
+        "id": "c170"
+    },
+    {
+        "name": "Privaty Government Grunt",
+        "id": "c170_01"
+    },
+    {
+        "name": "Yulha",
+        "id": "c171"
+    },
+    {
+        "name": "Admi",
+        "id": "c172"
+    },
+    {
+        "name": "Guillotine",
+        "id": "c180"
+    },
+    {
+        "name": "Maiden",
+        "id": "c181"
+    },
+    {
+        "name": "Maiden Covert Nurse",
+        "id": "c181_01"
+    },
+    {
+        "name": "Ludmilla",
+        "id": "c190"
+    },
+    {
+        "name": "Alice",
+        "id": "c191"
+    },
+    {
+        "name": "Alice Sweet Home",
+        "id": "c191_01"
+    },
+    {
+        "name": "Neve",
+        "id": "c193"
+    },
+    {
+        "name": "Rupee",
+        "id": "c200"
+    },
+    {
+        "name": "Rupee Rabbit Deluxe",
+        "id": "c200_01",
+        "version": 4.1
+    },
+    {
+        "name": "Yan",
+        "id": "c201"
+    },
+    {
+        "name": "Yan Sunrise Market",
+        "id": "c201_01",
+        "version": 4.1
+    },
+    {
+        "name": "Dolla",
+        "id": "c202"
+    },
+    {
+        "name": "Dolla Dark Rose",
+        "id": "c202_01"
+    },
+    {
+        "name": "Rupee: Winter Shopper",
+        "id": "c203"
+    },
+    {
+        "name": "Exia",
+        "id": "c210"
+    },
+    {
+        "name": "Exia Join The Nerds",
+        "id": "c210_01"
+    },
+    {
+        "name": "c211",
+        "id": "c211"
+    },
+    {
+        "name": "Novel",
+        "id": "c212"
+    },
+    {
+        "name": "Novel Penguin Holmes",
+        "id": "c212_01"
+    },
+    {
+        "name": "Snow White",
+        "id": "c220"
+    },
+    {
+        "name": "Rapunzel",
+        "id": "c221"
+    },
+    {
+        "name": "Scarlet",
+        "id": "c222"
+    },
+    {
+        "name": "Harran",
+        "id": "c230"
+    },
+    {
+        "name": "Isabel",
+        "id": "c231"
+    },
+    {
+        "name": "Noah",
+        "id": "c232"
+    },
+    {
+        "name": "Dorothy",
+        "id": "c233"
+    },
+    {
+        "name": "Rumani",
+        "id": "c240"
+    },
+    {
+        "name": "Epinel",
+        "id": "c241"
+    },
+    {
+        "name": "Folkwang",
+        "id": "c242"
+    },
+    {
+        "name": "c250",
+        "id": "c250"
+    },
+    {
+        "name": "Mass Produced Blue",
+        "id": "c251"
+    },
+    {
+        "name": "Mass Produced Orange",
+        "id": "c252"
+    },
+    {
+        "name": "Mass Produced Green",
+        "id": "c253"
+    },
+    {
+        "name": "Mass Produced Purple",
+        "id": "c254"
+    },
+    {
+        "name": "Mass Produced White",
+        "id": "c255"
+    },
+    {
+        "name": "Modernia",
+        "id": "c260"
+    },
+    {
+        "name": "Modernia First Affection",
+        "id": "c260_01",
+        "version": 4.1
+    },
+    {
+        "name": "Nihilister",
+        "id": "c261"
+    },
+    {
+        "name": "Liberalio",
+        "id": "c262"
+    },
+    {
+        "name": "Indivilia",
+        "id": "c263",
+        "version": 4.1
+    },
+    {
+        "name": "Blanc",
+        "id": "c270",
+        "version": 4.1
+    },
+    {
+        "name": "Noir",
+        "id": "c271",
+        "version": 4.1
+    },
+    {
+        "name": "Rouge",
+        "id": "c272",
+        "version": 4.1
+    },
+    {
+        "name": "Rosanna",
+        "id": "c280",
+        "version": 4.1
+    },
+    {
+        "name": "Moran",
+        "id": "c281"
+    },
+    {
+        "name": "Sakura",
+        "id": "c282"
+    },
+    {
+        "name": "Sakura Midnight Stealth",
+        "id": "c282_01",
+        "version": 4.1
+    },
+    {
+        "name": "Mana",
+        "id": "c290"
+    },
+    {
+        "name": "Ether",
+        "id": "c291"
+    },
+    {
+        "name": "Soldier EG",
+        "id": "c300"
+    },
+    {
+        "name": "Soldier FA",
+        "id": "c301"
+    },
+    {
+        "name": "Product 08",
+        "id": "c302"
+    },
+    {
+        "name": "Product 12",
+        "id": "c303"
+    },
+    {
+        "name": "iDoll Flower",
+        "id": "c304"
+    },
+    {
+        "name": "iDoll Ocean",
+        "id": "c305"
+    },
+    {
+        "name": "Soldier OW",
+        "id": "c306"
+    },
+    {
+        "name": "Product 23",
+        "id": "c307"
+    },
+    {
+        "name": "iDoll Sun",
+        "id": "c308"
+    },
+    {
+        "name": "Ade",
+        "id": "c310"
+    },
+    {
+        "name": "Cocoa",
+        "id": "c311"
+    },
+    {
+        "name": "Soda",
+        "id": "c312"
+    },
+    {
+        "name": "Bibli",
+        "id": "c320"
+    },
+    {
+        "name": "Marchana",
+        "id": "c321"
+    },
+    {
+        "name": "Crown",
+        "id": "c330",
+        "version": 4.1
+    },
+    {
+        "name": "Chime",
+        "id": "c331",
+        "version": 4.1
+    },
+    {
+        "name": "Siren",
+        "id": "c340"
+    },
+    {
+        "name": "Pin",
+        "id": "c342"
+    },
+    {
+        "name": "Mast",
+        "id": "c350",
+        "version": 4.1
+    },
+    {
+        "name": "Mast A Pirate's Heart",
+        "id": "c350_01",
+        "version": 4.1
+    },
+    {
+        "name": "Mast_old",
+        "id": "c350_old"
+    },
+    {
+        "name": "Anchor",
+        "id": "c351",
+        "version": 4.1
+    },
+    {
+        "name": "Helm",
+        "id": "c352"
+    },
+    {
+        "name": "Helm Chandelier",
+        "id": "c352_01"
+    },
+    {
+        "name": "Helm: Aquamarine",
+        "id": "c353",
+        "version": 4.1
+    },
+    {
+        "name": "Kilo",
+        "id": "c361"
+    },
+    {
+        "name": "Endless",
+        "id": "c371"
+    },
+    {
+        "name": "Nero",
+        "id": "c380",
+        "version": 4.1
+    },
+    {
+        "name": "Biscuit",
+        "id": "c381"
+    },
+    {
+        "name": "Leona",
+        "id": "c382",
+        "version": 4.1
+    },
+    {
+        "name": "Zwei",
+        "id": "c390"
+    },
+    {
+        "name": "Ein",
+        "id": "c391"
+    },
+    {
+        "name": "Rei",
+        "id": "c392"
+    },
+    {
+        "name": "Guilty",
+        "id": "c400"
+    },
+    {
+        "name": "Sin",
+        "id": "c401"
+    },
+    {
+        "name": "Quency",
+        "id": "c402"
+    },
+    {
+        "name": "Noise",
+        "id": "c430"
+    },
+    {
+        "name": "Noise Cherry Blossom Stage",
+        "id": "c430_01"
+    },
+    {
+        "name": "Volume",
+        "id": "c431"
+    },
+    {
+        "name": "Aria",
+        "id": "c432"
+    },
+    {
+        "name": "Red Hood",
+        "id": "c470",
+        "version": 4.1
+    },
+    {
+        "name": "Makima",
+        "id": "c800"
+    },
+    {
+        "name": "Makima Coat Off",
+        "id": "c800_01"
+    },
+    {
+        "name": "Power",
+        "id": "c801"
+    },
+    {
+        "name": "Himeno",
+        "id": "c802"
+    },
+    {
+        "name": "Denji",
+        "id": "c803"
+    },
+    {
+        "name": "Denji Chainsaw Man",
+        "id": "c803_01"
+    },
+    {
+        "name": "Aki Hayakawa",
+        "id": "c804"
+    },
+    {
+        "name": "Ingrid",
+        "id": "c900"
+    },
+    {
+        "name": "Syuen",
+        "id": "c901",
+        "version": 4.1
+    },
+    {
+        "name": "Mustang",
+        "id": "c902"
+    },
+    {
+        "name": "Andersen",
+        "id": "c903"
+    },
+    {
+        "name": "Andersen Soaked",
+        "id": "c903_01"
+    },
+    {
+        "name": "Enikk",
+        "id": "c904"
+    },
+    {
+        "name": "Rian",
+        "id": "c905"
+    },
+    {
+        "name": "Shifty",
+        "id": "c907"
+    },
+    {
+        "name": "Shifty_old",
+        "id": "c907_01"
+    },
+    {
+        "id": "c908",
+        "name": "Papillon"
+    },
+    {
+        "name": "Hologram",
+        "id": "c910"
+    },
+    {
+        "name": "Faceless Man",
+        "id": "c911"
+    },
+    {
+        "name": "Faceless Woman",
+        "id": "c912"
+    },
+    {
+        "name": "c913",
+        "id": "c913"
+    },
+    {
+        "name": "Burningum",
+        "id": "c914"
+    },
+    {
+        "name": "Faceless NPC 1",
+        "id": "c916"
+    },
+    {
+        "name": "Faceless NPC 2",
+        "id": "c917"
+    },
+    {
+        "name": "Faceless NPC 3",
+        "id": "c918"
+    },
+    {
+        "name": "Faceless NPC 4",
+        "id": "c919"
+    },
+    {
+        "name": "Faceless NPC 5",
+        "id": "c920"
+    },
+    {
+        "name": "Faceless NPC 6",
+        "id": "c921"
+    },
+    {
+        "name": "Faceless NPC 7",
+        "id": "c922"
+    },
+    {
+        "name": "Faceless NPC 8",
+        "id": "c923"
+    },
+    {
+        "name": "Faceless NPC 9",
+        "id": "c924"
+    },
+    {
+        "name": "Johan",
+        "id": "c925"
+    },
+    {
+        "name": "Einkk",
+        "id": "c928"
+    },
+    {
+        "name": "Cecil",
+        "id": "c929"
+    },
+    {
+        "name": "Beatrice",
+        "id": "c930"
+    },
+    {
+        "name": "Collection Robot",
+        "id": "c931"
+    },
+    {
+        "name": "Bolt Junior",
+        "id": "c932"
+    },
+    {
+        "name": "Bolt",
+        "id": "c933"
+    },
+    {
+        "name": "Angelina",
+        "id": "c934"
+    },
+    {
+        "name": "Joseph",
+        "id": "c935"
+    },
+    {
+        "name": "Max",
+        "id": "c936"
+    },
+    {
+        "name": "Booboo",
+        "id": "c937"
+    },
+    {
+        "name": "Doban",
+        "id": "c939"
+    },
+    {
+        "name": "E.H.",
+        "id": "c940"
+    },
+    {
+        "name": "Pinne",
+        "id": "c941"
+    },
+    {
+        "name": "Katie",
+        "id": "c945",
+        "version": 4.1
+    },
+    {
+        "name": "Ruru",
+        "id": "c946",
+        "version": 4.1
+    },
+    {
+        "name": "Self",
+        "id": "c9999"
+    },
+    {
+        "name": "Choice",
+        "id": "c9999"
+    },
+    {
+        "name": "Blue Water Island",
+        "id": "bluewaterisland",
+        "version": 4.1
+    },
+    {
+        "name": "Bow Wow Paradise",
+        "id": "bowwowparadise",
+        "version": 4.1
+    },
+    {
+        "name": "777",
+        "id": "777",
+        "version": 4.1
+    },
+    {
+        "name": "Cherry Blossom",
+        "id": "cherryblossom",
+        "version": 4.1
+    },
+    {
+        "name": "License to Kill",
+        "id": "ltk",
+        "version": 4.1
+    },
+    {
+        "name": "Maid in Valentine",
+        "id": "maidinvalentine",
+        "version": 4.1
+    },
+    {
+        "name": "Queen's Order",
+        "id": "queensorder",
+        "version": 4.1
+    },
+    {
+        "name": "Nya Nya Paradise",
+        "id": "nyanyaparadise",
+        "version": 4.1
+    },
+    {
+        "name": "Golden Ship",
+        "id": "goldenship",
+        "version": 4.1
+    },
+    {
+        "name": "Sea You Again",
+        "id": "seayouagain",
+        "version": 4.1
+    },
+    {
+        "id": "smol_anchor",
+        "name": "Smol Anchor",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Bolt",
+        "id": "smol_bolt",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Frima",
+        "id": "smol_frima",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Helm",
+        "id": "smol_helm",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Liter",
+        "id": "smol_liter",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Mary",
+        "id": "smol_mary",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Mast",
+        "id": "smol_mast",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Pepper",
+        "id": "smol_pepper",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Rapi",
+        "id": "smol_rapi",
+        "version": 4.1
+    },
+    {
+        "name": "Smol Yan",
+        "id": "smol_yan",
+        "version": 4.1
+    },
+    {
+        "name": "Story 00-01",
+        "id": "story0001",
+        "version": 4.1
+    },
+    {
+        "name": "Story 00-01 no filter",
+        "id": "story0001_2",
+        "version": 4.1
+    },
+    {
+        "name": "Story 00-02",
+        "id": "story0002"
+    },
+    {
+        "name": "Story 00-02 no filter",
+        "id": "story0002_2"
+    },
+    {
+        "name": "Story 00-03",
+        "id": "story0003",
+        "version": 4.1
+    },
+    {
+        "name": "Story 02-01",
+        "id": "story0201",
+        "version": 4.1
+    },
+    {
+        "name": "Story 04-01",
+        "id": "story0401",
+        "version": 4.1
+    },
+    {
+        "name": "Story 04-02",
+        "id": "story0401_2",
+        "version": 4.1
+    },
+    {
+        "name": "Story 04-05",
+        "id": "story0405",
+        "version": 4.1
+    },
+    {
+        "name": "Story 07-02",
+        "id": "story0702",
+        "version": 4.1
+    },
+    {
+        "name": "Story 12-01",
+        "id": "story1201",
+        "version": 4.1
+    },
+    {
+        "name": "Story 13-02",
+        "id": "story1302",
+        "version": 4.1
+    },
+    {
+        "name": "Story 13-03",
+        "id": "story1303",
+        "version": 4.1
+    },
+    {
+        "name": "Story 14-01",
+        "id": "story1401"
+    },
+    {
+        "name": "Story 14-03",
+        "id": "story1403",
+        "version": 4.1
+    },
+    {
+        "name": "Story 14-05",
+        "id": "story1405",
+        "version": 4.1
+    },
+    {
+        "name": "Story 15-01",
+        "id": "story1501",
+        "version": 4.1
+    },
+    {
+        "name": "Story 19-01",
+        "id": "story1902"
+    },
+    {
+        "name": "Story 20-01",
+        "id": "story2002"
+    },
+    {
+        "name": "Story 21-01",
+        "id": "story2101"
+    },
+    {
+        "name": "Story 22-01",
+        "id": "story2201",
+        "version": 4.1
+    },
+    {
+        "name": "Story 22-02",
+        "id": "story2202",
+        "version": 4.1
+    },
+    {
+        "name": "Story 22-06",
+        "id": "story2206"
+    }
+]
