@@ -2,23 +2,24 @@
 
 <template>
     <n-config-provider :theme="theme" :theme-overrides="override">
-    <!-- <n-config-provider> -->
-        <n-loading-bar-provider>
-            <App/>
-        </n-loading-bar-provider>
-    </n-config-provider>
+        <n-message-provider>
+                <n-loading-bar-provider>
+                    <App/>
+                </n-loading-bar-provider>
+            </n-message-provider>
+        </n-config-provider>
 </template>
 
 <script setup lang="ts">
 import App from '@/App.vue'
 import { darkTheme } from 'naive-ui'
-import { ref} from 'vue'
+import { ref } from 'vue'
 import { onBeforeMount } from 'vue';
-import { useGlobalParamsStore } from '@/stores/globalParamsStore'
 import * as override from '@/utils/style/naive-ui-theme-overrides.json';
+import { useMarket } from '@/stores/market'
 
 const theme = ref(darkTheme)
-const globalParamStore = useGlobalParamsStore()
+const market = useMarket()
 
 onBeforeMount(() => {
     checkIfMobileUI()
@@ -30,11 +31,9 @@ window.addEventListener("resize", (e) => {
 
 const checkIfMobileUI = () => {
     if (document.body.clientWidth < 900) { // DOM's width, if too low switch to mobile display globally
-        globalParamStore.setMobile()
+        market.globalParams.setMobile()
     } else {
-        globalParamStore.setComputer()
+        market.globalParams.setComputer()
     }
 }
-
-
 </script>

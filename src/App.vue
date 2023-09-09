@@ -1,21 +1,54 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import Header from '@/components/common/Header/HeaderSelector.vue'
-</script>
-
 <template>
   <Header />
   <!-- if increase/decrease margin top of scroll bar, need to update the calc of max height -->
-  <n-scrollbar style="max-height: calc(100vh - 120px); margin-top: 20px;"> 
+  <n-scrollbar :class="shouldHaveMargin()"> 
     <RouterView />
   </n-scrollbar>
 </template>
 
+<script setup lang="ts">
+import { RouterView } from 'vue-router'
+import Header from '@/components/common/Header/HeaderSelector.vue'
+import { watch } from 'vue'
+import { useMarket } from '@/stores/market'
+import { useLoadingBar } from 'naive-ui'
+
+const market = useMarket()
+const loadingBar = useLoadingBar()
+
+const shouldHaveMargin = () => {
+  if (market.route.name !== "Live2D") {
+    return "scrollBarMargin"
+  } else {
+    return "noScrollBarMargin"
+  }
+}
+
+// update the loading bar at the top of the screen
+watch(() => market.load.load, () => {
+    switch (market.load.load) {
+        case "done" : 
+            loadingBar.finish();
+            break;
+        case "loading" :
+            loadingBar.start();
+            break;
+        case "error" :
+            loadingBar.error();
+            break;
+        default :
+            console.log("unknown loadingBar value")
+    }
+})
+</script>
+
 <style lang="less">
-@import './utils/style/global_variables.less';
+@import '@/utils/style/global_variables.less';
+@import '@/utils/spine/spine-player.css';
 
 *{
   font-family: Arial, Helvetica, sans-serif;
+  color:white;
 }
 .main-bg {
   background-color: @main-dark-theme;
@@ -57,5 +90,14 @@ body {
 .n-a {
   font-size: 16px;
   text-decoration: underline;
+}
+
+.scrollBarMargin {
+  margin-top: 120px;
+  max-height: calc(100vh - 120px);
+}
+
+.noScrollBarMargin {
+  max-height: 100vh;
 }
 </style>

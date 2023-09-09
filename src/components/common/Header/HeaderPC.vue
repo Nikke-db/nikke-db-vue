@@ -1,5 +1,13 @@
 <template>
     <div class="flexbox main-bg main-box-shadow">
+        <div class="githubwrapper">
+            <n-tooltip trigger="hover" placement="bottom">
+                <template #trigger>
+                    <GithubFilled class="github" @click="sendToGithub()"/>
+                </template>
+                View the source code on GitHub
+            </n-tooltip>
+        </div>
         <span>
             <RouterLink to="/">
                 <img :src="logo" class="logo">
@@ -17,29 +25,20 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue'
-
 import logo from "@/assets/nikke-db.png"
 
-import { useLoaderStore } from '@/stores/loaderStore'
-import { useLoadingBar } from 'naive-ui'
+import { GithubFilled } from '@vicons/antd'
+import { globalParams } from '@/utils/enum/globalParams'
 
 import { type route2DisplayInterface } from "@/components/common/Header/routes2Display"
-
-const loaderStore = useLoaderStore()
-const loadingBar = useLoadingBar()
-
-watch(() => loaderStore.load, () => {
-    if (loaderStore.load) {
-        loadingBar.start()
-    } else {
-        loadingBar.finish()
-    }
-})
 
 const props = defineProps<{
     routes: route2DisplayInterface[]
 }>()
+
+const sendToGithub = () => {
+    window.open(globalParams.GITHUB, '_blank')
+}
 
 </script>
 
@@ -50,6 +49,9 @@ const props = defineProps<{
     display: flex;
     flex-direction: row;
     width: 100%;
+    position: absolute;
+    top:0;
+    z-index: 100;
 
     span {
         width: 100%;
@@ -70,9 +72,19 @@ const props = defineProps<{
     }
 
     .logo {
-        margin: 0 50px 0 50px;
+        margin: 0 50px 0 15px;
         height: 100px;
         user-select: none;
+    }
+}
+.githubwrapper{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 25px;
+    .github{
+        height:50%;
+        cursor: pointer;
     }
 }
 </style>

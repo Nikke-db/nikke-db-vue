@@ -17,22 +17,19 @@
 </template>
 
 <script lang="ts" setup>
-import { useLoaderStore } from '@/stores/loaderStore'
-import { onMounted, onBeforeMount, onUnmounted } from 'vue'
+import { onMounted, onBeforeMount, onUnmounted, inject } from 'vue'
+import { useMarket } from '@/stores/market'
 
-import { useGlobalParamsStore } from '@/stores/globalParamsStore'
-const globalParamStore = useGlobalParamsStore()
-
-const loaderStore = useLoaderStore()
+const market = useMarket()
 
 onBeforeMount(() => {
-    loaderStore.beginLoad()
+    market.load.beginLoad()
     document.body.classList.add("poli-bg")
 })
 
 onMounted(() => {
     setTimeout(()=>{
-        loaderStore.endLoad()
+        market.load.endLoad()
     }, 100)
 })
 
@@ -41,7 +38,7 @@ onUnmounted(() => {
 })
 
 const checkMobile = () => {
-    return globalParamStore.isMobile ? "isMobile" : ""
+    return market.globalParams.isMobile ? "isMobile" : ""
 }
 
 </script>
@@ -49,8 +46,8 @@ const checkMobile = () => {
 <style lang="less" scoped>
 @import '../../utils/style/global_variables.less';
 
-.body{
-    padding-top: 37vh;
+.body {
+    padding-top: 45vh;
 }
 
 .n-card{
@@ -59,7 +56,6 @@ const checkMobile = () => {
     margin:0 auto;
 
     .n-text {
-        
         font-size: larger;
     }
 }
@@ -69,7 +65,7 @@ const checkMobile = () => {
 }
 
 .isMobile {
-    width:95%
+    width:95%;
 }
 
 </style>

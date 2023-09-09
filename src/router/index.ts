@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Index from "@/components/views/Index.vue"
 import Characters from '@/components/views/Characters.vue'
-import L2D from '@/components/views/l2d.vue'
+import L2D from '@/components/views/L2D.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
