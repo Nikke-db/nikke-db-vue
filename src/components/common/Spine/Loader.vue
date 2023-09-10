@@ -17,11 +17,36 @@ import { globalParams } from "@/utils/enum/globalParams"
 
 let canvas: any;
 const market = useMarket()
-const DEFAULT_PC_Y = "18%";
 const id = ref("c010")
 
 onMounted(()=> {
     market.load.beginLoad()
+
+    spineLoader()
+
+    setTimeout(() => {
+        canvas = (document.querySelector(".spine-player-canvas") as any)
+
+        canvas.width = canvas.height    
+        
+        if (checkMobile()) {
+            canvas.style.marginTop = "50px"
+            canvas.style.height = "95vh"
+            canvas.style.width = "100%"
+        } else {
+            canvas.style.height = "500vh"
+            canvas.style.marginTop = "-195vh"
+            canvas.style.transform = "scale(0.17)"
+            canvas.style.position = "absolute"
+            canvas.style.left = "0px"
+            canvas.style.top = "0px"
+            centerForPC()
+        }
+
+    }, 200)
+})
+
+const spineLoader = () => {
     new (spine40 as any).SpinePlayer("player-container", {
         skelUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + id.value + "/" + id.value + "_00.skel",
         atlasUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + id.value + "/" + id.value + "_00.atlas",
@@ -33,6 +58,12 @@ onMounted(()=> {
         mipmaps:false,
         debug: false,
         preserveDrawingBuffer:true,
+        viewport: {
+            padLeft: "0%",
+            padRight: "0%",
+            padTop: "0%",
+            padBottom: "0%"
+        },
         success: (player: any) => {
             market.load.endLoad()
         },
@@ -40,41 +71,28 @@ onMounted(()=> {
             market.load.errorLoad()
         }
     })
-
-    setTimeout(() => {
-        canvas = (document.querySelector(".spine-player-canvas") as any)
-        // I hate this so much
-        canvas.style.marginTop = "50px"
-        canvas.width = canvas.height
-        
-        
-        // this centers the character and fit them on screen
-        canvas.style.height = "95vh"
-
-        // do NOT use this for computer or it'll mess up the screenshot (and video recording) features
-        if (checkMobile()) {
-            canvas.style.width = "100%"
-        } else {
-            canvas.style.position = "absolute"
-            // canvas.style.left = DEFAULT_PC_Y
-            canvas.style.top = "0px"
-            centerForPC()
-        }
-
-    }, 200)
-})
+}
 
 watch(() => market.globalParams.isMobile, (e) => {
     if (e) {
+        canvas.style.height = "95vh"
         canvas.style.width = "100%"
         canvas.style.position = "static"
         canvas.style.left = "0px"
         canvas.style.top = "0px"
+        canvas.style.marginTop = "50px"
+        canvas.width = canvas.height 
+        canvas.style.transform = "scale(1)"
     } else {
         canvas.style.position = "absolute"
-        canvas.style.left = DEFAULT_PC_Y
+        canvas.style.height = "500vh"
+        canvas.style.width = ''
+        canvas.style.marginTop = "-195vh"
+        canvas.style.transform = "scale(0.2)"
+        canvas.style.left = "0px"
         canvas.style.top = "0px"
-        canvas.style.width = canvas.style.height
+        canvas.width = canvas.height 
+        centerForPC()
     }
 })
 
@@ -88,10 +106,20 @@ const centerForPC = () => {
     canvas.style.left = ((viewport_width - canvas_width) / 2) + "px"
 }
 
+const filterDomEvents = (event:any) => {
+    if (event.target === canvas || 
+        event.target === document.querySelector('.spine-player')
+    ) {
+        return true
+    } else {
+        return false
+    }
+}
+
 
 /**
  * click to drag the character around, 
- * will move the canvas through the dom based on coordinates
+ * will move the canvas through the dom based on coordinates of the cursor
  */
 
 let oldX: number
@@ -99,8 +127,7 @@ let oldY: number
 let move = false as boolean
 
 document.addEventListener("mousedown", (e) => {
-    if (e.target === canvas ||
-        e.target === document.querySelector('.spine-player')) {
+    if (filterDomEvents(e)) {
         oldX = e.clientX
         oldY = e.clientY
         move = true
@@ -127,6 +154,34 @@ document.addEventListener("mousemove", (e) => {
 
         oldX = newX
         oldY = newY
+    }
+})
+
+/**
+ * zoom in or out for the live2d
+ * it uses the property transform scale instead of buffing up or down viewport height of the canvas
+ * using the vh in nikke db legacy produces some lag when zooming at high values ( 450 - 500 vh of size)
+ * transform should hopefully fix this issue, but to fix blurring/pixelated images
+ * the canvas is already bruteforced to 500vh and transform scale 0.2
+ * since the zoom is smooth there is no reason to limit it like in nikke db legacy
+ * however after scale(1) it'll start getting blurried than usual
+ * though I don't see the point as it is already pixelated enough
+ */
+
+let transformScale = 0.2
+
+document.addEventListener("wheel", (e) => {
+    if (filterDomEvents(e)) {
+        switch (e.deltaY > 0) {
+            case true:
+                    transformScale -= 0.05
+                break;
+            case false: 
+                    transformScale += 0.05
+                break;
+        }
+        
+        canvas.style.transform = "scale("+transformScale+")"
     }
 })
 
