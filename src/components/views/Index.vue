@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onBeforeMount, onUnmounted, inject } from 'vue'
+import { onMounted, onBeforeMount, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
 
 const market = useMarket()
