@@ -16,44 +16,31 @@ import spine41 from "@/utils/spine/spine-player4.1"
 import { globalParams } from "@/utils/enum/globalParams"
 
 let canvas: any;
+let spineCanvas: any;
 const market = useMarket()
-const id = ref("c010")
 
 onMounted(()=> {
     market.load.beginLoad()
-
     spineLoader()
-
-    setTimeout(() => {
-        canvas = (document.querySelector(".spine-player-canvas") as any)
-
-        canvas.width = canvas.height    
-        
-        if (checkMobile()) {
-            canvas.style.marginTop = "50px"
-            canvas.style.height = "95vh"
-            canvas.style.width = "100%"
-        } else {
-            canvas.style.height = "500vh"
-            canvas.style.marginTop = "-195vh"
-            canvas.style.transform = "scale(0.17)"
-            canvas.style.position = "absolute"
-            canvas.style.left = "0px"
-            canvas.style.top = "0px"
-            centerForPC()
-        }
-
-    }, 200)
+    applyDefaultStyle2Canvas()
 })
 
 const spineLoader = () => {
-    new (spine40 as any).SpinePlayer("player-container", {
-        skelUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + id.value + "/" + id.value + "_00.skel",
-        atlasUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + id.value + "/" + id.value + "_00.atlas",
+    let usedSpine: any;
+
+    switch (market.live2d.current_spine_version) {
+        case 4.0: usedSpine = spine40; break;
+        case 4.1: usedSpine = spine41; break;
+        default: console.log('TBA ALERT MESSAGE')
+    }
+
+    spineCanvas = new usedSpine.SpinePlayer("player-container", {
+        skelUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + market.live2d.current_id + "/" + market.live2d.current_id + "_00.skel",
+        atlasUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + market.live2d.current_id + "/" + market.live2d.current_id + "_00.atlas",
         animation: "idle",
         // skin: skin,
         // backgroundColor: transparent ? "#00000000" : current_color,
-        backgroundColor: "#00FF00",
+        backgroundColor: "#2f353a",
         // alpha: transparent ? true : false,
         mipmaps:false,
         debug: false,
@@ -75,14 +62,15 @@ const spineLoader = () => {
 
 watch(() => market.globalParams.isMobile, (e) => {
     if (e) {
-        canvas.style.height = "95vh"
+        canvas.style.height = "90vh"
         canvas.style.width = "100%"
         canvas.style.position = "static"
         canvas.style.left = "0px"
         canvas.style.top = "0px"
-        canvas.style.marginTop = "50px"
+        canvas.style.marginTop = "0px"
         canvas.width = canvas.height 
         canvas.style.transform = "scale(1)"
+        market.globalParams.hideMobileHeader()
     } else {
         canvas.style.position = "absolute"
         canvas.style.height = "500vh"
@@ -92,9 +80,43 @@ watch(() => market.globalParams.isMobile, (e) => {
         canvas.style.left = "0px"
         canvas.style.top = "0px"
         canvas.width = canvas.height 
+        market.globalParams.showMobileHeader()
         centerForPC()
     }
 })
+
+watch(() => market.live2d.current_id, (e) => {
+    spineCanvas.dispose()
+    market.load.beginLoad()
+    spineLoader()
+    applyDefaultStyle2Canvas()
+})
+
+const applyDefaultStyle2Canvas = () => {
+    setTimeout(() => {
+        canvas = (document.querySelector(".spine-player-canvas") as any)
+
+        canvas.width = canvas.height    
+        
+        if (checkMobile()) {
+            // canvas.style.marginTop = "50px"
+            canvas.style.height = "95vh"
+            canvas.style.width = "100%"
+            transformScale = 1
+            market.globalParams.hideMobileHeader()
+        } else {
+            canvas.style.height = "500vh"
+            canvas.style.marginTop = "-195vh"
+            canvas.style.transform = "scale(0.17)"
+            canvas.style.position = "absolute"
+            canvas.style.left = "0px"
+            canvas.style.top = "0px"
+            transformScale = 0.2
+            market.globalParams.showMobileHeader()
+            centerForPC()
+        }
+    }, 200)
+}
 
 const checkMobile = () => {
     return market.globalParams.isMobile ? true : false
@@ -115,7 +137,6 @@ const filterDomEvents = (event:any) => {
         return false
     }
 }
-
 
 /**
  * click to drag the character around, 

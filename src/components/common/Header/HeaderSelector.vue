@@ -1,6 +1,9 @@
 <template>
     <div>
-        <HeaderMobile v-show="market.globalParams.isMobile" :routes="ROUTES"></HeaderMobile>
+        <HeaderMobile 
+            v-show="market.globalParams.isMobile && market.globalParams.isMobileHeaderVisibile" 
+            :routes="ROUTES"
+        />
         <HeaderPC v-show="!market.globalParams.isMobile" :routes="ROUTES"/>
     </div>
 </template>

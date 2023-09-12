@@ -3,9 +3,10 @@
         <span>
             <RouterLink to="/"><img :src="logo" class="logo"></RouterLink>
         </span>
-        <div class="iconDiv">
-            <MenuOpenRound class="icon" @click="openDrawer()"/>
-        </div>
+        <!-- <div class="iconDiv"> -->
+            <!-- <MenuOpenRound class="icon" @click="openDrawer()"/> -->
+        <!-- </div> -->
+        <n-icon :component="MenuOpenRound" @click="openDrawer()" class="iconDiv" :size="80"/>
         <n-drawer v-model:show="showDrawer" placement="left">
             <n-drawer-content>
 
@@ -17,7 +18,6 @@
                     <n-a :href="globalParams.GITHUB" target="_blank">Visit the source code on GitHub</n-a>
                 </template>
 
-                <div id="emptyDivDrawer"></div>
                 <RouterLink v-for="route in props.routes"
                     :to="route.path" 
                     class="redirect" 
@@ -42,6 +42,10 @@ import type { route2DisplayInterface } from '@/components/common/Header/routes2D
 
 import { MenuOpenRound } from "@vicons/material"
 import { globalParams } from '@/utils/enum/globalParams'
+
+import { useMarket } from '@/stores/market'
+
+const market = useMarket()
 
 const showDrawer = ref(false)
 
@@ -87,11 +91,7 @@ const closeDrawer = () => {
         width: 100%;
         text-align: right;
         margin-right:15px;
-        .icon{
-            color: red;
-            height:64px;
-            margin-top: 18px;
-        }
+        margin-top: 18px;
     }
 }
 

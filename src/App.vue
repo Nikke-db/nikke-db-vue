@@ -48,7 +48,7 @@ watch(() => market.load.load, () => {
 
 *{
   font-family: Arial, Helvetica, sans-serif;
-  color:white;
+  // color:white;
 }
 .main-bg {
   background-color: @main-dark-theme;
@@ -99,5 +99,9 @@ body {
 
 .noScrollBarMargin {
   max-height: 100vh;
+}
+
+.n-icon {
+  color: white
 }
 </style>
