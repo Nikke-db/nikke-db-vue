@@ -83,6 +83,7 @@ const sendToGithub = () => {
     justify-content: center;
     margin-left: 25px;
     .github{
+        color:white;
         height:50%;
         cursor: pointer;
     }
