@@ -91,7 +91,7 @@ const changeSpine = (character: live2d_interface) => {
     }
 
     .n-card, .n-list {
-        border-left: 1px solid #63e2b7;
+        border-left: 1px solid @naive-green;
     }
 }
 
