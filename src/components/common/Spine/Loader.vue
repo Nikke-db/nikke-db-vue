@@ -13,11 +13,18 @@ import spine40 from "@/utils/spine/spine-player4.0"
 // @ts-ignore
 import spine41 from "@/utils/spine/spine-player4.1"
 
-import { globalParams } from "@/utils/enum/globalParams"
+import { globalParams, messagesEnum } from "@/utils/enum/globalParams"
 
 let canvas: any;
 let spineCanvas: any;
 const market = useMarket()
+
+const spineViewport = {
+    padLeft: "0%",
+    padRight: "0%",
+    padTop: "0%",
+    padBottom: "0%"
+}
 
 onMounted(()=> {
     market.load.beginLoad()
@@ -35,9 +42,9 @@ const spineLoader = () => {
     }
 
     spineCanvas = new usedSpine.SpinePlayer("player-container", {
-        skelUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + market.live2d.current_id + "/" + market.live2d.current_id + "_00.skel",
-        atlasUrl: globalParams.NIKKE_DB + globalParams.PATH_L2D + market.live2d.current_id + "/" + market.live2d.current_id + "_00.atlas",
-        animation: "idle",
+        skelUrl: getPathing('skel'),
+        atlasUrl: getPathing('atlas'),
+        animation: getDefaultAnimation(),
         // skin: skin,
         // backgroundColor: transparent ? "#00000000" : current_color,
         backgroundColor: "#2f353a",
@@ -45,19 +52,55 @@ const spineLoader = () => {
         mipmaps:false,
         debug: false,
         preserveDrawingBuffer:true,
-        viewport: {
-            padLeft: "0%",
-            padRight: "0%",
-            padTop: "0%",
-            padBottom: "0%"
-        },
+        viewport: spineViewport,
         success: (player: any) => {
-            market.load.endLoad()
+            successfullyLoaded(player)
         },
         error: (player: any) => {
-            market.load.errorLoad()
+            wrongfullyLoaded(player)
         }
     })
+}
+
+const getPathing = (extension: string) => {
+    let route = globalParams.NIKKE_DB + globalParams.PATH_L2D + market.live2d.current_id + '/'
+    let fileSuffix = '_00.'
+    
+    // could be more automated if we set market.live2d.current_pose to '' if we select
+    // "full body" but I'd rather keep fb for future/other functions
+    switch (market.live2d.current_pose) {
+        case 'aim': 
+            route += globalParams.PATH_L2D_AIM + '/'; 
+            fileSuffix = '_aim' + fileSuffix;
+            break;
+        case 'cover': 
+            route += globalParams.PATH_L2D_COVER + '/'; 
+            fileSuffix = '_cover' + fileSuffix
+            break;
+        default: break;
+    }
+
+    route += market.live2d.current_id + fileSuffix + extension
+    
+    return route
+}
+
+const getDefaultAnimation = () => {
+    switch (market.live2d.current_pose) {
+        case 'aim': return "aim_idle";
+        case 'cover': return "cover_idle";
+        default: return "idle";
+    }
+}
+
+const successfullyLoaded = (player: any) => {
+    market.load.endLoad()
+    market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED)
+}
+
+const wrongfullyLoaded = (player: any) => {
+    market.load.errorLoad()
+    market.message.getMessage().error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
 }
 
 watch(() => market.globalParams.isMobile, (e) => {
@@ -86,11 +129,20 @@ watch(() => market.globalParams.isMobile, (e) => {
 })
 
 watch(() => market.live2d.current_id, (e) => {
+    loadSpineAfterWatcher(e)
+})
+
+watch (() => market.live2d.current_pose, (e) => {
+    loadSpineAfterWatcher(e)
+})
+
+
+const loadSpineAfterWatcher = (e: any) => {
     spineCanvas.dispose()
     market.load.beginLoad()
     spineLoader()
     applyDefaultStyle2Canvas()
-})
+}
 
 const applyDefaultStyle2Canvas = () => {
     setTimeout(() => {
@@ -195,10 +247,10 @@ document.addEventListener("wheel", (e) => {
     if (filterDomEvents(e)) {
         switch (e.deltaY > 0) {
             case true:
-                    transformScale -= 0.05
+                    transformScale -= 0.02
                 break;
             case false: 
-                    transformScale += 0.05
+                    transformScale += 0.02
                 break;
         }
         

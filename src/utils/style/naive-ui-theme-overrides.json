@@ -10,5 +10,9 @@
   "Typography": {
     "pFontSize": "16px",
     "pTextColor": "rgba(255,255,255,1)"
+  },
+  "Scrollbar": {
+    "color": "rgba(99, 226, 183, 0.2)",
+    "colorHover": "rgba(99, 226, 183, 0.3)"
   }
 }

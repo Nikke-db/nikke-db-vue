@@ -12,6 +12,7 @@ import Header from '@/components/common/Header/HeaderSelector.vue'
 import { watch } from 'vue'
 import { useMarket } from '@/stores/market'
 import { useLoadingBar } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 
 const market = useMarket()
 const loadingBar = useLoadingBar()
@@ -23,6 +24,8 @@ const shouldHaveMargin = () => {
     return "noScrollBarMargin"
   }
 }
+
+market.message.setMessage(useMessage())
 
 // update the loading bar at the top of the screen
 watch(() => market.load.load, () => {

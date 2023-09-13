@@ -12636,7 +12636,7 @@ var spine41 = (() => {
             throw error;
         } else {
           this.error = true;
-          this.dom.appendChild(createElement(`<div class="spine-player-error" style="background:#000;color:#fff;position:absolute;top:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:auto;z-index:999">` + message.replace("\n", "<br><br>") + `</div>`));
+          this.dom.appendChild(createElement(`<div class="spine-player-error" style="background:#000;color:#fff;position:absolute;top:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:auto;z-index:0">` + message.replace("\n", "<br><br>") + `</div>`));
           if (this.config.error)
             this.config.error(this, message);
           throw error ? error : new Error(message);

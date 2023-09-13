@@ -20,7 +20,7 @@
                     <CharacterList/>
                 </n-tab-pane>
 
-                <n-tab-pane name="options" tab="Options" >
+                <n-tab-pane name="options" tab="Options" class="options">
                     <div class="l2d-options-tab">
                         <n-switch v-model:value="showHeaderBool" class="center-switch"> 
                             <template #checked>
@@ -31,6 +31,12 @@
                                 The header is currently hidden
                             </template>
                         </n-switch>
+                        <br/>
+                    </div>
+                    <div>
+                        <div class="poseSelector">
+                            <PoseSelector />
+                        </div>
                     </div>
                 </n-tab-pane> 
                 
@@ -54,6 +60,7 @@ import { CloseOutlined } from '@vicons/antd'
 import { ref, watch } from 'vue'
 import CharacterList from "./CharacterList.vue"
 import { useMarket } from '@/stores/market'
+import PoseSelector from '@/components/common/Spine/Tools/PoseSelector.vue'
 
 const market = useMarket()
 
@@ -76,7 +83,8 @@ watch(showHeaderBool, () => {
 })
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
+@import '@/utils/style/global_variables.less';
 
 #mobileCogL2d {
     position: absolute;
@@ -96,6 +104,21 @@ watch(showHeaderBool, () => {
     .l2d-options-tab {
         width:100%;
         text-align: center;
+    }
+
+    .poseSelector {
+        text-align: left;
+        width:100px;
+        margin: 0 auto
+    }
+
+    &.options > * {
+        padding-bottom: 10px;
+
+        &:not(:nth-child(1)) {
+            border-top: 1px solid @grey-color;
+            padding: 10px 0;
+        }
     }
 
 }

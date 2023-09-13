@@ -7,7 +7,7 @@
             <!-- <MenuOpenRound class="icon" @click="openDrawer()"/> -->
         <!-- </div> -->
         <n-icon :component="MenuOpenRound" @click="openDrawer()" class="iconDiv" :size="80"/>
-        <n-drawer v-model:show="showDrawer" placement="left">
+        <n-drawer v-model:show="showDrawer" placement="left" :trap-focus="false" :auto-focus="false">
             <n-drawer-content>
 
                 <template #header>
@@ -55,13 +55,6 @@ const props = defineProps<{
 
 const openDrawer = () => {
     showDrawer.value = true
-    setTimeout(()=>{
-        try {
-            (document.activeElement as HTMLElement).blur();
-        } catch {
-            console.log("HeaderMobile: activeElement.blur did not work")
-        }
-    }, 50)
 }
 
 const closeDrawer = () => {

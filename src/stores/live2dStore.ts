@@ -1,4 +1,4 @@
-import { ref, computed, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { type live2d_interface } from '@/utils/interfaces/live2d'
 import l2d from '@/utils/json/l2d.json'
@@ -9,6 +9,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
     const current_id = ref('c010') as Ref<string>
     const current_spine_version = ref(4.0) as Ref<number>
+    const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
 
     const filter = () => {
         const base_array: live2d_interface[] = l2d
@@ -33,6 +34,5 @@ export const useLive2dStore = defineStore('live2d', () => {
         }
     }
 
-
-  return { filtered_l2d_Array, current_id, filter, change_current_spine, current_spine_version }
+    return { filtered_l2d_Array, current_id, filter, change_current_spine, current_spine_version, current_pose }
 })

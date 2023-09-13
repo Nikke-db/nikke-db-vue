@@ -3,7 +3,7 @@
         <n-card size="small" :bordered="false">
             <n-input type="text" placeholder="Name" v-model:value='name_filter' :clearable="true"></n-input>
         </n-card>
-        <n-scrollbar style="">
+        <n-scrollbar>
         <n-list hoverable :show-divider="false">
                 <n-list-item 
                     v-for="character in market.live2d.filtered_l2d_Array" 
@@ -87,7 +87,10 @@ const changeSpine = (character: live2d_interface) => {
     .n-card {
         height: 60px;
         border-top: 1px solid @naive-green;
-        border-right: 1px solid @naive-green
+        border-right: 1px solid @naive-green;
+        border-radius: 10px;
+        border-bottom-left-radius: 0px;
+        border-bottom-right-radius: 0px;
     }
 
     .n-card, .n-list {

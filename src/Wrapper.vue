@@ -4,7 +4,9 @@
     <n-config-provider :theme="theme" :theme-overrides="override">
         <n-message-provider>
                 <n-loading-bar-provider>
-                    <App/>
+                    <n-message-provider>
+                        <App/>
+                    </n-message-provider>
                 </n-loading-bar-provider>
             </n-message-provider>
         </n-config-provider>

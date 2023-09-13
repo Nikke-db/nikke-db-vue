@@ -1,21 +1,20 @@
-import { ref, computed, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useLoaderStore = defineStore('loader', () => {
-  const load = ref("done") as Ref<"done"> | Ref<"loading"> | Ref<"error">
+  const load = ref("done") as Ref<"done" | "loading" | "error">
 
-  function beginLoad() {
+  const beginLoad = () => {
     load.value = "loading"
   }
   
-  function endLoad() {
+  const endLoad = () => {
     load.value = "done"
   }
 
-  function errorLoad() {
+  const errorLoad = () => {
     load.value = "error"
   }
-
 
   return { load, beginLoad, endLoad, errorLoad }
 })
