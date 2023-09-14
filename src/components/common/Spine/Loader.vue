@@ -19,6 +19,7 @@ let canvas: any;
 let spineCanvas: any;
 const market = useMarket()
 
+// http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
     padLeft: "0%",
     padRight: "0%",
@@ -46,10 +47,9 @@ const spineLoader = () => {
         atlasUrl: getPathing('atlas'),
         animation: getDefaultAnimation(),
         // skin: skin,
-        // backgroundColor: transparent ? "#00000000" : current_color,
-        backgroundColor: "#2f353a",
-        // alpha: transparent ? true : false,
-        mipmaps:false,
+        backgroundColor: "#00000000",
+        alpha: true,
+        mipmaps: market.live2d.current_pose === "fb" ? true : false,
         debug: false,
         preserveDrawingBuffer:true,
         viewport: spineViewport,
@@ -95,7 +95,7 @@ const getDefaultAnimation = () => {
 
 const successfullyLoaded = (player: any) => {
     market.load.endLoad()
-    market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED)
+    market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
 }
 
 const wrongfullyLoaded = (player: any) => {
