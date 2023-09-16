@@ -3,12 +3,14 @@
   <!-- if increase/decrease margin top of scroll bar, need to update the calc of max height -->
   <n-scrollbar :class="shouldHaveMargin()"> 
     <RouterView />
+    <Footer v-if='!isL2d()'/>
   </n-scrollbar>
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import Header from '@/components/common/Header/HeaderSelector.vue'
+import Footer from '@/components/common/Footer/Footer.vue'
 import { watch } from 'vue'
 import { useMarket } from '@/stores/market'
 import { useLoadingBar } from 'naive-ui'
@@ -23,6 +25,10 @@ const shouldHaveMargin = () => {
   } else {
     return "noScrollBarMargin"
   }
+}
+
+const isL2d = () => {
+  return market.route.name === "Live2D"
 }
 
 market.message.setMessage(useMessage())

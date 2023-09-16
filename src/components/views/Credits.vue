@@ -1,5 +1,5 @@
 <template>
-    <n-card class="center" :class="checkMobile()">
+    <n-card class="center first" :class="checkMobile()">
         <n-p>I'd like to dedicate this page to anyone who contributed one way or another to the website during it's entire lifespan. I am mainly alone in this project but any help I receive brings me great joy.</n-p><br/>
         <div class="imgDiv">
             <img :src="maids"/>
@@ -17,6 +17,11 @@
         <CreditTable :data="forks"/>
     </n-card>
 
+    <n-card class="center" :class="checkMobile()">
+        <n-h1>Other</n-h1>
+        <CreditTable :data="others"/>
+    </n-card>
+
     <n-back-top :visibility-height="0" style="display:none"/>
 </template>
 
@@ -25,7 +30,11 @@ import maids from "@/assets/maids.png"
 import { type help } from '@/utils/interfaces/contributor'
 import CreditTable from '@/components/common/Credits/Table.vue'
 import { useMarket } from '@/stores/market'
-import { onMounted } from 'vue'
+import { onMounted, onBeforeMount } from 'vue'
+
+onBeforeMount(() => {
+    market.load.beginLoad()
+})
 
 onMounted(() => {
     setTimeout(()=>{
@@ -68,11 +77,12 @@ const external : help[] = [
     },
     {
         name: "Falzar",
-        contribution: "NKAB v1 and NKAB v2 decryptor, though sad things happend for NKAV v3 decryptor",
+        contribution: "NKAB v1 and NKAB v2 decryptor, though sad things happened for NKAV v3 decryptor",
         tier: null
     }
 ]
 
+// forkers: feel free to add yourself here, if you don't I'll do it myself
 const forks: help[] = [
     {
         name: "R3XxN1xX",
@@ -96,6 +106,39 @@ const forks: help[] = [
     }
 ]
 
+const others: help[] = [
+    {
+        name: 'ShiftUp<br/>Level Infinite<br/>Tencent',
+        contribution: 'Owners of Nikke: Goddess of Victory, and all the assets associated shown in this website',
+        tier: null
+    },
+    {
+        name: '@totakeke__',
+        contribution: 'Artist of the chibi Soda and Cocoa just above (4koma from valentine event)',
+        tier: null
+    },
+    {
+        name: 'Vue',
+        contribution: 'Javascript framework that was used to develop this new version of Nikke-DB',
+        tier: null 
+    },
+    {
+        name: 'Naive-UI',
+        contribution: 'Vue 3 component library',
+        tier: null
+    },
+    {
+        name: 'Everyone who starred or forked either repository',
+        contribution: 'My online ego keeps going up. Thank you',
+        tier: null
+    },
+    {
+        name: 'Spine by Esoteric Softwares',
+        contribution: 'For the free and easy to use web runtimes',
+        tier: null
+    }
+]
+
 const checkMobile = () => {
     return market.globalParams.isMobile ? 'mobile': ''
 }
@@ -110,6 +153,18 @@ const checkMobile = () => {
 
     &.center {
         text-align: center;
+    }
+
+    &.center:not(:first-of-type) {
+        margin-top: 75px;
+    }
+
+    &.first {
+        .n-card__content:first {
+            background-color: red !important;
+            // padding: 0px !important
+            padding-top: 0px !important;
+        }
     }
 
     .imgDiv {
