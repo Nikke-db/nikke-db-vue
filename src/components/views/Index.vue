@@ -6,7 +6,6 @@
             <n-p>
                 Nikke Community decided to shut down the server I used for feedback and update log, so I guess the only way to reach me out is through private discord messages (Koshirei#0333 / koshirei).
             </n-p>
-            <RouterLink to="/credits"><n-a>credits</n-a></RouterLink>
         </n-card>
 
         <n-card title="Update log:" class="card-spacer" :class="checkMobile()">
@@ -14,6 +13,7 @@
                 A listing of the updates ( copy paste from legacy website )
             </n-p>
         </n-card>
+        <n-back-top :visibility-height="0" style="display:none"/>
     </div>
 </template>
 
@@ -31,9 +31,10 @@ onBeforeMount(() => {
 
 onMounted(() => {
     setTimeout(()=>{
-        market.load.endLoad()
-    }, 100)
-    document.body.style.backgroundImage = "url(" + bgi + ")"
+        market.load.endLoad();
+        (document.querySelector('.n-back-top') as HTMLElement).click()
+    }, 10)
+    document.body.style.backgroundImage = "url(" + bgi + ")";
 })
 
 onUnmounted(() => {

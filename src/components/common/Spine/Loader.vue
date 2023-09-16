@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch, h } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useMarket } from '@/stores/market'
 
 // @ts-ignore
@@ -208,8 +208,8 @@ const checkMobile = () => {
 }
 
 const centerForPC = () => {
-    let canvas_width = canvas.offsetWidth
-    let viewport_width = window.innerWidth
+    const canvas_width = canvas.offsetWidth
+    const viewport_width = window.innerWidth
     canvas.style.left = ((viewport_width - canvas_width) / 2) + "px"
 }
 
@@ -248,11 +248,11 @@ document.addEventListener("mouseup", (e) => {
 
 document.addEventListener("mousemove", (e) => {
     if (move) {
-        let newX = e.clientX
-        let newY = e.clientY
+        const newX = e.clientX
+        const newY = e.clientY
 
-        let stylel = parseInt(canvas.style.left.replaceAll("px", ""))
-        let stylet = parseInt(canvas.style.top.replaceAll("px", ""))
+        const stylel = parseInt(canvas.style.left.replaceAll("px", ""))
+        const stylet = parseInt(canvas.style.top.replaceAll("px", ""))
 
         if (newX !== oldX) { canvas.style.left = (stylel + (newX - oldX)) + "px" }
 
