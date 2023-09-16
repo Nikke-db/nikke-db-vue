@@ -79,7 +79,7 @@ watch(() => market.load.load, () => {
 }
 
 .poli-bg {
-  background-image: url(./assets/index_bg.jpg);
+  // background-image: url(./assets/index_bg.jpg);
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -106,5 +106,9 @@ body {
 
 .n-icon {
   color: white
+}
+
+.n-color-picker-trigger__value {
+  user-select: none !important;
 }
 </style>

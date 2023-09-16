@@ -10,6 +10,8 @@ export const useLive2dStore = defineStore('live2d', () => {
     const current_id = ref('c010') as Ref<string>
     const current_spine_version = ref(4.0) as Ref<number>
     const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
+    const resetPlacement = ref(0)
+    const screenshot = ref(0)
 
     const filter = () => {
         const base_array: live2d_interface[] = l2d
@@ -34,5 +36,23 @@ export const useLive2dStore = defineStore('live2d', () => {
         }
     }
 
-    return { filtered_l2d_Array, current_id, filter, change_current_spine, current_spine_version, current_pose }
+    const triggerResetPlacement = () => {
+        resetPlacement.value = new Date().getTime()
+    }
+
+    const triggerScreenshot = () => {
+        screenshot.value = new Date().getTime()
+    }
+
+    return { 
+        filtered_l2d_Array, 
+        current_id, filter, 
+        change_current_spine, 
+        current_spine_version, 
+        current_pose, 
+        resetPlacement, 
+        triggerResetPlacement,
+        screenshot,
+        triggerScreenshot
+    }
 })

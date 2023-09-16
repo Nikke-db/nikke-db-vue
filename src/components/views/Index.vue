@@ -19,6 +19,7 @@
 <script lang="ts" setup>
 import { onMounted, onBeforeMount, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
+import bgi from '@/assets/index_bg.jpg'
 
 const market = useMarket()
 
@@ -31,10 +32,12 @@ onMounted(() => {
     setTimeout(()=>{
         market.load.endLoad()
     }, 100)
+    document.body.style.backgroundImage = "url(" + bgi + ")"
 })
 
 onUnmounted(() => {
     document.body.classList.remove("poli-bg")
+    document.body.style.backgroundImage = 'none'
 })
 
 const checkMobile = () => {
@@ -54,10 +57,6 @@ const checkMobile = () => {
     background-color: @main-dark-theme-transparent;
     width: 50%;
     margin:0 auto;
-
-    .n-text {
-        font-size: larger;
-    }
 }
 
 .card-spacer {

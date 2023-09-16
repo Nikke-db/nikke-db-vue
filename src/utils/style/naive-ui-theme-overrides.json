@@ -14,5 +14,20 @@
   "Scrollbar": {
     "color": "rgba(99, 226, 183, 0.2)",
     "colorHover": "rgba(99, 226, 183, 0.3)"
+  },
+  "Message": {
+    "colorSuccess": "rgba(37, 96, 76, 1)",
+    "color": "rgb(72, 72, 78)",
+    "colorInfo": "rgba(54, 54, 108, 1)",
+    "textColor": "rgba(255, 255, 255, 1)",
+    "textColorSuccess": "rgba(255, 255, 255, 1)",
+    "iconColorSuccess": "#63e2b7",
+    "iconColorLoading": "#FFFFFFFF",
+    "colorError": "rgba(109, 36, 36, 1)",
+    "textColorInfo": "rgba(255, 255, 255, 1)",
+    "textColorError": "rgba(255, 255, 255, 1)",
+    "textColorWarning": "rgba(255, 255, 255, 1)",
+    "textColorLoading": "rgba(255, 255, 255, 1)",
+    "colorWarning": "rgba(125, 112, 40, 1)"
   }
 }

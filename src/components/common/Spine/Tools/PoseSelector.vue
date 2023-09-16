@@ -34,4 +34,8 @@ const poses = [
 
 <style scoped lang="less">
 
+div {
+    border-bottom: none !important;
+}
+
 </style>

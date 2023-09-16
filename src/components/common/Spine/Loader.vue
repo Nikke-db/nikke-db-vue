@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, watch } from 'vue'
+import { onMounted, watch, h } from 'vue'
 import { useMarket } from '@/stores/market'
 
 // @ts-ignore
@@ -116,9 +116,9 @@ watch(() => market.globalParams.isMobile, (e) => {
         market.globalParams.hideMobileHeader()
     } else {
         canvas.style.position = "absolute"
-        canvas.style.height = "500vh"
+        canvas.style.height = "475vh"
         canvas.style.width = ''
-        canvas.style.marginTop = "-195vh"
+        canvas.style.marginTop = "-183vh"
         canvas.style.transform = "scale(0.2)"
         canvas.style.left = "0px"
         canvas.style.top = "0px"
@@ -135,6 +135,39 @@ watch(() => market.live2d.current_id, (e) => {
 watch (() => market.live2d.current_pose, (e) => {
     loadSpineAfterWatcher(e)
 })
+
+watch (() => market.live2d.resetPlacement, (e) => {
+    applyDefaultStyle2Canvas()
+})
+
+watch (() => market.live2d.screenshot, (e) => {
+
+    
+    if (!checkMobile()) {
+        const sc_sz = localStorage.getItem('sc_sz')
+        const old_sc_sz = canvas.style.height 
+        canvas.style.height = sc_sz + 'px'
+
+        setTimeout(() => {
+            takeScreenshot()
+            canvas.style.height = old_sc_sz
+        }
+        , 250)
+    } else {
+        takeScreenshot()
+    }
+
+})
+
+const takeScreenshot = () => {
+    const dataURL = canvas.toDataURL()
+
+    const link = document.createElement('a')
+    link.download = "NIKKE-DB_"+market.live2d.current_id+'_'+market.live2d.current_pose+'_'+new Date().getTime().toString().slice(-3)+'.png'
+    link.href = dataURL
+    
+    link.click()
+}
 
 
 const loadSpineAfterWatcher = (e: any) => {
@@ -157,8 +190,8 @@ const applyDefaultStyle2Canvas = () => {
             transformScale = 1
             market.globalParams.hideMobileHeader()
         } else {
-            canvas.style.height = "500vh"
-            canvas.style.marginTop = "-195vh"
+            canvas.style.height = "475vh"
+            canvas.style.marginTop = "-183vh"
             canvas.style.transform = "scale(0.17)"
             canvas.style.position = "absolute"
             canvas.style.left = "0px"
@@ -167,7 +200,7 @@ const applyDefaultStyle2Canvas = () => {
             market.globalParams.showMobileHeader()
             centerForPC()
         }
-    }, 200)
+    }, 50)
 }
 
 const checkMobile = () => {
@@ -247,10 +280,12 @@ document.addEventListener("wheel", (e) => {
     if (filterDomEvents(e)) {
         switch (e.deltaY > 0) {
             case true:
-                    transformScale -= 0.02
+                transformScale -= 0.02
+                transformScale < 0.01 && transformScale > - 0.01 ? transformScale = - 0.02 : ''
                 break;
             case false: 
-                    transformScale += 0.02
+                transformScale += 0.02
+                transformScale < 0.01 && transformScale > - 0.01 ? transformScale = 0.02 : ''
                 break;
         }
         
