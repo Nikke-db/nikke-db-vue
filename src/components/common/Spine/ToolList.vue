@@ -5,7 +5,25 @@
         </n-card>
         <n-scrollbar style="height:calc(85vh - 120px)" >
             <n-card :bordered='false' size="small" class="toolCardContent">
-                <PoseSelector />
+                <div>
+                    <PoseSelector />
+                </div>
+                <div>
+                    <ResetCoordinates />
+                </div>
+                <div>
+                    <HideUI />
+                </div>
+                <div>
+                    <BackgroundColor />
+                </div>
+                <div>
+                    <BackgroundImage />
+                </div>
+                <div>
+                    <Screenshot />
+                    <ChangeScreenshotSize />
+                </div>
             </n-card>
         </n-scrollbar>
     </div>
@@ -13,6 +31,12 @@
 
 <script setup lang="ts">
 import PoseSelector from './Tools/PoseSelector.vue'
+import ResetCoordinates from './Tools/ResetCoordinates.vue'
+import HideUI from './Tools/HideUI.vue'
+import BackgroundColor from './Tools/BackgroundColor.vue'
+import BackgroundImage from './Tools/BackgroundImage.vue'
+import Screenshot from './Tools/Screenshot.vue'
+import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 
 </script>
 
@@ -44,7 +68,7 @@ import PoseSelector from './Tools/PoseSelector.vue'
         height:100%;
         border-right: 1px solid @naive-green;
 
-        * {
+        div {
             border-bottom: 1px solid @grey-color;
             padding-bottom: 10px;
 

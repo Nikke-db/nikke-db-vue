@@ -10,7 +10,17 @@ enum globalParams {
 
 enum messagesEnum {
     MESSAGE_ERROR = "Something went wrong, if it is unexpected contact me on discord or GitHub",
-    MESSAGE_ASSET_LOADED = "Assets loaded"
+    MESSAGE_ASSET_LOADED = "Assets loaded",
+    MESSAGE_LOCALSTORAGE_SAVED = "Data saved to the local storage",
+    MESSAGE_CANCELLED = "Action Cancelled",
+    MESSAGE_CANNOT_SAVE_EMPTY = "Cannot save an empty value"
 }
 
-export {globalParams, messagesEnum}
+enum theme {
+    BACKGROUND_COLOR = '#2f353a',
+    BACKGROUND_COLOR_2 = '#212529',
+    NAIVE_GREEN = '#63e2b7',
+    GREY = 'rgb(180, 175, 175)'
+}
+
+export {globalParams, messagesEnum, theme}
