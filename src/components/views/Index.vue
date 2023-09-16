@@ -6,6 +6,7 @@
             <n-p>
                 Nikke Community decided to shut down the server I used for feedback and update log, so I guess the only way to reach me out is through private discord messages (Koshirei#0333 / koshirei).
             </n-p>
+            <RouterLink to="/credits"><n-a>credits</n-a></RouterLink>
         </n-card>
 
         <n-card title="Update log:" class="card-spacer" :class="checkMobile()">
