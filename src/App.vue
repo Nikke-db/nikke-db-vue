@@ -96,8 +96,8 @@ body {
 }
 
 .scrollBarMargin {
-  margin-top: 120px;
-  max-height: calc(100vh - 120px);
+  margin-top: 100px;
+  max-height: calc(100vh - 100px);
 }
 
 .noScrollBarMargin {

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Index from "@/components/views/Index.vue"
 import Characters from '@/components/views/Characters.vue'
 import L2D from '@/components/views/L2D.vue'
+import Credits from '@/components/views/Credits.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,11 @@ const router = createRouter({
       path: '/v',
       name: 'Live2D',
       component: L2D
+    },
+    {
+      path: '/credits',
+      name: 'credits',
+      component: Credits
     },
     {
       path: '/:pathMatch(.*)*',
