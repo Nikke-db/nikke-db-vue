@@ -16,6 +16,8 @@
         <n-h3>(both repos)</n-h3>
         <CreditTable :data="forks"/>
     </n-card>
+
+    <n-back-top :visibility-height="0" style="display:none"/>
 </template>
 
 <script setup lang="ts">
@@ -23,7 +25,14 @@ import maids from "@/assets/maids.png"
 import { type help } from '@/utils/interfaces/contributor'
 import CreditTable from '@/components/common/Credits/Table.vue'
 import { useMarket } from '@/stores/market'
+import { onMounted } from 'vue'
 
+onMounted(() => {
+    setTimeout(()=>{
+        market.load.endLoad();
+        (document.querySelector('.n-back-top') as HTMLElement).click()
+    }, 10)
+})
 const market = useMarket()
 
 const external : help[] = [
