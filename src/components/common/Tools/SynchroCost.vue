@@ -39,11 +39,11 @@
           
           <n-list-item v-for="item in displayArray">
 
-            <n-grid :cols="2">
+            <n-grid :cols="checkMobile() ? 3 : 2">
               <n-gi class="right">
                 <n-image :src="item.img" width="96"/>
               </n-gi>
-              <n-gi class="left">
+              <n-gi class="left" :span="checkMobile() ? 2 : 1">
                 <n-statistic :label="item.label" :tabular-nums="true">
                   <n-number-animation
                     :ref="item.ref"
@@ -201,6 +201,10 @@ const updateOldValues = () => {
   oldCredit.value = credit.value
   oldBd.value = bd.value
   oldCore.value = core.value
+}
+
+const checkMobile = () => {
+  return market.globalParams.isMobile ? true : false
 }
 </script>
 

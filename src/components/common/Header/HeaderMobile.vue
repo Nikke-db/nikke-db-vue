@@ -14,7 +14,12 @@
                 </template>
 
                 <template #footer>
-                    <n-a :href="globalParams.GITHUB" target="_blank">Visit the source code on GitHub</n-a>
+                    <div>
+                        <n-a :href="globalParams.GITHUB" target="_blank">Visit the source code on GitHub</n-a>
+                        <br/>
+                        <n-p>Nikke-DB By Koshirei</n-p>
+                        <RouterLink to="/credits"><n-a @click="closeDrawer()">Credits</n-a></RouterLink>
+                    </div>
                 </template>
 
                 <RouterLink v-for="route in props.routes"
@@ -39,8 +44,6 @@ import type { route2DisplayInterface } from '@/components/common/Header/routes2D
 
 import { MenuOpenRound } from "@vicons/material"
 import { globalParams } from '@/utils/enum/globalParams'
-
-import { useMarket } from '@/stores/market'
 
 const showDrawer = ref(false)
 

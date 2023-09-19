@@ -3,7 +3,8 @@
   <!-- if increase/decrease margin top of scroll bar, need to update the calc of max height -->
   <n-scrollbar :class="shouldHaveMargin()"> 
     <RouterView />
-    <Footer v-if='!isL2d()'/>
+    <Footer v-if='!isL2d() && !market.globalParams.isMobile'/>
+    <div v-if="market.globalParams.isMobile" class="fakeFooter"></div>
   </n-scrollbar>
 </template>
 
@@ -57,7 +58,6 @@ watch(() => market.load.load, () => {
 
 *{
   font-family: Arial, Helvetica, sans-serif;
-  // color:white;
 }
 .main-bg {
   background-color: @main-dark-theme;
@@ -116,5 +116,9 @@ body {
 
 .n-color-picker-trigger__value {
   user-select: none !important;
+}
+
+.fakeFooter {
+  height: 150px
 }
 </style>
