@@ -3,10 +3,9 @@
         <span>
             <RouterLink to="/"><img :src="logo" class="logo"></RouterLink>
         </span>
-        <!-- <div class="iconDiv"> -->
-            <!-- <MenuOpenRound class="icon" @click="openDrawer()"/> -->
-        <!-- </div> -->
+
         <n-icon :component="MenuOpenRound" @click="openDrawer()" class="iconDiv" :size="80"/>
+
         <n-drawer v-model:show="showDrawer" placement="left" :trap-focus="false" :auto-focus="false">
             <n-drawer-content>
 
@@ -26,8 +25,6 @@
                         {{ route.text }}<br/>
                 </RouterLink>
 
-                
-
             </n-drawer-content>
         </n-drawer>
     </div>
@@ -45,8 +42,6 @@ import { globalParams } from '@/utils/enum/globalParams'
 
 import { useMarket } from '@/stores/market'
 
-const market = useMarket()
-
 const showDrawer = ref(false)
 
 const props = defineProps<{
@@ -60,7 +55,6 @@ const openDrawer = () => {
 const closeDrawer = () => {
     showDrawer.value = false
 }
-
 </script>
 
 <style lang="less" scoped>

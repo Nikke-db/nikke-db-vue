@@ -1,0 +1,3605 @@
+{
+  "version": "0.0.1",
+  "records": [
+    {
+      "level": 1,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 2,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 3,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 4,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 5,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 6,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 7,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 8,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 9,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 10,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 20
+    },
+    {
+      "level": 11,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 12,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 13,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 14,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 15,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 16,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 17,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 18,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 19,
+      "gold": 600,
+      "character_exp": 2280,
+      "character_exp_2": 0
+    },
+    {
+      "level": 20,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 40
+    },
+    {
+      "level": 21,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 22,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 23,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 24,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 25,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 26,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 27,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 28,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 29,
+      "gold": 600,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 30,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 31,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 32,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 33,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 34,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 35,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 36,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 37,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 38,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 39,
+      "gold": 840,
+      "character_exp": 5700,
+      "character_exp_2": 0
+    },
+    {
+      "level": 40,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 80
+    },
+    {
+      "level": 41,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 42,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 43,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 44,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 45,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 46,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 47,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 48,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 49,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 50,
+      "gold": 4860,
+      "character_exp": 22650,
+      "character_exp_2": 0
+    },
+    {
+      "level": 51,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 52,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 53,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 54,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 55,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 56,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 57,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 58,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 59,
+      "gold": 6540,
+      "character_exp": 37250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 60,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 400
+    },
+    {
+      "level": 61,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 62,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 63,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 64,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 65,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 66,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 67,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 68,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 69,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 70,
+      "gold": 10350,
+      "character_exp": 71850,
+      "character_exp_2": 0
+    },
+    {
+      "level": 71,
+      "gold": 14600,
+      "character_exp": 109450,
+      "character_exp_2": 0
+    },
+    {
+      "level": 72,
+      "gold": 14600,
+      "character_exp": 109450,
+      "character_exp_2": 0
+    },
+    {
+      "level": 73,
+      "gold": 14600,
+      "character_exp": 109450,
+      "character_exp_2": 0
+    },
+    {
+      "level": 74,
+      "gold": 14600,
+      "character_exp": 109450,
+      "character_exp_2": 0
+    },
+    {
+      "level": 75,
+      "gold": 14600,
+      "character_exp": 109450,
+      "character_exp_2": 0
+    },
+    {
+      "level": 76,
+      "gold": 16300,
+      "character_exp": 126250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 77,
+      "gold": 16300,
+      "character_exp": 126250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 78,
+      "gold": 16300,
+      "character_exp": 126250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 79,
+      "gold": 16300,
+      "character_exp": 126250,
+      "character_exp_2": 0
+    },
+    {
+      "level": 80,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 1000
+    },
+    {
+      "level": 81,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 82,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 83,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 84,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 85,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 86,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 87,
+      "gold": 30960,
+      "character_exp": 196380,
+      "character_exp_2": 0
+    },
+    {
+      "level": 88,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 89,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 90,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 91,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 92,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 93,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 94,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 95,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 96,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 97,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 98,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 99,
+      "gold": 41580,
+      "character_exp": 357660,
+      "character_exp_2": 0
+    },
+    {
+      "level": 100,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 2000
+    },
+    {
+      "level": 101,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 102,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 103,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 104,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 105,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 106,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 107,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 108,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 109,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 110,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 111,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 112,
+      "gold": 63770,
+      "character_exp": 564200,
+      "character_exp_2": 0
+    },
+    {
+      "level": 113,
+      "gold": 78190,
+      "character_exp": 738570,
+      "character_exp_2": 0
+    },
+    {
+      "level": 114,
+      "gold": 78190,
+      "character_exp": 738570,
+      "character_exp_2": 0
+    },
+    {
+      "level": 115,
+      "gold": 83230,
+      "character_exp": 813260,
+      "character_exp_2": 0
+    },
+    {
+      "level": 116,
+      "gold": 83230,
+      "character_exp": 813260,
+      "character_exp_2": 0
+    },
+    {
+      "level": 117,
+      "gold": 83230,
+      "character_exp": 813260,
+      "character_exp_2": 0
+    },
+    {
+      "level": 118,
+      "gold": 83230,
+      "character_exp": 813260,
+      "character_exp_2": 0
+    },
+    {
+      "level": 119,
+      "gold": 83230,
+      "character_exp": 813260,
+      "character_exp_2": 0
+    },
+    {
+      "level": 120,
+      "gold": 123040,
+      "character_exp": 1153120,
+      "character_exp_2": 4500
+    },
+    {
+      "level": 121,
+      "gold": 123040,
+      "character_exp": 1153120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 122,
+      "gold": 123040,
+      "character_exp": 1153120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 123,
+      "gold": 169840,
+      "character_exp": 1699120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 124,
+      "gold": 169840,
+      "character_exp": 1699120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 125,
+      "gold": 169840,
+      "character_exp": 1699120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 126,
+      "gold": 169840,
+      "character_exp": 1699120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 127,
+      "gold": 169840,
+      "character_exp": 1699120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 128,
+      "gold": 169840,
+      "character_exp": 1699120,
+      "character_exp_2": 0
+    },
+    {
+      "level": 129,
+      "gold": 183840,
+      "character_exp": 1789040,
+      "character_exp_2": 0
+    },
+    {
+      "level": 130,
+      "gold": 183840,
+      "character_exp": 1789040,
+      "character_exp_2": 0
+    },
+    {
+      "level": 131,
+      "gold": 185440,
+      "character_exp": 1926400,
+      "character_exp_2": 0
+    },
+    {
+      "level": 132,
+      "gold": 185440,
+      "character_exp": 1926400,
+      "character_exp_2": 0
+    },
+    {
+      "level": 133,
+      "gold": 185440,
+      "character_exp": 1926400,
+      "character_exp_2": 0
+    },
+    {
+      "level": 134,
+      "gold": 185440,
+      "character_exp": 1926400,
+      "character_exp_2": 0
+    },
+    {
+      "level": 135,
+      "gold": 185440,
+      "character_exp": 1926400,
+      "character_exp_2": 0
+    },
+    {
+      "level": 136,
+      "gold": 185440,
+      "character_exp": 1926400,
+      "character_exp_2": 0
+    },
+    {
+      "level": 137,
+      "gold": 200800,
+      "character_exp": 2087360,
+      "character_exp_2": 0
+    },
+    {
+      "level": 138,
+      "gold": 200800,
+      "character_exp": 2087360,
+      "character_exp_2": 0
+    },
+    {
+      "level": 139,
+      "gold": 200800,
+      "character_exp": 2087360,
+      "character_exp_2": 0
+    },
+    {
+      "level": 140,
+      "gold": 235980,
+      "character_exp": 2521980,
+      "character_exp_2": 7000
+    },
+    {
+      "level": 141,
+      "gold": 235980,
+      "character_exp": 2521980,
+      "character_exp_2": 0
+    },
+    {
+      "level": 142,
+      "gold": 235980,
+      "character_exp": 2521980,
+      "character_exp_2": 0
+    },
+    {
+      "level": 143,
+      "gold": 235980,
+      "character_exp": 2521980,
+      "character_exp_2": 0
+    },
+    {
+      "level": 144,
+      "gold": 235980,
+      "character_exp": 2521980,
+      "character_exp_2": 0
+    },
+    {
+      "level": 145,
+      "gold": 235980,
+      "character_exp": 2521980,
+      "character_exp_2": 0
+    },
+    {
+      "level": 146,
+      "gold": 256770,
+      "character_exp": 2774070,
+      "character_exp_2": 0
+    },
+    {
+      "level": 147,
+      "gold": 256770,
+      "character_exp": 2774070,
+      "character_exp_2": 0
+    },
+    {
+      "level": 148,
+      "gold": 256770,
+      "character_exp": 2774070,
+      "character_exp_2": 0
+    },
+    {
+      "level": 149,
+      "gold": 256770,
+      "character_exp": 2774070,
+      "character_exp_2": 0
+    },
+    {
+      "level": 150,
+      "gold": 256770,
+      "character_exp": 2774070,
+      "character_exp_2": 0
+    },
+    {
+      "level": 151,
+      "gold": 256770,
+      "character_exp": 2774070,
+      "character_exp_2": 0
+    },
+    {
+      "level": 152,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 153,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 154,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 155,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 156,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 157,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 158,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 159,
+      "gold": 268920,
+      "character_exp": 2944890,
+      "character_exp_2": 0
+    },
+    {
+      "level": 160,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 7000
+    },
+    {
+      "level": 161,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 162,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 163,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 164,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 165,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 166,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 167,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 168,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 169,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 170,
+      "gold": 346500,
+      "character_exp": 3910800,
+      "character_exp_2": 0
+    },
+    {
+      "level": 171,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 172,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 173,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 174,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 175,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 176,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 177,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 178,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 179,
+      "gold": 368500,
+      "character_exp": 4393300,
+      "character_exp_2": 0
+    },
+    {
+      "level": 180,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 8000
+    },
+    {
+      "level": 181,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 182,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 183,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 184,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 185,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 186,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 187,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 188,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 189,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 190,
+      "gold": 419300,
+      "character_exp": 4988500,
+      "character_exp_2": 0
+    },
+    {
+      "level": 191,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 192,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 193,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 194,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 195,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 196,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 197,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 198,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 199,
+      "gold": 480500,
+      "character_exp": 5983100,
+      "character_exp_2": 0
+    },
+    {
+      "level": 200,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 201,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 202,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 203,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 204,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 205,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 206,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 207,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 208,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 209,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 210,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 211,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 212,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 213,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 214,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 215,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 216,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 217,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 218,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 219,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 220,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 221,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 222,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 223,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 224,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 225,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 226,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 227,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 228,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 229,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 230,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 231,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 232,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 233,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 234,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 235,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 236,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 237,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 238,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 239,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 240,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 241,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 242,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 243,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 244,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 245,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 246,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 247,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 248,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 249,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 250,
+      "gold": 1694200,
+      "character_exp": 20944600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 251,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 252,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 253,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 254,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 255,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 256,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 257,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 258,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 259,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 260,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 261,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 262,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 263,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 264,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 265,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 266,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 267,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 268,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 269,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 270,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 271,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 272,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 273,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 274,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 275,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 276,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 277,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 278,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 279,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 280,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 281,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 282,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 283,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 284,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 285,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 286,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 287,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 288,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 289,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 290,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 291,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 292,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 293,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 294,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 295,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 296,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 297,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 298,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 299,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 300,
+      "gold": 3134000,
+      "character_exp": 39883600,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 301,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 302,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 303,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 304,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 305,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 306,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 307,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 308,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 309,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 310,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 311,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 312,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 313,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 314,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 315,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 316,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 317,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 318,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 319,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 320,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 321,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 322,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 323,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 324,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 325,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 326,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 327,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 328,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 329,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 330,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 331,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 332,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 333,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 334,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 335,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 336,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 337,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 338,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 339,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 340,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 341,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 342,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 343,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 344,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 345,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 346,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 347,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 348,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 349,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 350,
+      "gold": 3809800,
+      "character_exp": 50478800,
+      "character_exp_2": 10000
+    },
+    {
+      "level": 351,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 352,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 353,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 354,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 355,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 356,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 357,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 358,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 359,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 360,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 361,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 362,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 363,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 364,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 365,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 366,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 367,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 368,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 369,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 370,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 371,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 372,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 373,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 374,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 375,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 376,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 377,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 378,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 379,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 380,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 381,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 382,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 383,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 384,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 385,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 386,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 387,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 388,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 389,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 390,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 391,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 392,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 393,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 394,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 395,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 396,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 397,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 398,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 399,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 400,
+      "gold": 4762250,
+      "character_exp": 56536256,
+      "character_exp_2": 11000
+    },
+    {
+      "level": 401,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 402,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 403,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 404,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 405,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 406,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 407,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 408,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 409,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 410,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 411,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 412,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 413,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 414,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 415,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 416,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 417,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 418,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 419,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 420,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 421,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 422,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 423,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 424,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 425,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 426,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 427,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 428,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 429,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 430,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 431,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 432,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 433,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 434,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 435,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 436,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 437,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 438,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 439,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 440,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 441,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 442,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 443,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 444,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 445,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 446,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 447,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 448,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 449,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 450,
+      "gold": 5952813,
+      "character_exp": 61624519,
+      "character_exp_2": 12000
+    },
+    {
+      "level": 451,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 452,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 453,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 454,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 455,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 456,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 457,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 458,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 459,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 460,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 461,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 462,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 463,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 464,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 465,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 466,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 467,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 468,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 469,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 470,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 471,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 472,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 473,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 474,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 475,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 476,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 477,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 478,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 479,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 480,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 481,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 482,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 483,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 484,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 485,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 486,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 487,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 488,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 489,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 490,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 491,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 492,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 493,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 494,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 495,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 496,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 497,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 498,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 499,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 500,
+      "gold": 7441016,
+      "character_exp": 67170726,
+      "character_exp_2": 13000
+    },
+    {
+      "level": 501,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 502,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 503,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 504,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 505,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 506,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 507,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 508,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 509,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 510,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 511,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 512,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 513,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 514,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 515,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 516,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 517,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 518,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 519,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 520,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 521,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 522,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 523,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 524,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 525,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 526,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 527,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 528,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 529,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 530,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 531,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 532,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 533,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 534,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 535,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 536,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 537,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 538,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 539,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 540,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 541,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 542,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 543,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 544,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 545,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 546,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 547,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 548,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 549,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 550,
+      "gold": 8185117,
+      "character_exp": 72544384,
+      "character_exp_2": 14000
+    },
+    {
+      "level": 551,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 552,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 553,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 554,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 555,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 556,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 557,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 558,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 559,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 560,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 561,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 562,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 563,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 564,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 565,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 566,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 567,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 568,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 569,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 570,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 571,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 572,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 573,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 574,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 575,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 576,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 577,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 578,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 579,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 580,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 581,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 582,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 583,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 584,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 585,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 586,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 587,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 588,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 589,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 590,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 591,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 592,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 593,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 594,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 595,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 596,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 597,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 598,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 599,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    },
+    {
+      "level": 600,
+      "gold": 9003629,
+      "character_exp": 78347935,
+      "character_exp_2": 15000
+    }
+  ]
+}

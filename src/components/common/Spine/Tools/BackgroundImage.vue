@@ -57,7 +57,6 @@
                         </n-tabs>
                     </div>
                 </n-card>
-
         </n-modal>
     </span>
 </template>

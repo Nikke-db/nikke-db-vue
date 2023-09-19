@@ -29,5 +29,9 @@
     "textColorWarning": "rgba(255, 255, 255, 1)",
     "textColorLoading": "rgba(255, 255, 255, 1)",
     "colorWarning": "rgba(125, 112, 40, 1)"
+  },
+  "Form": {
+    "labelFontSizeTopLarge": "18px",
+    "feedbackPadding": "4px 0 8px 2px"
   }
 }

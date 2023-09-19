@@ -51,7 +51,6 @@ const changeSpine = (character: live2d_interface) => {
     market.live2d.change_current_spine(character)
 }
 
-
 </script>
 
 <style scoped lang="less">

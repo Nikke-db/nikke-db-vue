@@ -35,7 +35,9 @@
                     </div>
                     <div>
                         <div class="poseSelector">
-                            <PoseSelector />
+                            <span>
+                                <PoseSelector />
+                            </span>
                         </div>
                     </div>
                 </n-tab-pane> 
@@ -116,9 +118,11 @@ watch(showHeaderBool, () => {
     }
 
     .poseSelector {
-        text-align: left;
-        width:100px;
-        margin: 0 auto
+        text-align: center;
+
+        span {
+            text-align: left;
+        }
     }
 
     &.options > * {

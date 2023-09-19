@@ -1,26 +1,26 @@
 <template>
     <n-card class="center first" :class="checkMobile()">
-        <n-p>I'd like to dedicate this page to anyone who contributed one way or another to the website during it's entire lifespan. I am mainly alone in this project but any help I receive brings me great joy.</n-p><br/>
+        <n-p :class="checkMobile()">I'd like to dedicate this page to anyone who contributed one way or another to the website during it's entire lifespan. I am mainly alone in this project but any help I receive brings me great joy.</n-p><br/>
         <div class="imgDiv">
             <img :src="maids"/>
         </div>
     </n-card>
 
-    <n-card class="center" :class="checkMobile()">
-        <n-h1>External Help</n-h1>
-        <CreditTable :data="external"/>
-    </n-card>
+    <CreditTemplate 
+        title="External Help"
+        :data="external"
+    />
 
-    <n-card class="center" :class="checkMobile()">
-        <n-h1>GitHub Forks</n-h1>
-        <n-h3>(both repos)</n-h3>
-        <CreditTable :data="forks"/>
-    </n-card>
+    <CreditTemplate 
+        title="GitHub Forks"
+        subTitle="(both repos)"
+        :data="forks"
+    />
 
-    <n-card class="center" :class="checkMobile()">
-        <n-h1>Other</n-h1>
-        <CreditTable :data="others"/>
-    </n-card>
+    <CreditTemplate 
+        title="Other"
+        :data="others"
+    />
 
     <n-back-top :visibility-height="0" style="display:none"/>
 </template>
@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import maids from "@/assets/maids.png"
 import { type help } from '@/utils/interfaces/contributor'
-import CreditTable from '@/components/common/Credits/Table.vue'
+import CreditTemplate from '@/components/common/Credits/Template.vue'
 import { useMarket } from '@/stores/market'
 import { onMounted, onBeforeMount } from 'vue'
 
@@ -44,7 +44,7 @@ onMounted(() => {
 })
 const market = useMarket()
 
-const external : help[] = [
+const external: help[] = [
     {
         name: "Bingle",
         contribution: "NKAB v3 Decryptor to access encrypted files after the Septembre 1st patch.",
@@ -149,7 +149,7 @@ const checkMobile = () => {
 .n-card {
     width: 80%;
     margin:0 auto;
-    margin-top: 25px;
+    margin-top: 50px;
 
     &.center {
         text-align: center;
@@ -181,5 +181,9 @@ const checkMobile = () => {
 .mobile {
     width: 95%;
     text-align: left;
+}
+
+.n-p.mobile {
+    text-align: justify;
 }
 </style>

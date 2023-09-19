@@ -5,15 +5,15 @@ export interface route2DisplayInterface {
 
 export const ROUTES: route2DisplayInterface[] = [
     {
-        path: "c",
+        path: "characters",
         text: "Characters"
     },
     {
-        path: "t",
+        path: "tools",
         text: "Tools"
     },
     {
-        path: "v",
+        path: "visualiser",
         text: "Live2D Visualiser"
     }
 ]
