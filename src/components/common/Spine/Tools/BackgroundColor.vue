@@ -33,13 +33,12 @@
                     size="large"
                 />
                 </n-card>
-
         </n-modal>
     </span>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { messagesEnum, theme } from '@/utils/enum/globalParams'
 import { useMarket } from '@/stores/market'
 
@@ -107,11 +106,9 @@ const confirmBgcModal = () => {
 const saveToStorage = () => {
     localStorage.setItem('l2d_bgc', backgroundColor.value)
 }
-
 </script>
 
 <style scoped lang="less">
-
 .n-button {
     width: 100%;
     height: 40px;

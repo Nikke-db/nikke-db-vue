@@ -39,7 +39,6 @@ const props = defineProps<{
 const sendToGithub = () => {
     window.open(globalParams.GITHUB, '_blank')
 }
-
 </script>
 
 <style lang="less" scoped>

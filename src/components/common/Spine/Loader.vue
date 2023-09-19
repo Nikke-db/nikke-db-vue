@@ -141,8 +141,6 @@ watch (() => market.live2d.resetPlacement, (e) => {
 })
 
 watch (() => market.live2d.screenshot, (e) => {
-
-    
     if (!checkMobile()) {
         const sc_sz = localStorage.getItem('sc_sz')
         const old_sc_sz = canvas.style.height 
@@ -156,7 +154,6 @@ watch (() => market.live2d.screenshot, (e) => {
     } else {
         takeScreenshot()
     }
-
 })
 
 const takeScreenshot = () => {
@@ -168,7 +165,6 @@ const takeScreenshot = () => {
     
     link.click()
 }
-
 
 const loadSpineAfterWatcher = (e: any) => {
     spineCanvas.dispose()

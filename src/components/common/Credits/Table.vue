@@ -1,16 +1,16 @@
 <template>
     <n-table>
         <thead>
-        <tr>
-            <th>Name</th>
-            <th>Contribution</th>
-        </tr>
+            <tr>
+                <th>Name</th>
+                <th>Contribution</th>
+            </tr>
         </thead>
         <tbody>
-        <tr v-for="data in props.data">
-            <td :class="data.tier" v-html="data.name"></td>
-            <td :class="data.tier" v-html="data.contribution"></td>
-        </tr>
+            <tr v-for="data in props.data">
+                <td :class="data.tier" v-html="data.name"></td>
+                <td :class="data.tier" v-html="data.contribution"></td>
+            </tr>
         </tbody>
     </n-table>
 </template>
@@ -24,8 +24,6 @@ const props = defineProps({
         required: true
     }
 })
-
-
 
 </script>
 

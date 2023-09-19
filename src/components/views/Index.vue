@@ -49,7 +49,7 @@ const checkMobile = () => {
 </script>
 
 <style lang="less" scoped>
-@import '../../utils/style/global_variables.less';
+@import '@/utils/style/global_variables.less';
 
 .body {
     padding-top: 45vh;
