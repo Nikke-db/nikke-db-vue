@@ -1,21 +1,22 @@
 <template>
-    <n-card :class='checkMobile()'>
-      <!-- <n-icon :component="ChevronRight" size="40"/> -->
-        <n-h1 @click="showOrHide" prefix="bar" :type="show ? 'success' : 'info'">{{ props.title }}</n-h1>
+  <n-card :class="checkMobile()">
+    <!-- <n-icon :component="ChevronRight" size="40"/> -->
+    <n-h1 @click="showOrHide" prefix="bar" :type="show ? 'success' : 'info'">{{
+      props.title
+    }}</n-h1>
 
-        <n-collapse-transition :show="show">
-          <div class="slot">
-            <slot name="form" />
-          </div>
-        </n-collapse-transition>
+    <n-collapse-transition :show="show">
+      <div class="slot">
+        <slot name="form" />
+      </div>
+    </n-collapse-transition>
 
-        <n-collapse-transition :show="props.resultShow && show">
-          <div class="slot">
-            <slot name="result" />
-          </div>
-        </n-collapse-transition>
-
-    </n-card>
+    <n-collapse-transition :show="props.resultShow && show">
+      <div class="slot">
+        <slot name="result" />
+      </div>
+    </n-collapse-transition>
+  </n-card>
 </template>
 
 <script setup lang="ts">
@@ -26,14 +27,14 @@ const show = ref(false)
 const market = useMarket()
 
 const props = defineProps({
-    title: {
-        type: String,
-        required: true
-    },
-    resultShow: {
-      type: Boolean,
-      required: true
-    }
+  title: {
+    type: String,
+    required: true
+  },
+  resultShow: {
+    type: Boolean,
+    required: true
+  }
 })
 
 const showOrHide = () => {
@@ -50,7 +51,7 @@ const checkMobile = () => {
 
 .n-card {
   width: 80%;
-  margin:0 auto;
+  margin: 0 auto;
 
   .n-h1 {
     user-select: none;
@@ -61,16 +62,14 @@ const checkMobile = () => {
 }
 
 .n-collapse-transition {
-    border-top: 1px @grey-color solid;
-    .slot {
-      padding-bottom: 15px;
-      padding-top: 15px;
-    }
+  border-top: 1px @grey-color solid;
+  .slot {
+    padding-bottom: 15px;
+    padding-top: 15px;
+  }
 }
 
 .mobile {
-  width: 95%
+  width: 95%;
 }
-
-
 </style>

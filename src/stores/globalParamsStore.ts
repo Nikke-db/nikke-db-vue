@@ -21,5 +21,12 @@ export const useGlobalParamsStore = defineStore('globalParams', () => {
     isMobileHeaderVisibile.value = true
   }
 
-  return { isMobile, setMobile, setComputer, isMobileHeaderVisibile, hideMobileHeader, showMobileHeader }
+  return {
+    isMobile,
+    setMobile,
+    setComputer,
+    isMobileHeaderVisibile,
+    hideMobileHeader,
+    showMobileHeader
+  }
 })

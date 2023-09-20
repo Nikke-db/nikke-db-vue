@@ -1,16 +1,13 @@
 <template>
-    <div>
-        <CharacterList/>
-        <ToolList />
-    </div>
+  <div>
+    <CharacterList />
+    <ToolList />
+  </div>
 </template>
 
 <script setup lang="ts">
-import CharacterList from "./CharacterList.vue"
-import ToolList from "./ToolList.vue"
-
+import CharacterList from './CharacterList.vue'
+import ToolList from './ToolList.vue'
 </script>
 
-<style scoped lang="less">
-
-</style>
+<style scoped lang="less"></style>

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Index from "@/components/views/Index.vue"
+import Index from '@/components/views/Index.vue'
 import Characters from '@/components/views/Characters.vue'
 import L2D from '@/components/views/L2D.vue'
 import Credits from '@/components/views/Credits.vue'
@@ -16,7 +16,7 @@ const router = createRouter({
     {
       path: '/c',
       redirect: {
-        path : '/characters'
+        path: '/characters'
       }
     },
     {
@@ -49,8 +49,8 @@ const router = createRouter({
     {
       path: '/t',
       redirect: {
-          path: '/tools'
-      },
+        path: '/tools'
+      }
     },
     {
       path: '/tools',
@@ -61,16 +61,19 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'any',
       component: Index
-    },
+    }
     // {
-      // path: '/about',
-      // name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      // component: () => import('../views/AboutView.vue')
+    // path: '/about',
+    // name: 'about',
+    // route level code-splitting
+    // this generates a separate chunk (About.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    // component: () => import('../views/AboutView.vue')
     // }
-  ]
+  ],
+  scrollBehavior() {
+    return { top: 0 }
+  }
 })
 
 export default router

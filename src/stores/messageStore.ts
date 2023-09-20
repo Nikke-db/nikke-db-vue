@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 
-
 export const useMessageStore = defineStore('message', () => {
   const message: MessageApiInjection | any = ref('')
   const short_message = { duration: 1000 }
@@ -12,7 +11,7 @@ export const useMessageStore = defineStore('message', () => {
     message.value = messageInjection
   }
 
-  const getMessage = () : MessageApiInjection =>  {
+  const getMessage = (): MessageApiInjection => {
     return message.value
   }
 

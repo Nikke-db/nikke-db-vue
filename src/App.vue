@@ -1,10 +1,13 @@
 <template>
-  <Header />
   <!-- if increase/decrease margin top of scroll bar, need to update the calc of max height -->
-  <n-scrollbar :class="shouldHaveMargin()"> 
+  <n-scrollbar
+    class="scrollBarMargin"
+    :class="checkMobile() ? 'mobileScroll' : ''"
+  >
+    <Header />
     <RouterView />
-    <Footer v-if='!isL2d() && !market.globalParams.isMobile'/>
-    <div v-if="market.globalParams.isMobile" class="fakeFooter"></div>
+    <Footer v-show="!isL2d()" />
+    <!-- <div v-if="market.globalParams.isMobile" class="fakeFooter"></div> -->
   </n-scrollbar>
 </template>
 
@@ -20,43 +23,41 @@ import { useMessage } from 'naive-ui'
 const market = useMarket()
 const loadingBar = useLoadingBar()
 
-const shouldHaveMargin = () => {
-  if (market.route.name !== "Live2D") {
-    return "scrollBarMargin"
-  } else {
-    return "noScrollBarMargin"
-  }
+const checkMobile = () => {
+  return market.globalParams.isMobile
 }
-
 const isL2d = () => {
-  return market.route.name === "Live2D"
+  return market.route.name === 'Live2D'
 }
 
 market.message.setMessage(useMessage())
 
 // update the loading bar at the top of the screen
-watch(() => market.load.load, () => {
+watch(
+  () => market.load.load,
+  () => {
     switch (market.load.load) {
-        case "done" : 
-            loadingBar.finish();
-            break;
-        case "loading" :
-            loadingBar.start();
-            break;
-        case "error" :
-            loadingBar.error();
-            break;
-        default :
-            console.log("unknown loadingBar value")
+      case 'done':
+        loadingBar.finish()
+        break
+      case 'loading':
+        loadingBar.start()
+        break
+      case 'error':
+        loadingBar.error()
+        break
+      default:
+        console.log('unknown loadingBar value')
     }
-})
+  }
+)
 </script>
 
 <style lang="less">
 @import '@/utils/style/global_variables.less';
 @import '@/utils/spine/spine-player.css';
 
-*{
+* {
   font-family: Arial, Helvetica, sans-serif;
 }
 .main-bg {
@@ -65,6 +66,7 @@ watch(() => market.load.load, () => {
 
 .main-box-shadow {
   box-shadow: 0px 10px 5px 5px @main-dark-theme;
+  z-index: 100;
 }
 
 .alt-bg {
@@ -78,9 +80,8 @@ watch(() => market.load.load, () => {
   transition: 0.5s;
 
   &:hover {
-    color:white;
+    color: white;
     font-style: italic;
-    
   }
 }
 
@@ -102,16 +103,16 @@ body {
 }
 
 .scrollBarMargin {
-  margin-top: 100px;
-  max-height: calc(100vh - 100px);
+  margin-top: 0px;
+  max-height: calc(100vh - 0px);
 }
 
-.noScrollBarMargin {
-  max-height: 100vh;
+.mobileScroll {
+  max-height: -webkit-fill-available;
 }
 
 .n-icon {
-  color: white
+  color: white;
 }
 
 .n-color-picker-trigger__value {
@@ -119,6 +120,6 @@ body {
 }
 
 .fakeFooter {
-  height: 150px
+  height: 150px;
 }
 </style>
