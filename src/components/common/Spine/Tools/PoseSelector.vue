@@ -23,7 +23,8 @@ const market = useMarket()
 const poses = [
   {
     value: 'aim',
-    label: h('div', {}, [
+    label: h('div', {
+    }, [
       h(NIcon, {
         component: AimOutlined,
         size: 18,
@@ -34,7 +35,8 @@ const poses = [
   },
   {
     value: 'cover',
-    label: h('div', {}, [
+    label: h('div', {
+    }, [
       h(NIcon, {
         component: ManageProtection,
         size: 18,
@@ -45,7 +47,8 @@ const poses = [
   },
   {
     value: 'fb',
-    label: h('div', {}, [
+    label: h('div', {
+    }, [
       h(NIcon, {
         component: AccessibilityTwotone,
         size: 18,

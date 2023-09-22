@@ -24,6 +24,9 @@
           <Screenshot />
           <ChangeScreenshotSize />
         </div>
+        <div>
+          <CustomLoader />
+        </div>
       </n-card>
     </n-scrollbar>
   </div>
@@ -37,6 +40,7 @@ import BackgroundColor from './Tools/BackgroundColor.vue'
 import BackgroundImage from './Tools/BackgroundImage.vue'
 import Screenshot from './Tools/Screenshot.vue'
 import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
+import CustomLoader from './Tools/CustomLoader.vue'
 </script>
 
 <style scoped lang="less">
