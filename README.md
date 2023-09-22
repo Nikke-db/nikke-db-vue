@@ -14,6 +14,6 @@ Sure ! Fork the repository and fix a bug you've found, a bug someone else found,
 Make sure mobile display is good enough ( not asking for perfection ), grab width and conditions from other components to have the same workflow. To test it out run ```npm run serve``` and open a network url on your mobile device ( connected on the same wifi ! ) to instantly test out your modification on mobile.
 
 ## Pull Requests requirements
-Before asking any pull request, run ```npm run format``` and ```npm run lint```, fix all the warning and errors from eslint.
+Before asking any pull request, run ```npm run lint```, fix all the warning and errors from eslint.
 If your feature require to use files, especially spine assets, "si_" icons, "mi_" banners, or anything else, host them on [https://github.com/Nikke-db/Nikke-db.github.io](https://github.com/Nikke-db/Nikke-db.github.io) and make a Pull Request there as well.
 

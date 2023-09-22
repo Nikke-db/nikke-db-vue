@@ -95,6 +95,8 @@ watch(showHeaderBool, () => {
     case false:
       market.globalParams.hideMobileHeader()
       break
+    default:
+      break
   }
 })
 </script>

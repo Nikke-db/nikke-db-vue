@@ -1,3 +1,4 @@
+/* eslint-disable */
 enum globalParams {
   GITHUB = 'https://github.com/Nikke-db/nikke-db-vue',
   NIKKE_DB = 'https://nikke-db.pages.dev/',
@@ -14,7 +15,7 @@ enum messagesEnum {
   MESSAGE_LOCALSTORAGE_SAVED = 'Data saved to the local storage',
   MESSAGE_CANCELLED = 'Action Cancelled',
   MESSAGE_CANNOT_SAVE_EMPTY = 'Cannot save an empty value',
-  MESSAGE_WRONG_FORM_DATA = "Something is wrong with the form data you've entered",
+  MESSAGE_WRONG_FORM_DATA = 'Something is wrong with the form data you\'ve entered',
   MESSAGE_PROCESSING = 'Processing'
 }
 

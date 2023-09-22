@@ -45,14 +45,14 @@ const spineLoader = () => {
       usedSpine = spine41
       break
     default:
-      console.log('TBA ALERT MESSAGE')
+      break
   }
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', {
     skelUrl: getPathing('skel'),
     atlasUrl: getPathing('atlas'),
     animation: getDefaultAnimation(),
-    // skin: skin,
+    skin: market.live2d.getSkin(),
     backgroundColor: '#00000000',
     alpha: true,
     mipmaps: market.live2d.current_pose === 'fb' ? true : false,
@@ -333,6 +333,8 @@ document.addEventListener('wheel', (e) => {
           ? (transformScale = 0.02)
           : ''
         break
+      default:
+        break
     }
 
     canvas.style.transform = 'scale(' + transformScale + ')'
@@ -343,7 +345,7 @@ document.addEventListener('wheel', (e) => {
 <style scoped lang="less">
 #player-container {
   // height: calc(100vh - 100px);
-  // overflow:hidden
+  overflow:hidden
 }
 .mobile {
   height: -webkit-fill-available;

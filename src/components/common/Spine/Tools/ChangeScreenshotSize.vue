@@ -1,7 +1,8 @@
 <template>
   <span>
     <n-button ghost type="info" round @click="openScSzModal()">
-      Screenshot <br />options
+      Screenshot <br />
+      Options
     </n-button>
 
     <n-modal

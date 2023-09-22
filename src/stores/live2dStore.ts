@@ -48,6 +48,60 @@ export const useLive2dStore = defineStore('live2d', () => {
     screenshot.value = new Date().getTime()
   }
 
+  const getSkin = () => {
+    let skin = ''
+    switch (current_pose.value) {
+      case 'aim':
+        skin = getSkinAim()
+        break
+      case 'cover':
+        skin = getSkinCover()
+        break
+      default:
+        skin = getSkinFb()
+        break
+    }
+
+    if (current_id.value === 'c010_01' || current_id.value === 'c907_01' ) {
+      skin = '00'
+    }
+
+    return skin
+  }
+
+  const getSkinAim = () => {
+    return 'default'
+  }
+
+  const getSkinCover = () => {
+    switch (current_id.value) {
+      case 'c220':
+        return 'weapon_2'
+      default:
+        return 'default'
+    }
+  }
+
+  const getSkinFb = () => {
+    switch (current_id.value) {
+      case 'c220':
+      case 'c102':
+      case 'c940':
+      case 'c101_01':
+      case 'c350':
+      case 'c810':
+      case 'c810_01':
+      case 'c321':
+        return 'acc'
+      case 'c351':
+      case 'c070_02':
+      case 'c810_02':
+        return 'bg'
+      default:
+        return 'default'
+    }
+  }
+
   return {
     filtered_l2d_Array,
     current_id,
@@ -58,6 +112,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     resetPlacement,
     triggerResetPlacement,
     screenshot,
-    triggerScreenshot
+    triggerScreenshot,
+    getSkin
   }
 })
