@@ -1,45 +1,46 @@
 <template>
   <ToolsTemplate title="Synchro Level Cost Calculator" :resultShow="resultShow">
     <template #form>
-      <div class="wrapper">
-        <n-form :model="formData" :rules="rules" ref="formRef">
-          <n-form-item label="Current Syncro Level:" path="base" size="large">
-            <n-input-number
-              v-model:value="formData.base"
-              placeholder="From 1 to 599"
-              :min="1"
-              :max="599"
-            />
-          </n-form-item>
+      <n-form :model="formDataSyncroCost" :rules="rulesSyncroCost" ref="formRefSyncroCost">
 
-          <n-form-item label="Target Syncro Level:" path="target" size="large">
-            <n-input-number
-              v-model:value="formData.target"
-              placeholder="From 2 to 600"
-              :min="2"
-              :max="600"
-            />
-          </n-form-item>
+        <n-form-item label="Current Syncro Level:" path="base" size="large">
+          <n-input-number
+            v-model:value="formDataSyncroCost.base"
+            placeholder="From 1 to 599"
+            :min="1"
+            :max="599"
+          />
+        </n-form-item>
 
-          <div class="validate">
-            <n-button
-              :disabled="
-                formData.base === null ||
-                formData.target === null ||
-                formData.base! > formData.target!
-              "
-              round
-              type="primary"
-              @click="(e: MouseEvent) => triggerResult(e)"
-            >
-              Calculate
-            </n-button>
-          </div>
-        </n-form>
-      </div>
+        <n-form-item label="Target Syncro Level:" path="target" size="large">
+          <n-input-number
+            v-model:value="formDataSyncroCost.target"
+            placeholder="From 2 to 600"
+            :min="2"
+            :max="600"
+          />
+        </n-form-item>
+
+        <div class="validate">
+          <n-button
+            :disabled="
+              formDataSyncroCost.base === null ||
+              formDataSyncroCost.target === null ||
+              formDataSyncroCost.base! > formDataSyncroCost.target!
+            "
+            round
+            type="primary"
+            @click="(e: MouseEvent) => triggerResult(e)"
+          >
+            Calculate
+          </n-button>
+        </div>
+
+      </n-form>
     </template>
 
     <template #result>
+
       <n-h2 style="marginbottom: 0px"
         >In order to be synchro level {{ displayedLevels.target }}, starting at
         level {{ displayedLevels.base }}, you will need:</n-h2
@@ -50,6 +51,7 @@
       >
 
       <n-list :show-divider="true" bordered>
+
         <n-list-item v-for="item in displayArray" :key="item.label">
           <n-grid :cols="checkMobile() ? 3 : 2">
             <n-gi class="right">
@@ -71,7 +73,9 @@
             </n-gi>
           </n-grid>
         </n-list-item>
+
       </n-list>
+
     </template>
   </ToolsTemplate>
 </template>
@@ -79,13 +83,7 @@
 <script setup lang="ts">
 import ToolsTemplate from './Template.vue'
 import { ref } from 'vue'
-import {
-  type NumberAnimationInst,
-  type FormInst,
-  type FormItemRule,
-  type FormRules,
-  type FormValidationError
-} from 'naive-ui'
+import type { NumberAnimationInst, FormInst, FormItemRule, FormRules, FormValidationError } from 'naive-ui'
 import { useMarket } from '@/stores/market'
 import { messagesEnum } from '@/utils/enum/globalParams'
 import * as LevelingJson from '@/utils/json/CharacterLevelTable.json'
@@ -93,29 +91,32 @@ import type { levelingRecordInterface } from '@/utils/interfaces/levelingRecord'
 
 const market = useMarket()
 
-const formRef = ref<FormInst | null>(null)
+const formRefSyncroCost = ref<FormInst | null>(null)
 const resultShow = ref(false)
 
-const formData = ref({
+const formDataSyncroCost = ref({
   base: null,
   target: null
 })
 
 const displayedLevels = ref({ base: 0, target: 0 })
 
-const rules: FormRules = {
+const rulesSyncroCost: FormRules = {
   base: [
     {
       required: true,
       min: 1,
       max: 599,
       validator(rule: FormItemRule, value: number) {
-        if (formData.value.target !== null) {
-          if (value >= formData.value.target) {
+        if (formDataSyncroCost.value.target !== null) {
+          if (value >= formDataSyncroCost.value.target) {
             return new Error(
               'Base level cannot be above or equal the Target level'
             )
           }
+        }
+        if (value > rule.max!) {
+          return new Error('Base level is above the maximum')
         }
         return true
       },
@@ -127,14 +128,16 @@ const rules: FormRules = {
     min: 2,
     max: 600,
     validator(rule: FormItemRule, value: number) {
-      if (formData.value.base !== null) {
-        if (value <= formData.value.base) {
+      if (formDataSyncroCost.value.base !== null) {
+        if (value <= formDataSyncroCost.value.base) {
           return new Error(
-            'Base level cannot be above or equal the Target level'
+            'Target level cannot be below or equal the Base level'
           )
         }
       }
-
+      if (value > rule.max!) {
+        return new Error('Target level is above the maximum')
+      }
       return true
     },
     trigger: ['input', 'blur']
@@ -143,19 +146,17 @@ const rules: FormRules = {
 
 const triggerResult = (e: MouseEvent) => {
   e.preventDefault()
-  formRef.value?.validate((errors: FormValidationError[] | undefined) => {
+  formRefSyncroCost.value?.validate((errors: FormValidationError[] | undefined) => {
     if (errors) {
       market.message.getMessage().error(messagesEnum.MESSAGE_WRONG_FORM_DATA)
     } else {
-      market.message
-        .getMessage()
-        .success(messagesEnum.MESSAGE_PROCESSING, market.message.short_message)
+      market.message.getMessage().success(messagesEnum.MESSAGE_PROCESSING, market.message.short_message)
       resultShow.value = true
       credit.value = 0
       bd.value = 0
       core.value = 0
-      displayedLevels.value.base = formData.value.base!
-      displayedLevels.value.target = formData.value.target!
+      displayedLevels.value.base = formDataSyncroCost.value.base!
+      displayedLevels.value.target = formDataSyncroCost.value.target!
       calculateRessources()
       animate()
     }
@@ -199,8 +200,8 @@ const calculateRessources = () => {
   const LevelingTable = LevelingJson.records as levelingRecordInterface[]
   LevelingTable.forEach((record: levelingRecordInterface) => {
     if (
-      record.level >= formData.value.base! &&
-      record.level < formData.value.target!
+      record.level >= formDataSyncroCost.value.base! &&
+      record.level < formDataSyncroCost.value.target!
     ) {
       if (record.level < 200) {
         credit.value += record.gold * 5
@@ -236,19 +237,7 @@ const checkMobile = () => {
 </script>
 
 <style lang="less" scoped>
-.wrapper {
-  .n-form-item {
-    margin: 0 auto;
-    width: 250px;
-  }
-  .validate {
-    text-align: center;
 
-    .n-button {
-      width: 250px;
-    }
-  }
-}
 .n-list-item {
   .right {
     text-align: right;
