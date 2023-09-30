@@ -3,7 +3,7 @@
     <div class="githubwrapper">
       <n-tooltip trigger="hover" placement="bottom">
         <template #trigger>
-          <GithubFilled class="github" @click="sendToGithub()" />
+          <n-icon :component="GithubFilled" class="github" @click="sendToGithub()" size="50"/>
         </template>
         View the source code on GitHub
       </n-tooltip>

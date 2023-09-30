@@ -1,7 +1,7 @@
 /* eslint-disable */
 enum globalParams {
   GITHUB = 'https://github.com/Nikke-db/nikke-db-vue',
-  NIKKE_DB = 'https://nikke-db.pages.dev/',
+  NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
   PATH_L2D = 'l2d/',
   PATH_L2D_AIM = 'aim/',
   PATH_L2D_COVER = 'cover',
