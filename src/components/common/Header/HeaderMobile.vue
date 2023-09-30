@@ -22,12 +22,11 @@
 
         <template #footer>
           <div>
-            <n-a :href="globalParams.GITHUB" target="_blank"
-              >Visit the source code on GitHub</n-a
-            >
-            <!-- <br/> -->
-            <!-- <n-p>Nikke-DB By Koshirei</n-p>
-                        <RouterLink to="/credits"><n-a @click="closeDrawer()">Credits</n-a></RouterLink> -->
+            <n-p>Nikke-DB by Koshirei,
+              <RouterLink to="/credits"><n-a @click="closeDrawer()">Credits</n-a></RouterLink></n-p>
+              <n-a :href="globalParams.GITHUB" target="_blank"
+                >Visit the source code on GitHub</n-a
+              >
           </div>
         </template>
 

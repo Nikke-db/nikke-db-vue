@@ -4,6 +4,7 @@ import Characters from '@/components/views/Characters.vue'
 import L2D from '@/components/views/L2D.vue'
 import Credits from '@/components/views/Credits.vue'
 import Tools from '@/components/views/Tools.vue'
+import Chibi from '@/components/views/Chibi.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,11 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'any',
       component: Index
+    },
+    {
+      path: '/chibi',
+      name: 'chibi',
+      component: Chibi
     }
     // {
     // path: '/about',
