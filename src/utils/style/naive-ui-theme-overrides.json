@@ -9,7 +9,9 @@
   },
   "Typography": {
     "pFontSize": "16px",
-    "pTextColor": "rgba(255,255,255,1)"
+    "pTextColor": "rgba(255,255,255,1)",
+    "liTextColor": "rgba(255, 255, 255, 1)",
+    "liFontSize": "16px"
   },
   "Scrollbar": {
     "color": "rgba(99, 226, 183, 0.2)",

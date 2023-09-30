@@ -17,7 +17,7 @@ export const ROUTES: route2DisplayInterface[] = [
     text: 'Live2D Visualiser'
   },
   // {
-  // path: 'chibi',
-  // text: 'Chibi'
+  //   path: 'chibi',
+  //   text: 'Chibi'
   // }
 ]

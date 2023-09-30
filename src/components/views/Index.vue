@@ -5,7 +5,7 @@
       size="medium"
       :class="checkMobile()"
     >
-      <n-p>Last Update: August 25th 2023</n-p>
+      <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
       <RouterLink to="/notice"
         ><n-a
           >Check out the new notice where I talk about the recent google
@@ -20,7 +20,10 @@
     </n-card>
 
     <n-card title="Update log:" class="card-spacer" :class="checkMobile()">
-      <n-p> A listing of the updates ( copy paste from legacy website ) </n-p>
+      <n-p>New codebase, new update log! The old update log is still available on legacy website for the curious</n-p>
+      <n-ul>
+        <n-li v-for="update in updates" :key="update.date">{{ update.date }}: {{ update.update }}</n-li>
+      </n-ul>
     </n-card>
     <n-back-top :visibility-height="0" style="display: none" />
   </div>
@@ -54,6 +57,13 @@ onUnmounted(() => {
 const checkMobile = () => {
   return market.globalParams.isMobile ? 'isMobile' : ''
 }
+
+const updates = [
+  {
+    date: 'October 10th 2023',
+    update: 'Release of the Vue3 code!'
+  },
+]
 </script>
 
 <style lang="less" scoped>
