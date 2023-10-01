@@ -1,10 +1,6 @@
 <template>
   <n-card class="center first" :class="checkMobile()">
-    <n-p :class="checkMobile()"
-      >I'd like to dedicate this page to anyone who contributed one way or
-      another to the website during it's entire lifespan. I am mainly alone in
-      this project but any help I receive brings me great joy.</n-p
-    ><br />
+    <n-p :class="checkMobile()">I'd like to dedicate this page to anyone who contributed one way or another to the website during it's entire lifespan. I am mainly alone in this project but any help I receive brings me great joy.</n-p><br />
     <div class="imgDiv">
       <img :src="maids" />
     </div>
@@ -41,20 +37,22 @@ const market = useMarket()
 const external: help[] = [
   {
     name: 'Bingle',
-    contribution:
-      'NKAB v3 Decryptor to access encrypted files after the Septembre 1st patch.',
+    contribution: 'NKAB v3 Decryptor to access encrypted files after the Septembre 1st patch.',
     tier: 'gold'
   },
   {
+    name: 'Hacker_lyx',
+    contribution: 'Chibi 3d assets viewer.',
+    tier: 'amethyst'
+  },
+  {
     name: '神罰の執行者 ライラ',
-    contribution:
-      'Instructions on how to fix transparency issues for the live2d visualiser.',
+    contribution: 'Instructions on how to fix transparency issues for the live2d visualiser.',
     tier: 'silver'
   },
   {
     name: 'Panafonic',
-    contribution:
-      'Help on fixing display issues for Dolla and Centi skins live2d.',
+    contribution: 'Help on fixing display issues for Dolla and Centi skins live2d.',
     tier: null
   },
   {
@@ -64,20 +62,17 @@ const external: help[] = [
   },
   {
     name: 'Evilcat',
-    contribution:
-      'Tool Page idea, data about unit leveling cost, and data about outpost income calculations.',
+    contribution: 'Tool Page idea, data about unit leveling cost, and data about outpost income calculations.',
     tier: null
   },
   {
     name: 'Sakae',
-    contribution:
-      'Images and data gathering. Argued to develop the Live2D Visualiser.',
+    contribution: 'Images and data gathering. Argued to develop the Live2D Visualiser.',
     tier: null
   },
   {
     name: 'Falzar',
-    contribution:
-      'NKAB v1 and NKAB v2 decryptor, though sad things happened for NKAV v3 decryptor',
+    contribution: 'NKAB v1 and NKAB v2 decryptor, though sad things happened for NKAV v3 decryptor',
     tier: null
   }
 ]
@@ -86,8 +81,7 @@ const external: help[] = [
 const forks: help[] = [
   {
     name: 'R3XxN1xX',
-    contribution:
-      'Live2D files for Einkk, Rapunzel, Helm, Isabel, Shifty, Modernia Anchor, Jackal, Viper, Agent D, Agent K.<br/>Added icons for a bunch of characters',
+    contribution: 'Live2D files for Einkk, Rapunzel, Helm, Isabel, Shifty, Modernia Anchor, Jackal, Viper, Agent D, Agent K.<br/>Added icons for a bunch of characters',
     tier: null
   },
   {
@@ -110,20 +104,17 @@ const forks: help[] = [
 const others: help[] = [
   {
     name: 'ShiftUp<br/>Level Infinite<br/>Tencent',
-    contribution:
-      'Owners of Nikke: Goddess of Victory, and all the assets associated shown in this website',
+    contribution: 'Owners of Nikke: Goddess of Victory, and all the assets associated shown in this website',
     tier: null
   },
   {
     name: '@totakeke__',
-    contribution:
-      'Artist of the chibi Soda and Cocoa just above (4koma from valentine event)',
+    contribution: 'Artist of the chibi Soda and Cocoa just above (4koma from valentine event)',
     tier: null
   },
   {
     name: 'Vue',
-    contribution:
-      'Javascript framework that was used to develop this new version of Nikke-DB',
+    contribution: 'Javascript framework that was used to develop this new version of Nikke-DB',
     tier: null
   },
   {

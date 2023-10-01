@@ -2,11 +2,15 @@
 enum globalParams {
   GITHUB = 'https://github.com/Nikke-db/nikke-db-vue',
   NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
-  PATH_L2D = 'l2d/',
+  PATH_L2D = NIKKE_DB + 'l2d/',
   PATH_L2D_AIM = 'aim/',
   PATH_L2D_COVER = 'cover',
   PATH_SPRITE_1 = 'images/sprite/si_',
-  PATH_SPRITE_2 = '_00_s.png'
+  PATH_SPRITE_2 = '_00_s.png',
+  BUILD_PATH = 'chibi/Build/',
+  STREAMING_ASSETS_PATH = 'chibi/StreamingAssets',
+  CHIBI_BUILD = NIKKE_DB + BUILD_PATH,
+  STREAMING_ASSETS = NIKKE_DB + STREAMING_ASSETS_PATH
 }
 
 enum messagesEnum {

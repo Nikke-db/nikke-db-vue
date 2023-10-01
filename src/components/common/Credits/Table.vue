@@ -36,4 +36,8 @@ const props = defineProps({
   background-color: silver;
   color: black;
 }
+
+.amethyst {
+  background-color: #8F26AC
+}
 </style>

@@ -4,9 +4,9 @@
     class="scrollBarMargin"
     :class="checkMobile() ? 'mobileScroll' : ''"
   >
-    <Header />
+    <Header v-show="!isChibiMobile()"/>
     <RouterView />
-    <Footer v-show="!isL2d()" />
+    <Footer v-show="!isL2d() && !isChibiMobile()" />
     <!-- <div v-if="market.globalParams.isMobile" class="fakeFooter"></div> -->
   </n-scrollbar>
 </template>
@@ -29,28 +29,28 @@ const checkMobile = () => {
 const isL2d = () => {
   return market.route.name === 'Live2D'
 }
+const isChibiMobile = () => {
+  return checkMobile() && market.route.name === 'chibi'
+}
 
 market.message.setMessage(useMessage())
 
 // update the loading bar at the top of the screen
-watch(
-  () => market.load.load,
-  () => {
-    switch (market.load.load) {
-      case 'done':
-        loadingBar.finish()
-        break
-      case 'loading':
-        loadingBar.start()
-        break
-      case 'error':
-        loadingBar.error()
-        break
-      default:
-        console.log('unknown loadingBar value')
-    }
+watch(() => market.load.load, () => {
+  switch (market.load.load) {
+    case 'done':
+      loadingBar.finish()
+      break
+    case 'loading':
+      loadingBar.start()
+      break
+    case 'error':
+      loadingBar.error()
+      break
+    default:
+      console.log('unknown loadingBar value')
   }
-)
+})
 </script>
 
 <style lang="less">
