@@ -70,7 +70,6 @@ const spineLoader = () => {
 
 const getPathing = (extension: string) => {
   let route =
-    globalParams.NIKKE_DB +
     globalParams.PATH_L2D +
     market.live2d.current_id +
     '/'
@@ -121,71 +120,60 @@ const wrongfullyLoaded = () => {
     .error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
 }
 
-watch(
-  () => market.globalParams.isMobile,
-  (e) => {
-    if (e) {
-      canvas.style.height = '85vh'
-      canvas.style.width = '90%'
-      canvas.style.position = 'static'
-      canvas.style.left = '0px'
-      canvas.style.top = '0px'
-      canvas.style.marginTop = '0px'
-      canvas.width = canvas.height
-      canvas.style.transform = 'scale(1)'
-      market.globalParams.hideMobileHeader()
-    } else {
-      canvas.style.position = 'absolute'
-      canvas.style.height = '475vh'
-      canvas.style.width = ''
-      canvas.style.marginTop = 'calc(-183vh - 100px)'
-      canvas.style.transform = 'scale(0.2)'
-      canvas.style.left = '0px'
-      canvas.style.top = '0px'
-      canvas.width = canvas.height
-      market.globalParams.showMobileHeader()
-      centerForPC()
-    }
+watch(() => market.globalParams.isMobile, (e) => {
+  if (e) {
+    canvas.style.height = '85vh'
+    canvas.style.width = '90%'
+    canvas.style.position = 'static'
+    canvas.style.left = '0px'
+    canvas.style.top = '0px'
+    canvas.style.marginTop = '0px'
+    canvas.width = canvas.height
+    canvas.style.transform = 'scale(1)'
+    market.globalParams.hideMobileHeader()
+  } else {
+    canvas.style.position = 'absolute'
+    canvas.style.height = '475vh'
+    canvas.style.width = ''
+    canvas.style.marginTop = 'calc(-183vh - 100px)'
+    canvas.style.transform = 'scale(0.2)'
+    canvas.style.left = '0px'
+    canvas.style.top = '0px'
+    canvas.width = canvas.height
+    market.globalParams.showMobileHeader()
+    centerForPC()
   }
+})
+
+watch(() => market.live2d.current_id, () => {
+  loadSpineAfterWatcher()
+}
 )
 
-watch(
-  () => market.live2d.current_id,
-  () => {
-    loadSpineAfterWatcher()
-  }
+watch(() => market.live2d.current_pose, () => {
+  loadSpineAfterWatcher()
+}
 )
 
-watch(
-  () => market.live2d.current_pose,
-  () => {
-    loadSpineAfterWatcher()
-  }
+watch(() => market.live2d.resetPlacement, () => {
+  applyDefaultStyle2Canvas()
+}
 )
 
-watch(
-  () => market.live2d.resetPlacement,
-  () => {
-    applyDefaultStyle2Canvas()
-  }
-)
+watch(() => market.live2d.screenshot, () => {
+  if (!checkMobile()) {
+    const sc_sz = localStorage.getItem('sc_sz')
+    const old_sc_sz = canvas.style.height
+    canvas.style.height = sc_sz + 'px'
 
-watch(
-  () => market.live2d.screenshot,
-  () => {
-    if (!checkMobile()) {
-      const sc_sz = localStorage.getItem('sc_sz')
-      const old_sc_sz = canvas.style.height
-      canvas.style.height = sc_sz + 'px'
-
-      setTimeout(() => {
-        takeScreenshot()
-        canvas.style.height = old_sc_sz
-      }, 250)
-    } else {
+    setTimeout(() => {
       takeScreenshot()
-    }
+      canvas.style.height = old_sc_sz
+    }, 250)
+  } else {
+    takeScreenshot()
   }
+}
 )
 
 const takeScreenshot = () => {
