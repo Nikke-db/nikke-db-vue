@@ -9,7 +9,7 @@
       <RouterLink to="/notice"
         ><n-a
           >Check out the new notice where I talk about the recent google
-          form.</n-a
+          form. I forgot to update this page though so it's unavailable 💀</n-a
         ></RouterLink
       >
       <n-p>
@@ -22,7 +22,7 @@
     <n-card title="Update log:" class="card-spacer" :class="checkMobile()">
       <n-p>New codebase, new update log! The old update log is still available on legacy website for the curious</n-p>
       <n-ul>
-        <n-li v-for="update in updates" :key="update.date">{{ update.date }}: {{ update.update }}</n-li>
+        <n-li v-for="update in updates.reverse()" :key="update.date">{{ update.date }}: {{ update.update }}</n-li>
       </n-ul>
     </n-card>
     <n-back-top :visibility-height="0" style="display: none" />
@@ -60,8 +60,12 @@ const checkMobile = () => {
 
 const updates = [
   {
-    date: 'October 10th 2023',
+    date: 'October 1st 2023',
     update: 'Release of the Vue3 code!'
+  },
+  {
+    date: 'October 3rd 2023',
+    update: 'Added a fullscreen option on the chibi page. Added Marciana, Naga, Tia, Novel Halloween to the chibi page. Fixed Pepper skin, Yuni and Mihara issues. Minor UI/UX improvement'
   },
 ]
 </script>

@@ -1,8 +1,14 @@
 <template>
   <div class="spacer">
     <!-- Computer Render -->
-    <n-card title="3D Chibi Viewer - Beta" v-if="!market.globalParams.isMobile">
-      <n-p depth="3">Made by Hacker_lyx</n-p>
+    <n-card title="3D Chibi Viewer - Beta v0.11" v-if="!market.globalParams.isMobile" >
+      <template #header-extra>
+        <n-spin :show="unityInstance === null" size="small">
+          <n-button type="primary" round ghost @click="setFullScreen()" >
+          View in Full Screen
+        </n-button>
+        </n-spin><br/><br/>
+      </template>
       <div style="text-align:center">
         <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1" style="width:90%"></canvas>
       </div>
@@ -18,15 +24,20 @@
 import { globalParams } from '@/utils/enum/globalParams'
 // @ts-ignore
 import createUnityInstance from 'https://nikke-db-legacy.pages.dev/chibi/Build/chibi.loader.js'
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, ref, type Ref, onBeforeMount } from 'vue'
 
 import { useMarket } from '@/stores/market'
 
 const market = useMarket()
+let unityInstance = ref(null) as Ref<any>
 
 watch(() => market.globalParams.isMobile, () => {
   init()
   setMobileView()
+})
+
+onBeforeMount(() => {
+  market.load.beginLoad()
 })
 
 onMounted(() => {
@@ -42,7 +53,10 @@ const init = () => {
     streamingAssetsUrl: globalParams.STREAMING_ASSETS,
     companyName: 'Nikke-DB',
     productName: 'Nikke Chibi By Hacker_lyx',
-    productVersion: '0.1',
+    productVersion: '0.11',
+  }).then((inst: any) => {
+    unityInstance.value = inst
+    market.load.endLoad()
   })
 }
 
@@ -58,6 +72,10 @@ const setMobileView = () => {
     canvas.style.position = 'fixed'
     document.body.style.textAlign = 'left'
   }
+}
+
+const setFullScreen = () => {
+  unityInstance.value.SetFullscreen(1)
 }
 
 </script>

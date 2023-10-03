@@ -19,6 +19,7 @@ import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 let canvas: any
 let spineCanvas: any
 const market = useMarket()
+let tempSpineVersion: number | null = null //used for spine version exceptions, see spineExceptionList()
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
@@ -37,7 +38,7 @@ onMounted(() => {
 const spineLoader = () => {
   let usedSpine: any
 
-  switch (market.live2d.current_spine_version) {
+  switch (tempSpineVersion !== null ? tempSpineVersion : market.live2d.current_spine_version) {
     case 4.0:
       usedSpine = spine40
       break
@@ -146,19 +147,35 @@ watch(() => market.globalParams.isMobile, (e) => {
 })
 
 watch(() => market.live2d.current_id, () => {
+  spineExceptionList()
   loadSpineAfterWatcher()
-}
-)
+})
 
 watch(() => market.live2d.current_pose, () => {
+  spineExceptionList()
   loadSpineAfterWatcher()
+})
+
+const spineExceptionList = () => {
+  // exception list when a character have spine 4.1 and 4.0 assets
+  tempSpineVersion = null
+
+  const EXCEPTIONS = [
+    { id: 'c131_01', pose: 'aim', version: 4.0 }, // Pepper Summer skin
+    { id: 'c160', pose: 'fb', version: 4.1 }, // Yuni
+    { id: 'c161', pose: 'fb', version: 4.1 } // Mihara
+  ] as {id: string, pose: string, version: number}[]
+
+  EXCEPTIONS.forEach((exception) => {
+    if (market.live2d.current_id === exception.id && market.live2d.current_pose === exception.pose) {
+      tempSpineVersion = exception.version
+    }
+  })
 }
-)
 
 watch(() => market.live2d.resetPlacement, () => {
   applyDefaultStyle2Canvas()
-}
-)
+})
 
 watch(() => market.live2d.screenshot, () => {
   if (!checkMobile()) {

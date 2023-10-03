@@ -32,6 +32,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     current_id.value = newSpine.id
   }
 
+  // exception lists for spine version is handled in loader.vue at spineExceptionList()
   const getNewSpineVersion = (newSpine: live2d_interface) => {
     if (newSpine.version) {
       return newSpine.version
