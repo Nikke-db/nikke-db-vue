@@ -52,6 +52,7 @@ export const RELEASED_UNITS = [
   'Denji Chainsaw Man',
   'Diesel',
   'Diesel Black Sunday',
+  'Diesel Strawberry Flower',
   'Doban',
   'Dolla',
   'Dolla Dark Rose',
