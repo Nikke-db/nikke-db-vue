@@ -136,7 +136,7 @@ watch(() => market.globalParams.isMobile, (e) => {
     canvas.style.position = 'absolute'
     canvas.style.height = '475vh'
     canvas.style.width = ''
-    canvas.style.marginTop = 'calc(-183vh - 100px)'
+    canvas.style.marginTop = 'calc(-183vh)'
     canvas.style.transform = 'scale(0.2)'
     canvas.style.left = '0px'
     canvas.style.top = '0px'
@@ -233,7 +233,7 @@ const applyDefaultStyle2Canvas = () => {
       market.globalParams.hideMobileHeader()
     } else {
       canvas.style.height = '475vh'
-      canvas.style.marginTop = 'calc(-183vh - 100px)'
+      canvas.style.marginTop = 'calc(-183vh)'
       canvas.style.transform = 'scale(0.17)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
@@ -358,6 +358,7 @@ document.addEventListener('wheel', (e) => {
 }
 
 .computer {
-  height: calc(100vh - 100px);
+  height: 100vh;
+  margin-top: -100px
 }
 </style>

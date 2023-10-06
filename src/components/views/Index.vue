@@ -71,6 +71,10 @@ const updates = [
     date: 'October 5th 2023',
     update: 'Added Diesel Strawberry Flower live2d'
   },
+  {
+    date: 'October 7th 2023',
+    update: 'Fixed Dorothy aim and cover bondaries when selecting a skin. Fixed a display issues for 2k and above resolution screens'
+  },
 ]
 </script>
 

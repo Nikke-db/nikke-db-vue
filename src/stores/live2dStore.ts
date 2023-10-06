@@ -71,13 +71,20 @@ export const useLive2dStore = defineStore('live2d', () => {
   }
 
   const getSkinAim = () => {
-    return 'default'
+    switch (current_id.value) {
+      case 'c233':
+        return 'part_1'
+      default:
+        return 'default'
+    }
   }
 
   const getSkinCover = () => {
     switch (current_id.value) {
       case 'c220':
         return 'weapon_2'
+      case 'c233':
+        return 'part_1'
       default:
         return 'default'
     }
