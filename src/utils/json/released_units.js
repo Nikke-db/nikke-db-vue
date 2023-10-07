@@ -47,6 +47,8 @@ export const RELEASED_UNITS = [
   'Crow',
   'Crown',
   'D',
+  'Dazzling Cupid: Naga',
+  'Dazzling Cupid: Tia',
   'Delta',
   'Denji',
   'Denji Chainsaw Man',

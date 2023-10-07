@@ -75,6 +75,10 @@ const updates = [
     date: 'October 7th 2023',
     update: 'Fixed Dorothy aim and cover bondaries when selecting a skin. Fixed a display issues for 2k and above resolution screens'
   },
+  {
+    date: 'October 7th 2023',
+    update: 'Added Dazzling Cupid eventscenes'
+  },
 ]
 </script>
 
