@@ -1,0 +1,88 @@
+{
+  "path": "albums/",
+  "type": "img",
+  "id": "albums",
+  "title": "Album Covers (~9mb)",
+  "content": [
+    {
+      "name": "album_field_01",
+      "text": "Sleeping Forest"
+    },
+    {
+      "name": "album_menu_01",
+      "text": "After World"
+    },
+    {
+      "name": "album_lostsector_01",
+      "text": "Lost Sector"
+    },
+    {
+      "name": "album_story_01",
+      "text": "Folk Tales"
+    },
+    {
+      "name": "album_event_01",
+      "text": "Events"
+    },
+    {
+      "name": "album_field_02",
+      "text": "Living Land"
+    },
+    {
+      "name": "album_field_03",
+      "text": "Wandering Soul"
+    },
+    {
+      "name": "album_field_04",
+      "text": "Wonderland"
+    },
+    {
+      "name": "album_field_05",
+      "text": "White Snow"
+    },
+    {
+      "name": "album_field_06",
+      "text": "Hand On Hand"
+    },
+    {
+      "name": "album_field_07",
+      "text": "Two Top"
+    },
+    {
+      "name": "album_field_08",
+      "text": "Red Eye, Smile"
+    },
+    {
+      "name": "album_field_09",
+      "text": "Sand Storm"
+    },
+    {
+      "name": "album_field_10",
+      "text": "Eternal Scar"
+    },
+    {
+      "name": "album_field_11",
+      "text": "Morning Star"
+    },
+    {
+      "name": "album_field_13",
+      "text": "Invasion"
+    },
+    {
+      "name": "album_overzone_01",
+      "text": "Overzone"
+    },
+    {
+      "name": "album_bluewater_01",
+      "text": "Blue Water Island"
+    },
+    {
+      "name": "album_outerautomata_01",
+      "text": "Outer Automata"
+    },
+    {
+      "name": "album_special_01",
+      "text": "Special Sound Track"
+    }
+  ]
+}

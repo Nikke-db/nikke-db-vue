@@ -80,11 +80,11 @@ const getPathing = (extension: string) => {
   // "full body" but I'd rather keep fb for future/other functions
   switch (market.live2d.current_pose) {
     case 'aim':
-      route += globalParams.PATH_L2D_AIM + '/'
+      route += globalParams.PATH_L2D_AIM
       fileSuffix = '_aim' + fileSuffix
       break
     case 'cover':
-      route += globalParams.PATH_L2D_COVER + '/'
+      route += globalParams.PATH_L2D_COVER
       fileSuffix = '_cover' + fileSuffix
       break
     default:
