@@ -4,13 +4,16 @@ enum globalParams {
   NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
   PATH_L2D = NIKKE_DB + 'l2d/',
   PATH_L2D_AIM = 'aim/',
-  PATH_L2D_COVER = 'cover',
+  PATH_L2D_COVER = 'cover/',
   PATH_SPRITE_1 = 'images/sprite/si_',
   PATH_SPRITE_2 = '_00_s.png',
   BUILD_PATH = 'chibi/Build/',
   STREAMING_ASSETS_PATH = 'chibi/StreamingAssets',
+  GALLERY_PATH = 'images/gallery/',
   CHIBI_BUILD = NIKKE_DB + BUILD_PATH,
-  STREAMING_ASSETS = NIKKE_DB + STREAMING_ASSETS_PATH
+  STREAMING_ASSETS = NIKKE_DB + STREAMING_ASSETS_PATH,
+  GALLERY = NIKKE_DB + GALLERY_PATH
+  // GALLERY = 'http://localhost:5500/'
 }
 
 enum messagesEnum {

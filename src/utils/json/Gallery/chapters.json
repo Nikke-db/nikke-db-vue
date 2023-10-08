@@ -1,0 +1,108 @@
+{
+  "path": "chapters/",
+  "type": "img",
+  "id": "chapters",
+  "title": "Chapter Thumbnails (~3mb)",
+  "content": [
+    {
+      "name": "img_album_chapter00",
+      "text": "Chapter 00: Fall"
+    },
+    {
+      "name": "img_album_chapter01",
+      "text": "Chapter 01: Corruption"
+    },
+    {
+      "name": "img_album_chapter02",
+      "text": "Chapter 02: Identification"
+    },
+    {
+      "name": "img_album_chapter03",
+      "text": "Chapter 03: Enlightenment"
+    },
+    {
+      "name": "img_album_chapter04",
+      "text": "Chapter 04: Bouquet"
+    },
+    {
+      "name": "img_album_chapter05",
+      "text": "Chapter 05: Wonderland"
+    },
+    {
+      "name": "img_album_chapter06",
+      "text": "Chapter 06: Pilgrim"
+    },
+    {
+      "name": "img_album_chapter07",
+      "text": "Chapter 07: Reunited"
+    },
+    {
+      "name": "img_album_chapter08",
+      "text": "Chapter 08: Conflict"
+    },
+    {
+      "name": "img_album_chapter09",
+      "text": "Chapter 09: Secret"
+    },
+    {
+      "name": "img_album_chapter10",
+      "text": "Chapter 10: Comrade"
+    },
+    {
+      "name": "img_album_chapter11",
+      "text": "Chapter 11: The Strongest"
+    },
+    {
+      "name": "img_album_chapter12",
+      "text": "Chapter 12: Hometown"
+    },
+    {
+      "name": "img_album_chapter13",
+      "text": "Chapter 13: Return"
+    },
+    {
+      "name": "img_album_chapter14",
+      "text": "Chapter 14: Journey"
+    },
+    {
+      "name": "img_album_chapter15",
+      "text": "Chapter 15: Luck"
+    },
+    {
+      "name": "img_album_chapter16",
+      "text": "Chapter 16: Brand"
+    },
+    {
+      "name": "img_album_chapter17",
+      "text": "Chapter 17: Purpose"
+    },
+    {
+      "name": "img_album_chapter18",
+      "text": "Chapter 18: Hero"
+    },
+    {
+      "name": "img_album_chapter19",
+      "text": "Chapter 19: Eden"
+    },
+    {
+      "name": "img_album_chapter20",
+      "text": "Chapter 20: Fire Dragon"
+    },
+    {
+      "name": "img_album_chapter21",
+      "text": "Chapter 21: Giant Whale"
+    },
+    {
+      "name": "img_album_chapter22",
+      "text": "Chapter 22: Invasion"
+    },
+    {
+      "name": "img_album_chapter23",
+      "text": "Chapter 23: Prison"
+    },
+    {
+      "name": "img_album_chapter24",
+      "text": "Chapter 24: Banishment"
+    }
+  ]
+}

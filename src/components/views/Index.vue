@@ -33,6 +33,7 @@
 import { onMounted, onBeforeMount, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
 import bgi from '@/assets/index_bg.jpg'
+import updates from '@/utils/json/updateLog.json'
 
 const market = useMarket()
 
@@ -58,28 +59,7 @@ const checkMobile = () => {
   return market.globalParams.isMobile ? 'isMobile' : ''
 }
 
-const updates = [
-  {
-    date: 'October 1st 2023',
-    update: 'Release of the Vue3 code!'
-  },
-  {
-    date: 'October 3rd 2023',
-    update: 'Added a fullscreen option on the chibi page. Added Marciana, Naga, Tia, Novel Halloween to the chibi page. Fixed Pepper skin, Yuni and Mihara live2d issues. Minor UI/UX improvement'
-  },
-  {
-    date: 'October 5th 2023',
-    update: 'Added Diesel Strawberry Flower live2d'
-  },
-  {
-    date: 'October 7th 2023',
-    update: 'Fixed Dorothy aim and cover bondaries when selecting a skin. Fixed a display issues for 2k and above resolution screens'
-  },
-  {
-    date: 'October 7th 2023',
-    update: 'Added Dazzling Cupid eventscenes'
-  },
-]
+
 </script>
 
 <style lang="less" scoped>

@@ -19,5 +19,9 @@ export const ROUTES: route2DisplayInterface[] = [
   {
     path: 'chibi',
     text: 'Chibi'
+  },
+  {
+    path: 'gallery',
+    text: 'Gallery'
   }
 ]
