@@ -94,6 +94,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     switch (current_id.value) {
       case 'c220':
       case 'c102':
+      case 'c102_01':
       case 'c940':
       case 'c101_01':
       case 'c350':
