@@ -23,10 +23,10 @@ let tempSpineVersion: number | null = null //used for spine version exceptions, 
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
-  padLeft: '0%',
-  padRight: '0%',
-  padTop: '0%',
-  padBottom: '0%'
+  // padLeft: '0%',
+  // padRight: '0%',
+  // padTop: '0%',
+  // padBottom: '0%'
 }
 
 onMounted(() => {
@@ -123,8 +123,8 @@ const wrongfullyLoaded = () => {
 
 watch(() => market.globalParams.isMobile, (e) => {
   if (e) {
-    canvas.style.height = '85vh'
-    canvas.style.width = '90%'
+    canvas.style.height = '90vh'
+    canvas.style.width = '100%'
     canvas.style.position = 'static'
     canvas.style.left = '0px'
     canvas.style.top = '0px'
@@ -142,6 +142,7 @@ watch(() => market.globalParams.isMobile, (e) => {
     canvas.style.top = '0px'
     canvas.width = canvas.height
     market.globalParams.showMobileHeader()
+    transformScale = 0.2
     centerForPC()
   }
 })
@@ -234,7 +235,7 @@ const applyDefaultStyle2Canvas = () => {
     } else {
       canvas.style.height = '475vh'
       canvas.style.marginTop = 'calc(-183vh)'
-      canvas.style.transform = 'scale(0.17)'
+      canvas.style.transform = 'scale(0.2)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
