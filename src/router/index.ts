@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Index from '@/components/views/Index.vue'
-import Characters from '@/components/views/Characters.vue'
 import L2D from '@/components/views/L2D.vue'
 import Credits from '@/components/views/Credits.vue'
 import Tools from '@/components/views/Tools.vue'
@@ -14,17 +13,6 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: Index
-    },
-    {
-      path: '/c',
-      redirect: {
-        path: '/characters'
-      }
-    },
-    {
-      path: '/characters',
-      name: 'Characters',
-      component: Characters
     },
     {
       path: '/v',

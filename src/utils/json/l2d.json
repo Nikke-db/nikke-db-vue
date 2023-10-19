@@ -67,6 +67,11 @@
     "id": "c032"
   },
   {
+    "name": "Quiry",
+    "id": "c033",
+    "version": 4.1
+  },
+  {
     "name": "D",
     "id": "c040"
   },
@@ -277,6 +282,11 @@
   {
     "name": "Privaty Government Grunt",
     "id": "c170_01"
+  },
+  {
+    "name": "Privaty Banquet Princess",
+    "id": "c170_02",
+    "version": 4.1
   },
   {
     "name": "Yulha",

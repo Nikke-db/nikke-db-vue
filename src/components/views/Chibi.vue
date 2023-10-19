@@ -1,7 +1,7 @@
 <template>
   <div class="spacer">
     <!-- Computer Render -->
-    <n-card title="3D Chibi Viewer - Beta v0.11" v-if="!market.globalParams.isMobile" >
+    <n-card title="3D Chibi Viewer - Beta v0.12" v-if="!market.globalParams.isMobile" >
       <template #header-extra>
         <n-spin :show="unityInstance === null" size="small">
           <n-button type="primary" round ghost @click="setFullScreen()" >
