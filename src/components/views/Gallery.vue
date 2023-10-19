@@ -1,7 +1,6 @@
 <template>
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
-      <n-p>This page will display pictures from the game. It will be gradually updated with new events, story, 4-KOMA, community content, etc. I'm okay with adding anything as long as I deem it worth it, e.g. it's pointless to ask me to add gear pictures.</n-p>
       <n-p>If a gallery shows Cocoa and Soda, or if there's a missing image, hit me up asap !</n-p>
       <n-p>Feedback and content recommendation is appreciated</n-p>
 
@@ -33,7 +32,7 @@
       />
 
       <n-h1>Community Content</n-h1>
-      empty atm but will display 4koma, twitter exclusive pictures, or anything community made on discord/twitter/arca.live/anything. hit me up if you are interested in displaying something here!<br/>
+      This place could display anything community made on discord/twitter/arca.live/anything. hit me up if you are interested in displaying something here!<br/><br/>
       <ButtonTemplate
         v-for="buttonItem in buttonListCommunity"
         :key="buttonItem.id"
@@ -49,7 +48,7 @@
       </n-h1>
 
       <!-- COMPUTER CAROUSEL -->
-      <n-carousel v-if="carouselData !== null && !checkMobileBool()"
+      <n-carousel v-if="carouselData !== null && !checkMobileBool() && carouselData.type !== 'large'"
       :slides-per-view="2"
       :default-index="index - 1"
       :current-index="index - 1"
@@ -62,43 +61,63 @@
       style="width: 80%"
       >
         <n-carousel-item v-for="data in carouselData.content" :key="data.name">
-          <n-image
-            :src="globalParams.GALLERY + carouselData.path + data.name +'.png'"
-            :fallback-src="maids"
-            style="height:20vw; max-height: 512px;"
-          />
-          <n-h3 prefix="bar" type="info">
-            {{ data.text }}
-          </n-h3>
+          <div v-if="carouselData.type === 'img'">
+            <n-image
+              :src="globalParams.GALLERY + carouselData.path + data.name +'.png'"
+              :fallback-src="maids"
+              style="height:20vw; max-height: 512px;"
+            />
+            <n-h3 prefix="bar" type="info">
+              {{ data.text }}
+            </n-h3>
+          </div>
+          <div
+            v-else-if="carouselData.type === 'twitter'"
+            >
+              <Tweet :id="data.text.split('/status/')[1]" :options="{ dnt: 'true', theme: 'dark' }">
+                <n-spin size="large" />
+              </Tweet>
+          </div>
         </n-carousel-item>
         <template #arrow="{ prev, next }">
           <ArrowTemplate :index="index" :total="carouselData.content.length - 1" :prev="prev" :next="next"/>
         </template>
       </n-carousel>
 
-      <!-- MOBILE CAROUSEL -->
-      <n-carousel v-if="carouselData !== null && checkMobileBool()"
+      <!-- MOBILE/LARGE CAROUSEL -->
+      <n-carousel v-if="carouselData !== null && (checkMobileBool() || carouselData.type === 'large') "
       :slides-per-view="1"
       draggable
       :default-index="index - 1"
+      :current-index="index - 1"
       :loop="true"
       :show-arrow="true"
-      :show-dots="false"
-      :space-between="15"
+      :dot-type="'line'"
+      :show-dots="!checkMobileBool()"
+      :space-between="50"
       @update:current-index="(e: number) => updateIndex(e)"
-      style="width: 100%"
+      style="max-width: 95%"
       >
         <n-carousel-item v-for="data in carouselData.content" :key="data.name">
           <div style="text-align:center; width:100%;">
             <img
             :src="globalParams.GALLERY + carouselData.path + data.name +'.png'"
             :fallback-src="maids"
-            style="width:100%; object-fit: contain;"
+            style="max-width: 95%; height:100%; object-fit: cover;"
             object-fit='contain'
             />
           </div>
-          <n-h3 prefix="bar" type="info">
-          {{ data.text }}
+          <n-h3 style="text-align: center;">
+            <span v-if="data.text.includes('https://twitter.com/')">
+              <n-a :href="data.text" target="_blank">
+                <span v-if="data.text.includes('NIKKE_en')">Original Tweet</span>
+                <span v-else-if="data.text.includes('NIKKE_japan')">元のツイート</span>
+                <span v-else-if="data.text.includes('NIKKE_kr')">원본 트윗</span>
+              </n-a>
+            </span>
+            <span v-else>
+              {{ data.text }}
+            </span>
           </n-h3>
 
         </n-carousel-item>
@@ -118,10 +137,15 @@ import maids from '@/assets/maids.png'
 import { messagesEnum, globalParams } from '@/utils/enum/globalParams'
 import ArrowTemplate from '@/components/common/Gallery/ArrowTemplate.vue'
 import ButtonTemplate from '@/components/common/Gallery/ButtonTemplate.vue'
+// @ts-ignore
+import { Tweet } from '@jacksongross/vue-tweet-embed'
 
 import albumCovers from '@/utils/json/Gallery/albums.json'
 import chapterThumbnails from '@/utils/json/Gallery/chapters.json'
 import whiteMemory from '@/utils/json/Gallery/whitememory.json'
+import fourkoma_en from '@/utils/json/Gallery/4koma_en.json'
+import fourkoma_jp from '@/utils/json/Gallery/4koma_jp.json'
+import fourkoma_kr from '@/utils/json/Gallery/4koma_kr.json'
 
 const market = useMarket()
 
@@ -143,7 +167,9 @@ const buttonListOther = [
 
 // remove any when there will be content in the array
 const buttonListCommunity: any[] = [
-
+  { id: fourkoma_en.id, text: fourkoma_en.title },
+  { id: fourkoma_jp.id, text: fourkoma_jp.title },
+  { id: fourkoma_kr.id, text: fourkoma_kr.title }
 ]
 
 const checkMobile = () => {
@@ -165,6 +191,9 @@ const loadData = (id: string) => {
     case albumCovers.id: carouselData.value = albumCovers; break
     case chapterThumbnails.id: carouselData.value = chapterThumbnails; break
     case whiteMemory.id: carouselData.value = whiteMemory; break
+    case fourkoma_en.id: carouselData.value = fourkoma_en; break
+    case fourkoma_jp.id: carouselData.value = fourkoma_jp; break
+    case fourkoma_kr.id: carouselData.value = fourkoma_kr; break
     default:
   }
   currentId.value = id
@@ -203,5 +232,9 @@ const updateIndex = (newIndex: number) => {
 .mobile {
   width: 95%;
   text-align: left;
+}
+
+.tweet {
+  user-select: none;
 }
 </style>

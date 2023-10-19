@@ -2,7 +2,7 @@
   <n-button round @click="load()"
       :ghost="carouselData !== null && carouselData.id === targetId ? false : true"
       :type="carouselData !== null && carouselData.id === targetId ? 'success' : 'info'"
-      >Load {{ displayedText }}</n-button>
+      >{{ displayedText }}</n-button>
 </template>
 
 <script setup lang="ts">

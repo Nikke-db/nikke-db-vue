@@ -1,8 +1,8 @@
 {
   "path": "whitememory/",
-  "type": "img",
+  "type": "large",
   "id": "whitememory",
-  "title": "White Memory (~25mb)",
+  "title": "White Memory",
   "content": [
     {
       "name": "whitememory_01",

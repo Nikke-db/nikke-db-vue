@@ -14,6 +14,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@jacksongross/vue-tweet-embed": "^3.0.1",
     "@vicons/carbon": "^0.12.0",
     "@vicons/fa": "^0.12.0",
     "@vicons/material": "^0.12.0",

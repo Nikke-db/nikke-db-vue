@@ -2,7 +2,7 @@
   "path": "albums/",
   "type": "img",
   "id": "albums",
-  "title": "Album Covers (~9mb)",
+  "title": "Album Covers",
   "content": [
     {
       "name": "album_field_01",

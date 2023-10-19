@@ -6,7 +6,7 @@
       :class="checkMobile()"
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
-      <n-p>the character page ( route /c or /character ) have been removed and will never be developped back. Check out <n-a href="https://dotgg.gg/nikke/characters" target="_blank">dotgg.gg/nikke</n-a> for a better and quicker updated website.</n-p>
+      <n-p>the character page ( route /c or /character ) have been removed and will never be developped. Check out <n-a href="https://dotgg.gg/nikke/characters" target="_blank">dotgg.gg/nikke</n-a> for a better and quicker updated website.</n-p>
       <n-p>
         Nikke Community decided to shut down the server I used for feedback and
         update log, so I guess the only way to reach me out is through private
