@@ -1020,6 +1020,11 @@
     "version": 4.1
   },
   {
+    "name": "ACPU FREEZE",
+    "id": "acpufreeze",
+    "version": 4.1
+  },
+  {
     "id": "smol_anchor",
     "name": "Smol Anchor",
     "version": 4.1
@@ -1067,6 +1072,81 @@
   {
     "name": "Smol Yan",
     "id": "smol_yan",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Mother Whale",
+    "id": "bba001",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Harvester",
+    "id": "bbg001",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Chatterbox",
+    "id": "bbg002",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Blacksmith",
+    "id": "bbg003",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Storm Bringer",
+    "id": "eba001",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Gatekeeper Blue",
+    "id": "eba003",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Gatekeeper Green",
+    "id": "eba003_green",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Gatekeeper Red",
+    "id": "eba003_hsta",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Land Eater",
+    "id": "ebg001",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Material H",
+    "id": "ebg002",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Nihilister",
+    "id": "mba002",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Alteisen",
+    "id": "mbg001",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Grave Digger",
+    "id": "mbg002",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Modernia",
+    "id": "mbg004",
+    "version": 4.1
+  },
+  {
+    "name": "Boss: Modernia Intro",
+    "id": "mbg004_appearance",
     "version": 4.1
   },
   {

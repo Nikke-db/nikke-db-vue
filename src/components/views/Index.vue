@@ -32,6 +32,7 @@ import updates from '@/utils/json/updateLog.json'
 
 const market = useMarket()
 
+
 onBeforeMount(() => {
   market.load.beginLoad()
   document.body.classList.add('poli-bg')

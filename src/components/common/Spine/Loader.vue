@@ -97,6 +97,10 @@ const getPathing = (extension: string) => {
 }
 
 const getDefaultAnimation = () => {
+  if (market.live2d.current_id === 'mbg004_appearance' ) {
+    return 'mbg004_appearance'
+  }
+
   switch (market.live2d.current_pose) {
     case 'aim':
       return 'aim_idle'
