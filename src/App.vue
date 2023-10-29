@@ -156,4 +156,8 @@ blockquote.twitter-tweet a:hover,
 blockquote.twitter-tweet a:focus {
   text-decoration: underline;
 }
+
+.wideModalDialogWidth {
+  width: 60vw !important;
+}
 </style>

@@ -23,7 +23,9 @@ enum messagesEnum {
   MESSAGE_CANCELLED = 'Action Cancelled',
   MESSAGE_CANNOT_SAVE_EMPTY = 'Cannot save an empty value',
   MESSAGE_WRONG_FORM_DATA = 'Something is wrong with the form data you\'ve entered',
-  MESSAGE_PROCESSING = 'Processing'
+  MESSAGE_PROCESSING = 'Processing',
+  MESSAGE_UNLOAD = "Unloaded older asset successfully",
+  MESSAGE_WRONG_FILE_FORMAT = "Wrong file format"
 }
 
 enum theme {

@@ -8,6 +8,7 @@
     <n-modal
       v-model:show="scSzModal"
       id="bgcModal"
+      class="wideModalDialogWidth"
       :mask-closable="false"
       preset="dialog"
       title="&nbsp;&nbsp;Change the Screenshot size"

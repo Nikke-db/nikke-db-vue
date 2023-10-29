@@ -8,6 +8,7 @@
     <n-modal
       v-model:show="isBgiModalOpen"
       id="bgcModal"
+      class="wideModalDialogWidth"
       preset="dialog"
       title="&nbsp;&nbsp;Change the Background Image"
       positive-text="Confirm"
@@ -77,15 +78,7 @@
 <script setup lang="ts">
 import { ref, type Ref, onUnmounted, watch } from 'vue'
 import { DriveFolderUploadOutlined } from '@vicons/material'
-import {
-  MinusVertical,
-  Minus,
-  RadiusTopLeft,
-  RadiusTopRight,
-  RadiusBottomLeft,
-  RadiusBottomRight,
-  Circle
-} from '@vicons/tabler'
+import { MinusVertical, Minus, RadiusTopLeft, RadiusTopRight, RadiusBottomLeft, RadiusBottomRight, Circle } from '@vicons/tabler'
 import { type UploadFileInfo } from 'naive-ui'
 
 const isBgiModalOpen = ref(false)

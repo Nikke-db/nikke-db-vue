@@ -13,6 +13,26 @@ export const useLive2dStore = defineStore('live2d', () => {
   const resetPlacement = ref(0)
   const screenshot = ref(0)
 
+  const fr = new FileReader()
+
+  const customSkel = ref({
+    title: '' as string,
+    URI: '' as string | ArrayBuffer | null
+  })
+
+  const customPng = ref({
+    title: '' as string,
+    URI: '' as string | ArrayBuffer | null
+  })
+
+  const customAtlas = ref({
+    title: '' as string,
+    URI: '' as string | ArrayBuffer | null
+  })
+
+  const customSpineVersion = ref(4.1)
+  const customLoad = ref(0)
+
   const filter = () => {
     const base_array: live2d_interface[] = l2d
     filtered_l2d_Array.value = base_array.sort(
@@ -112,6 +132,38 @@ export const useLive2dStore = defineStore('live2d', () => {
     }
   }
 
+  const initCustomSkel = (skel: File) => {
+    fr.readAsDataURL(skel)
+    fr.onload = () => {
+      customSkel.value.title = skel.name
+      customSkel.value.URI = fr.result
+    }
+  }
+
+  const initCustomPng = (png: File) => {
+    fr.readAsDataURL(png)
+    fr.onload = () => {
+      customPng.value.title = png.name
+      customPng.value.URI = fr.result
+    }
+  }
+
+  const initCustomAtlas = (atlas: File) => {
+    fr.readAsDataURL(atlas)
+    fr.onload = () => {
+      customAtlas.value.title = atlas.name
+      customAtlas.value.URI = fr.result
+    }
+  }
+
+  const setCustomSpineVersion = (newVersion: number) => {
+    customSpineVersion.value = newVersion
+  }
+
+  const triggerCustomLoad = () => {
+    customLoad.value = new Date().getTime()
+  }
+
   return {
     filtered_l2d_Array,
     current_id,
@@ -123,6 +175,16 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerResetPlacement,
     screenshot,
     triggerScreenshot,
-    getSkin
+    getSkin,
+    customSkel,
+    initCustomSkel,
+    customPng,
+    initCustomPng,
+    customAtlas,
+    initCustomAtlas,
+    customSpineVersion,
+    setCustomSpineVersion,
+    customLoad,
+    triggerCustomLoad
   }
 })

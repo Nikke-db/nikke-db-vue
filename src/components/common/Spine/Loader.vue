@@ -69,6 +69,44 @@ const spineLoader = () => {
   })
 }
 
+const customSpineLoader = () => {
+  let usedSpine: any
+
+  switch (market.live2d.customSpineVersion) {
+    case 4.0:
+      usedSpine = spine40
+      break
+    case 4.1:
+      usedSpine = spine41
+      break
+    default:
+      break
+  }
+
+  spineCanvas = new usedSpine.SpinePlayer('player-container', {
+    skelUrl: market.live2d.customSkel.title,
+    atlasUrl: market.live2d.customAtlas.title,
+    rawDataURIs: {
+      [market.live2d.customSkel.title]: market.live2d.customSkel.URI,
+      [market.live2d.customAtlas.title]: market.live2d.customAtlas.URI,
+      [market.live2d.customPng.title]: market.live2d.customPng.URI
+    },
+    backgroundColor: '#00000000',
+    alpha: true,
+    mipmaps: market.live2d.current_pose === 'fb' ? true : false,
+    debug: false,
+    preserveDrawingBuffer: true,
+    viewport: spineViewport,
+    success: (e: any) => {
+      successfullyLoaded()
+      e.play()
+    },
+    error: () => {
+      wrongfullyLoaded()
+    }
+  })
+}
+
 const getPathing = (extension: string) => {
   let route =
     globalParams.PATH_L2D +
@@ -195,22 +233,22 @@ watch(() => market.live2d.screenshot, () => {
   } else {
     takeScreenshot()
   }
-}
-)
+})
+
+watch(() => market.live2d.customLoad, () => {
+  spineCanvas.dispose()
+  market.load.beginLoad()
+  customSpineLoader()
+  applyDefaultStyle2Canvas()
+})
 
 const takeScreenshot = () => {
   const dataURL = canvas.toDataURL()
 
   const link = document.createElement('a')
 
-  link.download =
-    'NIKKE-DB_' +
-    market.live2d.current_id +
-    '_' +
-    market.live2d.current_pose +
-    '_' +
-    new Date().getTime().toString().slice(-3) +
-    '.png'
+  link.download = 'NIKKE-DB_' + market.live2d.current_id + '_' + market.live2d.current_pose + '_' +
+                  new Date().getTime().toString().slice(-3) + '.png'
 
   link.href = dataURL
 
