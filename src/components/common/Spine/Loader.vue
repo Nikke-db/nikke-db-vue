@@ -242,6 +242,17 @@ watch(() => market.live2d.customLoad, () => {
   applyDefaultStyle2Canvas()
 })
 
+watch(() => market.live2d.hideUI, () => {
+  const controls = document.querySelector('.spine-player-controls') as HTMLElement
+  if (market.live2d.hideUI === false) {
+    controls.style.visibility = 'visible'
+  } else {
+    controls.style.visibility = 'hidden'
+  }
+})
+
+document.addEventListener
+
 const takeScreenshot = () => {
   const dataURL = canvas.toDataURL()
 

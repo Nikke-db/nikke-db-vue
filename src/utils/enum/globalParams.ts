@@ -25,7 +25,8 @@ enum messagesEnum {
   MESSAGE_WRONG_FORM_DATA = 'Something is wrong with the form data you\'ve entered',
   MESSAGE_PROCESSING = 'Processing',
   MESSAGE_UNLOAD = "Unloaded older asset successfully",
-  MESSAGE_WRONG_FILE_FORMAT = "Wrong file format"
+  MESSAGE_WRONG_FILE_FORMAT = "Wrong file format",
+  MESSAGE_UI_SHOWBACK = "Press the \"Enter\" key to show the UI back"
 }
 
 enum theme {

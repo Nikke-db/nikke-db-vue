@@ -42,5 +42,9 @@
   {
     "date": "October 29th 2023",
     "update": "Added the custom spine loader feature" 
+  },
+  {
+    "date": "October 29th 2023",
+    "update": "Added the hide UI feature" 
   }
 ]

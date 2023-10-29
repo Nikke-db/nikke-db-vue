@@ -1,5 +1,5 @@
 <template>
-  <div id="l2dsearchbox" :class="checkMobile()">
+  <div id="l2dsearchbox" :class="checkMobile()" v-show="!market.live2d.hideUI">
     <n-card size="small" :bordered="false">
       <n-input
         type="text"

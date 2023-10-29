@@ -12,6 +12,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
   const resetPlacement = ref(0)
   const screenshot = ref(0)
+  const hideUI = ref(false)
 
   const fr = new FileReader()
 
@@ -164,6 +165,14 @@ export const useLive2dStore = defineStore('live2d', () => {
     customLoad.value = new Date().getTime()
   }
 
+  const triggerHideUI = () => {
+    hideUI.value = true
+  }
+
+  const triggerShowUI = () => {
+    hideUI.value = false
+  }
+
   return {
     filtered_l2d_Array,
     current_id,
@@ -185,6 +194,9 @@ export const useLive2dStore = defineStore('live2d', () => {
     customSpineVersion,
     setCustomSpineVersion,
     customLoad,
-    triggerCustomLoad
+    triggerCustomLoad,
+    triggerHideUI,
+    triggerShowUI,
+    hideUI
   }
 })

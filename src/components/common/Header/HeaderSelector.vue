@@ -7,7 +7,7 @@
       "
       :routes="ROUTES"
     />
-    <HeaderPC v-show="!market.globalParams.isMobile" :routes="ROUTES" />
+    <HeaderPC v-show="!market.globalParams.isMobile" :routes="ROUTES"  :class="nullifyOpacity()"/>
   </div>
 </template>
 
@@ -20,6 +20,18 @@ import { ROUTES } from '@/components/common/Header/routes2Display'
 import { useMarket } from '@/stores/market'
 
 const market = useMarket()
+
+const nullifyOpacity = () => {
+  if (market.live2d.hideUI) {
+    return 'no-opacity'
+  } else {
+    ''
+  }
+}
 </script>
 
-<style lang="less"></style>
+<style lang="less">
+.no-opacity {
+  visibility: hidden;
+}
+</style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="toolList">
+  <div class="toolList" v-show="!market.live2d.hideUI">
     <n-card :bordered="false" size="small" class="toolCardTitle">
       <n-h3>Tools</n-h3>
     </n-card>
@@ -41,6 +41,9 @@ import BackgroundImage from './Tools/BackgroundImage.vue'
 import Screenshot from './Tools/Screenshot.vue'
 import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 import CustomLoader from './Tools/CustomLoader.vue'
+import { useMarket } from '@/stores/market'
+
+const market = useMarket()
 </script>
 
 <style scoped lang="less">
