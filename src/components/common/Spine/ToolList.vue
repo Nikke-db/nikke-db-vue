@@ -19,6 +19,7 @@
         </div>
         <div>
           <BackgroundImage />
+          <BackgroundImagePack />
         </div>
         <div>
           <Screenshot />
@@ -38,6 +39,7 @@ import ResetCoordinates from './Tools/ResetCoordinates.vue'
 import HideUI from './Tools/HideUI.vue'
 import BackgroundColor from './Tools/BackgroundColor.vue'
 import BackgroundImage from './Tools/BackgroundImage.vue'
+import BackgroundImagePack from './Tools/BackgroundImagePack.vue'
 import Screenshot from './Tools/Screenshot.vue'
 import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 import CustomLoader from './Tools/CustomLoader.vue'

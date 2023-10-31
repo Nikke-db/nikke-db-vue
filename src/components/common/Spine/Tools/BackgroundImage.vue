@@ -15,6 +15,7 @@
       :closable="false"
     >
       <n-card title="" :bordered="false" size="huge" id="bgcModalContent">
+        <BackgroundImagePack />
         <n-upload
           directory-dnd
           accept="image/*"
@@ -80,6 +81,7 @@ import { ref, type Ref, onUnmounted, watch } from 'vue'
 import { DriveFolderUploadOutlined } from '@vicons/material'
 import { MinusVertical, Minus, RadiusTopLeft, RadiusTopRight, RadiusBottomLeft, RadiusBottomRight, Circle } from '@vicons/tabler'
 import { type UploadFileInfo } from 'naive-ui'
+import BackgroundImagePack from './BackgroundImagePack.vue'
 
 const isBgiModalOpen = ref(false)
 const fileList: Ref<UploadFileInfo[]> = ref([])
@@ -214,5 +216,9 @@ const checkIfSelectedPosiBool = (e: string) => {
 
 .icn_black {
   color: black;
+}
+
+.n-upload {
+  margin-top: 25px;
 }
 </style>
