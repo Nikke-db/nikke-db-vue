@@ -11,7 +11,7 @@
       class="wideModalDialogWidth"
       :mask-closable="false"
       preset="dialog"
-      title="&nbsp;&nbsp;Load custom a spine asset"
+      title="&nbsp;&nbsp;Load a custom spine asset"
       positive-text="Close modal"
       negative-text="Close modal"
       :closable="false"
