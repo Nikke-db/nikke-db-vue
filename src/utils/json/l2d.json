@@ -392,8 +392,18 @@
     "id": "c222"
   },
   {
+    "name": "Snow White: Innocent Days",
+    "id": "c224",
+    "version":4.1
+  },
+  {
     "name": "Harran",
     "id": "c230"
+  },
+  {
+    "name": "Harran Banquet Witch",
+    "id": "c230_01",
+    "version":4.1
   },
   {
     "name": "Isabel",
@@ -406,6 +416,11 @@
   {
     "name": "Dorothy",
     "id": "c233"
+  },
+  {
+    "name": "Dorothy Nostalgia",
+    "id": "c233_01",
+    "version":4.1
   },
   {
     "name": "Rumani",
@@ -912,6 +927,16 @@
     "id": "c941"
   },
   {
+    "name": "Commander (GODDESS)",
+    "id": "c942",
+    "version":4.1
+  },
+  {
+    "name": "Liliweiss",
+    "id": "c943",
+    "version":4.1
+  },
+  {
     "name": "Katie",
     "id": "c945",
     "version": 4.1
@@ -934,6 +959,16 @@
   {
     "name": "Product 12: 6000-D",
     "id": "c964",
+    "version": 4.1
+  },
+  {
+    "name": "Scarlet",
+    "id": "c965",
+    "version": 4.1
+  },
+  {
+    "name": "Rapunzel",
+    "id": "c966",
     "version": 4.1
   },
   {
@@ -1022,6 +1057,16 @@
   {
     "name": "ACPU FREEZE",
     "id": "acpufreeze",
+    "version": 4.1
+  },
+  {
+    "name": "RED ASH 1",
+    "id": "redash1",
+    "version": 4.1
+  },
+  {
+    "name": "RED ASH 2",
+    "id": "redash2",
     "version": 4.1
   },
   {
@@ -1256,5 +1301,15 @@
   {
     "name": "Story 22-06",
     "id": "story2206"
+  },
+  {
+    "name": "Story 25-01",
+    "id": "story2501",
+    "version":4.1
+  },
+  {
+    "name": "Story 26-02",
+    "id": "story2602",
+    "version":4.1
   }
 ]
