@@ -1,0 +1,36 @@
+{
+  "path": "story4/",
+  "type": "large",
+  "id": "story4",
+  "title": "Chapters 26 to 30",
+  "content": [
+    {
+      "name": "EventScene_Chap_26_01",
+      "text": "Red Eye"
+    },
+    {
+      "name": "EventScene_Chap_26_03",
+      "text": "Music Box"
+    },
+    {
+      "name": "EventScene_Chap_26_04",
+      "text": "Red Hood"
+    },
+    {
+      "name": "EventScene_Chap_26_05",
+      "text": "Rapi"
+    },
+    {
+      "name": "EventScene_Chap_26_06",
+      "text": "Rapi"
+    },
+    {
+      "name": "EventScene_Chap_26_07",
+      "text": "Mother Whale ?"
+    },
+    {
+      "name": "EventScene_Chap_26_08",
+      "text": "Raptillion!"
+    }
+  ]
+}

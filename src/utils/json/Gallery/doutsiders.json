@@ -1,0 +1,12 @@
+{
+  "path": "doutsiders/",
+  "type": "large",
+  "id": "doutsiders",
+  "title": "D Outsiders",
+  "content": [
+    {
+      "name": "EventScene_Doutsiders",
+      "text": "D Outsiders"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "path": "outerautomata/",
+  "type": "large",
+  "id": "outerautomata",
+  "title": "Outer Automata",
+  "content": [
+    {
+      "name": "EventScene_ce_02_01",
+      "text": "Outer Automata 1"
+    },
+    {
+      "name": "EventScene_ce_02_02",
+      "text": "Outer Automata 2"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "path": "story1/",
+  "type": "large",
+  "id": "story1",
+  "title": "Chapters 0 to 9",
+  "content": [
+    {
+      "name": "EventScene_Main_02_01",
+      "text": "Great Scenery"
+    },
+    {
+      "name": "EventScene_Main_02_02",
+      "text": "Infiltration"
+    },
+    {
+      "name": "EventScene_Chap_02_After_02",
+      "text": "Syuen"
+    },
+    {
+      "name": "EventScene_Chap_04_01",
+      "text": "Euhnwa"
+    },
+    {
+      "name": "EventScene_Chap_04_02",
+      "text": "Helicopter"
+    },
+    {
+      "name": "EventScene_Chap_04_03",
+      "text": "Slightly different helicopter"
+    },
+    {
+      "name": "EventScene_Chap_04_05",
+      "text": "Yuni & Mihara"
+    },
+    {
+      "name": "EventScene_Chap_06_01",
+      "text": "Modernia"
+    },
+    {
+      "name": "EventScene_Chap_06_02",
+      "text": "Android"
+    },
+    {
+      "name": "EventScene_Chap_07_01",
+      "text": "Ludmilla & Alice"
+    },
+    {
+      "name": "EventScene_Chap_07_03",
+      "text": "Snow White"
+    },
+    {
+      "name": "EventScene_Chap_08_01",
+      "text": "Anis & Neon"
+    },
+    {
+      "name": "EventScene_Chap_08_01_a",
+      "text": "Friends"
+    },
+    {
+      "name": "EventScene_Chap_08_02",
+      "text": "Friendly Anis & Neon"
+    },
+    {
+      "name": "EventScene_Chap_08_02_a",
+      "text": "Cute"
+    },
+    {
+      "name": "EventScene_Chap_09_01",
+      "text": "Exia"
+    },
+    {
+      "name": "EventScene_Chap_09_02",
+      "text": "Dead"
+    }
+  ]
+}

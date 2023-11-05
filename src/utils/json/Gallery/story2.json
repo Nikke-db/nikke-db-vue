@@ -1,0 +1,72 @@
+{
+  "path": "story2/",
+  "type": "large",
+  "id": "story2",
+  "title": "Chapters 10 to 19",
+  "content": [
+    {
+      "name": "EventScene_Chap_10_01",
+      "text": "Rapi"
+    },
+    {
+      "name": "EventScene_Chap_11_01",
+      "text": "Laplace"
+    },
+    {
+      "name": "EventScene_Chap_12_01",
+      "text": "The Hero"
+    },
+    {
+      "name": "EventScene_Chap_12_02",
+      "text": "Maiden & Guillotine"
+    },
+    {
+      "name": "EventScene_Chap_12_03",
+      "text": "Maiden"
+    },
+    {
+      "name": "EventScene_Chap_12_After_02",
+      "text": "The big four"
+    },
+    {
+      "name": "EventScene_Chap_13_01",
+      "text": "Infinity Rail"
+    },
+    {
+      "name": "EventScene_Chap_13_01_02",
+      "text": "The AZX"
+    },
+    {
+      "name": "EventScene_Chap_13_03",
+      "text": "Chatterbox"
+    },
+    {
+      "name": "EventScene_Chap_13_04",
+      "text": "Gun"
+    },
+    {
+      "name": "EventScene_Chap_13_05",
+      "text": "Kick"
+    },
+    {
+      "name": "EventScene_Chap_13_06",
+      "text": "Red Hood"
+    },
+    {
+      "name": "EventScene_Chap_14_02",
+      "text": "Triangle"
+    },
+    {
+      "name": "EventScene_Main_15_After_01",
+      "text": "Matis"
+    },
+    {
+      "name": "EventScene_Main_16_01",
+      "text": "Exotic"
+    },
+    {
+      "name": "EventScene_Chap_19_01",
+      "text": "Eden"
+    }
+  ]
+}

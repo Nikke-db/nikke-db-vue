@@ -1,0 +1,20 @@
+{
+  "path": "bluewaterisland/",
+  "type": "large",
+  "id": "bluewaterisland",
+  "title": "Blue Water Island",
+  "content": [
+    {
+      "name": "EventScene_BluewaterIsland_02",
+      "text": "Blue Water Island 1"
+    },
+    {
+      "name": "EventScene_BluewaterIsland_03",
+      "text": "Blue Water Island 2"
+    },
+    {
+      "name": "EventScene_BluewaterIsland_04",
+      "text": "Blue Water Island 3"
+    }
+  ]
+}

@@ -7,38 +7,34 @@
       <n-h1>Story</n-h1>
       <ButtonTemplate
         v-for="buttonItem in buttonListStory"
-        :key="buttonItem.id"
-        :target-id="buttonItem.id"
-        :displayed-text="buttonItem.text"
-        :carousel-data="carouselData" :current-id="currentId" @load-data="(id: string) => loadData(id)"
+        :key="buttonItem.data.id"
+        :data-to-load="buttonItem.data"
+        :carousel-data="carouselData" :current-id="currentId" @load-data="(data: galleryInterface) => loadData(data)"
       />
 
       <n-h1>Events</n-h1>
       <ButtonTemplate
         v-for="buttonItem in buttonListEvents"
-        :key="buttonItem.id"
-        :target-id="buttonItem.id"
-        :displayed-text="buttonItem.text"
-        :carousel-data="carouselData" :current-id="currentId" @load-data="(id: string) => loadData(id)"
+        :key="buttonItem.data.id"
+        :data-to-load="buttonItem.data"
+        :carousel-data="carouselData" :current-id="currentId" @load-data="(data: galleryInterface) => loadData(data)"
       />
 
       <n-h1>Other</n-h1>
       <ButtonTemplate
         v-for="buttonItem in buttonListOther"
-        :key="buttonItem.id"
-        :target-id="buttonItem.id"
-        :displayed-text="buttonItem.text"
-        :carousel-data="carouselData" :current-id="currentId" @load-data="(id: string) => loadData(id)"
+        :key="buttonItem.data.id"
+        :data-to-load="buttonItem.data"
+        :carousel-data="carouselData" :current-id="currentId" @load-data="(data: galleryInterface) => loadData(data)"
       />
 
       <n-h1>Community Content</n-h1>
       This place could display anything community made on discord/twitter/arca.live/anything. hit me up if you are interested in displaying something here!<br/><br/>
       <ButtonTemplate
         v-for="buttonItem in buttonListCommunity"
-        :key="buttonItem.id"
-        :target-id="buttonItem.id"
-        :displayed-text="buttonItem.text"
-        :carousel-data="carouselData" :current-id="currentId" @load-data="(id: string) => loadData(id)"
+        :key="buttonItem.data.id"
+        :data-to-load="buttonItem.data"
+        :carousel-data="carouselData" :current-id="currentId" @load-data="(data: galleryInterface) => loadData(data)"
       />
     </n-card>
 
@@ -146,6 +142,21 @@ import whiteMemory from '@/utils/json/Gallery/whitememory.json'
 import fourkoma_en from '@/utils/json/Gallery/4koma_en.json'
 import fourkoma_jp from '@/utils/json/Gallery/4koma_jp.json'
 import fourkoma_kr from '@/utils/json/Gallery/4koma_kr.json'
+import story1 from '@/utils/json/Gallery/story1.json'
+import story2 from '@/utils/json/Gallery/story2.json'
+import story3 from '@/utils/json/Gallery/story3.json'
+import story4 from '@/utils/json/Gallery/story4.json'
+import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
+import voltroad from '@/utils/json/Gallery/voltroad.json'
+import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
+import brandnewyear from '@/utils/json/Gallery/brandnewyear.json'
+import outerautomata from '@/utils/json/Gallery/outerautomata.json'
+import doutsiders from '@/utils/json/Gallery/doutsiders.json'
+import bonds from '@/utils/json/Gallery/bonds.json'
+import fullfoolday from '@/utils/json/Gallery/fullfoolday.json'
+import miraclesnow from '@/utils/json/Gallery/miraclesnow.json'
+import seayouagain from '@/utils/json/Gallery/seayouagain.json'
+import overzone from '@/utils/json/Gallery/overzone.json'
 
 const market = useMarket()
 
@@ -153,24 +164,42 @@ const carouselData: Ref<galleryInterface | null> = ref(null)
 const index = ref(1)
 const currentId = ref('')
 
+interface buttonInterface {
+  data: galleryInterface
+}
+
 const buttonListStory = [
-  { id: chapterThumbnails.id, text: chapterThumbnails.title },
-]
+  { data: chapterThumbnails },
+  { data: story1 },
+  { data: story2 },
+  { data: story3 },
+  { data: story4 }
+] as buttonInterface[]
 
 const buttonListEvents = [
-  { id: whiteMemory.id, text: whiteMemory.title }
-]
+  { data: miraclesnow },
+  { data: brandnewyear },
+  { data: doutsiders },
+  { data: fullfoolday },
+  { data: overzone },
+  { data: whiteMemory },
+  { data: bluewaterisland },
+  { data: seayouagain },
+  { data: outerautomata }
+] as buttonInterface[]
 
 const buttonListOther = [
-  { id: albumCovers.id, text: albumCovers.title },
-]
+  { data: albumCovers },
+  { data: bonds },
+  { data: bbqmaster },
+  { data: voltroad }
+] as buttonInterface[]
 
-// remove any when there will be content in the array
-const buttonListCommunity: any[] = [
-  { id: fourkoma_en.id, text: fourkoma_en.title },
-  { id: fourkoma_jp.id, text: fourkoma_jp.title },
-  { id: fourkoma_kr.id, text: fourkoma_kr.title }
-]
+const buttonListCommunity = [
+  { data: fourkoma_en },
+  { data: fourkoma_jp },
+  { data: fourkoma_kr },
+] as buttonInterface[]
 
 const checkMobile = () => {
   return market.globalParams.isMobile ? 'mobile' : ''
@@ -184,19 +213,11 @@ const successFeedback = () => {
   market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED)
 }
 
-const loadData = (id: string) => {
+const loadData = (dataToLoad: galleryInterface) => {
   carouselData.value = null
   index.value = 1
-  switch (id) {
-    case albumCovers.id: carouselData.value = albumCovers; break
-    case chapterThumbnails.id: carouselData.value = chapterThumbnails; break
-    case whiteMemory.id: carouselData.value = whiteMemory; break
-    case fourkoma_en.id: carouselData.value = fourkoma_en; break
-    case fourkoma_jp.id: carouselData.value = fourkoma_jp; break
-    case fourkoma_kr.id: carouselData.value = fourkoma_kr; break
-    default:
-  }
-  currentId.value = id
+  carouselData.value = dataToLoad
+  currentId.value = dataToLoad.id
   setTimeout(() => {
     document.querySelector('#scrollTo')?.scrollIntoView({ behavior: 'smooth' })
     successFeedback()

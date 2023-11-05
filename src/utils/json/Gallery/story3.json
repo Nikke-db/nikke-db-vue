@@ -1,0 +1,136 @@
+{
+  "path": "story3/",
+  "type": "large",
+  "id": "story3",
+  "title": "Chapters 20 to 25",
+  "content": [
+    {
+      "name": "EventScene_Chap_20_01",
+      "text": "Johan"
+    },
+    {
+      "name": "EventScene_Chap_20_02_01",
+      "text": "Shooting Star"
+    },
+    {
+      "name": "EventScene_Chap_20_03",
+      "text": "Dragon"
+    },
+    {
+      "name": "EventScene_Chap_21_02_01",
+      "text": "Mother Whale 1"
+    },
+    {
+      "name": "EventScene_Chap_21_02_02",
+      "text": "Mother Whale 2"
+    },
+    {
+      "name": "EventScene_Chap_21_02",
+      "text": "Mother Whale 3"
+    },
+    {
+      "name": "EventScene_Chap_21_02_03",
+      "text": "Mother Whale 4"
+    },
+    {
+      "name": "EventScene_Chap_21_03",
+      "text": "Mother Whale 5"
+    },
+    {
+      "name": "EventScene_Chap_21_02_04",
+      "text": "Mother Whale 6"
+    },
+    {
+      "name": "EventScene_Chap_21_04",
+      "text": "Mother Whale 7"
+    },
+    {
+      "name": "EventScene_Chap_21_05",
+      "text": "Mother Whale 8"
+    },
+    {
+      "name": "EventScene_Chap_21_06",
+      "text": "Mother Whale 9"
+    },
+    {
+      "name": "EventScene_Chap_21_07_01",
+      "text": "Mother Whale 10"
+    },
+    {
+      "name": "EventScene_Chap_21_07_02",
+      "text": "Mother Whale 11"
+    },
+    {
+      "name": "EventScene_Chap_21_07",
+      "text": "Vapauss"
+    },
+    {
+      "name": "EventScene_Chap_22_02",
+      "text": "Enikk"
+    },
+    {
+      "name": "EventScene_Chap_22_03",
+      "text": "Nihilister"
+    },
+    {
+      "name": "EventScene_Chap_22_04",
+      "text": "Destruction"
+    },
+    {
+      "name": "EventScene_Chap_22_05",
+      "text": "Goddess"
+    },
+    {
+      "name": "EventScene_Chap_22_06",
+      "text": "Dorothy"
+    },
+    {
+      "name": "EventScene_Chap_23_01",
+      "text": "Moran"
+    },
+    {
+      "name": "EventScene_Chap_23_02",
+      "text": "Chuunibyou & Dog"
+    },
+    {
+      "name": "EventScene_Chap_24_01",
+      "text": "Viper"
+    },
+    {
+      "name": "EventScene_Chap_24_02",
+      "text": "Viper"
+    },
+    {
+      "name": "EventScene_Chap_24_03",
+      "text": "Viper"
+    },
+    {
+      "name": "EventScene_Chap_24_04",
+      "text": "Rapi"
+    },
+    {
+      "name": "EventScene_Chap_24_05",
+      "text": "Rapi & Scarf"
+    },
+    {
+      "name": "EventScene_Chap_24_06",
+      "text": "Scarf"
+    },
+    {
+      "name": "EventScene_Chap_24_07",
+      "text": "Call an ambulance"
+    },
+    {
+      "name": "EventScene_Chap_24_08",
+      "text": "But not for me"
+    },
+    {
+      "name": "EventScene_Chap_24_After2_01",
+      "text": "Andersen "
+    },
+    {
+      "name": "EventScene_Chap_24_09",
+      "text": "Syuen"
+    }
+  ]
+}

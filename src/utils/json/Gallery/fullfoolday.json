@@ -1,0 +1,12 @@
+{
+  "path": "fullfoolday/",
+  "type": "large",
+  "id": "fullfoolday",
+  "title": "Full Fool Day",
+  "content": [
+    {
+      "name": "EventScene_FullFoolDay_01",
+      "text": "Full Fool Day 2023"
+    }
+  ]
+}

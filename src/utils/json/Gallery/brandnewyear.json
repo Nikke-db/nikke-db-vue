@@ -1,0 +1,12 @@
+{
+  "path": "brandnewyear/",
+  "type": "large",
+  "id": "brandnewyear",
+  "title": "Brand New Year",
+  "content": [
+    {
+      "name": "EventScene_BrandNewYear_01",
+      "text": "Brand New Year 1"
+    }
+  ]
+}
