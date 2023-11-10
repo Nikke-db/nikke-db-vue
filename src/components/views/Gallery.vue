@@ -99,7 +99,7 @@
             <img
             :src="globalParams.GALLERY + carouselData.path + data.name +'.png'"
             :fallback-src="maids"
-            style="max-width: 95%; height:100%; object-fit: cover;"
+            style="max-width: 95%; max-height:80vh; object-fit: cover;"
             object-fit='contain'
             />
           </div>
@@ -157,6 +157,7 @@ import fullfoolday from '@/utils/json/Gallery/fullfoolday.json'
 import miraclesnow from '@/utils/json/Gallery/miraclesnow.json'
 import seayouagain from '@/utils/json/Gallery/seayouagain.json'
 import overzone from '@/utils/json/Gallery/overzone.json'
+import redash from '@/utils/json/Gallery/redash.json'
 
 const market = useMarket()
 
@@ -185,7 +186,8 @@ const buttonListEvents = [
   { data: whiteMemory },
   { data: bluewaterisland },
   { data: seayouagain },
-  { data: outerautomata }
+  { data: outerautomata },
+  { data: redash }
 ] as buttonInterface[]
 
 const buttonListOther = [
