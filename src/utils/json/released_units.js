@@ -261,6 +261,8 @@ export const RELEASED_UNITS = [
   'Yulha',
   'Yuni',
   'Yuni Pretty In Pink',
+  'White Memory 1',
+  'White Memory 2',
   'Zwei',
   'Smol Anchor',
   'Smol Bolt',

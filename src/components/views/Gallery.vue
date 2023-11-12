@@ -158,6 +158,8 @@ import miraclesnow from '@/utils/json/Gallery/miraclesnow.json'
 import seayouagain from '@/utils/json/Gallery/seayouagain.json'
 import overzone from '@/utils/json/Gallery/overzone.json'
 import redash from '@/utils/json/Gallery/redash.json'
+import sevensevenseven from '@/utils/json/Gallery/777.json'
+import nyanyaparadise from '@/utils/json/Gallery/nyanyaparadise.json'
 
 const market = useMarket()
 
@@ -184,7 +186,9 @@ const buttonListEvents = [
   { data: fullfoolday },
   { data: overzone },
   { data: whiteMemory },
+  { data: sevensevenseven },
   { data: bluewaterisland },
+  { data: nyanyaparadise },
   { data: seayouagain },
   { data: outerautomata },
   { data: redash }

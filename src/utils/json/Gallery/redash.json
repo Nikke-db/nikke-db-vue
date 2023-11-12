@@ -93,8 +93,12 @@
       "text": "RED ASH 22"
     },
     {
-      "name": "EventScene_redash_08",
+      "name": "EventTitle_redash_t2",
       "text": "RED ASH 23"
+    },
+    {
+      "name": "EventScene_redash_08",
+      "text": "RED ASH 24"
     }
   ]
 }
