@@ -152,6 +152,7 @@ export const RELEASED_UNITS = [
   'Marian',
   'Mary',
   'Mary: Bay Goddess',
+  'Mass Produced Red',
   'Mass Produced Blue',
   'Mass Produced Orange',
   'Mass Produced Green',
