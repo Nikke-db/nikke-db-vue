@@ -6,20 +6,27 @@
       :class="checkMobile()"
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
-      <n-p>the character page ( route /c or /character ) have been removed and will never be developped. Check out <n-a href="https://dotgg.gg/nikke/characters" target="_blank">dotgg.gg/nikke</n-a> for a better and quicker updated website.</n-p>
-      <n-p>
+      <n-alert type="info">
         Nikke Community decided to shut down the server I used for feedback and
         update log, so I guess the only way to reach me out is through private
         discord messages (Koshirei#0333 / koshirei).
-      </n-p>
+      </n-alert>
+      <n-divider></n-divider>
+      <n-alert type="error">
+        Now stopping to answer DMs asking how to datamine or extracting specific files for your own use.<br/>
+        Please only come for feedback about the website.
+      </n-alert>
     </n-card>
 
-    <n-card title="Update log:" class="card-spacer" :class="checkMobile()">
+    <n-card title="Update log:" class="card-spacer updatelog" :class="checkMobile()">
       <n-p>New codebase, new update log! The old update log is still available on legacy website for the curious</n-p>
-      <n-ul>
-        <n-li v-for="update in updates.slice().reverse()" :key="update.date">{{ update.date }}: {{ update.update }}</n-li>
-      </n-ul>
-    </n-card>
+      <n-divider></n-divider>
+      <n-scrollbar style="height:300px; padding-right: 15px">
+        <n-ul>
+          <n-li v-for="update in updates.slice().reverse()" :key="update.date">{{ update.date }}: {{ update.update }}</n-li>
+        </n-ul>
+      </n-scrollbar>
+      </n-card>
     <n-back-top :visibility-height="0" style="display: none" />
   </div>
 </template>
