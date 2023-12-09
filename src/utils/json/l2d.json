@@ -92,6 +92,11 @@
     "id": "c061"
   },
   {
+    "name": "Mica: Snow Buddy",
+    "id": "c062",
+    "version":4.1
+  },
+  {
     "name": "Brid",
     "id": "c070"
   },
@@ -330,6 +335,11 @@
     "id": "c193"
   },
   {
+    "name": "Ludmilla: Winter Owner",
+    "id": "c194",
+    "version": 4.1
+  },
+  {
     "name": "Rupee",
     "id": "c200"
   },
@@ -488,6 +498,11 @@
   {
     "name": "Blanc",
     "id": "c270",
+    "version": 4.1
+  },
+  {
+    "name": "Blanc White Rabbit",
+    "id": "c270_01",
     "version": 4.1
   },
   {
@@ -1112,6 +1127,11 @@
   {
     "name": "Miracle Snow",
     "id": "miraclesnow",
+    "version": 4.1
+  },
+  {
+    "name": "Neverland",
+    "id": "neverland",
     "version": 4.1
   },
   {

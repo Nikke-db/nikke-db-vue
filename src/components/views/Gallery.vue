@@ -1,6 +1,11 @@
 <template>
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
+
+      <n-alert type="info">
+        Snowfall Oasis (Neverland's minigame) AND Neverland galleries will be uploaded after the event is complete! enjoy the content everyone and don't look for leaks permanently.
+      </n-alert>
+
       <n-p>If a gallery shows Cocoa and Soda, or if there's a missing image, hit me up asap !</n-p>
       <n-p>Feedback and content recommendation is appreciated</n-p>
 

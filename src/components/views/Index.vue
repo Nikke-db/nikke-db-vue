@@ -6,16 +6,26 @@
       :class="checkMobile()"
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
+
+      <n-alert type="success">
+        The asset repository reached 100 total stargazers ! Thank you everyone for your support for over a year now, and sorry for taking my time to update this small website. Happy christmas and happy new year.
+      </n-alert>
+
+      <n-divider></n-divider>
+
       <n-alert type="info">
         Nikke Community decided to shut down the server I used for feedback and
         update log, so I guess the only way to reach me out is through private
         discord messages (Koshirei#0333 / koshirei).
       </n-alert>
+
       <n-divider></n-divider>
+
       <n-alert type="error">
         Now stopping to answer DMs asking how to datamine or extracting specific files for your own use.<br/>
         Please only come for feedback about the website.
       </n-alert>
+
     </n-card>
 
     <n-card title="Update log:" class="card-spacer updatelog" :class="checkMobile()">
