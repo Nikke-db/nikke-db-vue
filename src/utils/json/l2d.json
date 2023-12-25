@@ -1012,6 +1012,21 @@
     "version": 4.1
   },
   {
+    "name": "Ghost: Lumi",
+    "id": "c967",
+    "version": 4.1
+  },
+  {
+    "name": "Ghost: Lua",
+    "id": "c968",
+    "version": 4.1
+  },
+  {
+    "name": "Ghost: Lena",
+    "id": "c969",
+    "version": 4.1
+  },
+  {
     "name": "Self",
     "id": "c9999"
   },

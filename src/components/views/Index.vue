@@ -7,12 +7,6 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="success">
-        The asset repository reached 100 total stargazers ! Thank you everyone for your support for over a year now, and sorry for taking my time to update this small website. Happy christmas and happy new year.
-      </n-alert>
-
-      <n-divider></n-divider>
-
       <n-alert type="info">
         Nikke Community decided to shut down the server I used for feedback and
         update log, so I guess the only way to reach me out is through private
@@ -49,7 +43,6 @@ import updates from '@/utils/json/updateLog.json'
 
 const market = useMarket()
 
-
 onBeforeMount(() => {
   market.load.beginLoad()
   document.body.classList.add('poli-bg')
@@ -57,8 +50,8 @@ onBeforeMount(() => {
 
 onMounted(() => {
   setTimeout(() => {
-    market.load.endLoad()
-    ;(document.querySelector('.n-back-top') as HTMLElement).click()
+    market.load.endLoad();
+    (document.querySelector('.n-back-top') as HTMLElement).click()
   }, 10)
   document.body.style.backgroundImage = 'url(' + bgi + ')'
 })

@@ -251,8 +251,6 @@ watch(() => market.live2d.hideUI, () => {
   }
 })
 
-document.addEventListener
-
 const takeScreenshot = () => {
   const dataURL = canvas.toDataURL()
 
