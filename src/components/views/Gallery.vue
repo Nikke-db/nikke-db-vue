@@ -3,7 +3,7 @@
     <n-card :class="checkMobile()" title="Gallery">
 
       <n-alert type="info">
-        Snowfall Oasis (Neverland's minigame) AND Neverland galleries will be uploaded after the event is complete! enjoy the content everyone and don't look for leaks permanently.
+        Snowfall Oasis (Neverland's minigame) gallery will be uploaded after the event is complete! enjoy the content everyone and don't look for leaks permanently.
       </n-alert>
 
       <n-p>If a gallery shows Cocoa and Soda, or if there's a missing image, hit me up asap !</n-p>
@@ -165,6 +165,7 @@ import overzone from '@/utils/json/Gallery/overzone.json'
 import redash from '@/utils/json/Gallery/redash.json'
 import sevensevenseven from '@/utils/json/Gallery/777.json'
 import nyanyaparadise from '@/utils/json/Gallery/nyanyaparadise.json'
+import neverland from '@/utils/json/Gallery/neverland.json'
 
 const market = useMarket()
 
@@ -196,7 +197,8 @@ const buttonListEvents = [
   { data: nyanyaparadise },
   { data: seayouagain },
   { data: outerautomata },
-  { data: redash }
+  { data: redash },
+  { data: neverland }
 ] as buttonInterface[]
 
 const buttonListOther = [
