@@ -2,13 +2,6 @@
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
 
-      <n-alert type="info">
-        Snowfall Oasis (Neverland's minigame) gallery will be uploaded after the event is complete! enjoy the content everyone and don't look for leaks permanently.
-      </n-alert>
-
-      <n-p>If a gallery shows Cocoa and Soda, or if there's a missing image, hit me up asap !</n-p>
-      <n-p>Feedback and content recommendation is appreciated</n-p>
-
       <n-h1>Story</n-h1>
       <ButtonTemplate
         v-for="buttonItem in buttonListStory"
@@ -166,6 +159,7 @@ import redash from '@/utils/json/Gallery/redash.json'
 import sevensevenseven from '@/utils/json/Gallery/777.json'
 import nyanyaparadise from '@/utils/json/Gallery/nyanyaparadise.json'
 import neverland from '@/utils/json/Gallery/neverland.json'
+import snowfalloasis from '@/utils/json/Gallery/snowfalloasis.json'
 
 const market = useMarket()
 
@@ -198,7 +192,8 @@ const buttonListEvents = [
   { data: seayouagain },
   { data: outerautomata },
   { data: redash },
-  { data: neverland }
+  { data: neverland },
+  { data: snowfalloasis }
 ] as buttonInterface[]
 
 const buttonListOther = [

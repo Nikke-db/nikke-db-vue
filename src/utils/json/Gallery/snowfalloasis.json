@@ -1,0 +1,100 @@
+{
+  "path": "snowfalloasis/",
+  "type": "large",
+  "id": "snowfalloasis",
+  "title": "Snow Fall Oasis",
+  "content": [
+    {
+      "name": "EventTitle_snowfalloasis_02",
+      "text": "Snow Fall Oasis"
+    },
+    {
+      "name": "EventScene_snowfalloasis_04_1",
+      "text": "Legend of the Bridge: Out 1"
+    },
+    {
+      "name": "EventScene_snowfalloasis_04_2",
+      "text": "Legend of the Bridge: Out 2"
+    },
+    {
+      "name": "EventScene_snowfalloasis_04_3",
+      "text": "Legend of the Bridge: In"
+    },
+    {
+      "name": "EventScene_snowfalloasis_05_1",
+      "text": "Legend of the Waterfall: Out"
+    },
+    {
+      "name": "EventScene_snowfalloasis_05_2",
+      "text": "Legend of the Waterfall: In"
+    },
+    {
+      "name": "EventScene_snowfalloasis_06_1",
+      "text": "Legend of the Walking Trail: Out"
+    },
+    {
+      "name": "EventScene_snowfalloasis_06_2",
+      "text": "Legend of the Walking Trail: In"
+    },
+    {
+      "name": "EventScene_snowfalloasis_01_1",
+      "text": "Legend of the Hot Spring: Out"
+    },
+    {
+      "name": "EventScene_snowfalloasis_01_2",
+      "text": "Legend of the Hot Spring: In"
+    },
+    {
+      "name": "EventScene_snowfalloasis_09",
+      "text": "The Menu"
+    },
+    {
+      "name": "EventScene_snowfalloasis_10",
+      "text": "Fireworks"
+    },
+    {
+      "name": "EventScene_snowfalloasis_11",
+      "text": "Snowfield Festival"
+    },
+    {
+      "name": "EventScene_snowfalloasis_03_1",
+      "text": "Legend of the Dormitory: Out"
+    },
+    {
+      "name": "EventScene_snowfalloasis_03_2",
+      "text": "Legend of the Dormitory: In"
+    },
+    {
+      "name": "EventScene_snowfalloasis_12",
+      "text": "Lucky Hot Spring"
+    },
+    {
+      "name": "EventScene_snowfalloasis_13",
+      "text": "Snowfield Special Date"
+    },
+    {
+      "name": "EventScene_snowfalloasis_14",
+      "text": "Farewell Party"
+    },
+    {
+      "name": "EventScene_snowfalloasis_02_1",
+      "text": "Legend of the Bamboo Forest: Out"
+    },
+    {
+      "name": "EventScene_snowfalloasis_02_3",
+      "text": "Legend of the Bamboo Forest: In 1"
+    },
+    {
+      "name": "EventScene_snowfalloasis_02_2",
+      "text": "Legend of the Bamboo Forest: In 2"
+    },
+    {
+      "name": "EventScene_snowfalloasis_07",
+      "text": "The Last Legend: Out"
+    },
+    {
+      "name": "EventScene_snowfalloasis_08",
+      "text": "The Last Legend: In"
+    }
+  ]
+}

@@ -148,6 +148,7 @@ export const RELEASED_UNITS = [
   'Lucilla',
   'Ludmilla',
   'Ludmilla: Winter Owner',
+  'Lumi',
   'Maid in Valentine',
   'Maiden',
   'Maiden Covert Nurse',
