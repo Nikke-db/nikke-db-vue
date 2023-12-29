@@ -148,6 +148,11 @@
     "version": 4.1
   },
   {
+    "name": "Liter Cute Sunflower",
+    "id": "c082_02",
+    "version": 4.1
+  },
+  {
     "name": "Emma",
     "id": "c090"
   },
@@ -306,6 +311,11 @@
     "id": "c180"
   },
   {
+    "name": "Guillotine Dark Tracer",
+    "id": "c180_01",
+    "version": 4.1
+  },
+  {
     "name": "Maiden",
     "id": "c181"
   },
@@ -409,6 +419,11 @@
   {
     "name": "Snow White: Innocent Days",
     "id": "c224",
+    "version":4.1
+  },
+  {
+    "name": "Scarlet: Black Shadow",
+    "id": "c225",
     "version":4.1
   },
   {
@@ -708,6 +723,11 @@
     "id": "c430_01"
   },
   {
+    "name": "Noise Classic Diva",
+    "id": "c430_02",
+    "version": 4.1
+  },
+  {
     "name": "Volume",
     "id": "c431"
   },
@@ -1002,11 +1022,6 @@
     "version": 4.1
   },
   {
-    "name": "Scarlet",
-    "id": "c965",
-    "version": 4.1
-  },
-  {
     "name": "Rapunzel",
     "id": "c966",
     "version": 4.1
@@ -1029,6 +1044,16 @@
   {
     "name": "Lumi",
     "id": "c970",
+    "version": 4.1
+  },
+  {
+    "name": "Rose",
+    "id": "c971",
+    "version": 4.1
+  },
+  {
+    "name": "Mass Produced Melee",
+    "id": "c974",
     "version": 4.1
   },
   {
@@ -1152,6 +1177,11 @@
   {
     "name": "Neverland",
     "id": "neverland",
+    "version": 4.1
+  },
+  {
+    "name": "New Year New Sword",
+    "id": "newyearnewsword",
     "version": 4.1
   },
   {
