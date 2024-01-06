@@ -23,10 +23,10 @@ let tempSpineVersion: number | null = null //used for spine version exceptions, 
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
-  // padLeft: '0%',
-  // padRight: '0%',
-  // padTop: '0%',
-  // padBottom: '0%'
+  padLeft: '0%',
+  padRight: '0%',
+  padTop: '0%',
+  padBottom: '0%'
 }
 
 onMounted(() => {
@@ -176,15 +176,15 @@ watch(() => market.globalParams.isMobile, (e) => {
     market.globalParams.hideMobileHeader()
   } else {
     canvas.style.position = 'absolute'
-    canvas.style.height = '475vh'
     canvas.style.width = ''
-    canvas.style.marginTop = 'calc(-183vh)'
-    canvas.style.transform = 'scale(0.2)'
+    canvas.style.height = '168vh'
+    canvas.style.marginTop = 'calc(-30vh)'
+    canvas.style.transform = 'scale(0.5)'
     canvas.style.left = '0px'
     canvas.style.top = '0px'
     canvas.width = canvas.height
     market.globalParams.showMobileHeader()
-    transformScale = 0.2
+    transformScale = 0.5
     centerForPC()
   }
 })
@@ -273,7 +273,7 @@ const loadSpineAfterWatcher = () => {
 
 const applyDefaultStyle2Canvas = () => {
   setTimeout(() => {
-    canvas = document.querySelector('.spine-player-canvas') as any
+    canvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
 
     canvas.width = canvas.height
 
@@ -284,13 +284,13 @@ const applyDefaultStyle2Canvas = () => {
       transformScale = 1
       market.globalParams.hideMobileHeader()
     } else {
-      canvas.style.height = '475vh'
-      canvas.style.marginTop = 'calc(-183vh)'
-      canvas.style.transform = 'scale(0.2)'
+      canvas.style.height = '168vh'
+      canvas.style.marginTop = 'calc(-30vh)'
+      canvas.style.transform = 'scale(0.5)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
-      transformScale = 0.2
+      transformScale = 0.5
       market.globalParams.showMobileHeader()
       centerForPC()
     }
@@ -401,7 +401,7 @@ document.addEventListener('wheel', (e) => {
 
 <style scoped lang="less">
 #player-container {
-  // height: calc(100vh - 100px);
+   //height: calc(100vh - 100px);
   overflow:hidden
 }
 .mobile {

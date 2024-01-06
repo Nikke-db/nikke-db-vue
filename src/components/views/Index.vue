@@ -27,7 +27,10 @@
       <n-divider></n-divider>
       <n-scrollbar style="height:300px; padding-right: 15px">
         <n-ul>
-          <n-li v-for="update in updates.slice().reverse()" :key="update.date">{{ update.date }}: {{ update.update }}</n-li>
+          <n-li v-for="update in updates.slice().reverse()" :key="update.date">
+            <n-text class="naive-underlive" >{{ update.date }}</n-text>:
+            {{ update.update }}
+          </n-li>
         </n-ul>
       </n-scrollbar>
       </n-card>
@@ -87,5 +90,9 @@ const checkMobile = () => {
 
 .isMobile {
   width: 95%;
+}
+
+.naive-underlive{
+  text-decoration: underline;
 }
 </style>

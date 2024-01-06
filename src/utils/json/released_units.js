@@ -168,6 +168,7 @@ export const RELEASED_UNITS = [
   'Mass Produced Purple',
   'Mass Produced White',
   'Mass Produced Melee',
+  'Mass Produced Melee 2',
   'Mast',
   'Mast A Pirate\'s Heart',
   'Mast_old',
