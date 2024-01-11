@@ -249,6 +249,11 @@
     "id": "c140_01"
   },
   {
+    "name": "Sugar Wild Backyard",
+    "id": "c140_02",
+    "version": 4.1
+  },
+  {
     "name": "Milk",
     "id": "c141"
   },
@@ -542,7 +547,8 @@
   },
   {
     "name": "Moran",
-    "id": "c281"
+    "id": "c281",
+    "version": 4.1
   },
   {
     "name": "Sakura",
@@ -1059,6 +1065,11 @@
   {
     "name": "Mass Produced Melee 2",
     "id": "c974_01",
+    "version": 4.1
+  },
+  {
+    "name": "Timi",
+    "id": "c975",
     "version": 4.1
   },
   {
