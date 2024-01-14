@@ -144,6 +144,7 @@ export const RELEASED_UNITS = [
   'Liberty',
   'License to Kill',
   'Liliweiss',
+  'Lion Heart',
   'Liter',
   'Liter Guardfish',
   'Liter Cute Sunflower',

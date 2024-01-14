@@ -1201,6 +1201,11 @@
     "version": 4.1
   },
   {
+    "name": "Lion Heart",
+    "id": "lionheart",
+    "version": 4.1
+  },
+  {
     "id": "smol_anchor",
     "name": "Smol Anchor",
     "version": 4.1
