@@ -1,7 +1,7 @@
 <template>
   <div class="spacer">
     <!-- Computer Render -->
-    <n-card title="3D Chibi Viewer - Beta v0.16" v-if="!market.globalParams.isMobile" >
+    <n-card title="3D Chibi Viewer - Beta v0.17" v-if="!market.globalParams.isMobile" >
       <template #header-extra>
         <n-spin :show="unityInstance === null" size="small">
           <n-button type="primary" round ghost @click="setFullScreen()" >
@@ -53,7 +53,7 @@ const init = () => {
     streamingAssetsUrl: globalParams.STREAMING_ASSETS,
     companyName: 'Nikke-DB',
     productName: 'Nikke Chibi By Hacker_lyx',
-    productVersion: '0.16',
+    productVersion: '0.17',
   }).then((inst: any) => {
     unityInstance.value = inst
     market.load.endLoad()
