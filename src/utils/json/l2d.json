@@ -187,6 +187,11 @@
     "version": 4.1
   },
   {
+    "name": "Drake Maid For Villain",
+    "id": "c101_02",
+    "version": 4.1
+  },
+  {
     "name": "Maxwell",
     "id": "c102"
   },
@@ -605,7 +610,8 @@
   },
   {
     "name": "Ade",
-    "id": "c310"
+    "id": "c310",
+    "version": 4.1
   },
   {
     "name": "Cocoa",
@@ -614,6 +620,11 @@
   {
     "name": "Soda",
     "id": "c312"
+  },
+  {
+    "name": "Privaty: Unkind Maid",
+    "id": "c313",
+    "version": 4.1
   },
   {
     "name": "Bibli",
@@ -1216,6 +1227,16 @@
     "version": 4.1
   },
   {
+    "name": "Perfect Maid",
+    "id": "perfectmaid",
+    "version": 4.1
+  },
+  {
+    "name": "Smol Ade",
+    "id": "smol_ade",
+    "version": 4.1
+  },
+  {
     "id": "smol_anchor",
     "name": "Smol Anchor",
     "version": 4.1
@@ -1253,6 +1274,11 @@
   {
     "name": "Smol Pepper",
     "id": "smol_pepper",
+    "version": 4.1
+  },
+  {
+    "name": "Smol Maid Privaty",
+    "id": "smol_mpriv",
     "version": 4.1
   },
   {

@@ -23,8 +23,6 @@
     </n-card>
 
     <n-card title="Update log:" class="card-spacer updatelog" :class="checkMobile()">
-      <n-p>New codebase, new update log! The old update log is still available on legacy website for the curious</n-p>
-      <n-divider></n-divider>
       <n-scrollbar style="height:300px; padding-right: 15px">
         <n-ul>
           <n-li v-for="update in updates.slice().reverse()" :key="update.date">
