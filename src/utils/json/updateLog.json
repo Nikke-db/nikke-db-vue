@@ -142,5 +142,9 @@
   {
     "date": "February 7th 2024",
     "update": "Chibi v0.18: Added Privaty: Unkind Maid, Drake Maid For Villain, Ade"
+  },
+  {
+    "date": "February 9th 2024",
+    "update": "Custom Spine Viewer : implemented a potential fix for atlas files using non modern-latin alphabet ( eg objects with korean/japanese/chinese letters in their name ). Example: c170_02.atlas "
   }
 ]

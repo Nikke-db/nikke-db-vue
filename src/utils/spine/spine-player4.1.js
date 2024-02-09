@@ -4933,7 +4933,7 @@ var spine41 = (() => {
       let base64Idx = dataUri.indexOf('base64,')
       if (base64Idx != -1) {
         base64Idx += 'base64,'.length
-        return atob(dataUri.substr(base64Idx))
+        return decodeURIComponent(escape(window.atob( dataUri.substr(base64Idx) )))
       } else {
         return dataUri.substr(dataUri.indexOf(',') + 1)
       }
