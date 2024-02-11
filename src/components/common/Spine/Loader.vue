@@ -56,6 +56,7 @@ const spineLoader = () => {
     skin: market.live2d.getSkin(),
     backgroundColor: '#00000000',
     alpha: true,
+    premultipliedAlpha: true,
     mipmaps: market.live2d.current_pose === 'fb' ? true : false,
     debug: false,
     preserveDrawingBuffer: true,
@@ -89,10 +90,12 @@ const customSpineLoader = () => {
     rawDataURIs: {
       [market.live2d.customSkel.title]: market.live2d.customSkel.URI,
       [market.live2d.customAtlas.title]: market.live2d.customAtlas.URI,
-      [market.live2d.customPng.title]: market.live2d.customPng.URI
+      [market.live2d.customPng.title]: market.live2d.customPng.URI,
+      [market.live2d.customAdditionalPng.title]: market.live2d.customAdditionalPng.URI
     },
     backgroundColor: '#00000000',
     alpha: true,
+    premultipliedAlpha: market.live2d.customPremultipliedAlpha,
     mipmaps: market.live2d.current_pose === 'fb' ? true : false,
     debug: false,
     preserveDrawingBuffer: true,

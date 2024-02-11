@@ -51,6 +51,13 @@
               </div>
             </n-upload-dragger>
           </n-upload>
+          <n-button
+            dashed type="info"
+            class="additional-png"
+            @click="triggerAdditionalPng"
+          >
+            <n-icon :component="!additionalPng ? PlusCircleOutlined : MinusCircleOutlined" :size="32"></n-icon>
+          </n-button>
 
           <n-upload
           directory-dnd
@@ -67,20 +74,45 @@
           </n-upload>
 
         </div>
-          <n-select
-            v-model:value="spineVersion"
-            :options="spineVersionList"
-            class="marginTop"
-          />
 
-          <n-button
-          @click="triggerCustomLoad()"
-          class="marginTop"
-          type="primary"
-          round
+        <div v-if="additionalPng">
+          <n-upload
+          style="width: 37.5%; padding-left: 31.5%; padding-top: 10px"
+          directory-dnd
+          accept=".png"
+          list-type="image"
+          v-model:file-list="additionalPngFileList"
+          @update:file-list="handleAdditionalPngFileListChange"
           >
-            Load the custom assets
-          </n-button>
+            <n-upload-dragger>
+              <div class="verticalFlex">
+                <n-icon :component="AttachFileOutlined" :size="32"/>
+                <span>Load a second .png file</span>
+              </div>
+            </n-upload-dragger>
+          </n-upload>
+        </div>
+
+        <n-select
+          v-model:value="spineVersion"
+          :options="spineVersionList"
+          class="marginTop"
+        />
+
+        <n-select
+            v-model:value="premultipliedAlpha"
+            :options="getFormattedBooleanTemplate('Pre Multiplied Alpha')"
+            class="marginTop"
+        />
+
+        <n-button
+        @click="triggerCustomLoad()"
+        class="marginTop submit"
+        type="primary"
+        round
+        >
+          Load the custom assets
+        </n-button>
       </n-card>
     </n-modal>
   </span>
@@ -92,12 +124,16 @@ import { messagesEnum } from '@/utils/enum/globalParams'
 import type { UploadFileInfo } from 'naive-ui'
 import { ref, type Ref, watch } from 'vue'
 import { AttachFileOutlined } from '@vicons/material'
+import { PlusCircleOutlined, MinusCircleOutlined } from '@vicons/antd'
 
 const market = useMarket()
 
 const skelFileList: Ref<UploadFileInfo[]> = ref([])
 const pngFileList: Ref<UploadFileInfo[]> = ref([])
+const additionalPngFileList: Ref<UploadFileInfo[]> = ref([])
 const atlasFileList: Ref<UploadFileInfo[]> = ref([])
+
+const additionalPng = ref(false)
 
 const spineVersionList = [
   {
@@ -110,7 +146,26 @@ const spineVersionList = [
   }
 ]
 
+const templateBoolean = [
+  {
+    label: 'xxx : true',
+    value: true
+  },
+  {
+    label: 'xxx : false',
+    value: false
+  }
+]
+
+const getFormattedBooleanTemplate = (str: string) => {
+  return templateBoolean.map((v) => {
+    v.label = v.label.replace('xxx', str)
+    return v
+  })
+}
+
 const spineVersion = ref(4.1)
+const premultipliedAlpha = ref(true)
 
 const customSpineModal = ref(false)
 
@@ -156,6 +211,25 @@ const handlePngFileListChange = () => {
   }
 }
 
+const handleAdditionalPngFileListChange = () => {
+  if (additionalPngFileList.value.length > 1) {
+    const backup = additionalPngFileList.value[1]
+    additionalPngFileList.value = []
+    additionalPngFileList.value.push(backup)
+    market.message.getMessage().error(messagesEnum.MESSAGE_UNLOAD)
+  }
+
+  const additionalPngFile = additionalPngFileList.value[0].file!
+
+  if (additionalPngFile.name.endsWith('png')) {
+    market.live2d.initCustomAdditionalPng(additionalPngFile)
+    market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED)
+  } else {
+    additionalPngFileList.value = []
+    market.message.getMessage().error(messagesEnum.MESSAGE_WRONG_FILE_FORMAT)
+  }
+}
+
 const handleAtlasFileListChange = () => {
   if (atlasFileList.value.length > 1) {
     const backup = atlasFileList.value[1]
@@ -179,15 +253,33 @@ watch(spineVersion, () => {
   market.live2d.setCustomSpineVersion(spineVersion.value)
 })
 
+watch(premultipliedAlpha, () => {
+  market.live2d.setPremultipliedAlpha(premultipliedAlpha.value)
+})
+
 const triggerCustomLoad = () => {
   market.live2d.triggerCustomLoad()
+}
+
+const triggerAdditionalPng = () => {
+  additionalPng.value = !additionalPng.value
+
+  if (additionalPng.value === false && additionalPngFileList.value.length > 0) {
+    additionalPngFileList.value = []
+    market.message.getMessage().error(messagesEnum.MESSAGE_UNLOAD)
+  }
 }
 </script>
 
 <style scoped lang="less">
 .n-button {
-  width: 100%;
-  height: 40px;
+  &.submit {
+    width: 100%;
+    height: 40px;
+  }
+  &.additional-png {
+    height: 82px;
+  }
 }
 .fileFlexWrap {
   display: flex;

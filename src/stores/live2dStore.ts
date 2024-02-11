@@ -26,12 +26,18 @@ export const useLive2dStore = defineStore('live2d', () => {
     URI: '' as string | ArrayBuffer | null
   })
 
+  const customAdditionalPng = ref({
+    title: '' as string,
+    URI: '' as string | ArrayBuffer | null
+  })
+
   const customAtlas = ref({
     title: '' as string,
     URI: '' as string | ArrayBuffer | null
   })
 
   const customSpineVersion = ref(4.1)
+  const customPremultipliedAlpha = ref(true)
   const customLoad = ref(0)
 
   const filter = () => {
@@ -154,6 +160,14 @@ export const useLive2dStore = defineStore('live2d', () => {
     }
   }
 
+  const initCustomAdditionalPng = (png: File) => {
+    fr.readAsDataURL(png)
+    fr.onload = () => {
+      customAdditionalPng.value.title = png.name
+      customAdditionalPng.value.URI = fr.result
+    }
+  }
+
   const initCustomAtlas = (atlas: File) => {
     fr.readAsDataURL(atlas)
     fr.onload = () => {
@@ -164,6 +178,10 @@ export const useLive2dStore = defineStore('live2d', () => {
 
   const setCustomSpineVersion = (newVersion: number) => {
     customSpineVersion.value = newVersion
+  }
+
+  const setPremultipliedAlpha = (newBool: boolean) => {
+    customPremultipliedAlpha.value = newBool
   }
 
   const triggerCustomLoad = () => {
@@ -194,10 +212,14 @@ export const useLive2dStore = defineStore('live2d', () => {
     initCustomSkel,
     customPng,
     initCustomPng,
+    customAdditionalPng,
+    initCustomAdditionalPng,
     customAtlas,
     initCustomAtlas,
     customSpineVersion,
     setCustomSpineVersion,
+    customPremultipliedAlpha,
+    setPremultipliedAlpha,
     customLoad,
     triggerCustomLoad,
     triggerHideUI,
