@@ -13,6 +13,8 @@ export const useLive2dStore = defineStore('live2d', () => {
   const resetPlacement = ref(0)
   const screenshot = ref(0)
   const hideUI = ref(false)
+  const recorder = ref<MediaRecorder>();
+  const isRecording = ref<boolean>(false);
 
   const fr = new FileReader()
 
@@ -224,6 +226,8 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerCustomLoad,
     triggerHideUI,
     triggerShowUI,
-    hideUI
+    hideUI,
+    recorder,
+    isRecording
   }
 })

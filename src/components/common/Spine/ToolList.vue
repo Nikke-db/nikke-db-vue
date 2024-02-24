@@ -28,6 +28,7 @@
         <div>
           <CustomLoader />
         </div>
+        <Recorder />
       </n-card>
     </n-scrollbar>
   </div>
@@ -43,6 +44,7 @@ import BackgroundImagePack from './Tools/BackgroundImagePack.vue'
 import Screenshot from './Tools/Screenshot.vue'
 import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 import CustomLoader from './Tools/CustomLoader.vue'
+import Recorder from './Tools/Recorder.vue'
 import { useMarket } from '@/stores/market'
 
 const market = useMarket()

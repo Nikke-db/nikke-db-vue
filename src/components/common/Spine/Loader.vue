@@ -3,10 +3,12 @@
     id="player-container"
     :class="checkMobile() ? 'mobile' : 'computer'"
   ></div>
+  <video ref="recorder" autoplay controls loop></video>
+
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, ref } from 'vue'
 import { useMarket } from '@/stores/market'
 
 // @ts-ignore
@@ -20,6 +22,8 @@ let canvas: any
 let spineCanvas: any
 const market = useMarket()
 let tempSpineVersion: number | null = null //used for spine version exceptions, see spineExceptionList()
+
+const recorder = ref<HTMLVideoElement | null>(null)
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
@@ -277,6 +281,34 @@ const loadSpineAfterWatcher = () => {
 const applyDefaultStyle2Canvas = () => {
   setTimeout(() => {
     canvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
+
+    const videoStream = canvas.captureStream(30);
+
+    market.live2d.recorder =  new MediaRecorder(videoStream, {
+      bitsPerSecond: 24000000
+    });
+    let chunks: Blob[] = []
+    market.live2d.recorder.onstart = () => {
+      market.live2d.isRecording = true
+
+    }
+    market.live2d.recorder.ondataavailable = (e) => {
+      chunks.push(e.data)
+    }
+    market.live2d.recorder.onstop = (e) => {
+      market.live2d.isRecording = false
+
+
+      const blob = new Blob(chunks, {
+        type: 'video/webm',
+      })
+      chunks = [];
+      if (recorder.value) {
+        recorder.value.src = URL.createObjectURL(blob)
+      } else{
+        console.error('recorder is not mounted')
+      }
+    }
 
     canvas.width = canvas.height
 
