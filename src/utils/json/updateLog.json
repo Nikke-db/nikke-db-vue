@@ -150,5 +150,9 @@
   {
     "date": "February 11th 2024",
     "update": "Custom Spine Viewer : implemented a way to load 2-png assets (c470 for instance). Implemented a Pre Multiplied Alpha option for broader uses than only nikke assets."
+  },
+  {
+    "date": "February 24th 2024",
+    "update": "Added Elegg, Trony, BOOM's DAY live2d. Added BOOM's DAY gallery image. Added 4koma 44, 45 and 46."
   }
 ]

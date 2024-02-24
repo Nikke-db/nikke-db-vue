@@ -768,6 +768,16 @@
     "version": 4.1
   },
   {
+    "name": "Elegg",
+    "id": "c500",
+    "version": 4.1
+  },
+  {
+    "name": "Trony",
+    "id": "c501",
+    "version": 4.1
+  },
+  {
     "name": "Makima",
     "id": "c800"
   },
@@ -1229,6 +1239,11 @@
   {
     "name": "Perfect Maid",
     "id": "perfectmaid",
+    "version": 4.1
+  },
+  {
+    "name": "BOOM's DAY",
+    "id": "boomsday",
     "version": 4.1
   },
   {

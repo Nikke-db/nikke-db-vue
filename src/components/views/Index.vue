@@ -7,6 +7,12 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
+      <n-alert type="warning">
+        Chapter 27 and 28 content will be added after I'm done completing them. I'm pretty busy recently and I'm having a ton of fun on Limbus Company, NIKKE is not my current top priority as it is becoming too bland.
+      </n-alert>
+
+      <n-divider></n-divider>
+
       <n-alert type="info">
         Nikke Community decided to shut down the server I used for feedback and
         update log, so I guess the only way to reach me out is through private
