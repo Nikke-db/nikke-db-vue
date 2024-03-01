@@ -398,6 +398,11 @@
     "id": "c210_01"
   },
   {
+    "name": "Exia Gamer",
+    "id": "c210_02",
+    "version": 4.1
+  },
+  {
     "name": "c211",
     "id": "c211"
   },
@@ -732,6 +737,11 @@
     "id": "c402"
   },
   {
+    "name": "Flora",
+    "id": "c411",
+    "version": 4.1
+  },
+  {
     "name": "Noise",
     "id": "c430"
   },
@@ -768,6 +778,16 @@
     "version": 4.1
   },
   {
+    "name": "Liveryn",
+    "id": "c480",
+    "version": 4.1
+  },
+  {
+    "name": "Hammering",
+    "id": "c490",
+    "version": 4.1
+  },
+  {
     "name": "Elegg",
     "id": "c500",
     "version": 4.1
@@ -775,6 +795,11 @@
   {
     "name": "Trony",
     "id": "c501",
+    "version": 4.1
+  },
+  {
+    "name": "Unknown",
+    "id": "c510",
     "version": 4.1
   },
   {
@@ -905,6 +930,11 @@
   {
     "name": "Burningum",
     "id": "c914"
+  },
+  {
+    "name": "Raptillion",
+    "id": "c915",
+    "version": 4.1
   },
   {
     "name": "Faceless NPC 1",
@@ -1091,6 +1121,11 @@
   {
     "name": "Timi",
     "id": "c975",
+    "version": 4.1
+  },
+  {
+    "name": "T.Rony",
+    "id": "c976",
     "version": 4.1
   },
   {

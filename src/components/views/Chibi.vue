@@ -1,7 +1,7 @@
 <template>
   <div class="spacer">
     <!-- Computer Render -->
-    <n-card title="3D Chibi Viewer - Beta v0.18" v-if="!market.globalParams.isMobile" >
+    <n-card title="3D Chibi Viewer - Beta v0.20" v-if="!market.globalParams.isMobile" >
       <template #header-extra>
         <n-spin :show="unityInstance === null" size="small">
           <n-button type="primary" round ghost @click="setFullScreen()" >
@@ -9,6 +9,9 @@
         </n-button>
         </n-spin><br/><br/>
       </template>
+      <n-alert type="info" style="margin: 10px 0">
+        New since v0.20 : Press H to hide the UI of the app.
+      </n-alert>
       <div style="text-align:center">
         <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1" style="width:90%"></canvas>
       </div>
@@ -24,6 +27,7 @@
 import { globalParams } from '@/utils/enum/globalParams'
 // @ts-ignore
 import createUnityInstance from 'https://nikke-db-legacy.pages.dev/chibi/Build/chibi.loader.js'
+// import createUnityInstance from 'http://127.0.0.1:5500/chibi/Build/chibi.loader.js'
 import { onMounted, watch, ref, type Ref, onBeforeMount } from 'vue'
 
 import { useMarket } from '@/stores/market'
@@ -47,13 +51,17 @@ onMounted(() => {
 
 const init = () => {
   createUnityInstance(document.querySelector('#unity-canvas'), {
-    dataUrl: globalParams.CHIBI_BUILD + 'chibi.data.unityweb',
-    frameworkUrl: globalParams.CHIBI_BUILD + 'chibi.framework.js.unityweb',
-    codeUrl: globalParams.CHIBI_BUILD + 'chibi.wasm.unityweb',
+    dataUrl: globalParams.CHIBI_BUILD + 'chibi.data',
+    frameworkUrl: globalParams.CHIBI_BUILD + 'chibi.framework.js',
+    codeUrl: globalParams.CHIBI_BUILD + 'chibi.wasm',
     streamingAssetsUrl: globalParams.STREAMING_ASSETS,
+    // dataUrl: globalParams.LOCALHOST_CHIBI_BUILD + 'chibi.data',
+    // frameworkUrl: globalParams.LOCALHOST_CHIBI_BUILD + 'chibi.framework.js',
+    // codeUrl: globalParams.LOCALHOST_CHIBI_BUILD + 'chibi.wasm',
+    // streamingAssetsUrl: globalParams.LOCALHOST_STREAMING_ASSETS,
     companyName: 'Nikke-DB',
     productName: 'Nikke Chibi By Hacker_lyx',
-    productVersion: '0.18',
+    productVersion: '0.20',
   }).then((inst: any) => {
     unityInstance.value = inst
     market.load.endLoad()
