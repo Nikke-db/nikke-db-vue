@@ -161,6 +161,7 @@ import nyanyaparadise from '@/utils/json/Gallery/nyanyaparadise.json'
 import neverland from '@/utils/json/Gallery/neverland.json'
 import snowfalloasis from '@/utils/json/Gallery/snowfalloasis.json'
 import boomsday from '@/utils/json/Gallery/boomsday.json'
+import killthelord from '@/utils/json/Gallery/killthelord.json'
 
 const market = useMarket()
 
@@ -195,7 +196,8 @@ const buttonListEvents = [
   { data: redash },
   { data: neverland },
   { data: snowfalloasis },
-  { data: boomsday }
+  { data: boomsday },
+  { data: killthelord }
 ] as buttonInterface[]
 
 const buttonListOther = [
