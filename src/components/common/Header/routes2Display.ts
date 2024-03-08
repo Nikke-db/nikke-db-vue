@@ -19,5 +19,9 @@ export const ROUTES: route2DisplayInterface[] = [
   {
     path: 'gallery',
     text: 'Gallery'
+  },
+  {
+    path: 'tierlistmaker',
+    text: 'Tier List Maker'
   }
 ]

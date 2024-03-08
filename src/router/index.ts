@@ -5,6 +5,7 @@ import Credits from '@/components/views/Credits.vue'
 import Tools from '@/components/views/Tools.vue'
 import Chibi from '@/components/views/Chibi.vue'
 import Gallery from '@/components/views/Gallery.vue'
+import TierListMaker from '@/components/views/Tierlistmaker.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +62,11 @@ const router = createRouter({
       path: '/gallery',
       name: 'gallery',
       component: Gallery
+    },
+    {
+      path: '/tierlistmaker',
+      name: 'tierlistmaker',
+      component: TierListMaker
     }
     // {
     // path: '/about',
