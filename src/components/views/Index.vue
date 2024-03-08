@@ -7,10 +7,9 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="info">
-        Nikke Community decided to shut down the server I used for feedback and
-        update log, so I guess the only way to reach me out is through private
-        discord messages (Koshirei#0333 / koshirei).
+      <n-alert type="warning">
+        It has come to my attention that this website have been banned from being shared in the official Discord channel.<br/>
+        Be careful out there folks, papa tencent does not seem to like seeing their community enjoy tools they can't make themselves.
       </n-alert>
 
       <n-divider></n-divider>

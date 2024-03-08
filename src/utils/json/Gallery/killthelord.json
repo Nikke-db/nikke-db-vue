@@ -1,0 +1,12 @@
+{
+  "path": "killthelord/",
+  "type": "large",
+  "id": "killthelord",
+  "title": "Kill The Lord",
+  "content": [
+    {
+      "name": "bg_killthelord_nor",
+      "text": "Kill The Lord 1"
+    }
+  ]
+}
