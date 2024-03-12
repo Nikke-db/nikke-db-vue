@@ -1,7 +1,7 @@
 <template>
   <div class="spacer">
     <!-- Computer Render -->
-    <n-card title="3D Chibi Viewer - Beta v0.20" v-if="!market.globalParams.isMobile" >
+    <n-card title="3D Chibi Viewer - Beta v0.21" v-if="!market.globalParams.isMobile" >
       <template #header-extra>
         <n-spin :show="unityInstance === null" size="small">
           <n-button type="primary" round ghost @click="setFullScreen()" >
@@ -9,9 +9,7 @@
         </n-button>
         </n-spin><br/><br/>
       </template>
-      <n-alert type="info" style="margin: 10px 0">
-        New since v0.20 : Press H to hide the UI of the app.
-      </n-alert>
+
       <div style="text-align:center">
         <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1" style="width:90%"></canvas>
       </div>
@@ -61,7 +59,7 @@ const init = () => {
     // streamingAssetsUrl: globalParams.LOCALHOST_STREAMING_ASSETS,
     companyName: 'Nikke-DB',
     productName: 'Nikke Chibi By Hacker_lyx',
-    productVersion: '0.20',
+    productVersion: '0.21',
   }).then((inst: any) => {
     unityInstance.value = inst
     market.load.endLoad()

@@ -85,7 +85,7 @@ import ToolsTemplate from './Template.vue'
 import { ref } from 'vue'
 import type { NumberAnimationInst, FormInst, FormItemRule, FormRules, FormValidationError } from 'naive-ui'
 import { useMarket } from '@/stores/market'
-import { messagesEnum } from '@/utils/enum/globalParams'
+import {globalParams, messagesEnum} from '@/utils/enum/globalParams'
 import * as LevelingJson from '@/utils/json/CharacterLevelTable.json'
 import type { levelingRecordInterface } from '@/utils/interfaces/levelingRecord'
 
@@ -178,21 +178,21 @@ const displayArray = [
     calculated: credit,
     label: 'Credit',
     ref: 'creditRef',
-    img: 'https://cdn.discordapp.com/attachments/891090590048075786/1040028793328373830/im_1002.png'
+    img: globalParams.NIKKE_DB + '/images/' + 'credit.png'
   },
   {
     old: oldBd,
     calculated: bd,
     label: 'Battle Data',
     ref: 'bdRef',
-    img: 'https://cdn.discordapp.com/attachments/891090590048075786/1040028792992833606/im_1005.png'
+    img: globalParams.NIKKE_DB + '/images/' + 'battledata.png'
   },
   {
     old: oldCore,
     calculated: core,
     label: 'Core',
     ref: 'coreRef',
-    img: 'https://cdn.discordapp.com/attachments/891090590048075786/1040028704539168839/im_1006.png'
+    img: globalParams.NIKKE_DB + '/images/' + 'coredust.png'
   }
 ]
 
