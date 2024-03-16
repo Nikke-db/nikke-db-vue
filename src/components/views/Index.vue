@@ -25,7 +25,7 @@
       <n-scrollbar style="height:300px; padding-right: 15px">
         <n-ul>
           <n-li v-for="update in updates.slice().reverse()" :key="update.date">
-            <n-text class="naive-underlive" >{{ update.date }}</n-text>:
+            <n-text class="naive-underlive" :class="update.date === updates[updates.length-1].date ? 'latest-date' : 'older-date'">{{ update.date }}</n-text>:
             {{ update.update }}
           </n-li>
         </n-ul>
@@ -91,5 +91,9 @@ const checkMobile = () => {
 
 .naive-underlive{
   text-decoration: underline;
+}
+
+.latest-date {
+  color: @naive-green;
 }
 </style>
