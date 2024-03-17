@@ -15,15 +15,17 @@
   },
   "dependencies": {
     "@jacksongross/vue-tweet-embed": "^3.0.1",
+    "@types/crypto-js": "^4.2.2",
     "@vicons/carbon": "^0.12.0",
     "@vicons/fa": "^0.12.0",
     "@vicons/material": "^0.12.0",
     "@vicons/tabler": "^0.12.0",
+    "crypto-js": "^4.2.0",
     "html2canvas": "^1.4.1",
     "less": "^4.2.0",
     "naive-ui": "^2.34.4",
     "pinia": "^2.1.6",
-    "vue": "^3.3.4",
+    "vue": "^3.4.*",
     "vue-router": "^4.2.4",
     "vuedraggable": "^4.1.0"
   },

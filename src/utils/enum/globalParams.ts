@@ -15,7 +15,8 @@ enum globalParams {
   GALLERY = NIKKE_DB + GALLERY_PATH,
   LOCALHOST = 'http://localhost:5500/',
   LOCALHOST_CHIBI_BUILD = LOCALHOST + BUILD_PATH,
-  LOCALHOST_STREAMING_ASSETS = LOCALHOST + STREAMING_ASSETS_PATH
+  LOCALHOST_STREAMING_ASSETS = LOCALHOST + STREAMING_ASSETS_PATH,
+  CRYPTOJS_AES_KEY = 'Nikke DB AES Key' //never change this or it'll break tierlist save slots
 }
 
 enum messagesEnum {
@@ -28,7 +29,11 @@ enum messagesEnum {
   MESSAGE_PROCESSING = 'Processing',
   MESSAGE_UNLOAD = "Unloaded older asset successfully",
   MESSAGE_WRONG_FILE_FORMAT = "Wrong file format",
-  MESSAGE_UI_SHOWBACK = "Press the \"Enter\" key to show the UI back"
+  MESSAGE_UI_SHOWBACK = "Press the \"Enter\" key to show the UI back",
+  MESSAGE_TIERLIST_DELETE_ROW = "Row deleted, characters that were in that row have been transferred to the bench",
+  MESSAGE_TIERLIST_UPDATED_ROW = "Row updated",
+  MESSAGE_TIERLIST_SCREENSHOT_CONVERT2CANVAS = "Converting HTML data to a canvas object...",
+  MESSAGE_TIERLIST_SCREENSHOT_CANVAS2PNG = "Downloading a canvas to a PNG file",
 }
 
 enum theme {
