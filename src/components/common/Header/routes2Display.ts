@@ -1,23 +1,33 @@
 export interface route2DisplayInterface {
   path: string
   text: string
+  mobile: boolean
 }
 
 export const ROUTES: route2DisplayInterface[] = [
   {
     path: 'tools',
-    text: 'Tools'
+    text: 'Tools',
+    mobile: true
   },
   {
     path: 'visualiser',
-    text: 'Live2D Visualiser'
+    text: 'Live2D Visualiser',
+    mobile: true
   },
   {
     path: 'chibi',
-    text: 'Chibi'
+    text: 'Chibi',
+    mobile: true
   },
   {
     path: 'gallery',
-    text: 'Gallery'
+    text: 'Gallery',
+    mobile: true
+  },
+  {
+    path: 'tierlistmaker',
+    text: 'Tier List Maker',
+    mobile: false
   }
 ]

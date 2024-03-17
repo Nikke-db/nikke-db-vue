@@ -31,7 +31,7 @@
         </template>
 
         <RouterLink
-          v-for="route in props.routes"
+          v-for="route in props.routes.filter((rout) => rout.mobile === true)"
           :to="route.path"
           class="redirect"
           :key="'route' + route.path"
