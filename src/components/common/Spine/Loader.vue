@@ -9,7 +9,6 @@
 import { onMounted, watch } from 'vue'
 import { useMarket } from '@/stores/market'
 
-// @ts-ignore
 import spine40 from '@/utils/spine/spine-player4.0'
 // @ts-ignore
 import spine41 from '@/utils/spine/spine-player4.1'
@@ -34,6 +33,9 @@ onMounted(() => {
   spineLoader()
   applyDefaultStyle2Canvas()
 })
+
+const SPINE_DEFAULT_MIX = 0.25
+let spinePlayer: any = null
 
 const spineLoader = () => {
   let usedSpine: any
@@ -61,12 +63,14 @@ const spineLoader = () => {
     debug: false,
     preserveDrawingBuffer: true,
     viewport: spineViewport,
-    success: () => {
+    defaultMix: SPINE_DEFAULT_MIX,
+    success: (player: any) => {
+      spinePlayer = player
       successfullyLoaded()
     },
     error: () => {
       wrongfullyLoaded()
-    }
+    },
   })
 }
 
@@ -100,6 +104,7 @@ const customSpineLoader = () => {
     debug: false,
     preserveDrawingBuffer: true,
     viewport: spineViewport,
+    defaultMix: SPINE_DEFAULT_MIX,
     success: (e: any) => {
       successfullyLoaded()
       e.play()
@@ -238,6 +243,12 @@ watch(() => market.live2d.screenshot, () => {
   }
 })
 
+watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    exportAnimationFrames(newVal)
+  }
+})
+
 watch(() => market.live2d.customLoad, () => {
   spineCanvas.dispose()
   market.load.beginLoad()
@@ -265,6 +276,87 @@ const takeScreenshot = () => {
   link.href = dataURL
 
   link.click()
+}
+
+const RECORDING_MIME_TYPE = 'video/webm'
+const RECORDING_BITRATE = 15000000
+
+async function startRecording(spinePlayer: any, currentAnimation: string, timestamp: number) {
+  return new Promise<void>((resolve, reject) => {
+    const chunks = [] // Store recorded media chunks (Blobs)
+    const stream = canvas.captureStream() // Grab our canvas MediaStream
+    const rec = new MediaRecorder(stream, { mimeType: RECORDING_MIME_TYPE, videoBitsPerSecond: RECORDING_BITRATE }) // Initialize the recorder
+
+    rec.onerror = (e) => reject(e) // Reject the promise on error
+
+    // Every time the recorder has new data, store it in our array
+    rec.ondataavailable = (e) => chunks.push(e.data)
+
+    // Only when the recorder stops, construct a complete Blob from all the chunks
+    rec.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'video/webm' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.download = 'animation_frames_' + timestamp + '.webm'
+      link.href = url
+      link.click()
+      URL.revokeObjectURL(url) // Clean up
+      resolve()
+    }
+
+    // This is important, the timeslice has to be low or the lag is high and the loop won't look right.
+    rec.start(10)
+
+    spinePlayer.play() // Start the animation
+
+    // Set up an interval to constantly check the condition
+    const checkInterval = setInterval(() => {
+
+      if (spinePlayer.animationState.tracks && spinePlayer.animationState.tracks[0] && spinePlayer.animationState.tracks[0].animationLast !== -1 && spinePlayer.animationState.tracks[0].animationLast === spinePlayer.animationState.tracks[0].animationEnd) {
+        spinePlayer.pause()
+        rec.stop()
+
+        clearInterval(checkInterval)
+      }
+    }, 1) // Check every 1 millisecond
+  })
+}
+
+async function exportAnimationFrames(timestamp: number) {
+  if (spineCanvas && spinePlayer) {
+    const currentAnimation = spineCanvas.config.animation
+    spinePlayer.playerControls.style.visibility = 'hidden'
+    spinePlayer.animationState.data.defaultMix = 0
+    spinePlayer.setAnimation(currentAnimation, false)
+    spinePlayer.pause()
+
+    market.message
+      .getMessage()
+      .success(messagesEnum.MESSAGE_EXPORT_ANIMATION, market.message.short_message)
+
+    market.live2d.isExportingAnimation = true
+    startRecording(spinePlayer, currentAnimation, timestamp).then(() => {
+      market.message
+        .getMessage()
+        .success(messagesEnum.MESSAGE_EXPORT_ANIMATION_SUCCESS, market.message.short_message)
+    }).catch((err: any) => {
+      market.message
+        .getMessage()
+        .error(messagesEnum.MESSAGE_EXPORT_ANIMATION_FAILED, market.message.short_message)
+      console.error(err)
+    }).finally(() => {
+      market.live2d.isExportingAnimation = false
+      spinePlayer.animationState.data.defaultMix = SPINE_DEFAULT_MIX
+      spinePlayer.play()
+      spinePlayer.setAnimation(currentAnimation, true)
+      spinePlayer.playerControls.style.visibility = 'visible'
+    })
+  } else {
+    market.message
+      .getMessage()
+      .error(messagesEnum.MESSAGE_EXPORT_ANIMATION_FAILED, market.message.short_message)
+    console.error('spineCanvas is not properly initialized or accessible.')
+  }
 }
 
 const loadSpineAfterWatcher = () => {

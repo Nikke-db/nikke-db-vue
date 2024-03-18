@@ -11,6 +11,8 @@ export const useLive2dStore = defineStore('live2d', () => {
   const current_spine_version = ref(4.0) as Ref<number>
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
   const resetPlacement = ref(0)
+  const isExportingAnimation = ref(false)
+  const exportAnimationTimestamp = ref(0)
   const screenshot = ref(0)
   const hideUI = ref(false)
 
@@ -74,6 +76,10 @@ export const useLive2dStore = defineStore('live2d', () => {
 
   const triggerScreenshot = () => {
     screenshot.value = new Date().getTime()
+  }
+
+  const exportAnimation = () => {
+    exportAnimationTimestamp.value = new Date().getTime()
   }
 
   const getSkin = () => {
@@ -208,6 +214,9 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerResetPlacement,
     screenshot,
     triggerScreenshot,
+    isExportingAnimation,
+    exportAnimationTimestamp,
+    exportAnimation,
     getSkin,
     customSkel,
     initCustomSkel,

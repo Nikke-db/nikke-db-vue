@@ -22,6 +22,9 @@
           <BackgroundImagePack />
         </div>
         <div>
+          <Export />
+        </div>
+        <div>
           <Screenshot />
           <ChangeScreenshotSize />
         </div>
@@ -40,6 +43,7 @@ import HideUI from './Tools/HideUI.vue'
 import BackgroundColor from './Tools/BackgroundColor.vue'
 import BackgroundImage from './Tools/BackgroundImage.vue'
 import BackgroundImagePack from './Tools/BackgroundImagePack.vue'
+import Export from './Tools/Export.vue'
 import Screenshot from './Tools/Screenshot.vue'
 import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 import CustomLoader from './Tools/CustomLoader.vue'

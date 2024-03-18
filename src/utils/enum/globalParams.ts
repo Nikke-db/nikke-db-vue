@@ -34,6 +34,9 @@ enum messagesEnum {
   MESSAGE_TIERLIST_UPDATED_ROW = "Row updated",
   MESSAGE_TIERLIST_SCREENSHOT_CONVERT2CANVAS = "Converting HTML data to a canvas object...",
   MESSAGE_TIERLIST_SCREENSHOT_CANVAS2PNG = "Downloading a canvas to a PNG file",
+  MESSAGE_EXPORT_ANIMATION = "Replaying and exporting animation...",
+  MESSAGE_EXPORT_ANIMATION_SUCCESS = "Animation exported successfully",
+  MESSAGE_EXPORT_ANIMATION_FAILED = "Animation export failed",
 }
 
 enum theme {
