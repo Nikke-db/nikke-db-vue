@@ -9,6 +9,7 @@
 import { onMounted, watch } from 'vue'
 import { useMarket } from '@/stores/market'
 
+// @ts-ignore
 import spine40 from '@/utils/spine/spine-player4.0'
 // @ts-ignore
 import spine41 from '@/utils/spine/spine-player4.1'
@@ -280,22 +281,27 @@ const takeScreenshot = () => {
 
 // VP9 may be too performance intensive. VP8 or VP9 MUST be explicitly specified for alpha transparency to work.
 const RECORDING_MIME_TYPE = 'video/webm;codecs=vp8'
-const RECORDING_BITRATE = 5000000
+const RECORDING_BITRATE = 12000000
+const RECORDING_FRAME_RATE = 30
+const RECORDING_TIME_SLICE = 10
 
 async function startRecording(spinePlayer: any, currentAnimation: string, timestamp: number) {
   return new Promise<void>((resolve, reject) => {
-    const chunks = [] // Store recorded media chunks (Blobs)
-    const stream = canvas.captureStream() // Grab our canvas MediaStream
-    const rec = new MediaRecorder(stream, { mimeType: RECORDING_MIME_TYPE, videoBitsPerSecond: RECORDING_BITRATE }) // Initialize the recorder
+    const chunks: BlobPart[] | undefined = [] // Store recorded media chunks (Blobs)
+    const stream = canvas.captureStream(RECORDING_FRAME_RATE) // Grab our canvas MediaStream
+    const rec = new MediaRecorder(stream, { mimeType: RECORDING_MIME_TYPE, videoBitsPerSecond: RECORDING_BITRATE }) // Initialize the MediaRecorder
 
     rec.onerror = (e) => reject(e) // Reject the promise on error
 
-    // Every time the recorder has new data, store it in our array
-    rec.ondataavailable = (e) => chunks.push(e.data)
+    rec.ondataavailable = (e) => {
+      chunks.push(e.data)
+    }
 
     // Only when the recorder stops, construct a complete Blob from all the chunks
     rec.onstop = async () => {
-      const blob = new Blob(chunks, { type: 'video/webm' })
+      spinePlayer.pause()
+
+      const blob: BlobPart = new Blob(chunks, { type: 'video/webm' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.download = 'animation_frames_' + timestamp + '.webm'
@@ -305,21 +311,25 @@ async function startRecording(spinePlayer: any, currentAnimation: string, timest
       resolve()
     }
 
+    rec.onresume = () => {
+    }
+
+
+    rec.onstart = () => {
+      spinePlayer.play()
+      requestAnimationFrame(checkCondition)
+    }
+
     // This is important, the timeslice has to be low or the lag is high and the loop won't look right.
-    rec.start(10)
+    rec.start(RECORDING_TIME_SLICE)
 
-    spinePlayer.play() // Start the animation
-
-    // Set up an interval to constantly check the condition
-    const checkInterval = setInterval(() => {
-
+    function checkCondition() {
       if (spinePlayer.animationState.tracks && spinePlayer.animationState.tracks[0] && spinePlayer.animationState.tracks[0].animationLast !== -1 && spinePlayer.animationState.tracks[0].animationLast === spinePlayer.animationState.tracks[0].animationEnd) {
-        spinePlayer.pause()
         rec.stop()
-
-        clearInterval(checkInterval)
+      } else {
+        requestAnimationFrame(checkCondition)
       }
-    }, 1) // Check every 1 millisecond
+    }
   })
 }
 
@@ -328,7 +338,9 @@ async function exportAnimationFrames(timestamp: number) {
     const currentAnimation = spineCanvas.config.animation
     spinePlayer.playerControls.style.visibility = 'hidden'
     spinePlayer.animationState.data.defaultMix = 0
+    spinePlayer.animationState.setAnimation(0, currentAnimation)
     spinePlayer.setAnimation(currentAnimation, false)
+    spinePlayer.animationState.data.defaultMix = SPINE_DEFAULT_MIX
     spinePlayer.pause()
 
     market.message
