@@ -278,8 +278,9 @@ const takeScreenshot = () => {
   link.click()
 }
 
-const RECORDING_MIME_TYPE = 'video/webm'
-const RECORDING_BITRATE = 15000000
+// VP9 may be too performance intensive. VP8 or VP9 MUST be explicitly specified for alpha transparency to work.
+const RECORDING_MIME_TYPE = 'video/webm;codecs=vp8'
+const RECORDING_BITRATE = 5000000
 
 async function startRecording(spinePlayer: any, currentAnimation: string, timestamp: number) {
   return new Promise<void>((resolve, reject) => {
