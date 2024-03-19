@@ -40,4 +40,9 @@ const props = defineProps({
 .amethyst {
   background-color: #8F26AC
 }
+
+.pink {
+  background-color: #FC0083;
+  color: black;
+}
 </style>

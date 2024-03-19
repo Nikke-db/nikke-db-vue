@@ -85,6 +85,11 @@ const external: help[] = [
 // forkers: feel free to add yourself here, if you don't I'll do it myself
 const forks: help[] = [
   {
+    name: 'Kalila (digisomni)',
+    contribution: 'Live2d WebM export feature',
+    tier: 'pink'
+  },
+  {
     name: 'R3XxN1xX',
     contribution: 'Live2D files for Einkk, Rapunzel, Helm, Isabel, Shifty, Modernia Anchor, Jackal, Viper, Agent D, Agent K.<br/>Added icons for a bunch of characters',
     tier: null
