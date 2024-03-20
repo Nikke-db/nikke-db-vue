@@ -2,6 +2,10 @@
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
 
+      <n-alert type="warning">
+        The recipe gallery will be added once the event is complete
+      </n-alert>
+
       <n-h1>Story</n-h1>
       <ButtonTemplate
         v-for="buttonItem in buttonListStory"

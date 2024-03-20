@@ -7,9 +7,9 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="warning">
-        It has come to my attention that this website have been banned from being shared in the official Discord channel.<br/>
-        Be careful out there folks, papa tencent does not seem to like seeing their community enjoy tools they can't make themselves.
+      <n-alert type="error">
+        Can't believe this god awful of a show managed to hook a collab with nikke, feels like the money I spent on battle passes was even more wasted than I felt like after summoning and getting no SSR. <br/>
+        Not sure why I bothered adding them to the website, if the next collab is also with such a pointless IP I might give up and go full time on Limbus Company and new gachas.
       </n-alert>
 
       <n-divider></n-divider>

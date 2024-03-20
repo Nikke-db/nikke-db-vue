@@ -695,7 +695,7 @@
     "name": "Rosanna Kill The Lord",
     "id": "c280_01",
     "version": 4.1,
-    "tl": "nikke"
+    "tl": "skin"
   },
   {
     "name": "Moran",
@@ -1082,6 +1082,48 @@
     "id": "c813",
     "version": 4.1,
     "tl": "never"
+  },
+  {
+    "name": "Rem",
+    "id": "c820",
+    "version": 4.1,
+    "tl": "nikke"
+  },
+  {
+    "name": "Rem Handy Maid",
+    "id": "c820_01",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
+    "name": "Rem Pure Blossom",
+    "id": "c820_02",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
+    "name": "Emilia",
+    "id": "c821",
+    "version": 4.1,
+    "tl": "nikke"
+  },
+  {
+    "name": "Emilia Clumsy Maid",
+    "id": "c821_01",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
+    "name": "Emilia Spring Breeze",
+    "id": "c821_02",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
+    "name": "Ram",
+    "id": "c822",
+    "version": 4.1,
+    "tl": "nikke"
   },
   {
     "name": "Ingrid",
@@ -1591,6 +1633,12 @@
     "tl": "never"
   },
   {
+    "name": "Re: Cipe For You",
+    "id": "recipeforyou",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
     "name": "Smol Ade",
     "id": "smol_ade",
     "version": 4.1,
@@ -1659,6 +1707,24 @@
   {
     "name": "Smol Yan",
     "id": "smol_yan",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "Smol Rem",
+    "id": "smol_rem",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "Smol Ram",
+    "id": "smol_ram",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "Smol Emilia",
+    "id": "smol_emilia",
     "version": 4.1,
     "tl": "never"
   },

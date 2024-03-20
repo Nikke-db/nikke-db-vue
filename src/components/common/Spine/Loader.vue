@@ -148,6 +148,12 @@ const getDefaultAnimation = () => {
     return 'mbg004_appearance'
   }
 
+  if (market.live2d.current_id === 'smol_rem' ||
+      market.live2d.current_id === 'smol_ram' ||
+      market.live2d.current_id === 'smol_emilia') {
+    return 'idle_front'
+  }
+
   switch (market.live2d.current_pose) {
     case 'aim':
       return 'aim_idle'
