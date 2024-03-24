@@ -7,7 +7,6 @@ import { RELEASED_UNITS } from '@/utils/json/released_units.js'
 
 export const useLive2dStore = defineStore('live2d', () => {
   const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
-  const current_id = ref('c010') as Ref<string>
   const current_spine_version = ref(4.0) as Ref<number>
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
   const resetPlacement = ref(0)
@@ -57,9 +56,22 @@ export const useLive2dStore = defineStore('live2d', () => {
   }
 
   const change_current_spine = (newSpine: live2d_interface) => {
-    current_spine_version.value = getNewSpineVersion(newSpine)
-    current_id.value = newSpine.id
+    if (foolCheck()) {
+      current_spine_version.value = 4.0
+      current_id.value = 'c312'
+    } else {
+      current_spine_version.value = getNewSpineVersion(newSpine)
+      current_id.value = newSpine.id
+    }
   }
+
+  const foolCheck = () => {
+    const fooldate = new Date()
+    if (fooldate.getDate() === 1 && fooldate.getMonth() === 3) return true
+    return false
+  }
+
+  const current_id = ref(foolCheck() ? 'c312' : 'c010') as Ref<string>
 
   // exception lists for spine version is handled in loader.vue at spineExceptionList()
   const getNewSpineVersion = (newSpine: live2d_interface) => {

@@ -59,6 +59,15 @@ const checkMobile = () => {
 
 const changeSpine = (character: live2d_interface) => {
   market.live2d.change_current_spine(character)
+  if (foolCheck()) {
+    market.message.getMessage().warning('Action refused: whoever you wishes to visualise is not worthy of it, with the exception of Soda.')
+  }
+}
+
+const foolCheck = () => {
+  const fooldate = new Date()
+  if (fooldate.getDate() === 1 && fooldate.getMonth() === 3) return true
+  return false
 }
 </script>
 
