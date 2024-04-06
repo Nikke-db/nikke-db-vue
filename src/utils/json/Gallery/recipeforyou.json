@@ -1,0 +1,24 @@
+{
+  "path": "recipeforyou/",
+  "type": "large",
+  "id": "recipeforyou",
+  "title": "Re:Cipe For You",
+  "content": [
+    {
+      "name": "EventTitle_ReCIPEFORYOU_01",
+      "text": "Re:Cipe For You 1"
+    },
+    {
+      "name": "EventTitle_ReCIPEFORYOU_02",
+      "text": "Re:Cipe For You 2"
+    },
+    {
+      "name": "EventScene_ce_03_03",
+      "text": "Re:Cipe For You 3"
+    },
+    {
+      "name": "EventScene_ce_03_02",
+      "text": "Re:Cipe For You 4"
+    }
+  ]
+}

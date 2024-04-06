@@ -1,0 +1,12 @@
+{
+  "path": "liarsend/",
+  "type": "large",
+  "id": "liarsend",
+  "title": "Liar's End",
+  "content": [
+    {
+      "name": "EventScene_lairsend_01",
+      "text": "Liar's End"
+    }
+  ]
+}

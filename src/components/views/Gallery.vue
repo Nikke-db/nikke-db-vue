@@ -2,9 +2,9 @@
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
 
-      <n-alert type="warning">
-        The recipe gallery will be added once the event is complete
-      </n-alert>
+<!--      <n-alert type="warning">-->
+<!--        The recipe gallery will be added once the event is complete-->
+<!--      </n-alert>-->
 
       <n-h1>Story</n-h1>
       <ButtonTemplate
@@ -69,13 +69,6 @@
               {{ data.text }}
             </n-h3>
           </div>
-          <div
-            v-else-if="carouselData.type === 'twitter'"
-            >
-              <Tweet :id="data.text.split('/status/')[1]" :options="{ dnt: 'true', theme: 'dark' }">
-                <n-spin size="large" />
-              </Tweet>
-          </div>
         </n-carousel-item>
         <template #arrow="{ prev, next }">
           <ArrowTemplate :index="index" :total="carouselData.content.length - 1" :prev="prev" :next="next"/>
@@ -135,8 +128,6 @@ import maids from '@/assets/maids.png'
 import { messagesEnum, globalParams } from '@/utils/enum/globalParams'
 import ArrowTemplate from '@/components/common/Gallery/ArrowTemplate.vue'
 import ButtonTemplate from '@/components/common/Gallery/ButtonTemplate.vue'
-// @ts-ignore
-import { Tweet } from '@jacksongross/vue-tweet-embed'
 
 import albumCovers from '@/utils/json/Gallery/albums.json'
 import chapterThumbnails from '@/utils/json/Gallery/chapters.json'
@@ -166,6 +157,8 @@ import neverland from '@/utils/json/Gallery/neverland.json'
 import snowfalloasis from '@/utils/json/Gallery/snowfalloasis.json'
 import boomsday from '@/utils/json/Gallery/boomsday.json'
 import killthelord from '@/utils/json/Gallery/killthelord.json'
+import recipeforyou from '@/utils/json/Gallery/recipeforyou.json'
+import liarsend from '@/utils/json/Gallery/liarsend.json'
 
 const market = useMarket()
 
@@ -201,7 +194,9 @@ const buttonListEvents = [
   { data: neverland },
   { data: snowfalloasis },
   { data: boomsday },
-  { data: killthelord }
+  { data: killthelord },
+  { data: recipeforyou },
+  { data: liarsend }
 ] as buttonInterface[]
 
 const buttonListOther = [
@@ -269,9 +264,5 @@ const updateIndex = (newIndex: number) => {
 .mobile {
   width: 95%;
   text-align: left;
-}
-
-.tweet {
-  user-select: none;
 }
 </style>
