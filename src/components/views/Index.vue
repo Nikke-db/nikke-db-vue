@@ -7,12 +7,14 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-<!--      <n-alert type="error">-->
-<!--        Can't believe this god awful of a show managed to hook a collab with nikke, feels like the money I spent on battle passes was even more wasted than I felt like after summoning and getting no SSR. <br/>-->
-<!--        Not sure why I bothered adding them to the website, if the next collab is also with such a pointless IP I might give up and go full time on Limbus Company and new gachas.-->
-<!--      </n-alert>-->
+      <n-alert type="info">
+        holy shit canto 6 y'all ! <br/>
 
-<!--      <n-divider></n-divider>-->
+        <n-image src="https://cdn.discordapp.com/attachments/891090590048075786/1228809752382013571/fth1h6zpghsc1.png?ex=662d6543&is=661af043&hm=bf3600778864640c1b70d312256a9f27d1d9d794b4459e3332e0f8c83d81af43&"
+                 width="50%"/>
+      </n-alert>
+
+      <n-divider></n-divider>
 
       <n-alert type="error">
         Now stopping to answer DMs asking how to datamine or extracting specific files for your own use.<br/>

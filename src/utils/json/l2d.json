@@ -646,6 +646,12 @@
     "tl": "skin"
   },
   {
+    "name": "Modernia TBA",
+    "id": "c260_02",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
     "name": "Nihilister",
     "id": "c261",
     "tl": "nikke"
@@ -1005,6 +1011,18 @@
     "id": "c510",
     "version": 4.1,
     "tl": "NPC"
+  },
+  {
+    "name": "Bay",
+    "id": "c550",
+    "version": 4.1,
+    "tl": "nikke"
+  },
+  {
+    "name": "Clay",
+    "id": "c551",
+    "version": 4.1,
+    "tl": "nikke"
   },
   {
     "name": "Makima",
@@ -1641,6 +1659,12 @@
   {
     "name": "Re: Cipe For You",
     "id": "recipeforyou",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "One More Time",
+    "id": "onemoretime",
     "version": 4.1,
     "tl": "never"
   },

@@ -14,6 +14,14 @@
         :carousel-data="carouselData" :current-id="currentId" @load-data="(data: galleryInterface) => loadData(data)"
       />
 
+      <n-h1>Side Stories</n-h1>
+      <ButtonTemplate
+          v-for="buttonItem in buttonListSideStory"
+          :key="buttonItem.data.id"
+          :data-to-load="buttonItem.data"
+          :carousel-data="carouselData" :current-id="currentId" @load-data="(data: galleryInterface) => loadData(data)"
+      />
+
       <n-h1>Events</n-h1>
       <ButtonTemplate
         v-for="buttonItem in buttonListEvents"
@@ -159,6 +167,7 @@ import boomsday from '@/utils/json/Gallery/boomsday.json'
 import killthelord from '@/utils/json/Gallery/killthelord.json'
 import recipeforyou from '@/utils/json/Gallery/recipeforyou.json'
 import liarsend from '@/utils/json/Gallery/liarsend.json'
+import side01 from '@/utils/json/Gallery/side01.json'
 
 const market = useMarket()
 
@@ -176,6 +185,10 @@ const buttonListStory = [
   { data: story2 },
   { data: story3 },
   { data: story4 }
+] as buttonInterface[]
+
+const buttonListSideStory = [
+  { data: side01 }
 ] as buttonInterface[]
 
 const buttonListEvents = [

@@ -1,0 +1,28 @@
+{
+  "path": "side01/",
+  "type": "large",
+  "id": "side01",
+  "title": "Side Story 01",
+  "content": [
+    {
+      "name": "EventScene_Side_01_01",
+      "text": "Side Story 01-1"
+    },
+    {
+      "name": "EventScene_Side_01_02",
+      "text": "Side Story 01-2"
+    },
+    {
+      "name": "EventScene_Side_01_03",
+      "text": "Side Story 01-3"
+    },
+    {
+      "name": "EventScene_Side_01_04",
+      "text": "Side Story 01-4"
+    },
+    {
+      "name": "EventScene_Side_01_05",
+      "text": "Side Story 01-5"
+    }
+  ]
+}
