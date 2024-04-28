@@ -2,9 +2,9 @@
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
 
-<!--      <n-alert type="warning">-->
-<!--        The recipe gallery will be added once the event is complete-->
-<!--      </n-alert>-->
+      <n-alert type="warning">
+        Last Kingdom Gallery will be added after part 2 is done. enjoy the event, this one is worth it compared to re zero.
+      </n-alert>
 
       <n-h1>Story</n-h1>
       <ButtonTemplate

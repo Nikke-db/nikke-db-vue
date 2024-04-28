@@ -8,9 +8,9 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        holy shit canto 6 y'all ! <br/>
+        Walpurgis Nacht 3 is on it's way guys. This is epic <br/>
 
-        <n-image src="https://cdn.discordapp.com/attachments/891090590048075786/1228809752382013571/fth1h6zpghsc1.png?ex=662d6543&is=661af043&hm=bf3600778864640c1b70d312256a9f27d1d9d794b4459e3332e0f8c83d81af43&"
+        <n-image src="https://cdn.discordapp.com/attachments/891090590048075786/1234126498168836167/ekklfnp7xsva1.png?ex=662f995e&is=662e47de&hm=841d19d2b90d2d0d61c501799ca4e7ee0150add23ca372dd9350649825aa1f45&"
                  width="50%"/>
       </n-alert>
 

@@ -169,6 +169,12 @@
     "tl": "skin"
   },
   {
+    "name": "Diesel Midnight Strawberry",
+    "id": "c072_04",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
     "name": "Centi",
     "id": "c080",
     "tl": "nikke"
@@ -536,6 +542,12 @@
     "tl": "nikke"
   },
   {
+    "name": "Snow White White Knight",
+    "id": "c220_01",
+    "tl": "skin",
+    "version": 4.1
+  },
+  {
     "name": "Rapunzel",
     "id": "c221",
     "tl": "nikke"
@@ -646,7 +658,7 @@
     "tl": "skin"
   },
   {
-    "name": "Modernia TBA",
+    "name": "Modernia Second Affection",
     "id": "c260_02",
     "version": 4.1,
     "tl": "skin"
@@ -876,9 +888,10 @@
     "tl": "nikke"
   },
   {
-    "name": "Kilo",
+    "name": "T.A.L.O.S (Kilo)",
     "id": "c361",
-    "tl": "never"
+    "version": 4.1,
+    "tl": "nikke"
   },
   {
     "name": "Endless",
@@ -989,8 +1002,20 @@
     "tl": "NPC"
   },
   {
+    "name": "Fragile",
+    "id": "c481",
+    "version": 4.1,
+    "tl": "NPC"
+  },
+  {
     "name": "Hammering",
     "id": "c490",
+    "version": 4.1,
+    "tl": "NPC"
+  },
+  {
+    "name": "Drilley",
+    "id": "c491",
     "version": 4.1,
     "tl": "NPC"
   },
@@ -1007,7 +1032,7 @@
     "tl": "NPC"
   },
   {
-    "name": "Unknown",
+    "name": "Grave",
     "id": "c510",
     "version": 4.1,
     "tl": "NPC"
@@ -1467,6 +1492,12 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Kilo",
+    "id": "c977",
+    "version": 4.1,
+    "tl": "NPCnever"
+  },
+  {
     "name": "Self",
     "id": "c9999",
     "tl": "never"
@@ -1665,6 +1696,12 @@
   {
     "name": "One More Time",
     "id": "onemoretime",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "Brand New Year",
+    "id": "brandnewyear",
     "version": 4.1,
     "tl": "never"
   },
