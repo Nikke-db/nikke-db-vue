@@ -108,6 +108,17 @@ const customSpineLoader = () => {
     defaultMix: SPINE_DEFAULT_MIX,
     success: (e: any) => {
       successfullyLoaded()
+      if (market.live2d.customDefaultAnimationIdle) {
+        const animationArray = e.animationState.data.skeletonData.animations
+        const idleRegEx = /idle/
+
+        for (let i = 0; i <= animationArray.length; i++) {
+          if (idleRegEx.test(animationArray[i].name)) {
+            e.config.animation = animationArray[i].name
+            break
+          }
+        }
+      }
       e.play()
     },
     error: () => {

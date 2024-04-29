@@ -105,6 +105,12 @@
             class="marginTop"
         />
 
+        <n-select
+            v-model:value="defaultIdleAnimation"
+            :options="getFormattedBooleanTemplate('Default animation \'idle\'')"
+            class="marginTop"
+        />
+
         <n-button
         @click="triggerCustomLoad()"
         class="marginTop submit"
@@ -146,19 +152,21 @@ const spineVersionList = [
   }
 ]
 
-const templateBoolean = [
-  {
-    label: 'xxx : true',
-    value: true
-  },
-  {
-    label: 'xxx : false',
-    value: false
-  }
-]
+const constructTemplateBoolean = () => {
+  return [
+    {
+      label: 'xxx : true',
+      value: true
+    },
+    {
+      label: 'xxx : false',
+      value: false
+    }
+  ]
+}
 
 const getFormattedBooleanTemplate = (str: string) => {
-  return templateBoolean.map((v) => {
+  return constructTemplateBoolean().map((v) => {
     v.label = v.label.replace('xxx', str)
     return v
   })
@@ -166,6 +174,7 @@ const getFormattedBooleanTemplate = (str: string) => {
 
 const spineVersion = ref(4.1)
 const premultipliedAlpha = ref(true)
+const defaultIdleAnimation = ref(true)
 
 const customSpineModal = ref(false)
 
@@ -255,6 +264,10 @@ watch(spineVersion, () => {
 
 watch(premultipliedAlpha, () => {
   market.live2d.setPremultipliedAlpha(premultipliedAlpha.value)
+})
+
+watch(defaultIdleAnimation, () => {
+  market.live2d.setCustomDefaultAnimationIdle(defaultIdleAnimation.value)
 })
 
 const triggerCustomLoad = () => {

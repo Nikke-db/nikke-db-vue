@@ -40,6 +40,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const customSpineVersion = ref(4.1)
   const customPremultipliedAlpha = ref(true)
   const customLoad = ref(0)
+  const customDefaultAnimationIdle = ref(true)
 
   const filter = () => {
     const base_array: live2d_interface[] = l2d
@@ -206,6 +207,10 @@ export const useLive2dStore = defineStore('live2d', () => {
     customPremultipliedAlpha.value = newBool
   }
 
+  const setCustomDefaultAnimationIdle = (newBoolean: boolean) => {
+    customDefaultAnimationIdle.value = newBoolean
+  }
+
   const triggerCustomLoad = () => {
     customLoad.value = new Date().getTime()
   }
@@ -245,6 +250,8 @@ export const useLive2dStore = defineStore('live2d', () => {
     setCustomSpineVersion,
     customPremultipliedAlpha,
     setPremultipliedAlpha,
+    customDefaultAnimationIdle,
+    setCustomDefaultAnimationIdle,
     customLoad,
     triggerCustomLoad,
     triggerHideUI,
