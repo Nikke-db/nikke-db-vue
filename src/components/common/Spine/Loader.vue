@@ -352,6 +352,11 @@ async function startRecording(spinePlayer: any, currentAnimation: string, timest
 
 async function exportAnimationFrames(timestamp: number) {
   if (spineCanvas && spinePlayer) {
+    let bgColor = document.body.style.backgroundColor.replace('rgb(', '').replace(')', '').split(',')
+    spinePlayer.bg.r = parseInt(bgColor[0].trim()) / 255
+    spinePlayer.bg.g = parseInt(bgColor[1].trim()) / 255
+    spinePlayer.bg.b = parseInt(bgColor[2].trim()) / 255
+    spinePlayer.bg.a = 100
     const currentAnimation = spineCanvas.config.animation
     spinePlayer.playerControls.style.visibility = 'hidden'
     spinePlayer.animationState.data.defaultMix = 0
@@ -380,6 +385,10 @@ async function exportAnimationFrames(timestamp: number) {
       spinePlayer.play()
       spinePlayer.setAnimation(currentAnimation, true)
       spinePlayer.playerControls.style.visibility = 'visible'
+      spinePlayer.bg.r = 0
+      spinePlayer.bg.g = 0
+      spinePlayer.bg.b = 0
+      spinePlayer.bg.a = 0
     })
   } else {
     market.message

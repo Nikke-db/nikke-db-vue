@@ -230,5 +230,9 @@
   {
     "date": "April 28th 2024",
     "update": "Live2D: Updated Unknown name to Grave. Updated Crown assets. Updated Modernia Second Affection assets and her name. Updated Hammering assets. Added One More Time Eventscene. Added Diesel Midnight Strawberry. Added Snow White White Knight. Added T.A.L.O.S and Kilo. Added Fragile. Added Drilley. Added Brand New Year EventScene."
+  },
+  {
+    "date": "May 1st 2024",
+    "update": "Live2D: WebM export now sets a background color instead of transparent/black. This helps fixing transparent pixels related issues."
   }
 ]
