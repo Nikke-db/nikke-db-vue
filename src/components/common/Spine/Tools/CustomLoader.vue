@@ -25,7 +25,7 @@
         <div class="fileFlexWrap marginTop">
           <n-upload
           directory-dnd
-          accept=".skel"
+          accept=".skel, .txt"
           v-model:file-list="skelFileList"
           @update:file-list="handleSkelFileListChange"
           >
@@ -61,7 +61,7 @@
 
           <n-upload
           directory-dnd
-          accept=".atlas"
+          accept=".atlas, .txt"
           v-model:file-list="atlasFileList"
           @update:file-list="handleAtlasFileListChange"
           >
@@ -192,7 +192,7 @@ const handleSkelFileListChange = () => {
 
   const skelFile = skelFileList.value[0].file!
 
-  if (skelFile.name.endsWith('.skel')) {
+  if (skelFile.name.endsWith('.skel') || skelFile.name.endsWith('.txt')) {
     market.live2d.initCustomSkel(skelFile)
     market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED)
   } else {
@@ -249,7 +249,7 @@ const handleAtlasFileListChange = () => {
 
   const atlasFile = atlasFileList.value[0].file!
 
-  if (atlasFile.name.endsWith('.atlas')) {
+  if (atlasFile.name.endsWith('.atlas') || atlasFile.name.endsWith('.txt')) {
     market.live2d.initCustomAtlas(atlasFile)
     market.message.getMessage().success(messagesEnum.MESSAGE_ASSET_LOADED)
   } else {
