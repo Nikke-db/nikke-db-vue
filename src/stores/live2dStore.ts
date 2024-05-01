@@ -12,6 +12,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const resetPlacement = ref(0)
   const isExportingAnimation = ref(false)
   const exportAnimationTimestamp = ref(0)
+  const exportAnimationColoredBackground = ref(true)
   const screenshot = ref(0)
   const hideUI = ref(false)
 
@@ -236,6 +237,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerScreenshot,
     isExportingAnimation,
     exportAnimationTimestamp,
+    exportAnimationColoredBackground,
     exportAnimation,
     getSkin,
     customSkel,

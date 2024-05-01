@@ -352,11 +352,13 @@ async function startRecording(spinePlayer: any, currentAnimation: string, timest
 
 async function exportAnimationFrames(timestamp: number) {
   if (spineCanvas && spinePlayer) {
-    let bgColor = document.body.style.backgroundColor.replace('rgb(', '').replace(')', '').split(',')
-    spinePlayer.bg.r = parseInt(bgColor[0].trim()) / 255
-    spinePlayer.bg.g = parseInt(bgColor[1].trim()) / 255
-    spinePlayer.bg.b = parseInt(bgColor[2].trim()) / 255
-    spinePlayer.bg.a = 100
+    if (market.live2d.exportAnimationColoredBackground) {
+      let bgColor = document.body.style.backgroundColor.replace('rgb(', '').replace(')', '').split(',')
+      spinePlayer.bg.r = parseInt(bgColor[0].trim()) / 255
+      spinePlayer.bg.g = parseInt(bgColor[1].trim()) / 255
+      spinePlayer.bg.b = parseInt(bgColor[2].trim()) / 255
+      spinePlayer.bg.a = 100
+    }
     const currentAnimation = spineCanvas.config.animation
     spinePlayer.playerControls.style.visibility = 'hidden'
     spinePlayer.animationState.data.defaultMix = 0
