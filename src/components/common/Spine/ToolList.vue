@@ -9,6 +9,14 @@
           <PoseSelector />
         </div>
         <div>
+          <ChangeQualityMode />
+          <span class="routerLinkSpan">
+            <RouterLink :to="{name: 'HQvqLQAssets'}" class="routerLink">
+              Learn More
+            </RouterLink>
+          </span>
+        </div>
+        <div>
           <ResetCoordinates />
         </div>
         <div>
@@ -48,6 +56,7 @@ import Screenshot from './Tools/Screenshot.vue'
 import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 import CustomLoader from './Tools/CustomLoader.vue'
 import { useMarket } from '@/stores/market'
+import ChangeQualityMode from '@/components/common/Spine/Tools/ChangeQualityMode.vue'
 
 const market = useMarket()
 </script>
@@ -86,6 +95,18 @@ const market = useMarket()
 
       &:not(:nth-child(1)) {
         padding: 10px 0;
+      }
+    }
+
+    .routerLinkSpan {
+      width: 100%;
+      display: block;
+      text-align: center;
+
+      .routerLink{
+        color: @naive-green;
+        text-decoration: underline;
+
       }
     }
   }
