@@ -1,5 +1,26 @@
 <template>
   <div class="body">
+
+    <n-card>
+
+      straight alpha to pre multiplied testing
+
+      <n-upload
+          directory-dnd
+          v-model:file-list="testFile"
+          @update:file-list="testJimp"
+      >
+        <n-upload-dragger>
+          drag file
+        </n-upload-dragger>
+      </n-upload>
+
+      {{ testFile[0] }}
+
+      <img :src="src" />
+
+    </n-card>
+
     <n-card
       title="Nikke: Database of Victory"
       size="medium"
@@ -38,12 +59,65 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onBeforeMount, onUnmounted } from 'vue'
+import { onMounted, onBeforeMount, onUnmounted, ref, type Ref } from 'vue'
 import { useMarket } from '@/stores/market'
 import bgi from '@/assets/index_bg.jpg'
 import updates from '@/utils/json/updateLog.json'
+import { type UploadFileInfo } from 'naive-ui'
+import { getPixels, savePixels } from 'ndarray-pixels'
 
 const market = useMarket()
+
+const testFile: Ref<UploadFileInfo[]> = ref([])
+const src = ref('')
+
+const testJimp = () => {
+  const fr = new FileReader()
+  fr.readAsArrayBuffer(testFile.value[0].file!)
+  fr.onload = async () => {
+    market.message.getMessage().success('reading png as arraybuffer')
+    const result = fr.result as ArrayBuffer
+    market.message.getMessage().success('converting buffer to uint8array')
+    const pixels = await getPixels(new Uint8Array(result), 'image/png')
+
+    market.message.getMessage().success('parsing ndarray data pixel per pixel')
+    market.message.getMessage().info('parsing ' + pixels.data.length / 4 + ' pixels of a png file', market.message.long_message)
+    const dateParsingStart = new Date()
+    const conversionType = 'sta2pma'
+    if (conversionType === 'sta2pma') {
+      for (let i = 0; i <= pixels.data.length - 5; i = i + 4) {
+        let r = pixels.data[i]
+        let g = pixels.data[i + 1]
+        let b = pixels.data[i + 2]
+        const a = pixels.data[i + 3]
+
+        if (r !== 0 || g !== 0 || b !== 0) {
+          r = ( r * a ) / 255
+          g = ( g * a ) / 255
+          b = ( b * a ) / 255
+          pixels.data[i] = r
+          pixels.data[i + 1] = g
+          pixels.data[i + 2] = b
+        }
+      }
+    }
+    const dateParsingEnd = new Date()
+    market.message.getMessage().success('parsing completed , duration : ' + (dateParsingEnd.getTime() - dateParsingStart.getTime()) + ' ms')
+    market.message.getMessage().success('converting parsed uint8array to a new arraybuffer')
+    const savedPixels = await savePixels(pixels, 'image/png')
+    market.message.getMessage().success('building a new blob object')
+    const tempblob = new Blob([savedPixels], { type: 'image/png' })
+    market.message.getMessage().success('downloading the new png file')
+    const url = URL.createObjectURL(tempblob)
+    src.value = url
+    const a = document.createElement('a')
+    a.href = url
+    a.download = testFile.value[0].name
+    a.click()
+    // window.URL.revokeObjectURL(url)
+
+  }
+}
 
 onBeforeMount(() => {
   market.load.beginLoad()
