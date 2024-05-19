@@ -2,9 +2,9 @@
   <div class="galleryBody">
     <n-card :class="checkMobile()" title="Gallery">
 
-      <n-alert type="warning">
-        Last Kingdom Gallery will be added after part 2 is done. enjoy the event, this one is worth it compared to re zero.
-      </n-alert>
+<!--      <n-alert type="warning">-->
+<!--        Last Kingdom Gallery will be added after part 2 is done. enjoy the event, this one is worth it compared to re zero.-->
+<!--      </n-alert>-->
 
       <n-h1>Story</n-h1>
       <ButtonTemplate
@@ -168,6 +168,8 @@ import killthelord from '@/utils/json/Gallery/killthelord.json'
 import recipeforyou from '@/utils/json/Gallery/recipeforyou.json'
 import liarsend from '@/utils/json/Gallery/liarsend.json'
 import side01 from '@/utils/json/Gallery/side01.json'
+import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
+import darkhero from '@/utils/json/Gallery/darkhero.json'
 
 const market = useMarket()
 
@@ -209,7 +211,9 @@ const buttonListEvents = [
   { data: boomsday },
   { data: killthelord },
   { data: recipeforyou },
-  { data: liarsend }
+  { data: liarsend },
+  { data: lastkingdom },
+  { data: darkhero }
 ] as buttonInterface[]
 
 const buttonListOther = [

@@ -10,7 +10,7 @@
           <n-input-number
             v-model:value="formDataOutpostIncome.level"
             :min="1"
-            :max="300"
+            :max="400"
           />
         </n-form-item>
 
@@ -117,7 +117,7 @@ const rulesOutpostIncome: FormRules = {
     {
       required: true,
       min: 1,
-      max: 300,
+      max: 400,
       // must do a validator or naive will say that our number is not a string ...
       validator: (rule: FormItemRule, value: number) => {
         if (value > rule.max!) {

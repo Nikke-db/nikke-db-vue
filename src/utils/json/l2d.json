@@ -614,7 +614,7 @@
   {
     "name": "Folkwang",
     "id": "c242",
-    "tl": "NIKKE"
+    "tl": "nikke"
   },
   {
     "name": "Mass Produced Red",
@@ -833,6 +833,12 @@
     "tl": "nikke"
   },
   {
+    "name": "Crown Naked King",
+    "id": "c330_01",
+    "version": 4.1,
+    "tl": "skin"
+  },
+  {
     "name": "Chime",
     "id": "c331",
     "version": 4.1,
@@ -1029,7 +1035,7 @@
     "name": "Trony",
     "id": "c501",
     "version": 4.1,
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Grave",
@@ -1048,6 +1054,12 @@
     "id": "c551",
     "version": 4.1,
     "tl": "nikke"
+  },
+  {
+    "name": "Black Ark Ranger",
+    "id": "c570",
+    "version": 4.1,
+    "tl": "NPC"
   },
   {
     "name": "Makima",
@@ -1702,6 +1714,24 @@
   {
     "name": "Brand New Year",
     "id": "brandnewyear",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "Last Kingdom",
+    "id": "lastkingdom",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "D.ARK HERO",
+    "id": "darkhero",
+    "version": 4.1,
+    "tl": "never"
+  },
+  {
+    "name": "High Tech Toy",
+    "id": "hightechtoy",
     "version": 4.1,
     "tl": "never"
   },

@@ -16,110 +16,121 @@
       negative-text="Close modal"
       :closable="false"
     >
-      <n-card :bordered="false" size="huge" id="customSpineModalContent">
-        Load custom spine 4.0 or 4.1 assets<br/>
-        Useful to check out mods if you have all the non-encrypted files<br/>
-        Not restricted to NIKKE assets<br/>
-        Nothing will be saved on a server or your localhost.
+      <n-tabs>
 
-        <div class="fileFlexWrap marginTop">
-          <n-upload
-          directory-dnd
-          accept=".skel, .txt"
-          v-model:file-list="skelFileList"
-          @update:file-list="handleSkelFileListChange"
-          >
-            <n-upload-dragger>
-              <div class="verticalFlex">
-                <n-icon :component="AttachFileOutlined" :size="32"/>
-                <span>Load a .skel file</span>
-              </div>
-            </n-upload-dragger>
-          </n-upload>
+        <n-tab-pane name="custom l2d loader">
+          <n-card :bordered="false" size="huge" id="customSpineModalContent">
+            Load custom spine 4.0 or 4.1 assets<br/>
+            Useful to check out mods if you have all the non-encrypted files<br/>
+            Not restricted to NIKKE assets<br/>
+            Nothing will be saved on a server or your localhost.
 
-          <n-upload
-          directory-dnd
-          accept=".png"
-          list-type="image"
-          v-model:file-list="pngFileList"
-          @update:file-list="handlePngFileListChange"
-          >
-            <n-upload-dragger>
-              <div class="verticalFlex">
-                <n-icon :component="AttachFileOutlined" :size="32"/>
-                <span>Load a .png file</span>
-              </div>
-            </n-upload-dragger>
-          </n-upload>
-          <n-button
-            dashed type="info"
-            class="additional-png"
-            @click="triggerAdditionalPng"
-          >
-            <n-icon :component="!additionalPng ? PlusCircleOutlined : MinusCircleOutlined" :size="32"></n-icon>
-          </n-button>
+            <div class="fileFlexWrap marginTop">
+              <n-upload
+              directory-dnd
+              accept=".skel, .txt"
+              v-model:file-list="skelFileList"
+              @update:file-list="handleSkelFileListChange"
+              >
+                <n-upload-dragger>
+                  <div class="verticalFlex">
+                    <n-icon :component="AttachFileOutlined" :size="32"/>
+                    <span>Load a .skel file</span>
+                  </div>
+                </n-upload-dragger>
+              </n-upload>
 
-          <n-upload
-          directory-dnd
-          accept=".atlas, .txt"
-          v-model:file-list="atlasFileList"
-          @update:file-list="handleAtlasFileListChange"
-          >
-            <n-upload-dragger>
-              <div class="verticalFlex">
-                <n-icon :component="AttachFileOutlined" :size="32"/>
-                <span>Load a .atlas file</span>
-              </div>
-            </n-upload-dragger>
-          </n-upload>
+              <n-upload
+              directory-dnd
+              accept=".png"
+              list-type="image"
+              v-model:file-list="pngFileList"
+              @update:file-list="handlePngFileListChange"
+              >
+                <n-upload-dragger>
+                  <div class="verticalFlex">
+                    <n-icon :component="AttachFileOutlined" :size="32"/>
+                    <span>Load a .png file</span>
+                  </div>
+                </n-upload-dragger>
+              </n-upload>
 
-        </div>
+              <n-button
+                dashed type="info"
+                class="additional-png"
+                @click="triggerAdditionalPng"
+              >
+                <n-icon :component="!additionalPng ? PlusCircleOutlined : MinusCircleOutlined" :size="32"></n-icon>
+              </n-button>
 
-        <div v-if="additionalPng">
-          <n-upload
-          style="width: 37.5%; padding-left: 31.5%; padding-top: 10px"
-          directory-dnd
-          accept=".png"
-          list-type="image"
-          v-model:file-list="additionalPngFileList"
-          @update:file-list="handleAdditionalPngFileListChange"
-          >
-            <n-upload-dragger>
-              <div class="verticalFlex">
-                <n-icon :component="AttachFileOutlined" :size="32"/>
-                <span>Load a second .png file</span>
-              </div>
-            </n-upload-dragger>
-          </n-upload>
-        </div>
+              <n-upload
+              directory-dnd
+              accept=".atlas, .txt"
+              v-model:file-list="atlasFileList"
+              @update:file-list="handleAtlasFileListChange"
+              >
+                <n-upload-dragger>
+                  <div class="verticalFlex">
+                    <n-icon :component="AttachFileOutlined" :size="32"/>
+                    <span>Load a .atlas file</span>
+                  </div>
+                </n-upload-dragger>
+              </n-upload>
 
-        <n-select
-          v-model:value="spineVersion"
-          :options="spineVersionList"
-          class="marginTop"
-        />
+            </div>
 
-        <n-select
-            v-model:value="premultipliedAlpha"
-            :options="getFormattedBooleanTemplate('Pre Multiplied Alpha')"
-            class="marginTop"
-        />
+            <div v-if="additionalPng">
+              <n-upload
+              style="width: 37.5%; padding-left: 31.5%; padding-top: 10px"
+              directory-dnd
+              accept=".png"
+              list-type="image"
+              v-model:file-list="additionalPngFileList"
+              @update:file-list="handleAdditionalPngFileListChange"
+              >
+                <n-upload-dragger>
+                  <div class="verticalFlex">
+                    <n-icon :component="AttachFileOutlined" :size="32"/>
+                    <span>Load a second .png file</span>
+                  </div>
+                </n-upload-dragger>
+              </n-upload>
+            </div>
 
-        <n-select
-            v-model:value="defaultIdleAnimation"
-            :options="getFormattedBooleanTemplate('Default animation \'idle\'')"
-            class="marginTop"
-        />
+            <n-select
+              v-model:value="spineVersion"
+              :options="spineVersionList"
+              class="marginTop"
+            />
 
-        <n-button
-        @click="triggerCustomLoad()"
-        class="marginTop submit"
-        type="primary"
-        round
-        >
-          Load the custom assets
-        </n-button>
-      </n-card>
+            <n-select
+                v-model:value="premultipliedAlpha"
+                :options="getFormattedBooleanTemplate('Pre Multiplied Alpha')"
+                class="marginTop"
+            />
+
+            <n-select
+                v-model:value="defaultIdleAnimation"
+                :options="getFormattedBooleanTemplate('Default animation \'idle\'')"
+                class="marginTop"
+            />
+
+            <n-button
+            @click="triggerCustomLoad()"
+            class="marginTop submit"
+            type="primary"
+            round
+            >
+              Load the custom assets
+            </n-button>
+          </n-card>
+        </n-tab-pane>
+
+        <n-tab-pane name="Tools">
+          <ModdingTools />
+        </n-tab-pane>
+
+      </n-tabs>
     </n-modal>
   </span>
 </template>
@@ -131,6 +142,7 @@ import type { UploadFileInfo } from 'naive-ui'
 import { ref, type Ref, watch } from 'vue'
 import { AttachFileOutlined } from '@vicons/material'
 import { PlusCircleOutlined, MinusCircleOutlined } from '@vicons/antd'
+import ModdingTools from '@/components/common/Spine/Tools/ModdingTools.vue'
 
 const market = useMarket()
 

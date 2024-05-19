@@ -15,6 +15,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const exportAnimationColoredBackground = ref(true)
   const screenshot = ref(0)
   const hideUI = ref(false)
+  const HQassets = ref(true)
 
   const fr = new FileReader()
 
@@ -258,6 +259,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerCustomLoad,
     triggerHideUI,
     triggerShowUI,
-    hideUI
+    hideUI,
+    HQassets
   }
 })

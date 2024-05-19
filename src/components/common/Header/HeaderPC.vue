@@ -16,7 +16,7 @@
     <span class="routes">
       <RouterLink
         v-for="route in props.routes"
-        :to="route.path"
+        :to="{name: route.path}"
         class="redirect"
         :key="'route' + route.path"
       >

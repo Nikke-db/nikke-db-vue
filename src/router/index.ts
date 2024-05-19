@@ -6,6 +6,7 @@ import Tools from '@/components/views/Tools.vue'
 import Chibi from '@/components/views/Chibi.vue'
 import Gallery from '@/components/views/Gallery.vue'
 import TierListMaker from '@/components/views/Tierlistmaker.vue'
+import HighAndLowQualityAssets from '@/components/views/notices/HighAndLowQualityAssets.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,7 +30,7 @@ const router = createRouter({
     },
     {
       path: '/visualiser',
-      name: 'Live2D',
+      name: 'visualiser',
       component: L2D
     },
     {
@@ -67,6 +68,11 @@ const router = createRouter({
       path: '/tierlistmaker',
       name: 'tierlistmaker',
       component: TierListMaker
+    },
+    {
+      path: '/notice/HQvqLQAssets',
+      name: 'HQvqLQAssets',
+      component: HighAndLowQualityAssets
     }
     // {
     // path: '/about',

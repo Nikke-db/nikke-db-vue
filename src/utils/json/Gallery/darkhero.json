@@ -1,0 +1,12 @@
+{
+  "path": "darkhero/",
+  "type": "large",
+  "id": "darkhero",
+  "title": "D.ARK HERO",
+  "content": [
+    {
+      "name": "EventTitle_Darkhero_01",
+      "text": "D.ARK HERO 1"
+    }
+  ]
+}

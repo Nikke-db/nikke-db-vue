@@ -201,16 +201,7 @@ watch(() => market.globalParams.isMobile, (e) => {
     canvas.style.transform = 'scale(1)'
     market.globalParams.hideMobileHeader()
   } else {
-    canvas.style.position = 'absolute'
-    canvas.style.width = ''
-    canvas.style.height = '168vh'
-    canvas.style.marginTop = 'calc(-30vh)'
-    canvas.style.transform = 'scale(0.5)'
-    canvas.style.left = '0px'
-    canvas.style.top = '0px'
-    canvas.width = canvas.height
-    market.globalParams.showMobileHeader()
-    transformScale = 0.5
+    applyDefaultStyle2Canvas()
     centerForPC()
   }
 })
@@ -420,13 +411,13 @@ const applyDefaultStyle2Canvas = () => {
       transformScale = 1
       market.globalParams.hideMobileHeader()
     } else {
-      canvas.style.height = '168vh'
-      canvas.style.marginTop = 'calc(-30vh)'
-      canvas.style.transform = 'scale(0.5)'
+      canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
+      canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
+      canvas.style.transform = market.live2d.HQassets ? 'scale(0.18)' : 'scale(0.5)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
-      transformScale = 0.5
+      transformScale = market.live2d.HQassets ? 0.18 : 0.5
       market.globalParams.showMobileHeader()
       centerForPC()
     }
@@ -509,7 +500,7 @@ document.addEventListener('mousemove', (e) => {
  * though I don't see the point as it is already pixelated enough
  */
 
-let transformScale = 0.2
+let transformScale = 0.5
 
 document.addEventListener('wheel', (e) => {
   if (filterDomEvents(e)) {
