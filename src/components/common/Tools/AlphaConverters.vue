@@ -1,5 +1,5 @@
 <template>
-  t
+  WIP, should be live soon
 </template>
 
 <script setup lang="ts">
