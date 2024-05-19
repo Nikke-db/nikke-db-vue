@@ -18,7 +18,7 @@
     >
       <n-tabs>
 
-        <n-tab-pane name="custom l2d loader">
+        <n-tab-pane name="Custom L2D Loader">
           <n-card :bordered="false" size="huge" id="customSpineModalContent">
             Load custom spine 4.0 or 4.1 assets<br/>
             Useful to check out mods if you have all the non-encrypted files<br/>
@@ -126,8 +126,8 @@
           </n-card>
         </n-tab-pane>
 
-        <n-tab-pane name="Tools">
-          <ModdingTools />
+        <n-tab-pane name="Alpha Converters">
+          <AlphaConverters />
         </n-tab-pane>
 
       </n-tabs>
@@ -142,7 +142,7 @@ import type { UploadFileInfo } from 'naive-ui'
 import { ref, type Ref, watch } from 'vue'
 import { AttachFileOutlined } from '@vicons/material'
 import { PlusCircleOutlined, MinusCircleOutlined } from '@vicons/antd'
-import ModdingTools from '@/components/common/Spine/Tools/ModdingTools.vue'
+import AlphaConverters from '@/components/common/Tools/AlphaConverters.vue'
 
 const market = useMarket()
 
