@@ -1,6 +1,5 @@
 <template>
   <div class="body">
-
     <n-card
       title="Nikke: Database of Victory"
       size="medium"
@@ -45,7 +44,6 @@ import bgi from '@/assets/index_bg.jpg'
 import updates from '@/utils/json/updateLog.json'
 
 const market = useMarket()
-
 
 onBeforeMount(() => {
   market.load.beginLoad()
