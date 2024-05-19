@@ -413,11 +413,11 @@ const applyDefaultStyle2Canvas = () => {
     } else {
       canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
       canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
-      canvas.style.transform = market.live2d.HQassets ? 'scale(0.19)' : 'scale(0.5)'
+      canvas.style.transform = market.live2d.HQassets ? 'scale(0.18)' : 'scale(0.5)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
-      transformScale = market.live2d.HQassets ? 0.19 : 0.5
+      transformScale = market.live2d.HQassets ? 0.18 : 0.5
       market.globalParams.showMobileHeader()
       centerForPC()
     }
@@ -500,7 +500,7 @@ document.addEventListener('mousemove', (e) => {
  * though I don't see the point as it is already pixelated enough
  */
 
-let transformScale = 0.2
+let transformScale = 0.5
 
 document.addEventListener('wheel', (e) => {
   if (filterDomEvents(e)) {

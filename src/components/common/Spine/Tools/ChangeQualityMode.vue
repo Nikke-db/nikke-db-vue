@@ -1,5 +1,5 @@
 <template>
-  <n-button :type="market.live2d.HQassets ? 'success' : 'warning'" round @click="resetPlacement()" :style="{fontWeight: 'bold'}">
+  <n-button :type="market.live2d.HQassets ? 'success' : 'warning'" round @click="changeQuality()" :style="{fontWeight: 'bold'}">
     <span v-if="market.live2d.HQassets">HQ Assets</span>
     <span v-else>LQ Assets</span>
   </n-button>
@@ -10,13 +10,7 @@ import { useMarket } from '@/stores/market'
 
 const market = useMarket()
 
-document.addEventListener('keypress', (e) => {
-  if (e.key.toLowerCase() === 'z') {
-    resetPlacement()
-  }
-})
-
-const resetPlacement = () => {
+const changeQuality = () => {
   market.live2d.HQassets = !market.live2d.HQassets
   market.live2d.triggerResetPlacement()
 }

@@ -2100,6 +2100,706 @@
       "character_exp1": 15475151,
       "user_exp": 4170000,
       "character_exp2": 7583
+    },
+    {
+      "id": 301,
+      "credit": 1507211,
+      "character_exp1": 15511784,
+      "user_exp": 4183333,
+      "character_exp2": 7599
+    },
+    {
+      "id": 302,
+      "credit": 1509923,
+      "character_exp1": 15548392,
+      "user_exp": 4200000,
+      "character_exp2": 7615
+    },
+    {
+      "id": 303,
+      "credit": 1512634,
+      "character_exp1": 15584976,
+      "user_exp": 4216666,
+      "character_exp2": 7630
+    },
+    {
+      "id": 304,
+      "credit": 1515345,
+      "character_exp1": 15621536,
+      "user_exp": 4230000,
+      "character_exp2": 7646
+    },
+    {
+      "id": 305,
+      "credit": 1518054,
+      "character_exp1": 15658072,
+      "user_exp": 4246666,
+      "character_exp2": 7661
+    },
+    {
+      "id": 306,
+      "credit": 1520763,
+      "character_exp1": 15694584,
+      "user_exp": 4263333,
+      "character_exp2": 7677
+    },
+    {
+      "id": 307,
+      "credit": 1523471,
+      "character_exp1": 15731072,
+      "user_exp": 4276666,
+      "character_exp2": 7692
+    },
+    {
+      "id": 308,
+      "credit": 1526177,
+      "character_exp1": 15767536,
+      "user_exp": 4293333,
+      "character_exp2": 7708
+    },
+    {
+      "id": 309,
+      "credit": 1528883,
+      "character_exp1": 15803977,
+      "user_exp": 4310000,
+      "character_exp2": 7723
+    },
+    {
+      "id": 310,
+      "credit": 1531588,
+      "character_exp1": 15840394,
+      "user_exp": 4323333,
+      "character_exp2": 7739
+    },
+    {
+      "id": 311,
+      "credit": 1534292,
+      "character_exp1": 15876788,
+      "user_exp": 4340000,
+      "character_exp2": 7754
+    },
+    {
+      "id": 312,
+      "credit": 1536996,
+      "character_exp1": 15913158,
+      "user_exp": 4356666,
+      "character_exp2": 7770
+    },
+    {
+      "id": 313,
+      "credit": 1539698,
+      "character_exp1": 15949505,
+      "user_exp": 4373333,
+      "character_exp2": 7785
+    },
+    {
+      "id": 314,
+      "credit": 1542400,
+      "character_exp1": 15985829,
+      "user_exp": 4386666,
+      "character_exp2": 7800
+    },
+    {
+      "id": 315,
+      "credit": 1545101,
+      "character_exp1": 16022129,
+      "user_exp": 4403333,
+      "character_exp2": 7816
+    },
+    {
+      "id": 316,
+      "credit": 1547800,
+      "character_exp1": 16058407,
+      "user_exp": 4420000,
+      "character_exp2": 7831
+    },
+    {
+      "id": 317,
+      "credit": 1550499,
+      "character_exp1": 16094661,
+      "user_exp": 4433333,
+      "character_exp2": 7846
+    },
+    {
+      "id": 318,
+      "credit": 1553198,
+      "character_exp1": 16130893,
+      "user_exp": 4450000,
+      "character_exp2": 7861
+    },
+    {
+      "id": 319,
+      "credit": 1555895,
+      "character_exp1": 16167102,
+      "user_exp": 4466666,
+      "character_exp2": 7877
+    },
+    {
+      "id": 320,
+      "credit": 1558591,
+      "character_exp1": 16203288,
+      "user_exp": 4483333,
+      "character_exp2": 7892
+    },
+    {
+      "id": 321,
+      "credit": 1561287,
+      "character_exp1": 16239452,
+      "user_exp": 4496666,
+      "character_exp2": 7907
+    },
+    {
+      "id": 322,
+      "credit": 1563982,
+      "character_exp1": 16275593,
+      "user_exp": 4513333,
+      "character_exp2": 7922
+    },
+    {
+      "id": 323,
+      "credit": 1566676,
+      "character_exp1": 16311711,
+      "user_exp": 4530000,
+      "character_exp2": 7937
+    },
+    {
+      "id": 324,
+      "credit": 1569369,
+      "character_exp1": 16347808,
+      "user_exp": 4546666,
+      "character_exp2": 7953
+    },
+    {
+      "id": 325,
+      "credit": 1572061,
+      "character_exp1": 16383882,
+      "user_exp": 4560000,
+      "character_exp2": 7968
+    },
+    {
+      "id": 326,
+      "credit": 1574752,
+      "character_exp1": 16419933,
+      "user_exp": 4576666,
+      "character_exp2": 7983
+    },
+    {
+      "id": 327,
+      "credit": 1577443,
+      "character_exp1": 16455963,
+      "user_exp": 4593333,
+      "character_exp2": 7998
+    },
+    {
+      "id": 328,
+      "credit": 1580133,
+      "character_exp1": 16491971,
+      "user_exp": 4610000,
+      "character_exp2": 8013
+    },
+    {
+      "id": 329,
+      "credit": 1582822,
+      "character_exp1": 16527956,
+      "user_exp": 4623333,
+      "character_exp2": 8028
+    },
+    {
+      "id": 330,
+      "credit": 1585510,
+      "character_exp1": 16563920,
+      "user_exp": 4640000,
+      "character_exp2": 8043
+    },
+    {
+      "id": 331,
+      "credit": 1588197,
+      "character_exp1": 16599862,
+      "user_exp": 4656666,
+      "character_exp2": 8058
+    },
+    {
+      "id": 332,
+      "credit": 1590884,
+      "character_exp1": 16635783,
+      "user_exp": 4673333,
+      "character_exp2": 8073
+    },
+    {
+      "id": 333,
+      "credit": 1593570,
+      "character_exp1": 16671681,
+      "user_exp": 4686666,
+      "character_exp2": 8088
+    },
+    {
+      "id": 334,
+      "credit": 1596255,
+      "character_exp1": 16707559,
+      "user_exp": 4703333,
+      "character_exp2": 8103
+    },
+    {
+      "id": 335,
+      "credit": 1598939,
+      "character_exp1": 16743414,
+      "user_exp": 4720000,
+      "character_exp2": 8118
+    },
+    {
+      "id": 336,
+      "credit": 1601622,
+      "character_exp1": 16779248,
+      "user_exp": 4736666,
+      "character_exp2": 8133
+    },
+    {
+      "id": 337,
+      "credit": 1604305,
+      "character_exp1": 16815061,
+      "user_exp": 4750000,
+      "character_exp2": 8147
+    },
+    {
+      "id": 338,
+      "credit": 1606986,
+      "character_exp1": 16850853,
+      "user_exp": 4766666,
+      "character_exp2": 8162
+    },
+    {
+      "id": 339,
+      "credit": 1609667,
+      "character_exp1": 16886624,
+      "user_exp": 4783333,
+      "character_exp2": 8177
+    },
+    {
+      "id": 340,
+      "credit": 1612347,
+      "character_exp1": 16922373,
+      "user_exp": 4800000,
+      "character_exp2": 8192
+    },
+    {
+      "id": 341,
+      "credit": 1615027,
+      "character_exp1": 16958102,
+      "user_exp": 4813333,
+      "character_exp2": 8207
+    },
+    {
+      "id": 342,
+      "credit": 1617705,
+      "character_exp1": 16993809,
+      "user_exp": 4830000,
+      "character_exp2": 8221
+    },
+    {
+      "id": 343,
+      "credit": 1620383,
+      "character_exp1": 17029496,
+      "user_exp": 4846666,
+      "character_exp2": 8236
+    },
+    {
+      "id": 344,
+      "credit": 1623060,
+      "character_exp1": 17065161,
+      "user_exp": 4863333,
+      "character_exp2": 8251
+    },
+    {
+      "id": 345,
+      "credit": 1625736,
+      "character_exp1": 17100806,
+      "user_exp": 4876666,
+      "character_exp2": 8266
+    },
+    {
+      "id": 346,
+      "credit": 1628412,
+      "character_exp1": 17136431,
+      "user_exp": 4893333,
+      "character_exp2": 8280
+    },
+    {
+      "id": 347,
+      "credit": 1631086,
+      "character_exp1": 17172035,
+      "user_exp": 4910000,
+      "character_exp2": 8295
+    },
+    {
+      "id": 348,
+      "credit": 1633760,
+      "character_exp1": 17207618,
+      "user_exp": 4926666,
+      "character_exp2": 8310
+    },
+    {
+      "id": 349,
+      "credit": 1636433,
+      "character_exp1": 17243181,
+      "user_exp": 4943333,
+      "character_exp2": 8324
+    },
+    {
+      "id": 350,
+      "credit": 1639106,
+      "character_exp1": 17278723,
+      "user_exp": 4956666,
+      "character_exp2": 8339
+    },
+    {
+      "id": 351,
+      "credit": 1641777,
+      "character_exp1": 17314246,
+      "user_exp": 4973333,
+      "character_exp2": 8353
+    },
+    {
+      "id": 352,
+      "credit": 1644448,
+      "character_exp1": 17349747,
+      "user_exp": 4990000,
+      "character_exp2": 8368
+    },
+    {
+      "id": 353,
+      "credit": 1647118,
+      "character_exp1": 17385229,
+      "user_exp": 5006666,
+      "character_exp2": 8382
+    },
+    {
+      "id": 354,
+      "credit": 1649788,
+      "character_exp1": 17420691,
+      "user_exp": 5023333,
+      "character_exp2": 8397
+    },
+    {
+      "id": 355,
+      "credit": 1652456,
+      "character_exp1": 17456133,
+      "user_exp": 5036666,
+      "character_exp2": 8411
+    },
+    {
+      "id": 356,
+      "credit": 1655124,
+      "character_exp1": 17491554,
+      "user_exp": 5053333,
+      "character_exp2": 8426
+    },
+    {
+      "id": 357,
+      "credit": 1657791,
+      "character_exp1": 17526956,
+      "user_exp": 5070000,
+      "character_exp2": 8440
+    },
+    {
+      "id": 358,
+      "credit": 1660457,
+      "character_exp1": 17562338,
+      "user_exp": 5086666,
+      "character_exp2": 8455
+    },
+    {
+      "id": 359,
+      "credit": 1663123,
+      "character_exp1": 17597700,
+      "user_exp": 5103333,
+      "character_exp2": 8469
+    },
+    {
+      "id": 360,
+      "credit": 1665788,
+      "character_exp1": 17633043,
+      "user_exp": 5116666,
+      "character_exp2": 8484
+    },
+    {
+      "id": 361,
+      "credit": 1668452,
+      "character_exp1": 17668366,
+      "user_exp": 5133333,
+      "character_exp2": 8498
+    },
+    {
+      "id": 362,
+      "credit": 1671115,
+      "character_exp1": 17703669,
+      "user_exp": 5150000,
+      "character_exp2": 8513
+    },
+    {
+      "id": 363,
+      "credit": 1673778,
+      "character_exp1": 17738953,
+      "user_exp": 5166666,
+      "character_exp2": 8527
+    },
+    {
+      "id": 364,
+      "credit": 1676440,
+      "character_exp1": 17774217,
+      "user_exp": 5183333,
+      "character_exp2": 8541
+    },
+    {
+      "id": 365,
+      "credit": 1679101,
+      "character_exp1": 17809462,
+      "user_exp": 5196666,
+      "character_exp2": 8556
+    },
+    {
+      "id": 366,
+      "credit": 1681761,
+      "character_exp1": 17844688,
+      "user_exp": 5213333,
+      "character_exp2": 8570
+    },
+    {
+      "id": 367,
+      "credit": 1684421,
+      "character_exp1": 17879894,
+      "user_exp": 5230000,
+      "character_exp2": 8584
+    },
+    {
+      "id": 368,
+      "credit": 1687080,
+      "character_exp1": 17915082,
+      "user_exp": 5246666,
+      "character_exp2": 8598
+    },
+    {
+      "id": 369,
+      "credit": 1689738,
+      "character_exp1": 17950250,
+      "user_exp": 5263333,
+      "character_exp2": 8613
+    },
+    {
+      "id": 370,
+      "credit": 1692396,
+      "character_exp1": 17985399,
+      "user_exp": 5280000,
+      "character_exp2": 8627
+    },
+    {
+      "id": 371,
+      "credit": 1695053,
+      "character_exp1": 18020529,
+      "user_exp": 5293333,
+      "character_exp2": 8641
+    },
+    {
+      "id": 372,
+      "credit": 1697709,
+      "character_exp1": 18055640,
+      "user_exp": 5310000,
+      "character_exp2": 8655
+    },
+    {
+      "id": 373,
+      "credit": 1700364,
+      "character_exp1": 18090733,
+      "user_exp": 5326666,
+      "character_exp2": 8670
+    },
+    {
+      "id": 374,
+      "credit": 1703019,
+      "character_exp1": 18125806,
+      "user_exp": 5343333,
+      "character_exp2": 8684
+    },
+    {
+      "id": 375,
+      "credit": 1705673,
+      "character_exp1": 18160861,
+      "user_exp": 5360000,
+      "character_exp2": 8698
+    },
+    {
+      "id": 376,
+      "credit": 1708326,
+      "character_exp1": 18195897,
+      "user_exp": 5376666,
+      "character_exp2": 8712
+    },
+    {
+      "id": 377,
+      "credit": 1710979,
+      "character_exp1": 18230914,
+      "user_exp": 5390000,
+      "character_exp2": 8726
+    },
+    {
+      "id": 378,
+      "credit": 1713631,
+      "character_exp1": 18265913,
+      "user_exp": 5406666,
+      "character_exp2": 8740
+    },
+    {
+      "id": 379,
+      "credit": 1716282,
+      "character_exp1": 18300893,
+      "user_exp": 5423333,
+      "character_exp2": 8754
+    },
+    {
+      "id": 380,
+      "credit": 1718932,
+      "character_exp1": 18335855,
+      "user_exp": 5440000,
+      "character_exp2": 8768
+    },
+    {
+      "id": 381,
+      "credit": 1721582,
+      "character_exp1": 18370799,
+      "user_exp": 5456666,
+      "character_exp2": 8782
+    },
+    {
+      "id": 382,
+      "credit": 1724231,
+      "character_exp1": 18405724,
+      "user_exp": 5473333,
+      "character_exp2": 8796
+    },
+    {
+      "id": 383,
+      "credit": 1726879,
+      "character_exp1": 18440631,
+      "user_exp": 5490000,
+      "character_exp2": 8810
+    },
+    {
+      "id": 384,
+      "credit": 1729527,
+      "character_exp1": 18475520,
+      "user_exp": 5503333,
+      "character_exp2": 8824
+    },
+    {
+      "id": 385,
+      "credit": 1732174,
+      "character_exp1": 18510390,
+      "user_exp": 5520000,
+      "character_exp2": 8838
+    },
+    {
+      "id": 386,
+      "credit": 1734820,
+      "character_exp1": 18545242,
+      "user_exp": 5536666,
+      "character_exp2": 8852
+    },
+    {
+      "id": 387,
+      "credit": 1737466,
+      "character_exp1": 18580077,
+      "user_exp": 5553333,
+      "character_exp2": 8866
+    },
+    {
+      "id": 388,
+      "credit": 1740111,
+      "character_exp1": 18614893,
+      "user_exp": 5570000,
+      "character_exp2": 8880
+    },
+    {
+      "id": 389,
+      "credit": 1742755,
+      "character_exp1": 18649691,
+      "user_exp": 5586666,
+      "character_exp2": 8894
+    },
+    {
+      "id": 390,
+      "credit": 1745399,
+      "character_exp1": 18684472,
+      "user_exp": 5603333,
+      "character_exp2": 8908
+    },
+    {
+      "id": 391,
+      "credit": 1748042,
+      "character_exp1": 18719235,
+      "user_exp": 5616666,
+      "character_exp2": 8922
+    },
+    {
+      "id": 392,
+      "credit": 1750684,
+      "character_exp1": 18753979,
+      "user_exp": 5633333,
+      "character_exp2": 8936
+    },
+    {
+      "id": 393,
+      "credit": 1753325,
+      "character_exp1": 18788707,
+      "user_exp": 5650000,
+      "character_exp2": 8950
+    },
+    {
+      "id": 394,
+      "credit": 1755966,
+      "character_exp1": 18823416,
+      "user_exp": 5666666,
+      "character_exp2": 8963
+    },
+    {
+      "id": 395,
+      "credit": 1758606,
+      "character_exp1": 18858108,
+      "user_exp": 5683333,
+      "character_exp2": 8977
+    },
+    {
+      "id": 396,
+      "credit": 1761246,
+      "character_exp1": 18892782,
+      "user_exp": 5700000,
+      "character_exp2": 8991
+    },
+    {
+      "id": 397,
+      "credit": 1763885,
+      "character_exp1": 18927439,
+      "user_exp": 5716666,
+      "character_exp2": 9005
+    },
+    {
+      "id": 398,
+      "credit": 1766523,
+      "character_exp1": 18962078,
+      "user_exp": 5733333,
+      "character_exp2": 9019
+    },
+    {
+      "id": 399,
+      "credit": 1769161,
+      "character_exp1": 18996700,
+      "user_exp": 5746666,
+      "character_exp2": 9032
+    },
+    {
+      "id": 400,
+      "credit": 1771797,
+      "character_exp1": 19031305,
+      "user_exp": 5763333,
+      "character_exp2": 9046
     }
   ]
 }

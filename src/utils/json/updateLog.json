@@ -238,5 +238,21 @@
   {
     "date": "May 4th 2024",
     "update": "Live2D: Added a High and Low Quality setting. Defaults to High Quality"
+  },
+  {
+    "date": "May 19th 2024",
+    "update": "Tools: Updated the outpost tool to handle levels 301 to 400."
+  },
+  {
+    "date": "May 19th 2024",
+    "update": "Gallery: Added 4koma 50. Added Last Kingdom. Added Dark Hero."
+  },
+  {
+    "date": "May 19th 2024",
+    "update": "Live2D: Updated Diesel Midnight Strawberry aim assets. Added Black Ark Ranger. Updated Chime assets. Added Crown Naked King. Updated Trony assets. Added Last Kingdom event scene. Added D.ARK HERO event scene. Added High Tech Toy event scene. "
+  },
+  {
+    "date": "May 19th 2024",
+    "update": "Live2D: Fixed a bug that caused the button Z to also trigger the change of the asset quality feature. Reduced the default transformation scale to fit better within the screen."
   }
 ]

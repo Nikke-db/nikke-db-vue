@@ -33,7 +33,7 @@ module.exports = {
     'keyword-spacing': ['error', {
       'after': true, 'before': true,
     }],
-    'no-trailing-spaces': 'error',
+    // 'no-trailing-spaces': 'error',
     'no-unreachable': 'error',
     'no-unreachable-loop': 'error',
     'no-unused-vars': 'off',
