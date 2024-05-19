@@ -254,5 +254,9 @@
   {
     "date": "May 19th 2024",
     "update": "Live2D: Fixed a bug that caused the button Z to also trigger the change of the asset quality feature. Reduced the default transformation scale to fit better within the screen."
+  },
+  {
+    "date": "May 19th 2024",
+    "update": "Custom Live2D : Added a Straight to Premultiplied Alpha converter, and the other way around"
   }
 ]
