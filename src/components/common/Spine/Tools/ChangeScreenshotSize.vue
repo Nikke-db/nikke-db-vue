@@ -1,10 +1,14 @@
 <template>
-  <span>
-    <n-button ghost type="info" round @click="openScSzModal()">
-      Screenshot <br />
-      Options
-    </n-button>
+  <n-tooltip>
+    <template #trigger>
+      <n-button ghost type="info" @click="openScSzModal()">
+        <n-icon :component="Cog" color="inherit" size="24"/>
+      </n-button>
+    </template>
+    Screenshot Options
+  </n-tooltip>
 
+  <span>
     <n-modal
       v-model:show="scSzModal"
       id="bgcModal"
@@ -42,6 +46,7 @@
 import { ref, onMounted } from 'vue'
 import { useMarket } from '@/stores/market'
 import { messagesEnum } from '@/utils/enum/globalParams'
+import { Cog } from '@vicons/fa'
 
 onMounted(() => {
   if (
@@ -85,9 +90,9 @@ const cancelScSzModal = () => {
 
 <style scoped lang="less">
 .n-button {
-  width: 100%;
   height: 40px;
-  margin-top: 10px;
+  width: 50%;
+  border-radius: 0px 34px 34px 0px;
 }
 
 .n-input-number {

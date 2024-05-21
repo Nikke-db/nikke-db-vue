@@ -7,12 +7,9 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="info">
-        Walpurgis Nacht 3 is on it's way guys. This is epic <br/>
-
-        <n-image src="https://cdn.discordapp.com/attachments/891090590048075786/1234126498168836167/ekklfnp7xsva1.png?ex=662f995e&is=662e47de&hm=841d19d2b90d2d0d61c501799ca4e7ee0150add23ca372dd9350649825aa1f45&"
-                 width="50%"/>
-      </n-alert>
+<!--      <n-alert type="info">-->
+<!--          -->
+<!--      </n-alert>-->
 
       <n-divider></n-divider>
 
@@ -40,7 +37,7 @@
 <script lang="ts" setup>
 import { onMounted, onBeforeMount, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
-import bgi from '@/assets/index_bg.jpg'
+import bgi from '@/assets/index_bg2.png'
 import updates from '@/utils/json/updateLog.json'
 
 const market = useMarket()

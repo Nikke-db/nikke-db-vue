@@ -32,7 +32,7 @@
         <div>
           <Export />
         </div>
-        <div>
+        <div style="display: flex;">
           <Screenshot />
           <ChangeScreenshotSize />
         </div>
