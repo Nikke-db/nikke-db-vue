@@ -58,15 +58,14 @@ const spineLoader = () => {
     uintArray[i] = text.charCodeAt(i)
   }
 
-  // Extract and decode version string, and log all relevant information
-  console.log('UintArray:', uintArray)
+  // Extract and decode version string
 
   // Take the first 16 bytes
   const versionBytes = uintArray.slice(0, 16)
-  console.log('Version Bytes:', versionBytes)
+
 
   const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
-  console.log('Decoded Version String:', versionString)
+
 
   let usedSpine
 
