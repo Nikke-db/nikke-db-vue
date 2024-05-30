@@ -19,7 +19,7 @@ import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 let canvas: any
 let spineCanvas: any
 const market = useMarket()
-let tempSpineVersion: number | null = null //used for spine version exceptions, see spineExceptionList()
+//let tempSpineVersion: number | null = null //used for spine version exceptions, see spineExceptionList()
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
@@ -39,17 +39,45 @@ const SPINE_DEFAULT_MIX = 0.25
 let spinePlayer: any = null
 
 const spineLoader = () => {
-  let usedSpine: any
+  const skelUrl = getPathing('skel')
+  const request = new XMLHttpRequest()
 
-  switch (tempSpineVersion !== null ? tempSpineVersion : market.live2d.current_spine_version) {
-    case 4.0:
-      usedSpine = spine40
-      break
-    case 4.1:
-      usedSpine = spine41
-      break
-    default:
-      break
+  request.open('GET', skelUrl, false)
+  request.send()
+
+  if (request.status !== 200) {
+    console.error('Failed to load skel file:', request.statusText)
+    return
+  }
+
+  // Manually convert the response text to an ArrayBuffer
+  const text = request.responseText
+  const arrayBuffer = new ArrayBuffer(text.length)
+  const uintArray = new Uint8Array(arrayBuffer)
+
+  for (let i = 0; i < text.length; i++) {
+    uintArray[i] = text.charCodeAt(i)
+  }
+
+  // Extract and decode version string, and log all relevant information
+  console.log('UintArray:', uintArray)
+
+  // Take the first 16 bytes
+  const versionBytes = uintArray.slice(0, 16)
+  console.log('Version Bytes:', versionBytes)
+
+  const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
+  console.log('Decoded Version String:', versionString)
+
+  let usedSpine
+
+  if (versionString.includes('4.0.47')) {
+    usedSpine = spine40
+  } else if (versionString.includes('4.1.20')) {
+    usedSpine = spine41
+  } else {
+    console.error('Unsupported Spine version:', versionString)
+    return
   }
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', {
@@ -65,7 +93,7 @@ const spineLoader = () => {
     preserveDrawingBuffer: true,
     viewport: spineViewport,
     defaultMix: SPINE_DEFAULT_MIX,
-    success: (player: any) => {
+    success: (player) => {
       spinePlayer = player
       successfullyLoaded()
     },
@@ -74,6 +102,7 @@ const spineLoader = () => {
     },
   })
 }
+
 
 const customSpineLoader = () => {
   let usedSpine: any
