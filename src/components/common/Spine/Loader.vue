@@ -31,7 +31,6 @@ const spineViewport = {
 onMounted(() => {
   market.load.beginLoad()
   spineLoader()
-  applyDefaultStyle2Canvas()
 })
 
 const SPINE_DEFAULT_MIX = 0.25
@@ -41,66 +40,70 @@ const spineLoader = () => {
   const skelUrl = getPathing('skel')
   const request = new XMLHttpRequest()
 
-  request.open('GET', skelUrl, false)
+  request.responseType = 'arraybuffer'
+  request.open('GET', skelUrl, true)
   request.send()
+  request.onloadend = () => {
+    if (request.status !== 200) {
+      console.error('Failed to load skel file:', request.statusText)
+      return
+    }
 
-  if (request.status !== 200) {
-    console.error('Failed to load skel file:', request.statusText)
-    return
+    // convert the ArrayBuffer in the response as a DataUrl for rawDataURIs
+    const buffer = request.response
+    
+    const frURL = new FileReader()
+    frURL.readAsDataURL(new Blob([buffer]))
+    frURL.onload = () => {
+      const skelURL: string | ArrayBuffer | null = frURL.result
+
+      const uintArray = new Uint8Array(buffer)
+
+      // Take the first 16 bytes
+      const versionBytes = uintArray.slice(0, 16)
+
+      // Extract and decode version string
+      const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
+
+      let usedSpine
+
+      if (versionString.includes('4.0.47')) {
+        usedSpine = spine40
+      } else if (versionString.includes('4.1.20')) {
+        usedSpine = spine41
+      } else {
+        console.error('Unsupported Spine version:', versionString)
+        return
+      }
+
+      spineCanvas = new usedSpine.SpinePlayer('player-container', {
+        skelUrl: market.live2d.current_id,
+        rawDataURIs: {
+          [market.live2d.current_id]: skelURL,
+        },
+        atlasUrl: getPathing('atlas'),
+        animation: getDefaultAnimation(),
+        skin: market.live2d.getSkin(),
+        backgroundColor: '#00000000',
+        alpha: true,
+        premultipliedAlpha: true,
+        mipmaps: market.live2d.current_pose === 'fb' ? true : false,
+        debug: false,
+        preserveDrawingBuffer: true,
+        viewport: spineViewport,
+        defaultMix: SPINE_DEFAULT_MIX,
+        success: (player: any) => {
+          spinePlayer = player
+          successfullyLoaded()
+          applyDefaultStyle2Canvas()
+        },
+        error: () => {
+          wrongfullyLoaded()
+        },
+      })
+    }
   }
-
-  // Manually convert the response text to an ArrayBuffer
-  const text = request.responseText
-  const arrayBuffer = new ArrayBuffer(text.length)
-  const uintArray = new Uint8Array(arrayBuffer)
-
-  for (let i = 0; i < text.length; i++) {
-    uintArray[i] = text.charCodeAt(i)
-  }
-
-  // Extract and decode version string
-
-  // Take the first 16 bytes
-  const versionBytes = uintArray.slice(0, 16)
-
-
-  const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
-
-
-  let usedSpine
-
-  if (versionString.includes('4.0.47')) {
-    usedSpine = spine40
-  } else if (versionString.includes('4.1.20')) {
-    usedSpine = spine41
-  } else {
-    console.error('Unsupported Spine version:', versionString)
-    return
-  }
-
-  spineCanvas = new usedSpine.SpinePlayer('player-container', {
-    skelUrl: getPathing('skel'),
-    atlasUrl: getPathing('atlas'),
-    animation: getDefaultAnimation(),
-    skin: market.live2d.getSkin(),
-    backgroundColor: '#00000000',
-    alpha: true,
-    premultipliedAlpha: true,
-    mipmaps: market.live2d.current_pose === 'fb' ? true : false,
-    debug: false,
-    preserveDrawingBuffer: true,
-    viewport: spineViewport,
-    defaultMix: SPINE_DEFAULT_MIX,
-    success: (player) => {
-      spinePlayer = player
-      successfullyLoaded()
-    },
-    error: () => {
-      wrongfullyLoaded()
-    },
-  })
 }
-
 
 const customSpineLoader = () => {
   let usedSpine: any
