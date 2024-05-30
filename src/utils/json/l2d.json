@@ -17,7 +17,6 @@
   {
     "name": "Rapi Classic Vacation",
     "id": "c010_03",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -43,13 +42,11 @@
   {
     "name": "Neon: Blue Ocean",
     "id": "c014",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Anis: Sparkling Summer",
     "id": "c015",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -80,8 +77,7 @@
   {
     "name": "Poli Cheer Up Police",
     "id": "c030_02",
-    "tl": "skin",
-    "version":4.1
+    "tl": "skin"
   },
   {
     "name": "Miranda",
@@ -91,7 +87,6 @@
   {
     "name": "Quiry",
     "id": "c033",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -107,7 +102,6 @@
   {
     "name": "D: Killer Wife",
     "id": "c043",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -128,7 +122,6 @@
   {
     "name": "Mica: Snow Buddy",
     "id": "c062",
-    "version":4.1,
     "tl": "nikke"
   },
   {
@@ -144,7 +137,6 @@
   {
     "name": "Brid Black Moon",
     "id": "c070_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -165,13 +157,11 @@
   {
     "name": "Diesel Strawberry Flower",
     "id": "c072_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Diesel Midnight Strawberry",
     "id": "c072_04",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -197,13 +187,11 @@
   {
     "name": "Liter Guardfish",
     "id": "c082_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Liter Cute Sunflower",
     "id": "c082_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -219,7 +207,6 @@
   {
     "name": "Emma Office Therapy",
     "id": "c090_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -245,13 +232,11 @@
   {
     "name": "Drake Villain Racer",
     "id": "c101_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Drake Maid For Villain",
     "id": "c101_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -312,13 +297,11 @@
   {
     "name": "Pepper Ocean Vitamin",
     "id": "c131_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Mary: Bay Goddess",
     "id": "c132",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -334,7 +317,6 @@
   {
     "name": "Sugar Wild Backyard",
     "id": "c140_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -355,7 +337,6 @@
   {
     "name": "Frima Sea of Sloth",
     "id": "c142_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -396,7 +377,6 @@
   {
     "name": "Privaty Banquet Princess",
     "id": "c170_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -417,7 +397,6 @@
   {
     "name": "Guillotine Dark Tracer",
     "id": "c180_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -448,7 +427,6 @@
   {
     "name": "Tove",
     "id": "c192",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -459,7 +437,6 @@
   {
     "name": "Ludmilla: Winter Owner",
     "id": "c194",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -470,7 +447,6 @@
   {
     "name": "Rupee Rabbit Deluxe",
     "id": "c200_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -481,7 +457,6 @@
   {
     "name": "Yan Sunrise Market",
     "id": "c201_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -512,7 +487,6 @@
   {
     "name": "Exia Gamer",
     "id": "c210_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -533,7 +507,6 @@
   {
     "name": "Novel Detective Nurse",
     "id": "c212_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -544,8 +517,7 @@
   {
     "name": "Snow White White Knight",
     "id": "c220_01",
-    "tl": "skin",
-    "version": 4.1
+    "tl": "skin"
   },
   {
     "name": "Rapunzel",
@@ -560,13 +532,11 @@
   {
     "name": "Snow White: Innocent Days",
     "id": "c224",
-    "version":4.1,
     "tl": "nikke"
   },
   {
     "name": "Scarlet: Black Shadow",
     "id": "c225",
-    "version":4.1,
     "tl": "nikke"
   },
   {
@@ -577,7 +547,6 @@
   {
     "name": "Harran Banquet Witch",
     "id": "c230_01",
-    "version":4.1,
     "tl": "skin"
   },
   {
@@ -598,7 +567,6 @@
   {
     "name": "Dorothy Nostalgia",
     "id": "c233_01",
-    "version":4.1,
     "tl": "skin"
   },
   {
@@ -654,13 +622,11 @@
   {
     "name": "Modernia First Affection",
     "id": "c260_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Modernia Second Affection",
     "id": "c260_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -676,55 +642,46 @@
   {
     "name": "Indivilia",
     "id": "c263",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Blanc",
     "id": "c270",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Blanc White Rabbit",
     "id": "c270_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Noir",
     "id": "c271",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Noir Black Rabbit",
     "id": "c271_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Rouge",
     "id": "c272",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "Rosanna",
     "id": "c280",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Rosanna Ms. Dangerous",
     "id": "c280_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Moran",
     "id": "c281",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -735,7 +692,6 @@
   {
     "name": "Sakura Midnight Stealth",
     "id": "c282_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -796,7 +752,6 @@
   {
     "name": "Ade",
     "id": "c310",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -812,7 +767,6 @@
   {
     "name": "Privaty: Unkind Maid",
     "id": "c313",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -823,25 +777,21 @@
   {
     "name": "Marciana",
     "id": "c321",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Crown",
     "id": "c330",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Crown Naked King",
     "id": "c330_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Chime",
     "id": "c331",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
@@ -857,13 +807,11 @@
   {
     "name": "Mast",
     "id": "c350",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Mast A Pirate's Heart",
     "id": "c350_01",
-    "version": 4.1,
     "tl": "never"
   },
   {
@@ -874,7 +822,6 @@
   {
     "name": "Anchor",
     "id": "c351",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -890,13 +837,11 @@
   {
     "name": "Helm: Aquamarine",
     "id": "c353",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "T.A.L.O.S (Kilo)",
     "id": "c361",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -907,7 +852,6 @@
   {
     "name": "Nero",
     "id": "c380",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -918,7 +862,6 @@
   {
     "name": "Leona",
     "id": "c382",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -954,7 +897,6 @@
   {
     "name": "Flora",
     "id": "c411",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
@@ -970,7 +912,6 @@
   {
     "name": "Noise Classic Diva",
     "id": "c430_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
@@ -986,79 +927,66 @@
   {
     "name": "Naga",
     "id": "c450",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Tia",
     "id": "c451",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Red Hood",
     "id": "c470",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Liveryn",
     "id": "c480",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "Fragile",
     "id": "c481",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "Hammering",
     "id": "c490",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "Drilley",
     "id": "c491",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "Elegg",
     "id": "c500",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Trony",
     "id": "c501",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Grave",
     "id": "c510",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "Bay",
     "id": "c550",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Clay",
     "id": "c551",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Black Ark Ranger",
     "id": "c570",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
@@ -1099,91 +1027,76 @@
   {
     "name": "2B",
     "id": "c810",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "2B Metamorphic Damage",
     "id": "c810_01",
-    "version": 4.1,
     "tl": "NPC"
   },
   {
     "name": "2B YoRHa Uniform 1",
     "id": "c810_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "A2",
     "id": "c811",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "A2 Metamorphic Damage",
     "id": "c811_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "A2 YoRHa Uniform Prototype",
     "id": "c811_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Pascal",
     "id": "c812",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "9S",
     "id": "c813",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Rem",
     "id": "c820",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Rem Handy Maid",
     "id": "c820_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Rem Pure Blossom",
     "id": "c820_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Emilia",
     "id": "c821",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
     "name": "Emilia Clumsy Maid",
     "id": "c821_01",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Emilia Spring Breeze",
     "id": "c821_02",
-    "version": 4.1,
     "tl": "skin"
   },
   {
     "name": "Ram",
     "id": "c822",
-    "version": 4.1,
     "tl": "nikke"
   },
   {
@@ -1194,7 +1107,6 @@
   {
     "name": "Syuen",
     "id": "c901",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
@@ -1265,7 +1177,6 @@
   {
     "name": "Raptillion",
     "id": "c915",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
@@ -1386,127 +1297,106 @@
   {
     "name": "Commander (GODDESS)",
     "id": "c942",
-    "version":4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Liliweiss",
     "id": "c943",
-    "version":4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Anachiro | Cinderella",
     "id": "c944",
-    "version":4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Katie",
     "id": "c945",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Ruru",
     "id": "c946",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Freesia",
     "id": "c960",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Oswald",
     "id": "c961",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Product 12: B-0006",
     "id": "c962",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Product 12: C-1002",
     "id": "c963",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Product 12: 6000-D",
     "id": "c964",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Rapunzel",
     "id": "c966",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Ghost: Lumi",
     "id": "c967",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Ghost: Lua",
     "id": "c968",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Ghost: Lena",
     "id": "c969",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Lumi",
     "id": "c970",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Rose",
     "id": "c971",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Mass Produced Melee",
     "id": "c974",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Mass Produced Melee 2",
     "id": "c974_01",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Timi",
     "id": "c975",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "T.Rony",
     "id": "c976",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "Kilo",
     "id": "c977",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
@@ -1522,409 +1412,341 @@
   {
     "name": "Blue Water Island",
     "id": "bluewaterisland",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Bow Wow Paradise",
     "id": "bowwowparadise",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "White Memory 1",
     "id": "whitememory1",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "White Memory 2",
     "id": "whitememory2",
-    "version": 4.1,
     "tl": "NPCnever"
   },
   {
     "name": "777",
     "id": "777",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Cherry Blossom",
     "id": "cherryblossom",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "License to Kill",
     "id": "ltk",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Maid in Valentine",
     "id": "maidinvalentine",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Queen's Order",
     "id": "queensorder",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Nya Nya Paradise",
     "id": "nyanyaparadise",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Golden Ship",
     "id": "goldenship",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Sea You Again",
     "id": "seayouagain",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Outer Automata",
     "id": "outerautomata",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "No Caller ID",
     "id": "nocallerid",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "School Of Lock",
     "id": "schooloflock",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Dazzling Cupid: Tia",
     "id": "dazzlingcupid_tia",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Dazzling Cupid: Naga",
     "id": "dazzlingcupid_naga",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "ACPU FREEZE",
     "id": "acpufreeze",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "RED ASH 1",
     "id": "redash1",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "RED ASH 2",
     "id": "redash2",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Alone Survivor",
     "id": "alonesurvivor",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Miracle Snow",
     "id": "miraclesnow",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Neverland",
     "id": "neverland",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "New Year New Sword",
     "id": "newyearnewsword",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Lion Heart",
     "id": "lionheart",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "D Outsider",
     "id": "doutsider",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Dirty Backyard",
     "id": "dirtybackyard",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Perfect Maid",
     "id": "perfectmaid",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "BOOM's DAY",
     "id": "boomsday",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Kill The Lord",
     "id": "killthelord",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Re: Cipe For You",
     "id": "recipeforyou",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "One More Time",
     "id": "onemoretime",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Brand New Year",
     "id": "brandnewyear",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Last Kingdom",
     "id": "lastkingdom",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "D.ARK HERO",
     "id": "darkhero",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "High Tech Toy",
     "id": "hightechtoy",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Ade",
     "id": "smol_ade",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "id": "smol_anchor",
     "name": "Smol Anchor",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Bolt",
     "id": "smol_bolt",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Frima",
     "id": "smol_frima",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Helm",
     "id": "smol_helm",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Liter",
     "id": "smol_liter",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Mary",
     "id": "smol_mary",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Mast",
     "id": "smol_mast",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Pepper",
     "id": "smol_pepper",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Maid Privaty",
     "id": "smol_mpriv",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Rapi",
     "id": "smol_rapi",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Yan",
     "id": "smol_yan",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Rem",
     "id": "smol_rem",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Ram",
     "id": "smol_ram",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Smol Emilia",
     "id": "smol_emilia",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Mother Whale",
     "id": "bba001",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Harvester",
     "id": "bbg001",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Chatterbox",
     "id": "bbg002",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Blacksmith",
     "id": "bbg003",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Storm Bringer",
     "id": "eba001",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Gatekeeper Blue",
     "id": "eba003",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Gatekeeper Green",
     "id": "eba003_green",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Gatekeeper Red",
     "id": "eba003_hsta",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Land Eater",
     "id": "ebg001",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Material H",
     "id": "ebg002",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Nihilister",
     "id": "mba002",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Alteisen",
     "id": "mbg001",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Grave Digger",
     "id": "mbg002",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Modernia",
     "id": "mbg004",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Boss: Modernia Intro",
     "id": "mbg004_appearance",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 00-01",
     "id": "story0001",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 00-01 no filter",
     "id": "story0001_2",
-    "version": 4.1,
     "tl": "never"
   },
   {
@@ -1940,55 +1762,46 @@
   {
     "name": "Story 00-03",
     "id": "story0003",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 02-01",
     "id": "story0201",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 04-01",
     "id": "story0401",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 04-02",
     "id": "story0401_2",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 04-05",
     "id": "story0405",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 07-02",
     "id": "story0702",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 12-01",
     "id": "story1201",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 13-02",
     "id": "story1302",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 13-03",
     "id": "story1303",
-    "version": 4.1,
     "tl": "never"
   },
   {
@@ -1999,19 +1812,16 @@
   {
     "name": "Story 14-03",
     "id": "story1403",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 14-05",
     "id": "story1405",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 15-01",
     "id": "story1501",
-    "version": 4.1,
     "tl": "never"
   },
   {
@@ -2032,13 +1842,11 @@
   {
     "name": "Story 22-01",
     "id": "story2201",
-    "version": 4.1,
     "tl": "never"
   },
   {
     "name": "Story 22-02",
     "id": "story2202",
-    "version": 4.1,
     "tl": "never"
   },
   {
@@ -2049,13 +1857,11 @@
   {
     "name": "Story 25-01",
     "id": "story2501",
-    "version":4.1,
     "tl": "never"
   },
   {
     "name": "Story 26-02",
     "id": "story2602",
-    "version":4.1,
     "tl": "never"
   }
 ]
