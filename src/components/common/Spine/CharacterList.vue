@@ -59,9 +59,6 @@ const checkMobile = () => {
 
 const changeSpine = (character: live2d_interface) => {
   market.live2d.change_current_spine(character)
-  if (foolCheck()) {
-    market.message.getMessage().warning('Action refused: whoever you wishes to visualise is not worthy of it, with the exception of Soda.')
-  }
 }
 
 const foolCheck = () => {

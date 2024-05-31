@@ -2,7 +2,9 @@
   "extends": "./tsconfig.app.json",
   "exclude": [],
   "compilerOptions": {
-    "lib": [],
+    "lib": [
+      "ES2021.String"
+    ],
     "types": ["node", "jsdom"]
   }
 }

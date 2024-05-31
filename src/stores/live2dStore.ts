@@ -59,13 +59,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   }
 
   const change_current_spine = (newSpine: live2d_interface) => {
-    if (foolCheck()) {
-      current_spine_version.value = 4.0
-      current_id.value = 'c312'
-    } else {
-      current_spine_version.value = getNewSpineVersion(newSpine)
-      current_id.value = newSpine.id
-    }
+    current_id.value = newSpine.id
   }
 
   const foolCheck = () => {
@@ -75,15 +69,6 @@ export const useLive2dStore = defineStore('live2d', () => {
   }
 
   const current_id = ref(foolCheck() ? 'c312' : 'c010') as Ref<string>
-
-  // exception lists for spine version is handled in loader.vue at spineExceptionList()
-  const getNewSpineVersion = (newSpine: live2d_interface) => {
-    if (newSpine.version) {
-      return newSpine.version
-    } else {
-      return 4.0
-    }
-  }
 
   const triggerResetPlacement = () => {
     resetPlacement.value = new Date().getTime()
