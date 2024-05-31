@@ -16,8 +16,8 @@ import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 
-let canvas: any
-let spineCanvas: any
+let canvas: HTMLCanvasElement | null = null
+let spineCanvas: any = null
 const market = useMarket()
 
 // http://esotericsoftware.com/spine-player#Viewports
@@ -221,15 +221,7 @@ const wrongfullyLoaded = () => {
 
 watch(() => market.globalParams.isMobile, (e) => {
   if (e) {
-    canvas.style.height = '90vh'
-    canvas.style.width = '100%'
-    canvas.style.position = 'static'
-    canvas.style.left = '0px'
-    canvas.style.top = '0px'
-    canvas.style.marginTop = '0px'
-    canvas.width = canvas.height
-    canvas.style.transform = 'scale(1)'
-    market.globalParams.hideMobileHeader()
+    canvas && setCanvasStyleMobile()
   } else {
     applyDefaultStyle2Canvas()
     centerForPC()
@@ -251,12 +243,12 @@ watch(() => market.live2d.resetPlacement, () => {
 watch(() => market.live2d.screenshot, () => {
   if (!checkMobile()) {
     const sc_sz = localStorage.getItem('sc_sz')
-    const old_sc_sz = canvas.style.height
-    canvas.style.height = sc_sz + 'px'
+    const old_sc_sz = canvas ? canvas.style.height : '0'
+    canvas && (canvas.style.height = sc_sz + 'px')
 
     setTimeout(() => {
       takeScreenshot()
-      canvas.style.height = old_sc_sz
+      canvas && (canvas.style.height = old_sc_sz)
     }, 250)
   } else {
     takeScreenshot()
@@ -286,6 +278,7 @@ watch(() => market.live2d.hideUI, () => {
 })
 
 const takeScreenshot = () => {
+  if (!canvas) return
   const dataURL = canvas.toDataURL()
 
   const link = document.createElement('a')
@@ -307,7 +300,7 @@ const RECORDING_TIME_SLICE = 10
 async function startRecording(spinePlayer: any, currentAnimation: string, timestamp: number) {
   return new Promise<void>((resolve, reject) => {
     const chunks: BlobPart[] | undefined = [] // Store recorded media chunks (Blobs)
-    const stream = canvas.captureStream(RECORDING_FRAME_RATE) // Grab our canvas MediaStream
+    const stream = canvas ? canvas.captureStream(RECORDING_FRAME_RATE) : new MediaStream() // Grab our canvas MediaStream
     const rec = new MediaRecorder(stream, { mimeType: RECORDING_MIME_TYPE, videoBitsPerSecond: RECORDING_BITRATE }) // Initialize the MediaRecorder
 
     rec.onerror = (e) => reject(e) // Reject the promise on error
@@ -413,14 +406,12 @@ const applyDefaultStyle2Canvas = () => {
   setTimeout(() => {
     canvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
 
+    if (!canvas) return
+
     canvas.width = canvas.height
 
     if (checkMobile()) {
-      // canvas.style.marginTop = "50px"
-      canvas.style.height = '90vh'
-      canvas.style.width = '100%'
-      transformScale = 1
-      market.globalParams.hideMobileHeader()
+      setCanvasStyleMobile()
     } else {
       canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
       canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
@@ -435,14 +426,23 @@ const applyDefaultStyle2Canvas = () => {
   }, 50)
 }
 
+const setCanvasStyleMobile = () => {
+  if (!canvas) return
+
+  canvas.style.height = '90vh'
+  canvas.style.width = '100%'
+  transformScale = 1
+  market.globalParams.hideMobileHeader()
+}
+
 const checkMobile = () => {
   return market.globalParams.isMobile ? true : false
 }
 
 const centerForPC = () => {
-  const canvas_width = canvas.offsetWidth
+  const canvas_width = canvas ? canvas.offsetWidth : 0
   const viewport_width = window.innerWidth
-  canvas.style.left = (viewport_width - canvas_width) / 2 + 'px'
+  canvas && (canvas.style.left = (viewport_width - canvas_width) / 2 + 'px')
 }
 
 const filterDomEvents = (event: any) => {
@@ -480,7 +480,7 @@ document.addEventListener('mouseup', () => {
 })
 
 document.addEventListener('mousemove', (e) => {
-  if (move) {
+  if (move && canvas) {
     const newX = e.clientX
     const newY = e.clientY
 
@@ -532,7 +532,7 @@ document.addEventListener('wheel', (e) => {
         break
     }
 
-    canvas.style.transform = 'scale(' + transformScale + ')'
+    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
   }
 })
 </script>
