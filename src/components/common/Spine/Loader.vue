@@ -67,9 +67,9 @@ const spineLoader = () => {
 
       let usedSpine
 
-      if (versionString.includes('4.0.47')) {
+      if (/4\.0\.\d+/.test(versionString)) {
         usedSpine = spine40
-      } else if (versionString.includes('4.1.20')) {
+      } else if (/4\.1\.\d+/.test(versionString)) {
         usedSpine = spine41
       } else {
         console.error('Unsupported Spine version:', versionString)
@@ -104,6 +104,7 @@ const spineLoader = () => {
     }
   }
 }
+
 
 const customSpineLoader = () => {
   let usedSpine: any
