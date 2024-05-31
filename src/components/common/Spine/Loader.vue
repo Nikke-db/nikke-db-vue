@@ -95,12 +95,12 @@ const spineLoader = () => {
         success: (player: any) => {
           spinePlayer = player
           successfullyLoaded()
-          applyDefaultStyle2Canvas()
         },
         error: () => {
           wrongfullyLoaded()
         },
       })
+      applyDefaultStyle2Canvas()
     }
   }
 }
