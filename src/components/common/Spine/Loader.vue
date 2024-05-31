@@ -16,10 +16,9 @@ import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 
-let canvas: any
-let spineCanvas: any
+let canvas: HTMLCanvasElement | null = null
+let spineCanvas: any = null
 const market = useMarket()
-let tempSpineVersion: number | null = null //used for spine version exceptions, see spineExceptionList()
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
@@ -32,48 +31,80 @@ const spineViewport = {
 onMounted(() => {
   market.load.beginLoad()
   spineLoader()
-  applyDefaultStyle2Canvas()
 })
 
 const SPINE_DEFAULT_MIX = 0.25
 let spinePlayer: any = null
 
 const spineLoader = () => {
-  let usedSpine: any
+  const skelUrl = getPathing('skel')
+  const request = new XMLHttpRequest()
 
-  switch (tempSpineVersion !== null ? tempSpineVersion : market.live2d.current_spine_version) {
-    case 4.0:
-      usedSpine = spine40
-      break
-    case 4.1:
-      usedSpine = spine41
-      break
-    default:
-      break
+  request.responseType = 'arraybuffer'
+  request.open('GET', skelUrl, true)
+  request.send()
+  request.onloadend = () => {
+    if (request.status !== 200) {
+      console.error('Failed to load skel file:', request.statusText)
+      return
+    }
+
+    // convert the ArrayBuffer in the response as a DataUrl for rawDataURIs
+    const buffer = request.response
+    
+    const frURL = new FileReader()
+    frURL.readAsDataURL(new Blob([buffer]))
+    frURL.onload = () => {
+      const skelURL: string | ArrayBuffer | null = frURL.result
+
+      const uintArray = new Uint8Array(buffer)
+
+      // Take the first 16 bytes
+      const versionBytes = uintArray.slice(0, 16)
+
+      // Extract and decode version string
+      const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
+
+      let usedSpine
+
+      if (/4\.0\.\d+/.test(versionString)) {
+        usedSpine = spine40
+      } else if (/4\.1\.\d+/.test(versionString)) {
+        usedSpine = spine41
+      } else {
+        console.error('Unsupported Spine version:', versionString)
+        return
+      }
+
+      spineCanvas = new usedSpine.SpinePlayer('player-container', {
+        skelUrl: market.live2d.current_id,
+        rawDataURIs: {
+          [market.live2d.current_id]: skelURL,
+        },
+        atlasUrl: getPathing('atlas'),
+        animation: getDefaultAnimation(),
+        skin: market.live2d.getSkin(),
+        backgroundColor: '#00000000',
+        alpha: true,
+        premultipliedAlpha: true,
+        mipmaps: market.live2d.current_pose === 'fb' ? true : false,
+        debug: false,
+        preserveDrawingBuffer: true,
+        viewport: spineViewport,
+        defaultMix: SPINE_DEFAULT_MIX,
+        success: (player: any) => {
+          spinePlayer = player
+          successfullyLoaded()
+        },
+        error: () => {
+          wrongfullyLoaded()
+        },
+      })
+      applyDefaultStyle2Canvas()
+    }
   }
-
-  spineCanvas = new usedSpine.SpinePlayer('player-container', {
-    skelUrl: getPathing('skel'),
-    atlasUrl: getPathing('atlas'),
-    animation: getDefaultAnimation(),
-    skin: market.live2d.getSkin(),
-    backgroundColor: '#00000000',
-    alpha: true,
-    premultipliedAlpha: true,
-    mipmaps: market.live2d.current_pose === 'fb' ? true : false,
-    debug: false,
-    preserveDrawingBuffer: true,
-    viewport: spineViewport,
-    defaultMix: SPINE_DEFAULT_MIX,
-    success: (player: any) => {
-      spinePlayer = player
-      successfullyLoaded()
-    },
-    error: () => {
-      wrongfullyLoaded()
-    },
-  })
 }
+
 
 const customSpineLoader = () => {
   let usedSpine: any
@@ -191,15 +222,7 @@ const wrongfullyLoaded = () => {
 
 watch(() => market.globalParams.isMobile, (e) => {
   if (e) {
-    canvas.style.height = '90vh'
-    canvas.style.width = '100%'
-    canvas.style.position = 'static'
-    canvas.style.left = '0px'
-    canvas.style.top = '0px'
-    canvas.style.marginTop = '0px'
-    canvas.width = canvas.height
-    canvas.style.transform = 'scale(1)'
-    market.globalParams.hideMobileHeader()
+    canvas && setCanvasStyleMobile()
   } else {
     applyDefaultStyle2Canvas()
     centerForPC()
@@ -207,31 +230,12 @@ watch(() => market.globalParams.isMobile, (e) => {
 })
 
 watch(() => market.live2d.current_id, () => {
-  spineExceptionList()
   loadSpineAfterWatcher()
 })
 
 watch(() => market.live2d.current_pose, () => {
-  spineExceptionList()
   loadSpineAfterWatcher()
 })
-
-const spineExceptionList = () => {
-  // exception list when a character have spine 4.1 and 4.0 assets
-  tempSpineVersion = null
-
-  const EXCEPTIONS = [
-    { id: 'c131_01', pose: 'aim', version: 4.0 }, // Pepper Summer skin
-    { id: 'c160', pose: 'fb', version: 4.1 }, // Yuni
-    { id: 'c161', pose: 'fb', version: 4.1 } // Mihara
-  ] as {id: string, pose: string, version: number}[]
-
-  EXCEPTIONS.forEach((exception) => {
-    if (market.live2d.current_id === exception.id && market.live2d.current_pose === exception.pose) {
-      tempSpineVersion = exception.version
-    }
-  })
-}
 
 watch(() => market.live2d.resetPlacement, () => {
   applyDefaultStyle2Canvas()
@@ -240,12 +244,12 @@ watch(() => market.live2d.resetPlacement, () => {
 watch(() => market.live2d.screenshot, () => {
   if (!checkMobile()) {
     const sc_sz = localStorage.getItem('sc_sz')
-    const old_sc_sz = canvas.style.height
-    canvas.style.height = sc_sz + 'px'
+    const old_sc_sz = canvas ? canvas.style.height : '0'
+    canvas && (canvas.style.height = sc_sz + 'px')
 
     setTimeout(() => {
       takeScreenshot()
-      canvas.style.height = old_sc_sz
+      canvas && (canvas.style.height = old_sc_sz)
     }, 250)
   } else {
     takeScreenshot()
@@ -275,6 +279,7 @@ watch(() => market.live2d.hideUI, () => {
 })
 
 const takeScreenshot = () => {
+  if (!canvas) return
   const dataURL = canvas.toDataURL()
 
   const link = document.createElement('a')
@@ -296,7 +301,7 @@ const RECORDING_TIME_SLICE = 10
 async function startRecording(spinePlayer: any, currentAnimation: string, timestamp: number) {
   return new Promise<void>((resolve, reject) => {
     const chunks: BlobPart[] | undefined = [] // Store recorded media chunks (Blobs)
-    const stream = canvas.captureStream(RECORDING_FRAME_RATE) // Grab our canvas MediaStream
+    const stream = canvas ? canvas.captureStream(RECORDING_FRAME_RATE) : new MediaStream() // Grab our canvas MediaStream
     const rec = new MediaRecorder(stream, { mimeType: RECORDING_MIME_TYPE, videoBitsPerSecond: RECORDING_BITRATE }) // Initialize the MediaRecorder
 
     rec.onerror = (e) => reject(e) // Reject the promise on error
@@ -402,14 +407,12 @@ const applyDefaultStyle2Canvas = () => {
   setTimeout(() => {
     canvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
 
+    if (!canvas) return
+
     canvas.width = canvas.height
 
     if (checkMobile()) {
-      // canvas.style.marginTop = "50px"
-      canvas.style.height = '90vh'
-      canvas.style.width = '100%'
-      transformScale = 1
-      market.globalParams.hideMobileHeader()
+      setCanvasStyleMobile()
     } else {
       canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
       canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
@@ -424,14 +427,23 @@ const applyDefaultStyle2Canvas = () => {
   }, 50)
 }
 
+const setCanvasStyleMobile = () => {
+  if (!canvas) return
+
+  canvas.style.height = '90vh'
+  canvas.style.width = '100%'
+  transformScale = 1
+  market.globalParams.hideMobileHeader()
+}
+
 const checkMobile = () => {
   return market.globalParams.isMobile ? true : false
 }
 
 const centerForPC = () => {
-  const canvas_width = canvas.offsetWidth
+  const canvas_width = canvas ? canvas.offsetWidth : 0
   const viewport_width = window.innerWidth
-  canvas.style.left = (viewport_width - canvas_width) / 2 + 'px'
+  canvas && (canvas.style.left = (viewport_width - canvas_width) / 2 + 'px')
 }
 
 const filterDomEvents = (event: any) => {
@@ -469,7 +481,7 @@ document.addEventListener('mouseup', () => {
 })
 
 document.addEventListener('mousemove', (e) => {
-  if (move) {
+  if (move && canvas) {
     const newX = e.clientX
     const newY = e.clientY
 
@@ -521,7 +533,7 @@ document.addEventListener('wheel', (e) => {
         break
     }
 
-    canvas.style.transform = 'scale(' + transformScale + ')'
+    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
   }
 })
 </script>
