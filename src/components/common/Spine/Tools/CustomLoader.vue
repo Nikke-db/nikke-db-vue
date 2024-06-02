@@ -283,6 +283,7 @@ watch(defaultIdleAnimation, () => {
 })
 
 const triggerCustomLoad = () => {
+  market.live2d.current_pose = 'fb'
   market.live2d.triggerCustomLoad()
 }
 

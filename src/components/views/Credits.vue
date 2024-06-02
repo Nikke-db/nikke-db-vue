@@ -85,6 +85,11 @@ const external: help[] = [
 // forkers: feel free to add yourself here, if you don't I'll do it myself
 const forks: help[] = [
   {
+    name: 'SELEKCJONER',
+    contribution: 'Automatic Skel version checker ( development QoL )',
+    tier: 'SELEKCJONER'
+  },
+  {
     name: 'Kalila (digisomni)',
     contribution: 'Live2d WebM export feature',
     tier: 'pink'

@@ -45,4 +45,8 @@ const props = defineProps({
   background-color: #FC0083;
   color: black;
 }
+
+.SELEKCJONER {
+  background: #260b56;
+}
 </style>

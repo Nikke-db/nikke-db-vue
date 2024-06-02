@@ -211,6 +211,11 @@ const successfullyLoaded = () => {
   market.message
     .getMessage()
     .success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
+
+  // checkIfAssetCanTalk()
+  if (market.live2d.current_id.includes('favorite')) {
+    // favoriteTrackMerger()
+  }
 }
 
 const wrongfullyLoaded = () => {
@@ -536,6 +541,36 @@ document.addEventListener('wheel', (e) => {
     canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
   }
 })
+
+/*const checkIfAssetCanTalk = () => {
+  market.live2d.canAssetTalk = false
+  if (market.live2d.current_pose === 'fb') {
+
+  }
+}*/
+
+// const favoriteTrackMerger = () => {
+//   let bgToUseAsTrack = ''
+//   let bgToUseAsTrack2 = ''
+//
+//   setTimeout(() => {
+//     console.log(spineCanvas)
+//     const currentAnimationTitle = spineCanvas.animationState.tracks[0].animation.name
+//
+//     switch (market.live2d.current_id.replace('favorite_', '')) {
+//       case 'c210': //Exia
+//         spineCanvas.animationState.addAnimation(1, 'bg_idle')
+//         //     spineCanvas.animationState.addAnimation(2, currentAnimationTitle)
+//         spineCanvas.animationState.setAnimation(0, currentAnimationTitle, true)
+//         break
+//       default:
+//         console.log('undevelopped favorite')
+//     }
+//
+//     console.log(spineCanvas)
+//   }, 50)
+//
+// }
 </script>
 
 <style scoped lang="less">

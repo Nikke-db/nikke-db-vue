@@ -7,7 +7,6 @@ import { RELEASED_UNITS } from '@/utils/json/released_units.js'
 
 export const useLive2dStore = defineStore('live2d', () => {
   const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
-  const current_spine_version = ref(4.0) as Ref<number>
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
   const resetPlacement = ref(0)
   const isExportingAnimation = ref(false)
@@ -16,6 +15,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const screenshot = ref(0)
   const hideUI = ref(false)
   const HQassets = ref(true)
+  const canAssetTalk = ref(false)
 
   const fr = new FileReader()
 
@@ -215,7 +215,6 @@ export const useLive2dStore = defineStore('live2d', () => {
     current_id,
     filter,
     change_current_spine,
-    current_spine_version,
     current_pose,
     resetPlacement,
     triggerResetPlacement,
@@ -245,6 +244,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerHideUI,
     triggerShowUI,
     hideUI,
-    HQassets
+    HQassets,
+    canAssetTalk
   }
 })

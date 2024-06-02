@@ -290,6 +290,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Mary Medical Rabbit",
+    "id": "c130_01",
+    "tl": "skin"
+  },
+  {
     "name": "Pepper",
     "id": "c131",
     "tl": "nikke"
@@ -440,6 +445,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Alice: Wonderland Bunny",
+    "id": "c195",
+    "tl": "nikke"
+  },
+  {
     "name": "Rupee",
     "id": "c200",
     "tl": "nikke"
@@ -583,6 +593,11 @@
     "name": "Folkwang",
     "id": "c242",
     "tl": "nikke"
+  },
+  {
+    "name": "Folkwang Moist Bunny",
+    "id": "c242_01",
+    "tl": "skin"
   },
   {
     "name": "Mass Produced Red",
@@ -767,6 +782,11 @@
   {
     "name": "Privaty: Unkind Maid",
     "id": "c313",
+    "tl": "nikke"
+  },
+  {
+    "name": "Soda: Twinkling Bunny",
+    "id": "c314",
     "tl": "nikke"
   },
   {
@@ -1590,6 +1610,11 @@
     "tl": "never"
   },
   {
+    "name": "Golden Coin Rush",
+    "id": "goldencoinrush",
+    "tl": "never"
+  },
+  {
     "name": "Smol Ade",
     "id": "smol_ade",
     "tl": "never"
@@ -1737,6 +1762,26 @@
   {
     "name": "Boss: Modernia Intro",
     "id": "mbg004_appearance",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Diesel",
+    "id": "favorite_c072",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Laplace",
+    "id": "favorite_c100",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Frima",
+    "id": "favorite_c142",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Exia",
+    "id": "favorite_c210",
     "tl": "never"
   },
   {

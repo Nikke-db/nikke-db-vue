@@ -1,0 +1,40 @@
+{
+  "path": "goldencoinrush/",
+  "type": "large",
+  "id": "goldencoinrush",
+  "title": "Golden Coin Rush",
+  "content": [
+    {
+      "name": "EventScene_GoldenCoinRush_01_1",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_01_2",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_02",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_03",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_04",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_05_1",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_05_2",
+      "text": "Golden Coin Rush 1"
+    },
+    {
+      "name": "EventScene_GoldenCoinRush_06",
+      "text": "Golden Coin Rush 1"
+    }
+  ]
+}

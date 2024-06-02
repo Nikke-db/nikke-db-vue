@@ -170,6 +170,7 @@ import liarsend from '@/utils/json/Gallery/liarsend.json'
 import side01 from '@/utils/json/Gallery/side01.json'
 import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
 import darkhero from '@/utils/json/Gallery/darkhero.json'
+import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
 
 const market = useMarket()
 
@@ -213,7 +214,8 @@ const buttonListEvents = [
   { data: recipeforyou },
   { data: liarsend },
   { data: lastkingdom },
-  { data: darkhero }
+  { data: darkhero },
+  { data: goldencoinrush }
 ] as buttonInterface[]
 
 const buttonListOther = [
