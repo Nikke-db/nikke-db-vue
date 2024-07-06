@@ -11,7 +11,7 @@
           In august I will start working on a Limbus Company website. If anyone passes by and wishes to help or introduce me to modders/tools for that game, please hit me up !<br/><br/>
           I plan to make that website a lot, lot better than this nikke website. And keeping it adless ( looking at you prydwen dog shit with thousands of ads ).
 
-        <img src="public/index-alt.webp" alt="If you read this, you should buy a better wifi." style="width: 100%"/>
+        <img src="/public/index-alt.webp" alt="If you read this, you should buy a better wifi." style="width: 100%"/>
       </n-alert>
 
       <n-divider></n-divider>
