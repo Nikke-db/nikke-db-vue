@@ -270,6 +270,11 @@
     "tl": "skin"
   },
   {
+    "name": "Viper Shine of Love",
+    "id": "c112_02",
+    "tl": "skin"
+  },
+  {
     "name": "N102",
     "id": "c120",
     "tl": "nikke"
@@ -412,6 +417,11 @@
   {
     "name": "Maiden Covert Nurse",
     "id": "c181_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Maiden Under the Sun",
+    "id": "c181_02",
     "tl": "skin"
   },
   {
@@ -710,6 +720,16 @@
     "tl": "skin"
   },
   {
+    "name": "Rosanna: Chic Ocean",
+    "id": "c283",
+    "tl": "nikke"
+  },
+  {
+    "name": "Sakura: Bloom in Summer",
+    "id": "c284",
+    "tl": "nikke"
+  },
+  {
     "name": "Mana",
     "id": "c290",
     "tl": "NPC"
@@ -832,7 +852,12 @@
   {
     "name": "Mast A Pirate's Heart",
     "id": "c350_01",
-    "tl": "never"
+    "tl": "skin"
+  },
+  {
+    "name": "Mast the Diver",
+    "id": "c350_02",
+    "tl": "skin"
   },
   {
     "name": "Mast_old",
@@ -843,6 +868,11 @@
     "name": "Anchor",
     "id": "c351",
     "tl": "nikke"
+  },
+  {
+    "name": "Anchor the Diver",
+    "id": "c351_01",
+    "tl": "skin"
   },
   {
     "name": "Helm",
@@ -903,6 +933,11 @@
     "name": "Guilty",
     "id": "c400",
     "tl": "nikke"
+  },
+  {
+    "name": "Guilty Wave of Disbelief",
+    "id": "c400_01",
+    "tl": "skin"
   },
   {
     "name": "Sin",
@@ -1612,6 +1647,21 @@
   {
     "name": "Golden Coin Rush",
     "id": "goldencoinrush",
+    "tl": "never"
+  },
+  {
+    "name": "Claymore",
+    "id": "claymore",
+    "tl": "never"
+  },
+  {
+    "name": "Aegis the Diver",
+    "id": "aegisthediver",
+    "tl": "never"
+  },
+  {
+    "name": "Beauty Full Shot",
+    "id": "beautyfullshot",
     "tl": "never"
   },
   {
