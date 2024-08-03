@@ -922,7 +922,7 @@
   {
     "name": "Ein",
     "id": "c391",
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Rei",
@@ -985,9 +985,19 @@
     "tl": "nikke"
   },
   {
+    "name": "Naga Elegant Date",
+    "id": "c450_01",
+    "tl": "skin"
+  },
+  {
     "name": "Tia",
     "id": "c451",
     "tl": "nikke"
+  },
+  {
+    "name": "Tia Lovely Date",
+    "id": "c451_01",
+    "tl": "skin"
   },
   {
     "name": "Red Hood",
@@ -1038,6 +1048,11 @@
     "name": "Clay",
     "id": "c551",
     "tl": "nikke"
+  },
+  {
+    "name": "Behemoth",
+    "id": "c560",
+    "tl": "NPC"
   },
   {
     "name": "Black Ark Ranger",
@@ -1662,6 +1677,11 @@
   {
     "name": "Beauty Full Shot",
     "id": "beautyfullshot",
+    "tl": "never"
+  },
+  {
+    "name": "Juvenile Days",
+    "id": "juveniledays",
     "tl": "never"
   },
   {

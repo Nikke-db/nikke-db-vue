@@ -8,17 +8,11 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-          In august I will start working on a Limbus Company website. If anyone passes by and wishes to help or introduce me to modders/tools for that game, please hit me up !<br/><br/>
-          I plan to make that website a lot, lot better than this nikke website. And keeping it adless ( looking at you prydwen dog shit with thousands of ads ).
-
+          The limbus company website is off to a great start, I've found how to automate most of the files of the game and have almost everything I want in my v1 in the database already (ID, skills, EGOs, passives, images, ... ) <br/>
+          Next step will be to make the server and the API, which shouldn't be too bad.  <br/>
+          Finally the front end will take a god damn lot amount of time, which is why I start with a simple v1. Later on I'll add tools such as team builder, randomizer, etc.<br/>
+          Feel free to message me if you are curious of my progress, and if a community want to partner early on, hit me up as well. (I'll just do free advertisement)
         <img src="/public/index-alt.webp" alt="If you read this, you should buy a better wifi." style="width: 100%"/>
-      </n-alert>
-
-      <n-divider></n-divider>
-
-      <n-alert type="info">
-        Back after a 3 weeks break from Nikke, got a small burnout after playing since the open beta test 2. <br/>
-        The bland state of the game isn't helping, without any new content for almost a year, not including mini games.
       </n-alert>
 
       <n-divider></n-divider>

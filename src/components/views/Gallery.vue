@@ -147,6 +147,7 @@ import story1 from '@/utils/json/Gallery/story1.json'
 import story2 from '@/utils/json/Gallery/story2.json'
 import story3 from '@/utils/json/Gallery/story3.json'
 import story4 from '@/utils/json/Gallery/story4.json'
+import story5 from '@/utils/json/Gallery/story5.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -172,6 +173,7 @@ import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
 import darkhero from '@/utils/json/Gallery/darkhero.json'
 import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
 import beautyfullshot from '@/utils/json/Gallery/beautyfullshot.json'
+import juveniledays from '@/utils/json/Gallery/juveniledays.json'
 
 const market = useMarket()
 
@@ -188,7 +190,8 @@ const buttonListStory = [
   { data: story1 },
   { data: story2 },
   { data: story3 },
-  { data: story4 }
+  { data: story4 },
+  { data: story5 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [
@@ -217,7 +220,8 @@ const buttonListEvents = [
   { data: lastkingdom },
   { data: darkhero },
   { data: goldencoinrush },
-  { data: beautyfullshot }
+  { data: beautyfullshot },
+  { data: juveniledays }
 ] as buttonInterface[]
 
 const buttonListOther = [
