@@ -820,6 +820,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Marciana School Days",
+    "id": "c321_01",
+    "tl": "skin"
+  },
+  {
     "name": "Crown",
     "id": "c330",
     "tl": "nikke"
@@ -1682,6 +1687,11 @@
   {
     "name": "Juvenile Days",
     "id": "juveniledays",
+    "tl": "never"
+  },
+  {
+    "name": "Colorless",
+    "id": "colorless",
     "tl": "never"
   },
   {

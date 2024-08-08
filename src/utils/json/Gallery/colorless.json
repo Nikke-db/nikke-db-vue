@@ -1,0 +1,12 @@
+{
+  "path": "colorless/",
+  "type": "large",
+  "id": "colorless",
+  "title": "Colorless",
+  "content": [
+    {
+      "name": "colorless_bg_list_hard",
+      "text": "Colorless 1"
+    }
+  ]
+}
