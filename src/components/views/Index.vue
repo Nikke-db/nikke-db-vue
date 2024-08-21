@@ -8,11 +8,13 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-          The limbus company website is off to a great start, I've found how to automate most of the files of the game and have almost everything I want in my v1 in the database already (ID, skills, EGOs, passives, images, ... ) <br/>
-          Next step will be to make the server and the API, which shouldn't be too bad.  <br/>
-          Finally the front end will take a god damn lot amount of time, which is why I start with a simple v1. Later on I'll add tools such as team builder, randomizer, etc.<br/>
-          Feel free to message me if you are curious of my progress, and if a community want to partner early on, hit me up as well. (I'll just do free advertisement)
+          A real sentient human being actually made this picture. This is unreal. Do the official under aged moderators of the official Discord
+          knows that the Tencent PR team paid me cash and gems before the release and they are 100% cool with Nikke-DB? Last time I told them with proofs
+          I was told to shut up and was a liar.
         <img src="/public/index-alt.webp" alt="If you read this, you should buy a better wifi." style="width: 100%"/>
+
+          Anyway, the limbus website is still being developped, I've made a couple pages and start to be happy with the design.<br/>
+          Enjoy the collab, I don't give a crap about EVA so I'll be skipping everything. At least it can't be worst than re:zero.
       </n-alert>
 
       <n-divider></n-divider>

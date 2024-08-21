@@ -1,0 +1,44 @@
+{
+  "path": "evangelion/",
+  "type": "large",
+  "id": "evangelion",
+  "title": "Evangelion",
+  "content": [
+    {
+      "name": "ce004_part03_bg_01",
+      "text": "Evangelion 1"
+    },
+    {
+      "name": "EventScene_ce004_01_1",
+      "text": "Evangelion 2"
+    },
+    {
+      "name": "EventScene_ce004_01_2",
+      "text": "Evangelion 3"
+    },
+    {
+      "name": "EventScene_ce004_02",
+      "text": "Evangelion 4"
+    },
+    {
+      "name": "EventScene_ce004_03",
+      "text": "Evangelion 5"
+    },
+    {
+      "name": "EventScene_ce004_04",
+      "text": "Evangelion 6"
+    },
+    {
+      "name": "EventScene_ce004_05",
+      "text": "Evangelion 7"
+    },
+    {
+      "name": "EventScene_ce004_06",
+      "text": "Evangelion 8"
+    },
+    {
+      "name": "EventScene_ce004_07",
+      "text": "Evangelion 9"
+    }
+  ]
+}

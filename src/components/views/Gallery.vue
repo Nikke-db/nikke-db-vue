@@ -175,6 +175,7 @@ import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
 import beautyfullshot from '@/utils/json/Gallery/beautyfullshot.json'
 import juveniledays from '@/utils/json/Gallery/juveniledays.json'
 import colorless from '@/utils/json/Gallery/colorless.json'
+import evangelion from '@/utils/json/Gallery/evangelion.json'
 
 const market = useMarket()
 
@@ -223,7 +224,8 @@ const buttonListEvents = [
   { data: goldencoinrush },
   { data: beautyfullshot },
   { data: juveniledays },
-  { data: colorless }
+  { data: colorless },
+  { data: evangelion }
 ] as buttonInterface[]
 
 const buttonListOther = [

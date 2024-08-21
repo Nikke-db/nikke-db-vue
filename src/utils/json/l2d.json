@@ -920,6 +920,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Leona",
+    "id": "c382_01",
+    "tl": "skin"
+  },
+  {
     "name": "Zwei",
     "id": "c390",
     "tl": "NPC"
@@ -1172,6 +1177,61 @@
   {
     "name": "Ram",
     "id": "c822",
+    "tl": "nikke"
+  },
+  {
+    "name": "Asuka Shikinami",
+    "id": "c830",
+    "tl": "nikke"
+  },
+  {
+    "name": "Asuka Shikinami Asuka's School Uniform",
+    "id": "c830_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Asuka Shikinami Cynical Street",
+    "id": "c830_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Asuka Shikinami Test Plugsuit",
+    "id": "c830_03",
+    "tl": "skin"
+  },
+  {
+    "name": "Rei Ayanami",
+    "id": "c831",
+    "tl": "nikke"
+  },
+  {
+    "name": "Rei Ayanami Rei's School Uniform",
+    "id": "c831_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Rei Ayanami Peaceful Vacation",
+    "id": "c831_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Mari Makinami",
+    "id": "c832",
+    "tl": "nikke"
+  },
+  {
+    "name": "Mari Makinami Mari's School Uniform",
+    "id": "c832_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Mari Makinami Leisure Travel",
+    "id": "c832_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Misato Katsuragi",
+    "id": "c833",
     "tl": "nikke"
   },
   {
@@ -1692,6 +1752,11 @@
   {
     "name": "Colorless",
     "id": "colorless",
+    "tl": "never"
+  },
+  {
+    "name": "Evangelion",
+    "id": "evangelion",
     "tl": "never"
   },
   {
