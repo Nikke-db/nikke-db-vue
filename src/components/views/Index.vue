@@ -8,13 +8,8 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-          A real sentient human being actually made this picture. This is unreal. Do the official under aged moderators of the official Discord
-          knows that the Tencent PR team paid me cash and gems before the release and they are 100% cool with Nikke-DB? Last time I told them with proofs
-          I was told to shut up and was a liar.
-        <img src="/public/index-alt.webp" alt="If you read this, you should buy a better wifi." style="width: 100%"/>
-
-          Anyway, the limbus website is still being developped, I've made a couple pages and start to be happy with the design.<br/>
-          Enjoy the collab, I don't give a crap about EVA so I'll be skipping everything. At least it can't be worst than re:zero.
+        warp express is a banger, SH SF ryoshu is a banger, lament gregor is a banger, gun sang is a banger, rodion is reviving rupture, don quixote feet are canon.<br/>
+        life's good
       </n-alert>
 
       <n-divider></n-divider>

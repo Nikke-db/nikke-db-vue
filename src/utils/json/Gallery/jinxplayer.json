@@ -1,0 +1,16 @@
+{
+  "path": "jinxplayer/",
+  "type": "large",
+  "id": "jinxplayer",
+  "title": "Jinx Player",
+  "content": [
+    {
+      "name": "jinxplayer_list_bg_normal",
+      "text": "Jinx Player 1"
+    },
+    {
+      "name": "jinxplayer_list_bg_hard",
+      "text": "Jinx Player 2"
+    }
+  ]
+}

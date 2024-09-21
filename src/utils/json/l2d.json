@@ -85,6 +85,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Miranda Thief of Justice",
+    "id": "c032_01",
+    "tl": "skin"
+  },
+  {
     "name": "Quiry",
     "id": "c033",
     "tl": "nikke"
@@ -445,6 +450,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Tove Baseball Fan",
+    "id": "c192_01",
+    "tl": "skin"
+  },
+  {
     "name": "Neve",
     "id": "c193",
     "tl": "nikke"
@@ -692,7 +702,7 @@
   {
     "name": "Rouge",
     "id": "c272",
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Rosanna",
@@ -920,7 +930,7 @@
     "tl": "nikke"
   },
   {
-    "name": "Leona",
+    "name": "Leona Zoo Keeper",
     "id": "c382_01",
     "tl": "skin"
   },
@@ -957,6 +967,11 @@
   {
     "name": "Quency",
     "id": "c402",
+    "tl": "nikke"
+  },
+  {
+    "name": "Quency Escape Queen",
+    "id": "c403",
     "tl": "nikke"
   },
   {
@@ -1015,6 +1030,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Red Hood Nonsense Red",
+    "id": "c470_01",
+    "tl": "skin"
+  },
+  {
     "name": "Liveryn",
     "id": "c480",
     "tl": "NPC"
@@ -1068,6 +1088,11 @@
     "name": "Black Ark Ranger",
     "id": "c570",
     "tl": "NPC"
+  },
+  {
+    "name": "Phantom",
+    "id": "c580",
+    "tl": "nikke"
   },
   {
     "name": "Makima",
@@ -1757,6 +1782,11 @@
   {
     "name": "Evangelion",
     "id": "evangelion",
+    "tl": "never"
+  },
+  {
+    "name": "Jinx Player",
+    "id": "jinxplayer",
     "tl": "never"
   },
   {
