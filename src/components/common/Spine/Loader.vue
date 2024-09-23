@@ -416,9 +416,9 @@ const applyDefaultStyle2Canvas = () => {
     if (checkMobile()) {
       setCanvasStyleMobile()
     } else {
-      canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
-      canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
-      canvas.style.transform = market.live2d.HQassets ? 'scale(0.18)' : 'scale(0.5)'
+      canvas.style.height = market.live2d.HQassets ? '100vh' : '168vh'
+      canvas.style.marginTop = market.live2d.HQassets ? '0' : 'calc(-30vh)'
+      canvas.style.transform = market.live2d.HQassets ? 'scale(0.5)' : 'scale(0.5)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
