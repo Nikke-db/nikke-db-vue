@@ -169,6 +169,7 @@ import killthelord from '@/utils/json/Gallery/killthelord.json'
 import recipeforyou from '@/utils/json/Gallery/recipeforyou.json'
 import liarsend from '@/utils/json/Gallery/liarsend.json'
 import side01 from '@/utils/json/Gallery/side01.json'
+import side02 from '@/utils/json/Gallery/side02.json'
 import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
 import darkhero from '@/utils/json/Gallery/darkhero.json'
 import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
@@ -198,7 +199,8 @@ const buttonListStory = [
 ] as buttonInterface[]
 
 const buttonListSideStory = [
-  { data: side01 }
+  { data: side01 },
+  { data: side02 }
 ] as buttonInterface[]
 
 const buttonListEvents = [

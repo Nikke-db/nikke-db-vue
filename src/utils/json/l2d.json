@@ -380,6 +380,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Mihara",
+    "id": "c162",
+    "tl": "npc"
+  },
+  {
     "name": "Privaty",
     "id": "c170",
     "tl": "nikke"
@@ -602,7 +607,7 @@
   {
     "name": "Rumani",
     "id": "c240",
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Epinel",
@@ -1560,6 +1565,16 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Nadia",
+    "id": "c983",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Yuni",
+    "id": "c985",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Self",
     "id": "c9999",
     "tl": "never"
@@ -1787,6 +1802,16 @@
   {
     "name": "Jinx Player",
     "id": "jinxplayer",
+    "tl": "never"
+  },
+  {
+    "name": "Phantom Thief",
+    "id": "phantomthief",
+    "tl": "never"
+  },
+  {
+    "name": "Life Again",
+    "id": "lifeagain",
     "tl": "never"
   },
   {

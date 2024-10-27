@@ -8,8 +8,9 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        warp express is a banger, SH SF ryoshu is a banger, lament gregor is a banger, gun sang is a banger, rodion is reviving rupture, don quixote feet are canon.<br/>
-        life's good
+        Holy. Shit. Canto. Seven. The. Dream. Ending. Is. Peak.
+
+        <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>
       </n-alert>
 
       <n-divider></n-divider>
@@ -40,6 +41,7 @@ import { onMounted, onBeforeMount, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
 import bgi from '@/assets/index_bg2.png'
 import updates from '@/utils/json/updateLog.json'
+import indexalt from '@/assets/index-alt.png'
 
 const market = useMarket()
 
@@ -96,4 +98,5 @@ const checkMobile = () => {
 .latest-date {
   color: @naive-green;
 }
+
 </style>

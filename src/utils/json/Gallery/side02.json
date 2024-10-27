@@ -1,0 +1,32 @@
+{
+  "path": "side02/",
+  "type": "large",
+  "id": "side02",
+  "title": "Side Story 02",
+  "content": [
+    {
+      "name": "EventScene_Side_02_01_1",
+      "text": "Side Story 02-1"
+    },
+    {
+      "name": "EventScene_Side_02_01_2",
+      "text": "Side Story 02-2"
+    },
+    {
+      "name": "EventScene_Side_02_01_3",
+      "text": "Side Story 02-3"
+    },
+    {
+      "name": "EventScene_Side_02_01_4",
+      "text": "Side Story 02-4"
+    },
+    {
+      "name": "EventScene_Side_02_02",
+      "text": "Side Story 02-5"
+    },
+    {
+      "name": "EventScene_Side_02_03",
+      "text": "Side Story 02-6"
+    }
+  ]
+}
