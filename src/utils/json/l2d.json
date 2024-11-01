@@ -110,6 +110,11 @@
     "tl": "nikke"
   },
   {
+    "name": "D: Killer Wife Secret Party Cleaner",
+    "id": "c043_01",
+    "tl": "nikke"
+  },
+  {
     "name": "liqueur",
     "id": "c053",
     "tl": "never"
@@ -223,6 +228,21 @@
     "name": "Eunhwa",
     "id": "c092",
     "tl": "nikke"
+  },
+  {
+    "name": "Emma",
+    "id": "c093",
+    "tl": "npc"
+  },
+  {
+    "name": "Vesti",
+    "id": "c094",
+    "tl": "npc"
+  },
+  {
+    "name": "Eunhwa",
+    "id": "c095",
+    "tl": "npc"
   },
   {
     "name": "Laplace",
@@ -575,6 +595,16 @@
     "tl": "nikke"
   },
   {
+    "name": "Scarlet: Black Shadow Longing Flower",
+    "id": "c225_01",
+    "tl": "nikke"
+  },
+  {
+    "name": "Rapunzel: Pure Grace",
+    "id": "c226",
+    "tl": "nikke"
+  },
+  {
     "name": "Harran",
     "id": "c230",
     "tl": "nikke"
@@ -588,6 +618,11 @@
     "name": "Isabel",
     "id": "c231",
     "tl": "nikke"
+  },
+  {
+    "name": "Isabel Honeymoon Party",
+    "id": "c231_01",
+    "tl": "skin"
   },
   {
     "name": "Noah",
@@ -1075,6 +1110,26 @@
     "tl": "NPC"
   },
   {
+    "name": "Anachiro | Cinderella",
+    "id": "c511",
+    "tl": "nikke"
+  },
+  {
+    "name": "Anachiro | Cinderella Glass Princess",
+    "id": "c511_01",
+    "tl": "nikke"
+  },
+  {
+    "name": "Little Mermaid",
+    "id": "c513",
+    "tl": "npc"
+  },
+  {
+    "name": "Grave",
+    "id": "c514",
+    "tl": "NPC"
+  },
+  {
     "name": "Bay",
     "id": "c550",
     "tl": "nikke"
@@ -1087,6 +1142,11 @@
   {
     "name": "Behemoth",
     "id": "c560",
+    "tl": "NPC"
+  },
+  {
+    "name": "Leviathan",
+    "id": "c562",
     "tl": "NPC"
   },
   {
@@ -1470,11 +1530,6 @@
     "tl": "NPCnever"
   },
   {
-    "name": "Anachiro | Cinderella",
-    "id": "c944",
-    "tl": "NPCnever"
-  },
-  {
     "name": "Katie",
     "id": "c945",
     "tl": "NPCnever"
@@ -1507,11 +1562,6 @@
   {
     "name": "Product 12: 6000-D",
     "id": "c964",
-    "tl": "NPCnever"
-  },
-  {
-    "name": "Rapunzel",
-    "id": "c966",
     "tl": "NPCnever"
   },
   {
@@ -1562,6 +1612,31 @@
   {
     "name": "Kilo",
     "id": "c977",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Abe",
+    "id": "c979",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Hansel",
+    "id": "c980",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Gretel",
+    "id": "c981",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Red Shoes",
+    "id": "c982",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Rapi",
+    "id": "c989",
     "tl": "NPCnever"
   },
   {
