@@ -1,0 +1,222 @@
+{
+  "path": "oldtales/",
+  "type": "large",
+  "id": "oldtales",
+  "title": "Old Tales",
+  "notice": "The original in-game raw images totals over 230mb. It's way too high. The images here are compressed to a total of 12.5mb, thus they aren't original quality, but fairly close. <br/>Also this is probably out of order, I skipped the event and went by image id.",
+
+  "content": [
+    {
+      "name": "EventScene_oldtales_01_1",
+      "text": "Old Tales 1"
+    },
+    {
+      "name": "EventScene_oldtales_01_2",
+      "text": "Old Tales 2"
+    },
+    {
+      "name": "EventScene_oldtales_02_1",
+      "text": "Old Tales 3"
+    },
+    {
+      "name": "EventScene_oldtales_02_2",
+      "text": "Old Tales 4"
+    },
+    {
+      "name": "EventScene_oldtales_03_1",
+      "text": "Old Tales 5"
+    },
+    {
+      "name": "EventScene_oldtales_03_2",
+      "text": "Old Tales 6"
+    },
+    {
+      "name": "EventScene_oldtales_03_3",
+      "text": "Old Tales 7"
+    },
+    {
+      "name": "EventScene_oldtales_03_4",
+      "text": "Old Tales 8"
+    },
+    {
+      "name": "EventScene_oldtales_03_5",
+      "text": "Old Tales 9"
+    },
+    {
+      "name": "EventScene_oldtales_04",
+      "text": "Old Tales 10"
+    },
+    {
+      "name": "EventScene_oldtales_05",
+      "text": "Old Tales 11"
+    },
+    {
+      "name": "EventScene_oldtales_06_1",
+      "text": "Old Tales 12"
+    },
+    {
+      "name": "EventScene_oldtales_06_2",
+      "text": "Old Tales 13"
+    },
+    {
+      "name": "EventScene_oldtales_06_3",
+      "text": "Old Tales 14"
+    },
+    {
+      "name": "EventScene_oldtales_06_4",
+      "text": "Old Tales 15"
+    },
+    {
+      "name": "EventScene_oldtales_07_1",
+      "text": "Old Tales 16"
+    },
+    {
+      "name": "EventScene_oldtales_07_2",
+      "text": "Old Tales 17"
+    },
+    {
+      "name": "EventScene_oldtales_08_1",
+      "text": "Old Tales 18"
+    },
+    {
+      "name": "EventScene_oldtales_08_2",
+      "text": "Old Tales 19"
+    },
+    {
+      "name": "EventScene_oldtales_08_3",
+      "text": "Old Tales 20"
+    },
+    {
+      "name": "EventScene_oldtales_08_4",
+      "text": "Old Tales 21"
+    },
+    {
+      "name": "EventScene_oldtales_08_5",
+      "text": "Old Tales 22"
+    },
+    {
+      "name": "EventScene_oldtales_08_6",
+      "text": "Old Tales 23"
+    },
+    {
+      "name": "EventScene_oldtales_09",
+      "text": "Old Tales 24"
+    },
+    {
+      "name": "EventScene_oldtales_10",
+      "text": "Old Tales 25"
+    },
+    {
+      "name": "EventScene_oldtales_11_1",
+      "text": "Old Tales 26"
+    },
+    {
+      "name": "EventScene_oldtales_11_2",
+      "text": "Old Tales 27"
+    },
+    {
+      "name": "EventScene_oldtales_11_3",
+      "text": "Old Tales 28"
+    },
+    {
+      "name": "EventScene_oldtales_11_4",
+      "text": "Old Tales 29"
+    },
+    {
+      "name": "EventScene_oldtales_11_5",
+      "text": "Old Tales 30"
+    },
+    {
+      "name": "EventScene_oldtales_12_1",
+      "text": "Old Tales 31"
+    },
+    {
+      "name": "EventScene_oldtales_12_2",
+      "text": "Old Tales 32"
+    },
+    {
+      "name": "EventScene_oldtales_12_3",
+      "text": "Old Tales 33"
+    },
+    {
+      "name": "EventScene_oldtales_12_4",
+      "text": "Old Tales 34"
+    },
+    {
+      "name": "EventScene_oldtales_12_5",
+      "text": "Old Tales 35"
+    },
+    {
+      "name": "EventScene_oldtales_13_1",
+      "text": "Old Tales 36"
+    },
+    {
+      "name": "EventScene_oldtales_13_2",
+      "text": "Old Tales 37"
+    },
+    {
+      "name": "EventScene_oldtales_13_3",
+      "text": "Old Tales 38"
+    },
+    {
+      "name": "EventScene_oldtales_14",
+      "text": "Old Tales 39"
+    },
+    {
+      "name": "EventScene_oldtales_15",
+      "text": "Old Tales 40"
+    },
+    {
+      "name": "EventScene_oldtales_16",
+      "text": "Old Tales 41"
+    },
+    {
+      "name": "EventScene_oldtales_17_1",
+      "text": "Old Tales 42"
+    },
+    {
+      "name": "EventScene_oldtales_17_2",
+      "text": "Old Tales 43"
+    },
+    {
+      "name": "EventScene_oldtales_17_3",
+      "text": "Old Tales 44"
+    },
+    {
+      "name": "EventScene_oldtales_18_1",
+      "text": "Old Tales 45"
+    },
+    {
+      "name": "EventScene_oldtales_18_2",
+      "text": "Old Tales 46"
+    },
+    {
+      "name": "EventScene_oldtales_18_3",
+      "text": "Old Tales 47"
+    },
+    {
+      "name": "EventScene_oldtales_18_4",
+      "text": "Old Tales 48"
+    },
+    {
+      "name": "EventScene_oldtales_18_5",
+      "text": "Old Tales 49"
+    },
+    {
+      "name": "EventScene_oldtales_19_1",
+      "text": "Old Tales 50"
+    },
+    {
+      "name": "EventScene_oldtales_19_2",
+      "text": "Old Tales 51"
+    },
+    {
+      "name": "EventScene_oldtales_20",
+      "text": "Old Tales 52"
+    },
+    {
+      "name": "EventScene_oldtales_21",
+      "text": "Old Tales 53"
+    }
+  ]
+}

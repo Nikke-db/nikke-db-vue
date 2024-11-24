@@ -53,6 +53,11 @@
         {{ carouselData === null ? 'No data selected' : carouselData.title }}
       </n-h1>
 
+      <n-alert type="info" v-if="carouselData && carouselData.notice">
+        <div v-html="carouselData.notice"/>
+      </n-alert>
+      <br v-if="carouselData && carouselData.notice" />
+
       <!-- COMPUTER CAROUSEL -->
       <n-carousel v-if="carouselData !== null && !checkMobileBool() && carouselData.type !== 'large'"
       :slides-per-view="2"
@@ -148,6 +153,7 @@ import story2 from '@/utils/json/Gallery/story2.json'
 import story3 from '@/utils/json/Gallery/story3.json'
 import story4 from '@/utils/json/Gallery/story4.json'
 import story5 from '@/utils/json/Gallery/story5.json'
+import story6 from '@/utils/json/Gallery/story6.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -178,6 +184,7 @@ import juveniledays from '@/utils/json/Gallery/juveniledays.json'
 import colorless from '@/utils/json/Gallery/colorless.json'
 import evangelion from '@/utils/json/Gallery/evangelion.json'
 import jinxplayer from '@/utils/json/Gallery/jinxplayer.json'
+import oldtales from '@/utils/json/Gallery/oldtales.json'
 
 const market = useMarket()
 
@@ -195,7 +202,8 @@ const buttonListStory = [
   { data: story2 },
   { data: story3 },
   { data: story4 },
-  { data: story5 }
+  { data: story5 },
+  { data: story6 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [
@@ -229,7 +237,8 @@ const buttonListEvents = [
   { data: juveniledays },
   { data: colorless },
   { data: evangelion },
-  { data: jinxplayer }
+  { data: jinxplayer },
+  { data: oldtales }
 ] as buttonInterface[]
 
 const buttonListOther = [

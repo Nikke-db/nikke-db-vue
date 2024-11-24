@@ -8,8 +8,8 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        Holy. Shit. Canto. Seven. The. Dream. Ending. Is. Peak. <br/>
-        The chapter 33, 34 and Old tales galleries will be released later. Kind of lazy atm. But new characters are available in L2D viewer
+        Limbus RoadMap is VILE. tencent prolly looking for the next slop to make a new collab similar to re zero & EVA.<br/>
+        Almighty PMoon takes 10 months to cook something with HyperGryph. They never miss.
 
         <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>
       </n-alert>

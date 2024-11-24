@@ -1017,7 +1017,7 @@
   {
     "name": "Flora",
     "id": "c411",
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Noise",
@@ -1038,6 +1038,11 @@
     "name": "Volume",
     "id": "c431",
     "tl": "nikke"
+  },
+  {
+    "name": "Volume Beat the Gun",
+    "id": "c431_01",
+    "tl": "skin"
   },
   {
     "name": "Aria",
@@ -1887,6 +1892,16 @@
   {
     "name": "Life Again",
     "id": "lifeagain",
+    "tl": "never"
+  },
+  {
+    "name": "Old Tales",
+    "id": "oldtales",
+    "tl": "never"
+  },
+  {
+    "name": "Secret Garden",
+    "id": "secretgarden",
     "tl": "never"
   },
   {

@@ -8,5 +8,6 @@ export interface galleryInterface {
   type: string,
   title: string,
   id: string,
-  content: galleryItemInterface[]
+  content: galleryItemInterface[],
+  notice: string | null
 }
