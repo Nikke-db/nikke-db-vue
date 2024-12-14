@@ -225,6 +225,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Vesti Ark Mage",
+    "id": "c091_01",
+    "tl": "skin"
+  },
+  {
     "name": "Eunhwa",
     "id": "c092",
     "tl": "nikke"
@@ -442,6 +447,16 @@
   {
     "name": "Maiden",
     "id": "c181",
+    "tl": "nikke"
+  },
+  {
+    "name": "Guillotine Winter Slayer",
+    "id": "c182",
+    "tl": "nikke"
+  },
+  {
+    "name": "Maiden Ice Rose",
+    "id": "c183",
     "tl": "nikke"
   },
   {
@@ -1640,6 +1655,11 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Chloe - Village Guardian",
+    "id": "c988",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Rapi",
     "id": "c989",
     "tl": "NPCnever"
@@ -1902,6 +1922,11 @@
   {
     "name": "Secret Garden",
     "id": "secretgarden",
+    "tl": "never"
+  },
+  {
+    "name": "Ice Dragon Saga",
+    "id": "icedragonsaga",
     "tl": "never"
   },
   {

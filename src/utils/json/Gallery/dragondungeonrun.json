@@ -1,0 +1,64 @@
+{
+  "path": "dragondungeonrun/",
+  "type": "large",
+  "id": "dragondungeonrun",
+  "title": "Dragon Dungeon Run",
+  "content": [
+    {
+      "name": "event_dungeon_run_die_01",
+      "text": "Gotta catch Guillotine!"
+    },
+    {
+      "name": "event_dungeon_run_die_02",
+      "text": "It's dark and scary in here! Save me!"
+    },
+    {
+      "name": "event_dungeon_run_die_03",
+      "text": "We need Eunhwa."
+    },
+    {
+      "name": "event_dungeon_run_die_04",
+      "text": "Art is an explosion."
+    },
+    {
+      "name": "event_dungeon_run_die_05",
+      "text": "A surge of premonition."
+    },
+    {
+      "name": "event_dungeon_run_die_06",
+      "text": "Blasting off again!"
+    },
+    {
+      "name": "event_dungeon_run_die_07",
+      "text": "Trap ahead."
+    },
+    {
+      "name": "event_dungeon_run_die_08",
+      "text": "The most powerful White Ice Dragon lets out a roar."
+    },
+    {
+      "name": "event_dungeon_run_ending_01",
+      "text": "Praise the sun."
+    },
+    {
+      "name": "event_dungeon_run_ending_02",
+      "text": "Get Over it!"
+    },
+    {
+      "name": "event_dungeon_run_ending_03",
+      "text": "The excellence of Nikkes is the excellence of courage!"
+    },
+    {
+      "name": "event_dungeon_run_ending_04",
+      "text": "Shall we go to the dungeon again?"
+    },
+    {
+      "name": "event_dungeon_run_ending_05",
+      "text": "The cart is insurance."
+    },
+    {
+      "name": "event_dungeon_run_ending_06",
+      "text": "The battle with despair."
+    }
+  ]
+}

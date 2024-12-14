@@ -185,6 +185,8 @@ import colorless from '@/utils/json/Gallery/colorless.json'
 import evangelion from '@/utils/json/Gallery/evangelion.json'
 import jinxplayer from '@/utils/json/Gallery/jinxplayer.json'
 import oldtales from '@/utils/json/Gallery/oldtales.json'
+import icedragonsaga from '@/utils/json/Gallery/icedragonsaga.json'
+import dragondungeonrun from '@/utils/json/Gallery/dragondungeonrun.json'
 
 const market = useMarket()
 
@@ -238,14 +240,16 @@ const buttonListEvents = [
   { data: colorless },
   { data: evangelion },
   { data: jinxplayer },
-  { data: oldtales }
+  { data: oldtales },
+  { data: icedragonsaga }
 ] as buttonInterface[]
 
 const buttonListOther = [
   { data: albumCovers },
   { data: bonds },
   { data: bbqmaster },
-  { data: voltroad }
+  { data: voltroad },
+  { data: dragondungeonrun }
 ] as buttonInterface[]
 
 const buttonListCommunity = [

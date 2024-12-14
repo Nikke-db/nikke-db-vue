@@ -1,0 +1,89 @@
+{
+  "path": "icedragonsaga/",
+  "type": "large",
+  "id": "icedragonsaga",
+  "title": "Ice Dragon Saga",
+  "notice": "The original in-game raw images totals over 114mb. Compressed to 6mb. Probably not in order.",
+  "content": [
+    {
+      "name": "EventScene_icedragonsaga_01",
+      "text": "Ice Dragon Saga 1"
+    },
+    {
+      "name": "EventScene_icedragonsaga_02_1",
+      "text": "Ice Dragon Saga 2"
+    },
+    {
+      "name": "EventScene_icedragonsaga_02_2",
+      "text": "Ice Dragon Saga 3"
+    },
+    {
+      "name": "EventScene_icedragonsaga_03",
+      "text": "Ice Dragon Saga 4"
+    },
+    {
+      "name": "EventScene_icedragonsaga_04",
+      "text": "Ice Dragon Saga 5"
+    },
+    {
+      "name": "EventScene_icedragonsaga_05_1",
+      "text": "Ice Dragon Saga 6"
+    },
+    {
+      "name": "EventScene_icedragonsaga_05_2",
+      "text": "Ice Dragon Saga 7"
+    },
+    {
+      "name": "EventScene_icedragonsaga_05_3",
+      "text": "Ice Dragon Saga 8"
+    },
+    {
+      "name": "EventScene_icedragonsaga_06",
+      "text": "Ice Dragon Saga 9"
+    },
+    {
+      "name": "EventScene_icedragonsaga_07",
+      "text": "Ice Dragon Saga 10"
+    },
+    {
+      "name": "EventScene_icedragonsaga_08_1",
+      "text": "Ice Dragon Saga 11"
+    },
+    {
+      "name": "EventScene_icedragonsaga_08_2",
+      "text": "Ice Dragon Saga 12"
+    },
+    {
+      "name": "EventScene_icedragonsaga_09_1",
+      "text": "Ice Dragon Saga 13"
+    },
+    {
+      "name": "EventScene_icedragonsaga_09_2",
+      "text": "Ice Dragon Saga 14"
+    },
+    {
+      "name": "EventScene_icedragonsaga_10_1",
+      "text": "Ice Dragon Saga 15"
+    },
+    {
+      "name": "EventScene_icedragonsaga_10_2",
+      "text": "Ice Dragon Saga 16"
+    },
+    {
+      "name": "EventScene_icedragonsaga_10_3",
+      "text": "Ice Dragon Saga 17"
+    },
+    {
+      "name": "EventScene_icedragonsaga_11",
+      "text": "Ice Dragon Saga 18"
+    },
+    {
+      "name": "EventTitle_icedragonsaga_01",
+      "text": "Ice Dragon Saga 19"
+    },
+    {
+      "name": "EventTitle_icedragonsaga_03",
+      "text": "Ice Dragon Saga 20"
+    }
+  ]
+}

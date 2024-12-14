@@ -8,10 +8,8 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        Limbus RoadMap is VILE. tencent prolly looking for the next slop to make a new collab similar to re zero & EVA.<br/>
-        Almighty PMoon takes 10 months to cook something with HyperGryph. They never miss.
-
-        <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>
+        Back from a 3 weeks break of nikke because of overtime unpaid work and to play girls frontline 2
+<!--        <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>-->
       </n-alert>
 
       <n-divider></n-divider>
