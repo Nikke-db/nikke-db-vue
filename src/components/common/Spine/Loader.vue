@@ -212,7 +212,7 @@ const successfullyLoaded = () => {
     .getMessage()
     .success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
 
-  // checkIfAssetCanTalk()
+  checkIfAssetCanYap()
 }
 
 const wrongfullyLoaded = () => {
@@ -539,12 +539,43 @@ document.addEventListener('wheel', (e) => {
   }
 })
 
-/*const checkIfAssetCanTalk = () => {
-  market.live2d.canAssetTalk = false
-  if (market.live2d.current_pose === 'fb') {
+/**
+ * Yap or talking mode for the normal people;
+ * first of all begin with checking if a talk_start animation exists in the spine
+ * if it does, activate the checkbox, otherwise disable it
+ * once activated, add the animation & play it on top of the current track,
+ * once deactivated, remove the talking track and let only the regular animation play
+ */
 
+const YAP_TRACK = 'talk_start'
+
+const checkIfAssetCanYap = () => {
+  let yappable = false
+  if (market.live2d.current_pose === 'fb') {
+    const animations = spineCanvas.animationState.data.skeletonData.animations
+    animations.forEach((a: {name: string}) => {
+      if (a.name === YAP_TRACK) {
+        yappable = true
+      }
+    })
   }
-}*/
+  setYappable(yappable)
+}
+
+const setYappable = (bool: boolean) => {
+  market.live2d.canYap = bool
+  market.live2d.isYapping = false
+}
+
+watch(() => market.live2d.isYapping, (value) => {
+
+  if (value) {
+    spineCanvas.animationState.addAnimation(1, YAP_TRACK)
+    spineCanvas.animationState.setAnimation(1, YAP_TRACK, true)
+  } else {
+    spineCanvas.animationState.tracks = [spineCanvas.animationState.tracks[0]]
+  }
+})
 
 </script>
 

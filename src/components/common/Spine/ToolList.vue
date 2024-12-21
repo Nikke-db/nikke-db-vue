@@ -5,10 +5,13 @@
     </n-card>
     <n-scrollbar style="height: calc(85vh - 120px)">
       <n-card :bordered="false" size="small" class="toolCardContent">
-        <div>
+
+        <div class="toolListDiv">
           <PoseSelector />
+          <Yapping />
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <ChangeQualityMode />
           <span class="routerLinkSpan">
             <RouterLink :to="{name: 'HQvqLQAssets'}" class="routerLink">
@@ -16,29 +19,37 @@
             </RouterLink>
           </span>
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <ResetCoordinates />
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <HideUI />
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <BackgroundColor />
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <BackgroundImage />
           <BackgroundImagePack />
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <Export />
         </div>
-        <div style="display: flex;">
+
+        <div style="display: flex;" class="toolListDiv">
           <Screenshot />
           <ChangeScreenshotSize />
         </div>
-        <div>
+
+        <div class="toolListDiv">
           <CustomLoader />
         </div>
+
       </n-card>
     </n-scrollbar>
   </div>
@@ -57,6 +68,7 @@ import ChangeScreenshotSize from './Tools/ChangeScreenshotSize.vue'
 import CustomLoader from './Tools/CustomLoader.vue'
 import { useMarket } from '@/stores/market'
 import ChangeQualityMode from '@/components/common/Spine/Tools/ChangeQualityMode.vue'
+import Yapping from '@/components/common/Spine/Tools/Yapping.vue'
 
 const market = useMarket()
 </script>
@@ -89,7 +101,7 @@ const market = useMarket()
     height: 100%;
     border-right: 1px solid @naive-green;
 
-    div {
+    .toolListDiv {
       border-bottom: 1px solid @grey-color;
       padding-bottom: 10px;
 

@@ -16,6 +16,8 @@ export const useLive2dStore = defineStore('live2d', () => {
   const hideUI = ref(false)
   const HQassets = ref(true)
   const canAssetTalk = ref(false)
+  const canYap = ref(true)
+  const isYapping = ref(false)
 
   const fr = new FileReader()
 
@@ -226,6 +228,8 @@ export const useLive2dStore = defineStore('live2d', () => {
     hideUI.value = false
   }
 
+
+
   return {
     filtered_l2d_Array,
     current_id,
@@ -261,6 +265,8 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerShowUI,
     hideUI,
     HQassets,
-    canAssetTalk
+    canAssetTalk,
+    canYap,
+    isYapping
   }
 })
