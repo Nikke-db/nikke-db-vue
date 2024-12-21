@@ -317,6 +317,6 @@
   },
   {
     "date": "Decembre 21st 2024",
-    "update": "added a yapping mode"
+    "update": "added a yapping mode. Also added a hit counter to gather analytics for myself. See if it's worth maintaining this hell hole. cloudflare only shows the world wide traffic of the website but no actual visitor counter."
   }
 ]

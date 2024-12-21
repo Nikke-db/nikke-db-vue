@@ -4,12 +4,16 @@
       <RouterLink to="/"><img :src="logo" class="logo" /></RouterLink>
     </span>
 
-    <n-icon
-      :component="MenuOpenRound"
-      @click="openDrawer()"
-      class="iconDiv"
-      :size="80"
-    />
+
+    <div class="drawer-counter">
+      <n-icon
+        :component="MenuOpenRound"
+        @click="openDrawer()"
+        class="iconDiv"
+        :size="80"
+      />
+      <VisitorCounter display="mobile"/>
+    </div>
 
     <n-drawer
       v-model:show="showDrawer"
@@ -53,6 +57,7 @@ import type { route2DisplayInterface } from '@/components/common/Header/routes2D
 
 import { MenuOpenRound } from '@vicons/material'
 import { globalParams } from '@/utils/enum/globalParams'
+import VisitorCounter from '@/components/common/Header/VisitorCounter.vue'
 
 const showDrawer = ref(false)
 
@@ -85,12 +90,15 @@ const closeDrawer = () => {
     user-select: none;
   }
 
-  .iconDiv {
-    width: 100%;
-    text-align: right;
-    margin-right: 15px;
-    margin-top: 18px;
+  .drawer-counter {
+
+    .iconDiv {
+      width: 100%;
+      text-align: right;
+      margin-right: 15px;
+    }
   }
+
 }
 
 .github {
