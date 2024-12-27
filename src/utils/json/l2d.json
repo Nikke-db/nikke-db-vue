@@ -50,6 +50,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Rapi: Red Hood",
+    "id": "c016",
+    "tl": "nikke"
+  },
+  {
     "name": "Delta",
     "id": "c020",
     "tl": "nikke"
@@ -992,12 +997,22 @@
   {
     "name": "Zwei",
     "id": "c390",
-    "tl": "NPC"
+    "tl": "nikke"
+  },
+  {
+    "name": "Zwei First Festa",
+    "id": "c390_01",
+    "tl": "skin"
   },
   {
     "name": "Ein",
     "id": "c391",
     "tl": "nikke"
+  },
+  {
+    "name": "Ein Handmade Festa",
+    "id": "c391_01",
+    "tl": "skin"
   },
   {
     "name": "Rei",
@@ -1072,6 +1087,11 @@
   {
     "name": "Naga Elegant Date",
     "id": "c450_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Naga Last Girlhood",
+    "id": "c450_02",
     "tl": "skin"
   },
   {
@@ -1655,6 +1675,16 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Nadia",
+    "id": "c983",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Yuni",
+    "id": "c985",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Chloe - Village Guardian",
     "id": "c988",
     "tl": "NPCnever"
@@ -1665,13 +1695,23 @@
     "tl": "NPCnever"
   },
   {
-    "name": "Nadia",
-    "id": "c983",
+    "name": "Rapi",
+    "id": "c990",
     "tl": "NPCnever"
   },
   {
-    "name": "Yuni",
-    "id": "c985",
+    "name": "tba",
+    "id": "c991",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Rapi",
+    "id": "c992",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Rapi",
+    "id": "c994",
     "tl": "NPCnever"
   },
   {

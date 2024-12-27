@@ -1,7 +1,9 @@
 /* eslint-disable */
 enum globalParams {
   GITHUB = 'https://github.com/Nikke-db/nikke-db-vue',
-  NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
+  LOCALHOST = 'http://localhost:5500/',
+  // NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
+  NIKKE_DB = LOCALHOST,
   PATH_L2D = NIKKE_DB + 'l2d/',
   PATH_L2D_AIM = 'aim/',
   PATH_L2D_COVER = 'cover/',
@@ -13,7 +15,6 @@ enum globalParams {
   CHIBI_BUILD = NIKKE_DB + BUILD_PATH,
   STREAMING_ASSETS = NIKKE_DB + STREAMING_ASSETS_PATH,
   GALLERY = NIKKE_DB + GALLERY_PATH,
-  LOCALHOST = 'http://localhost:5500/',
   LOCALHOST_CHIBI_BUILD = LOCALHOST + BUILD_PATH,
   LOCALHOST_STREAMING_ASSETS = LOCALHOST + STREAMING_ASSETS_PATH,
   CRYPTOJS_AES_KEY = 'Nikke DB AES Key' //never change this or it'll break tierlist save slots

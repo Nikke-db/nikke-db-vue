@@ -8,7 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        Back from a 3 weeks break of nikke because of overtime unpaid work and to play girls frontline 2
+        Will add Footstep whatever gallery, new npc and event scene when part 2 of the event drops.
 <!--        <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>-->
       </n-alert>
 

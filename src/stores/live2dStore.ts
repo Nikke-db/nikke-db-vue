@@ -166,6 +166,7 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c832_02':
       case 'c132':
       case 'c095':
+      case 'c450_02':
         return 'bg'
       default:
         return 'default'

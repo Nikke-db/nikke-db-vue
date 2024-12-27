@@ -196,6 +196,9 @@ const getDefaultAnimation = () => {
     return 'idle_front'
   }
 
+  // mass manufactured rapi
+  if (market.live2d.current_id === 'c994') return 'idle_02'
+
   switch (market.live2d.current_pose) {
     case 'aim':
       return 'aim_idle'
