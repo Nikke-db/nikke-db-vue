@@ -2,8 +2,8 @@
 enum globalParams {
   GITHUB = 'https://github.com/Nikke-db/nikke-db-vue',
   LOCALHOST = 'http://localhost:5500/',
-  NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
-  // NIKKE_DB = LOCALHOST,
+  // NIKKE_DB = 'https://nikke-db-legacy.pages.dev/',
+  NIKKE_DB = LOCALHOST,
   PATH_L2D = NIKKE_DB + 'l2d/',
   PATH_L2D_AIM = 'aim/',
   PATH_L2D_COVER = 'cover/',

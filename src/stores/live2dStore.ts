@@ -23,22 +23,20 @@ export const useLive2dStore = defineStore('live2d', () => {
 
   const customSkel = ref({
     title: '' as string,
-    URI: '' as string | ArrayBuffer | null
+    URI: '' as string | ArrayBuffer | null,
+    file: null as File | null
   })
 
-  const customPng = ref({
+  const customPng = ref([{
     title: '' as string,
-    URI: '' as string | ArrayBuffer | null
-  })
-
-  const customAdditionalPng = ref({
-    title: '' as string,
-    URI: '' as string | ArrayBuffer | null
-  })
+    URI: '' as string | ArrayBuffer | null,
+    file: null as File | null
+  }])
 
   const customAtlas = ref({
     title: '' as string,
-    URI: '' as string | ArrayBuffer | null
+    URI: '' as string | ArrayBuffer | null,
+    file: null as File | null
   })
 
   const customSpineVersion = ref(4.1)
@@ -178,22 +176,22 @@ export const useLive2dStore = defineStore('live2d', () => {
     fr.onload = () => {
       customSkel.value.title = skel.name
       customSkel.value.URI = fr.result
+      customSkel.value.file = skel
     }
   }
 
   const initCustomPng = (png: File) => {
-    fr.readAsDataURL(png)
-    fr.onload = () => {
-      customPng.value.title = png.name
-      customPng.value.URI = fr.result
-    }
-  }
-
-  const initCustomAdditionalPng = (png: File) => {
-    fr.readAsDataURL(png)
-    fr.onload = () => {
-      customAdditionalPng.value.title = png.name
-      customAdditionalPng.value.URI = fr.result
+    customPng.value = customPng.value.filter((f) => {
+      return f.title !== ''
+    })
+    const dedicatedPngFr = new FileReader()
+    dedicatedPngFr.readAsDataURL(png)
+    dedicatedPngFr.onload = () => {
+      customPng.value.push({
+        title: png.name,
+        URI: dedicatedPngFr.result,
+        file: png
+      })
     }
   }
 
@@ -202,6 +200,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     fr.onload = () => {
       customAtlas.value.title = atlas.name
       customAtlas.value.URI = fr.result
+      customAtlas.value.file = atlas
     }
   }
 
@@ -250,8 +249,6 @@ export const useLive2dStore = defineStore('live2d', () => {
     initCustomSkel,
     customPng,
     initCustomPng,
-    customAdditionalPng,
-    initCustomAdditionalPng,
     customAtlas,
     initCustomAtlas,
     customSpineVersion,

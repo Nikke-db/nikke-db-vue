@@ -120,14 +120,12 @@ const customSpineLoader = () => {
       break
   }
 
-  spineCanvas = new usedSpine.SpinePlayer('player-container', {
+  const spineCanvasOptions = {
     skelUrl: market.live2d.customSkel.title,
     atlasUrl: market.live2d.customAtlas.title,
     rawDataURIs: {
       [market.live2d.customSkel.title]: market.live2d.customSkel.URI,
-      [market.live2d.customAtlas.title]: market.live2d.customAtlas.URI,
-      [market.live2d.customPng.title]: market.live2d.customPng.URI,
-      [market.live2d.customAdditionalPng.title]: market.live2d.customAdditionalPng.URI
+      [market.live2d.customAtlas.title]: market.live2d.customAtlas.URI
     },
     backgroundColor: '#00000000',
     alpha: true,
@@ -139,23 +137,36 @@ const customSpineLoader = () => {
     defaultMix: SPINE_DEFAULT_MIX,
     success: (e: any) => {
       successfullyLoaded()
-      if (market.live2d.customDefaultAnimationIdle) {
-        const animationArray = e.animationState.data.skeletonData.animations
-        const idleRegEx = /idle/
+      try {
+        if (market.live2d.customDefaultAnimationIdle) {
+          const animationArray = e.animationState.data.skeletonData.animations
+          const idleRegEx = /idle/
 
-        for (let i = 0; i <= animationArray.length; i++) {
-          if (idleRegEx.test(animationArray[i].name)) {
-            e.config.animation = animationArray[i].name
-            break
+          for (let i = 0; i <= animationArray.length; i++) {
+            if (idleRegEx.test(animationArray[i].name)) {
+              e.config.animation = animationArray[i].name
+              break
+            }
           }
-        }
+        } 
+      } catch (e) {
+        console.error('Something unexpected happened with custom loader: non-nikke asset ?')
+        console.error(e)
       }
       e.play()
     },
     error: () => {
       wrongfullyLoaded()
     }
-  })
+  }
+
+  for (let i = 0; i < market.live2d.customPng.length; i++) {
+    spineCanvasOptions.rawDataURIs[market.live2d.customPng[i].title] = market.live2d.customPng[i].URI
+  }
+
+  console.log(spineCanvasOptions)
+
+  spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
 }
 
 const getPathing = (extension: string) => {
