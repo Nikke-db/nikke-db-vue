@@ -1,10 +1,11 @@
 import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
-import { type live2d_interface } from '@/utils/interfaces/live2d'
+import { type AttachmentInterface, type live2d_interface } from '@/utils/interfaces/live2d'
 import l2d from '@/utils/json/l2d.json'
 // @ts-ignore
 import { RELEASED_UNITS } from '@/utils/json/released_units.js'
 
+// that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
   const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
@@ -18,6 +19,10 @@ export const useLive2dStore = defineStore('live2d', () => {
   const canAssetTalk = ref(false)
   const canYap = ref(true)
   const isYapping = ref(false)
+  const attachments = ref<AttachmentInterface[]>([])
+  const updateAttachments = ref(0)
+  const selectionAttachments = ref<'select' | 'unselect'>('select')
+  const selectAttachments = ref(0)
 
   const fr = new FileReader()
 
@@ -228,7 +233,13 @@ export const useLive2dStore = defineStore('live2d', () => {
     hideUI.value = false
   }
 
+  const triggerApplyAttachments = () => {
+    updateAttachments.value = new Date().getTime()
+  }
 
+  const triggerSelectAttachments = () => {
+    selectAttachments.value = new Date().getTime()
+  }
 
   return {
     filtered_l2d_Array,
@@ -265,6 +276,12 @@ export const useLive2dStore = defineStore('live2d', () => {
     HQassets,
     canAssetTalk,
     canYap,
-    isYapping
+    isYapping,
+    attachments,
+    updateAttachments,
+    triggerApplyAttachments,
+    triggerSelectAttachments,
+    selectAttachments,
+    selectionAttachments
   }
 })

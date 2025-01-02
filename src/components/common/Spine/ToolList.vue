@@ -38,6 +38,10 @@
         </div>
 
         <div class="toolListDiv">
+          <AttachmentEditor />
+        </div>
+
+        <div class="toolListDiv">
           <Export />
         </div>
 
@@ -69,6 +73,7 @@ import CustomLoader from './Tools/CustomLoader.vue'
 import { useMarket } from '@/stores/market'
 import ChangeQualityMode from '@/components/common/Spine/Tools/ChangeQualityMode.vue'
 import Yapping from '@/components/common/Spine/Tools/Yapping.vue'
+import AttachmentEditor from '@/components/common/Spine/Tools/AttachmentEditor.vue'
 
 const market = useMarket()
 </script>

@@ -94,6 +94,7 @@ const spineLoader = () => {
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
           spinePlayer = player
+          market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
           successfullyLoaded()
         },
         error: () => {
@@ -590,6 +591,13 @@ watch(() => market.live2d.isYapping, (value) => {
     spineCanvas.animationState.tracks = [spineCanvas.animationState.tracks[0]]
   }
 })
+
+/**
+ * Attachment / Layer edition
+ */
+watch(() => market.live2d.updateAttachments, () => {
+  spineCanvas.animationState.data.skeletonData.defaultSkin.attachments = [ ...market.live2d.attachments ]
+}, { deep: true })
 
 </script>
 
