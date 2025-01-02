@@ -1700,7 +1700,7 @@
     "tl": "NPCnever"
   },
   {
-    "name": "tba",
+    "name": "D.E.E.P",
     "id": "c991",
     "tl": "NPCnever"
   },
@@ -1967,6 +1967,11 @@
   {
     "name": "Ice Dragon Saga",
     "id": "icedragonsaga",
+    "tl": "never"
+  },
+  {
+    "name": "Footstep Walk Run",
+    "id": "footstepwalkrun",
     "tl": "never"
   },
   {

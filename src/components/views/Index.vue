@@ -7,12 +7,12 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="success">
-        Will add Footstep whatever gallery, new npc and event scene when part 2 of the event drops.
+<!--      <n-alert type="success">-->
+<!--        Will add Footstep whatever gallery, new npc and event scene when part 2 of the event drops.-->
 <!--        <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>-->
-      </n-alert>
+<!--      </n-alert>-->
 
-      <n-divider></n-divider>
+<!--      <n-divider></n-divider>-->
 
       <n-alert type="error">
         Now stopping to answer DMs asking how to datamine or extracting specific files for your own use.<br/>

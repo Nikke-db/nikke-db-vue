@@ -1,0 +1,85 @@
+{
+  "path": "footstepwalkrun/",
+  "type": "large",
+  "id": "footstepwalkrun",
+  "title": "Footstep Walk Run",
+  "notice": "Original was 97mb. blabla now 5mb. blabla maybe not in order.",
+  "content": [
+    {
+      "name": "EventScene_footstepwalkrun_01",
+      "text": "Footstep Walk Run 1"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_02_1",
+      "text": "Footstep Walk Run 2"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_02_2",
+      "text": "Footstep Walk Run 3"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_02_3",
+      "text": "Footstep Walk Run 4"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_02_4",
+      "text": "Footstep Walk Run 5"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_02_5",
+      "text": "Footstep Walk Run 6"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_03",
+      "text": "Footstep Walk Run 7"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_04_1",
+      "text": "Footstep Walk Run 8"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_04_2",
+      "text": "Footstep Walk Run 9"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_04_3",
+      "text": "Footstep Walk Run 10"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_04_4",
+      "text": "Footstep Walk Run 11"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_05",
+      "text": "Footstep Walk Run 12"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_06_1",
+      "text": "Footstep Walk Run 13"
+    },
+    {
+      "name": "EventScene_footstepwalkrun_06_2",
+      "text": "Footstep Walk Run 14"
+    },
+    {
+      "name": "footstepwalkrun_part2_bg_list_hard",
+      "text": "Footstep Walk Run 15"
+    },
+    {
+      "name": "footstepwalkrun_part1_main_char_03",
+      "text": "Footstep Walk Run 16"
+    },
+    {
+      "name": "footstepwalkrun_part1_main_char_02",
+      "text": "Footstep Walk Run 17"
+    },
+    {
+      "name": "footstepwalkrun_part1_main_char_01",
+      "text": "Footstep Walk Run 18"
+    },
+    {
+      "name": "footstepwalkrun_part2_main_cha",
+      "text": "Footstep Walk Run 19"
+    }
+  ]
+}

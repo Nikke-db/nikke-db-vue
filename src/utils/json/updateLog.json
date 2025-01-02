@@ -322,5 +322,17 @@
   {
     "date": "Decembre 27th 2024",
     "update": "Added Rapi, Rapi, Rapi, Rapi Hood, Ein, Zwei, Naga."
+  },
+  {
+    "date": "January 2nd 2025",
+    "update": "Added D.E.E.P, Footstep Walk Run Live2D & gallery. "
+  },
+  {
+    "date": "January 2nd 2025",
+    "update": "Re-coded the custom live2d loader to allow an infinite amount of PNG files : tested with a Brown Dust 2 asset containing 1 skel, 1 atlas, 10 png (char067401)."
+  },
+  {
+    "date": "January 2nd 2025",
+    "update": "Added the Layer Editor tool."
   }
 ]

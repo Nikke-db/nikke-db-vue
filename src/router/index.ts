@@ -7,6 +7,7 @@ import Chibi from '@/components/views/Chibi.vue'
 import Gallery from '@/components/views/Gallery.vue'
 import TierListMaker from '@/components/views/Tierlistmaker.vue'
 import HighAndLowQualityAssets from '@/components/views/notices/HighAndLowQualityAssets.vue'
+import AttachmentEditor from '@/components/views/notices/AttachmentEditor.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -73,6 +74,11 @@ const router = createRouter({
       path: '/notice/HQvqLQAssets',
       name: 'HQvqLQAssets',
       component: HighAndLowQualityAssets
+    },
+    {
+      path: '/notice/layerEditor',
+      name: 'layerEditor',
+      component: AttachmentEditor
     }
     // {
     // path: '/about',

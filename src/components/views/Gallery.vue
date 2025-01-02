@@ -187,6 +187,7 @@ import jinxplayer from '@/utils/json/Gallery/jinxplayer.json'
 import oldtales from '@/utils/json/Gallery/oldtales.json'
 import icedragonsaga from '@/utils/json/Gallery/icedragonsaga.json'
 import dragondungeonrun from '@/utils/json/Gallery/dragondungeonrun.json'
+import footstepwalkrun from '@/utils/json/Gallery/footstepwalkrun.json'
 
 const market = useMarket()
 
@@ -241,7 +242,8 @@ const buttonListEvents = [
   { data: evangelion },
   { data: jinxplayer },
   { data: oldtales },
-  { data: icedragonsaga }
+  { data: icedragonsaga },
+  { data: footstepwalkrun }
 ] as buttonInterface[]
 
 const buttonListOther = [
