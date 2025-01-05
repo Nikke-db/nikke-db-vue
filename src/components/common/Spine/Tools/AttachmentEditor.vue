@@ -26,6 +26,12 @@
           </span>
         </template>
 
+
+
+       <AttachmentEditorListing :searchQuery="searchQuery" :colors="colorsToApply"/>
+
+
+
         <template #footer>
           <div class="drawer-footer">
             <n-input type="text" v-model:value="searchQuery" placeholder="Search for an attachment name" clearable/>
@@ -42,14 +48,26 @@
             <AttachmentEditorColorSlider v-model="colors.b" class="selectionSlider" color="blue" type="info"/>
             <AttachmentEditorColorSlider v-model="colors.a" class="selectionSlider" color="alpha channel" type="default"/>
 
-            <n-button class="triggerButton" round type="primary" ghost @click="market.live2d.triggerApplyAttachments()">
+            <n-button class="triggerButton" round type="primary" ghost @click="market.live2d.triggerUpdateAttachments()">
               Apply modifications to selected layers
             </n-button>
 
+             <span class="selectionButtons">
+              <n-button @click="triggerExport()">Export Layers</n-button>
+
+               <n-upload
+                :multiple="false"
+                accept=".json"
+                @change="(e: any) => triggerImport(e)"
+                file-list-style="display: none;"
+               >
+                  <n-button @click="selectUnselectSelection('unselect')">Import Layers</n-button>
+
+               </n-upload>
+            </span>
+
           </div>
         </template>
-
-         <AttachmentEditorListing :searchQuery="searchQuery" :colors="colorsToApply"/>
 
       </n-drawer-content>
 
@@ -65,6 +83,7 @@ import { useMarket } from '@/stores/market'
 import AttachmentEditorListing from '@/components/common/Spine/Tools/AttachmentEditorListing.vue'
 import AttachmentEditorColorSlider from '@/components/common/Spine/Tools/AttachmentEditorColorSlider.vue'
 import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
+import { getExportableContent, getImportedContentV1, getKeyOfContentByString } from '@/utils/LayerEditorUtils'
 
 const market = useMarket()
 
@@ -102,6 +121,73 @@ const colorsToApply = computed(() => {
   } as AttachmentItemColorInterface
 })
 
+const triggerExport = () => {
+  const link = document.createElement('a')
+
+  link.download = 'NIKKE-DB_LAYER_EDIT_' + market.live2d.current_id + '_' + market.live2d.current_pose + '_' +
+      new Date().getTime().toString().slice(-3) + '.json'
+
+  link.href = 'data:text/plain;charset=utf-8,' + JSON.stringify(
+    getExportableContent(market.live2d.current_id, market.live2d.current_pose, market.live2d.attachments),
+    null, 2)
+  link.click()
+}
+
+const isImporting = ref(false)
+let fileContent = '' as string
+
+/**
+ * We have to separate the current id and current pose calls so the watchers in Loader.vue does not overlap
+ * We also need to wait for the asset to actually load or else the attachments won't be in pinia.
+ * @param e
+ */
+const triggerImport = async (e: any) => {
+  try {
+    isImporting.value = true
+    const content = await getImportedContentV1(e.file.file)
+    market.live2d.canLoadSpine = false
+    market.live2d.current_id = content.cid
+    // must use a temp fake pose or else the value set in setTimeout will not trigger the watcher
+    // in the case of imported asset being same pose as currently selected one
+    market.live2d.current_pose = 'temp'
+
+    setTimeout(() => {
+      market.live2d.canLoadSpine = true
+      market.live2d.current_pose = content.pose
+      fileContent = JSON.stringify(content)
+    }, 500)
+
+  } catch (e) {
+    market.message.getMessage().error('Something wrong happened, no way to know what. send me your file through discord', market.message.long_message)
+    isImporting.value = false
+  }
+}
+
+/**
+ * Will apply the imported layers after assets have loaded & market updated
+ */
+watch(() => market.live2d.finishedLoading, () => {
+  if (isImporting.value) {
+    const content = JSON.parse(fileContent)
+
+    market.live2d.attachments.forEach((a) => {
+      const keys = Object.keys(a)
+      if (keys.length > 0) {
+        const key = keys[0]
+        const keyInContent = getKeyOfContentByString(content, key)
+
+        if (keyInContent === undefined) return
+
+        a[key].color = { ...keyInContent }
+      }
+
+    })
+    isImporting.value = false
+    market.live2d.triggerHideUI()
+  }
+})
+
+
 
 </script>
 
@@ -125,10 +211,17 @@ const colorsToApply = computed(() => {
     padding-top: 8px;
     display: flex;
     justify-content: space-evenly;
+
+    .n-upload {
+      width: fit-content;
+    }
   }
   .selectionSlider {
     margin-top: 8px;
     margin-bottom: 8px;
   }
+}
+.n-upload-file-list {
+  display: none;
 }
 </style>

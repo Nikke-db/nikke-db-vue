@@ -7,12 +7,14 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-<!--      <n-alert type="success">-->
-<!--        Will add Footstep whatever gallery, new npc and event scene when part 2 of the event drops.-->
-<!--        <n-image :src="indexalt" :width="market.globalParams.isMobile ? '100%' : '50%'"/>-->
-<!--      </n-alert>-->
+      <n-alert type="success">
+        Tried real hard to make a "Rewind to last move" button for the layer editor, in case you failed something big time. but it's a lot harder than I expected to work with cloning huge nested objects.<br/>
+        I recommend making regular exports when working for a long time on an edition. <br/> <br/>
 
-<!--      <n-divider></n-divider>-->
+        My days off are ending the 6th january, but still do not hesitate to come forward if you notice an issue with the new tool.
+      </n-alert>
+
+      <n-divider></n-divider>
 
       <n-alert type="error">
         Now stopping to answer DMs asking how to datamine or extracting specific files for your own use.<br/>
@@ -40,7 +42,7 @@ import { onMounted, onBeforeMount, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
 import bgi from '@/assets/index_bg2.png'
 import updates from '@/utils/json/updateLog.json'
-import indexalt from '@/assets/index-alt.png'
+// import indexalt from '@/assets/index-alt.png'
 
 const market = useMarket()
 

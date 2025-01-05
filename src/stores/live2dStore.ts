@@ -8,7 +8,8 @@ import { RELEASED_UNITS } from '@/utils/json/released_units.js'
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
   const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
-  const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover'>
+  const current_id = ref('c010') as Ref<string>
+  const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover' | 'temp'>
   const resetPlacement = ref(0)
   const isExportingAnimation = ref(false)
   const exportAnimationTimestamp = ref(0)
@@ -21,8 +22,11 @@ export const useLive2dStore = defineStore('live2d', () => {
   const isYapping = ref(false)
   const attachments = ref<AttachmentInterface[]>([])
   const updateAttachments = ref(0)
+  const applyAttachments = ref(0)
   const selectionAttachments = ref<'select' | 'unselect'>('select')
   const selectAttachments = ref(0)
+  const canLoadSpine = ref(true)
+  const finishedLoading = ref(0)
 
   const fr = new FileReader()
 
@@ -66,8 +70,6 @@ export const useLive2dStore = defineStore('live2d', () => {
   const change_current_spine = (newSpine: live2d_interface) => {
     current_id.value = newSpine.id
   }
-
-  const current_id = ref('c010') as Ref<string>
 
   const triggerResetPlacement = () => {
     resetPlacement.value = new Date().getTime()
@@ -227,12 +229,20 @@ export const useLive2dStore = defineStore('live2d', () => {
     hideUI.value = false
   }
 
-  const triggerApplyAttachments = () => {
+  const triggerUpdateAttachments = () => {
     updateAttachments.value = new Date().getTime()
+  }
+
+  const triggerApplyAttachments = () => {
+    applyAttachments.value = new Date().getTime()
   }
 
   const triggerSelectAttachments = () => {
     selectAttachments.value = new Date().getTime()
+  }
+
+  const triggerFinishedLoading = () => {
+    finishedLoading.value = new Date().getTime()
   }
 
   return {
@@ -273,9 +283,14 @@ export const useLive2dStore = defineStore('live2d', () => {
     isYapping,
     attachments,
     updateAttachments,
+    applyAttachments,
+    triggerUpdateAttachments,
     triggerApplyAttachments,
     triggerSelectAttachments,
     selectAttachments,
-    selectionAttachments
+    selectionAttachments,
+    canLoadSpine,
+    finishedLoading,
+    triggerFinishedLoading
   }
 })

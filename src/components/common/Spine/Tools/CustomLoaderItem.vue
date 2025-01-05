@@ -93,7 +93,6 @@ const handleFileListChange = () => {
  */
 const handleMultipleListChange = (event: {file: UploadFileInfo, fileList: UploadFileInfo[]}) => {
 
-  console.log(event)
   if (!props.multiple) return
 
   if (backupMultipleQuantity > event.fileList.length) { //most likely here because a file got removed

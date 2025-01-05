@@ -95,6 +95,7 @@ const spineLoader = () => {
         success: (player: any) => {
           spinePlayer = player
           market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
+          market.live2d.triggerFinishedLoading()
           successfullyLoaded()
         },
         error: () => {
@@ -164,8 +165,6 @@ const customSpineLoader = () => {
   for (let i = 0; i < market.live2d.customPng.length; i++) {
     spineCanvasOptions.rawDataURIs[market.live2d.customPng[i].title] = market.live2d.customPng[i].URI
   }
-
-  console.log(spineCanvasOptions)
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
 }
@@ -414,10 +413,12 @@ async function exportAnimationFrames(timestamp: number) {
 }
 
 const loadSpineAfterWatcher = () => {
-  spineCanvas.dispose()
-  market.load.beginLoad()
-  spineLoader()
-  applyDefaultStyle2Canvas()
+  if (market.live2d.canLoadSpine) {
+    spineCanvas.dispose()
+    market.load.beginLoad()
+    spineLoader()
+    applyDefaultStyle2Canvas()
+  }
 }
 
 const applyDefaultStyle2Canvas = () => {
@@ -595,7 +596,7 @@ watch(() => market.live2d.isYapping, (value) => {
 /**
  * Attachment / Layer edition
  */
-watch(() => market.live2d.updateAttachments, () => {
+watch(() => market.live2d.applyAttachments, () => {
   spineCanvas.animationState.data.skeletonData.defaultSkin.attachments = [ ...market.live2d.attachments ]
 }, { deep: true })
 

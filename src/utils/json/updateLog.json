@@ -342,5 +342,13 @@
   {
     "date": "January 5th 2025",
     "update": "Expanded the color slider from 0..255 to 0..510 to allow over-saturation of colors. Meaning it's possible to white wash clothes or characters. It still has it's limits."
+  },
+  {
+    "date": "January 5th 2025",
+    "update": "Refactored some code to avoid insanely recursive methods on the layer editor lol."
+  },
+  {
+    "date": "January 5th 2025",
+    "update": "Added an export and import feature to the layer editor. Does NOT work for custom imported animations. Can break when a character gets updated with new animations."
   }
 ]
