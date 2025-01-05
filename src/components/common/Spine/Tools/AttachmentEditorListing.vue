@@ -1,6 +1,6 @@
 <template>
   <div>
-    <span v-for="(item, index) in market.live2d.attachments" v-bind:key="grabKey(item)">
+    <span v-for="(item, index) in market.live2d.attachments" v-bind:key="index">
       <AttachmentEditorListItem
           v-if="item !== null && item !== undefined"
           :item="item[grabKey(item)]"

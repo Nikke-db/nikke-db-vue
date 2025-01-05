@@ -67,13 +67,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     current_id.value = newSpine.id
   }
 
-  const foolCheck = () => {
-    const fooldate = new Date()
-    if (fooldate.getDate() === 1 && fooldate.getMonth() === 3) return true
-    return false
-  }
-
-  const current_id = ref(foolCheck() ? 'c312' : 'c010') as Ref<string>
+  const current_id = ref('c010') as Ref<string>
 
   const triggerResetPlacement = () => {
     resetPlacement.value = new Date().getTime()

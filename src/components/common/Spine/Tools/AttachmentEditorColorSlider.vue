@@ -4,7 +4,7 @@
     <n-button round ghost @click="setValue(0)" :type="props.type">0</n-button>
     <n-slider
         :keyboard="true"
-        :max="255"
+        :max="510"
         :min="0"
         v-model:value="model"
         :id="getId"

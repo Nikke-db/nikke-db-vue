@@ -334,5 +334,13 @@
   {
     "date": "January 2nd 2025",
     "update": "Added the Layer Editor tool."
+  },
+  {
+    "date": "January 5th 2025",
+    "update": "Fixed layer editor duplicating layers in the search box, crashing the browser after a while. Affected characters such as 2B YoRHa Uniform 1, Snow White, Naga Last Girlhood, ..."
+  },
+  {
+    "date": "January 5th 2025",
+    "update": "Expanded the color slider from 0..255 to 0..510 to allow over-saturation of colors. Meaning it's possible to white wash clothes or characters. It still has it's limits."
   }
 ]
