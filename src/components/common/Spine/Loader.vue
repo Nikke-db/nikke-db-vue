@@ -137,16 +137,19 @@ const customSpineLoader = () => {
     preserveDrawingBuffer: true,
     viewport: spineViewport,
     defaultMix: SPINE_DEFAULT_MIX,
-    success: (e: any) => {
+    success: (player: any) => {
+      spinePlayer = player
+      market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
+      market.live2d.triggerFinishedLoading()
       successfullyLoaded()
       try {
         if (market.live2d.customDefaultAnimationIdle) {
-          const animationArray = e.animationState.data.skeletonData.animations
+          const animationArray = player.animationState.data.skeletonData.animations
           const idleRegEx = /idle/
 
           for (let i = 0; i <= animationArray.length; i++) {
             if (idleRegEx.test(animationArray[i].name)) {
-              e.config.animation = animationArray[i].name
+              player.config.animation = animationArray[i].name
               break
             }
           }
@@ -155,7 +158,7 @@ const customSpineLoader = () => {
         console.error('Something unexpected happened with custom loader: non-nikke asset ?')
         console.error(e)
       }
-      e.play()
+      player.play()
     },
     error: () => {
       wrongfullyLoaded()

@@ -350,5 +350,13 @@
   {
     "date": "January 5th 2025",
     "update": "Added an export and import feature to the layer editor. Does NOT work for custom imported animations. Can break when a character gets updated with new animations."
+  },
+  {
+    "date": "January 16th 2025",
+    "update": "Updated Mana, Added Jien, Added Wisdom Spring event scene."
+  },
+  {
+    "date": "January 16th 2025",
+    "update": "Fixed Layer Editor not handling custom spines. Fixed custom loader png duplication."
   }
 ]

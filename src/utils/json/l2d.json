@@ -802,7 +802,7 @@
   {
     "name": "Mana",
     "id": "c290",
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Ether",
@@ -1630,6 +1630,11 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Jien",
+    "id": "c973",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Mass Produced Melee",
     "id": "c974",
     "tl": "NPCnever"
@@ -1972,6 +1977,11 @@
   {
     "name": "Footstep Walk Run",
     "id": "footstepwalkrun",
+    "tl": "never"
+  },
+  {
+    "name": "Wisdom Spring",
+    "id": "wisdomspring",
     "tl": "never"
   },
   {

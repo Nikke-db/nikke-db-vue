@@ -71,7 +71,7 @@ const handleFileListChange = () => {
   if (file.name.endsWith(`.${props.fileType}`)) {
     switch (props.fileType) {
       case 'atlas': market.live2d.initCustomAtlas(file); break
-      case 'png': market.live2d.initCustomPng(file); break
+      case 'png': market.live2d.initCustomPng(file); market.live2d.customPng = []; break
       case 'skel': market.live2d.initCustomSkel(file); break
       default: console.error(`illegal prop value : ${props.fileType}`)
     }
