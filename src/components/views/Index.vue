@@ -8,13 +8,31 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        I will not add datamined-exclusive assets until they are officially visible in-game. Sorry for the coomers but I gotta agree they look great. <br/> <br/>
+        Let's talk why favorite animations aren't on the website besides wave 1, <br/>
+        The files are clearly broken, the background animations are splitted from the character animation, and I've always been vocal ( on discord at least ) that if I don't find a way to fix that I won't really bother with new favorites. <br /> <br />
+        Time has come after 40+ hours of brute force testing ( decoding Skels, rewriting the spine run times, bruteforcing stuff here and there ) to give up on fixing it myself. <br/>
+        PS: it was during these hours that I discovered how to remove layers. <br /> <br />
 
-        Anyway, layer editor was a mistake, my website is banned from Official forums ( discord, reddit ) but suddenly mods are chill when they can see naked modernia and anachiro's tummy eh ? <br/>
-        Also the fuckers who makes thousands, if not tens of thousands of likes from a couple layers off, can you at least say the name of the website in the tweet or reddit post titles ? Instead of in a random response that gets no traction. <br/>
-        The more users the more I'll be willing to add new stuff you know? Layer editor only exists because I found out I got thousands of visitors weekly.<br/><br/>
+        I am now officially looking for a Spine Pro Owner to do the little work for me :
+        <ul>
+          <li>Must have a proof of ownership of the Pro Software for Spine 4.1 ( a portfolio should do )</li>
+          <li>Must be 18+</li>
+          <li>Must not be called Seireiko</li>
+        </ul>
 
-        Let's talk about Shift Up too. <br/>
+        I will pay 5€ through PayPal for each favorite asset fixed, which is 45 € for the current batch of 9 favorite animations. <br/>
+        You will be contacted when new favorites releases ( or if I forget, you can contact me ) and will also be paid 5€ per favorite. <br/>
+        I will be providing the files needed, and I want bg_idle and idle animation to be merged into one animation, and bg_expression_0 merged with expression_0 for a second animation. <br/>
+        Four favorites are publicly available for anyone interested, please try to fix at least one and contact me with a result. <br/>
+        First come first served, no new favorites until then.
+      </n-alert>
+
+      <n-divider />
+
+      <n-alert type="success">
+        Props to McPurrito on reddit, facebook and twitter for being the only dude crediting me on his layer editor posts. <br /> <br />
+
+        Let's talk about Shift Up. <br/>
 
         Pretty solid stuff recently with the UR "rework", but please, if a random marketing member, intern, or translator comes by, do something for any of this :
         <ul>

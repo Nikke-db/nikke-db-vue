@@ -965,6 +965,16 @@
     "tl": "nikke"
   },
   {
+    "name": "Mast: Romantic Maid",
+    "id": "c354",
+    "tl": "nikke"
+  },
+  {
+    "name": "Anchor: Innocent Maid",
+    "id": "c355",
+    "tl": "nikke"
+  },
+  {
     "name": "T.A.L.O.S (Kilo)",
     "id": "c361",
     "tl": "nikke"
@@ -1033,6 +1043,11 @@
     "name": "Sin",
     "id": "c401",
     "tl": "nikke"
+  },
+  {
+    "name": "Sin Backstreet Dream",
+    "id": "c401_01",
+    "tl": "skin"
   },
   {
     "name": "Quency",
@@ -1143,6 +1158,11 @@
     "name": "Trony",
     "id": "c501",
     "tl": "nikke"
+  },
+  {
+    "name": "Trony Sweet Step",
+    "id": "c501_01",
+    "tl": "skin"
   },
   {
     "name": "Grave",

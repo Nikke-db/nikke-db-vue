@@ -358,5 +358,9 @@
   {
     "date": "January 16th 2025",
     "update": "Fixed Layer Editor not handling custom spines. Fixed custom loader png duplication."
+  },
+  {
+    "date": "January 24th 2025",
+    "update": "Added Mast, Anchor, Trony skin, Sin skin"
   }
 ]
