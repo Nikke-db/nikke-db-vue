@@ -50,6 +50,10 @@
 
             <n-button class="triggerButton" round type="primary" ghost @click="market.live2d.triggerUpdateAttachments()">
               Apply modifications to selected layers
+            </n-button> <br/><br/>
+
+            <n-button class="triggerButton" round type="error" ghost @click="fixBrokenAnimation()">
+              Fix broken animation
             </n-button>
 
              <span class="selectionButtons">
@@ -83,7 +87,12 @@ import { useMarket } from '@/stores/market'
 import AttachmentEditorListing from '@/components/common/Spine/Tools/AttachmentEditorListing.vue'
 import AttachmentEditorColorSlider from '@/components/common/Spine/Tools/AttachmentEditorColorSlider.vue'
 import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
-import { getExportableContent, getImportedContentV1, getKeyOfContentByString } from '@/utils/LayerEditorUtils'
+import {
+  getExportableContent,
+  getImportedContentV1,
+  getKeyOfContentByString,
+  layerEditorImportableInterface
+} from '@/utils/LayerEditorUtils'
 
 const market = useMarket()
 
@@ -142,9 +151,13 @@ let fileContent = '' as string
  * @param e
  */
 const triggerImport = async (e: any) => {
+  const content = await getImportedContentV1(e.file.file)
+  importEditedLayer(content)
+}
+
+const importEditedLayer = (content: layerEditorImportableInterface) => {
   try {
     isImporting.value = true
-    const content = await getImportedContentV1(e.file.file)
     market.live2d.canLoadSpine = false
     market.live2d.current_id = content.cid
     // must use a temp fake pose or else the value set in setTimeout will not trigger the watcher
@@ -156,7 +169,6 @@ const triggerImport = async (e: any) => {
       market.live2d.current_pose = content.pose
       fileContent = JSON.stringify(content)
     }, 500)
-
   } catch (e) {
     market.message.getMessage().error('Something wrong happened, no way to know what. send me your file through discord', market.message.long_message)
     isImporting.value = false
@@ -187,7 +199,11 @@ watch(() => market.live2d.finishedLoading, () => {
   }
 })
 
-
+// https://github.com/Nikke-db/nikke-db-vue/issues/45
+const fixBrokenAnimation = () => {
+  const exportableContent = getExportableContent(market.live2d.current_id, market.live2d.current_pose, market.live2d.attachments)
+  importEditedLayer(exportableContent)
+}
 
 </script>
 

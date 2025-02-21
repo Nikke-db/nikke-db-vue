@@ -206,12 +206,15 @@ const getDefaultAnimation = () => {
 
   if (market.live2d.current_id === 'smol_rem' ||
       market.live2d.current_id === 'smol_ram' ||
-      market.live2d.current_id === 'smol_emilia') {
+      market.live2d.current_id === 'smol_emilia' ||
+      market.live2d.current_id === 'smol_mast_pirate') {
     return 'idle_front'
   }
 
   // mass manufactured rapi
   if (market.live2d.current_id === 'c994') return 'idle_02'
+
+  if (market.live2d.current_id.includes('favorite')) return 'idle_merged'
 
   switch (market.live2d.current_pose) {
     case 'aim':

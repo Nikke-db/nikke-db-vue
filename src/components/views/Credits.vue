@@ -37,12 +37,12 @@ const market = useMarket()
 const external: help[] = [
   {
     name: 'Bingle & Dani',
-    contribution: 'NKAB v4 Decryptor to access encrypted files after the February 5th patch.',
+    contribution: 'NKAB v4 Decryptor to access encrypted files after the February 5th 2024 patch.',
     tier: 'gold'
   },
   {
     name: 'Bingle',
-    contribution: 'NKAB v3 Decryptor to access encrypted files after the Septembre 1st patch.',
+    contribution: 'NKAB v3 Decryptor to access encrypted files after the Septembre 1st 2023 patch.',
     tier: 'gold'
   },
   {

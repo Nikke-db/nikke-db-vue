@@ -960,6 +960,11 @@
     "tl": "skin"
   },
   {
+    "name": "Helm Post-Shower Moment",
+    "id": "c352_02",
+    "tl": "skin"
+  },
+  {
     "name": "Helm: Aquamarine",
     "id": "c353",
     "tl": "nikke"
@@ -993,6 +998,11 @@
     "name": "Biscuit",
     "id": "c381",
     "tl": "nikke"
+  },
+  {
+    "name": "Biscuit Spring Puppy",
+    "id": "c381_01",
+    "tl": "skin"
   },
   {
     "name": "Leona",
@@ -1380,8 +1390,53 @@
     "tl": "skin"
   },
   {
+    "name": "Mari Makinami Final Battle",
+    "id": "c832_03",
+    "tl": "skin"
+  },
+  {
+    "name": "Mari Makinami Mystery Muse",
+    "id": "c832_04",
+    "tl": "skin"
+  },
+  {
     "name": "Misato Katsuragi",
     "id": "c833",
+    "tl": "nikke"
+  },
+  {
+    "name": "Rei Ayanami (Tentative Name)",
+    "id": "c834",
+    "tl": "nikke"
+  },
+  {
+    "name": "Rei Ayanami Miss Lookalike from Village-3",
+    "id": "c834_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Rei Ayanami Soul Connect",
+    "id": "c834_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Asuka Shikinami WILLE",
+    "id": "c835",
+    "tl": "nikke"
+  },
+  {
+    "name": "Asuka Shikinami Final Battle",
+    "id": "c835_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Asuka Shikinami Ocean's Lament",
+    "id": "c835_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Sakura Suzuhara",
+    "id": "c836",
     "tl": "nikke"
   },
   {
@@ -1437,6 +1492,11 @@
   {
     "name": "Hologram",
     "id": "c910",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Sweet Johnny",
+    "id": "c910_01",
     "tl": "NPCnever"
   },
   {
@@ -2005,6 +2065,11 @@
     "tl": "never"
   },
   {
+    "name": "Romantic Valentine",
+    "id": "romanticvalentine",
+    "tl": "never"
+  },
+  {
     "name": "Smol Ade",
     "id": "smol_ade",
     "tl": "never"
@@ -2042,6 +2107,16 @@
   {
     "name": "Smol Mast",
     "id": "smol_mast",
+    "tl": "never"
+  },
+  {
+    "name": "Smol Mast Pirate",
+    "id": "smol_mast_pirate",
+    "tl": "never"
+  },
+  {
+    "name": "Pirate Cafe",
+    "id": "piratecafe",
     "tl": "never"
   },
   {
@@ -2155,6 +2230,11 @@
     "tl": "never"
   },
   {
+    "name": "Favorite: Miranda",
+    "id": "favorite_c032",
+    "tl": "never"
+  },
+  {
     "name": "Favorite: Diesel",
     "id": "favorite_c072",
     "tl": "never"
@@ -2165,6 +2245,21 @@
     "tl": "never"
   },
   {
+    "name": "Favorite: Drake",
+    "id": "favorite_c101",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Viper",
+    "id": "favorite_c112",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Milk",
+    "id": "favorite_c141",
+    "tl": "never"
+  },
+  {
     "name": "Favorite: Frima",
     "id": "favorite_c142",
     "tl": "never"
@@ -2172,6 +2267,11 @@
   {
     "name": "Favorite: Exia",
     "id": "favorite_c210",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Helm",
+    "id": "favorite_c352",
     "tl": "never"
   },
   {
