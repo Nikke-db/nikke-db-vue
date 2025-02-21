@@ -91,7 +91,7 @@ import {
   getExportableContent,
   getImportedContentV1,
   getKeyOfContentByString,
-  layerEditorImportableInterface
+  type layerEditorImportableInterface
 } from '@/utils/LayerEditorUtils'
 
 const market = useMarket()
