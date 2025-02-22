@@ -36,6 +36,11 @@ const market = useMarket()
 
 const external: help[] = [
   {
+    name: 'Bingle',
+    contribution: 'Fixing favorite assets through Spine Pro.',
+    tier: 'skyblue'
+  },
+  {
     name: 'Bingle & Dani',
     contribution: 'NKAB v4 Decryptor to access encrypted files after the February 5th 2024 patch.',
     tier: 'gold'

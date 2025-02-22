@@ -207,7 +207,9 @@ const getDefaultAnimation = () => {
   if (market.live2d.current_id === 'smol_rem' ||
       market.live2d.current_id === 'smol_ram' ||
       market.live2d.current_id === 'smol_emilia' ||
-      market.live2d.current_id === 'smol_mast_pirate') {
+      market.live2d.current_id === 'smol_mast_pirate' ||
+      market.live2d.current_id === 'smol_anchor_pirate' ||
+      market.live2d.current_id === 'smol_sin_pirate') {
     return 'idle_front'
   }
 

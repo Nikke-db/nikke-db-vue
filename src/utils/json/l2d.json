@@ -2075,8 +2075,13 @@
     "tl": "never"
   },
   {
-    "id": "smol_anchor",
     "name": "Smol Anchor",
+    "id": "smol_anchor",
+    "tl": "never"
+  },
+  {
+    "name": "Smol Anchor Pirate",
+    "id": "smol_anchor_pirate",
     "tl": "never"
   },
   {
@@ -2127,6 +2132,11 @@
   {
     "name": "Smol Maid Privaty",
     "id": "smol_mpriv",
+    "tl": "never"
+  },
+  {
+    "name": "Smol Sin Pirate",
+    "id": "smol_sin_pirate",
     "tl": "never"
   },
   {

@@ -8,8 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        Favorite assets are fixed <br/>
-        I think some assets from the valentine event have been cleaned from the assets, I for the life of me can't find the chibi sin and anchor, and I don't have a backup from a week ago. <br/> <br/>
+        Favorite assets are fixed <br/><br/>
 
         Main story l2d & galleries and EVA gallery will wait until I catch them up, will take a week or two as usual. I ain't spoiling myself.
       </n-alert>
