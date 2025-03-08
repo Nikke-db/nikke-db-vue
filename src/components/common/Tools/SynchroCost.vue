@@ -85,7 +85,7 @@ import ToolsTemplate from './Template.vue'
 import { ref } from 'vue'
 import type { NumberAnimationInst, FormInst, FormItemRule, FormRules, FormValidationError } from 'naive-ui'
 import { useMarket } from '@/stores/market'
-import {globalParams, messagesEnum} from '@/utils/enum/globalParams'
+import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 import * as LevelingJson from '@/utils/json/CharacterLevelTable.json'
 import type { levelingRecordInterface } from '@/utils/interfaces/levelingRecord'
 

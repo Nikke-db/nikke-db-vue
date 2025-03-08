@@ -61,11 +61,6 @@ const changeSpine = (character: live2d_interface) => {
   market.live2d.change_current_spine(character)
 }
 
-const foolCheck = () => {
-  const fooldate = new Date()
-  if (fooldate.getDate() === 1 && fooldate.getMonth() === 3) return true
-  return false
-}
 </script>
 
 <style scoped lang="less">

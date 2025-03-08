@@ -1105,6 +1105,16 @@
     "tl": "nikke"
   },
   {
+    "name": "Eyeri",
+    "id": "c440",
+    "tl": "npc"
+  },
+  {
+    "name": "Avista",
+    "id": "c441",
+    "tl": "npc"
+  },
+  {
     "name": "Naga",
     "id": "c450",
     "tl": "nikke"
@@ -1195,9 +1205,9 @@
     "tl": "npc"
   },
   {
-    "name": "Grave",
+    "name": "Grave the Great (GraGre)",
     "id": "c514",
-    "tl": "NPC"
+    "tl": "nikke"
   },
   {
     "name": "Bay",
@@ -2067,6 +2077,16 @@
   {
     "name": "Romantic Valentine",
     "id": "romanticvalentine",
+    "tl": "never"
+  },
+  {
+    "name": "Second Quest",
+    "id": "secondquest1",
+    "tl": "never"
+  },
+  {
+    "name": "Second Quest",
+    "id": "secondquest2",
     "tl": "never"
   },
   {

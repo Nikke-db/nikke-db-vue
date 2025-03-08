@@ -154,6 +154,7 @@ import story3 from '@/utils/json/Gallery/story3.json'
 import story4 from '@/utils/json/Gallery/story4.json'
 import story5 from '@/utils/json/Gallery/story5.json'
 import story6 from '@/utils/json/Gallery/story6.json'
+import story7 from '@/utils/json/Gallery/story7.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -188,6 +189,7 @@ import oldtales from '@/utils/json/Gallery/oldtales.json'
 import icedragonsaga from '@/utils/json/Gallery/icedragonsaga.json'
 import dragondungeonrun from '@/utils/json/Gallery/dragondungeonrun.json'
 import footstepwalkrun from '@/utils/json/Gallery/footstepwalkrun.json'
+import secondquest from '@/utils/json/Gallery/secondquest.json'
 
 const market = useMarket()
 
@@ -206,7 +208,8 @@ const buttonListStory = [
   { data: story3 },
   { data: story4 },
   { data: story5 },
-  { data: story6 }
+  { data: story6 },
+  { data: story7 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [
@@ -243,7 +246,8 @@ const buttonListEvents = [
   { data: jinxplayer },
   { data: oldtales },
   { data: icedragonsaga },
-  { data: footstepwalkrun }
+  { data: footstepwalkrun },
+  { data: secondquest }
 ] as buttonInterface[]
 
 const buttonListOther = [

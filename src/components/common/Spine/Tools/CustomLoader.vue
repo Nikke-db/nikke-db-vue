@@ -85,17 +85,13 @@ import { useMarket } from '@/stores/market'
 import { messagesEnum } from '@/utils/enum/globalParams'
 import type { UploadFileInfo } from 'naive-ui'
 import { ref, type Ref, watch } from 'vue'
-import { AttachFileOutlined } from '@vicons/material'
 import { PlusCircleOutlined, MinusCircleOutlined } from '@vicons/antd'
 import AlphaConverters from '@/components/common/Tools/AlphaConverters.vue'
 import CustomLoaderItem from '@/components/common/Spine/Tools/CustomLoaderItem.vue'
 
 const market = useMarket()
 
-const skelFileList: Ref<UploadFileInfo[]> = ref([])
-const pngFileList: Ref<UploadFileInfo[]> = ref([])
 const additionalPngFileList: Ref<UploadFileInfo[]> = ref([])
-const atlasFileList: Ref<UploadFileInfo[]> = ref([])
 
 const additionalPng = ref(false)
 

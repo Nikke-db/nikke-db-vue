@@ -8,9 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        Favorite assets are fixed <br/><br/>
-
-        Main story l2d & galleries and EVA gallery will wait until I catch them up, will take a week or two as usual. I ain't spoiling myself.
+        Happy birthday everyone ! It is the 10th chapter anniversary of no Live2d Scene in the main story of Nikke !
       </n-alert>
 
       <n-divider />

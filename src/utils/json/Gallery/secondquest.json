@@ -1,0 +1,85 @@
+{
+  "path": "secondquest/",
+  "type": "large",
+  "id": "secondquest",
+  "title": "Second Quest",
+  "notice": "Full sized images. Maybe not in order.",
+  "content": [
+    {
+      "name": "EventScene_ce005_01_1",
+      "text": "Second Quest 1"
+    },
+    {
+      "name": "EventScene_ce005_01_2",
+      "text": "Second Quest 2"
+    },
+    {
+      "name": "EventScene_ce005_01_3",
+      "text": "Second Quest 3"
+    },
+    {
+      "name": "EventScene_ce005_01_4",
+      "text": "Second Quest 4"
+    },
+    {
+      "name": "EventScene_ce005_01_5",
+      "text": "Second Quest 5"
+    },
+    {
+      "name": "EventScene_ce005_01_6",
+      "text": "Second Quest 6"
+    },
+    {
+      "name": "EventScene_ce005_01_7",
+      "text": "Second Quest 7"
+    },
+    {
+      "name": "EventScene_ce005_02_1",
+      "text": "Second Quest 8"
+    },
+    {
+      "name": "EventScene_ce005_02_2",
+      "text": "Second Quest 9"
+    },
+    {
+      "name": "EventScene_ce005_02_3",
+      "text": "Second Quest 10"
+    },
+    {
+      "name": "EventScene_ce005_03",
+      "text": "Second Quest 11"
+    },
+    {
+      "name": "EventScene_ce005_04_1",
+      "text": "Second Quest 12"
+    },
+    {
+      "name": "EventScene_ce005_04_2",
+      "text": "Second Quest 13"
+    },
+    {
+      "name": "EventScene_ce005_06_1",
+      "text": "Second Quest 14"
+    },
+    {
+      "name": "EventScene_ce005_06_2",
+      "text": "Second Quest 15"
+    },
+    {
+      "name": "EventScene_ce005_06_3",
+      "text": "Second Quest 16"
+    },
+    {
+      "name": "EventScene_ce005_06_4",
+      "text": "Second Quest 17"
+    },
+    {
+      "name": "EventScene_ce005_06_5",
+      "text": "Second Quest 18"
+    },
+    {
+      "name": "EventScene_ce005_06_6",
+      "text": "Second Quest 19"
+    }
+  ]
+}
