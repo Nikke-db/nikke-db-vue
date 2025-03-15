@@ -1075,6 +1075,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Trina",
+    "id": "c412",
+    "tl": "nikke"
+  },
+  {
     "name": "Noise",
     "id": "c430",
     "tl": "nikke"
@@ -2087,6 +2092,11 @@
   {
     "name": "Second Quest",
     "id": "secondquest2",
+    "tl": "never"
+  },
+  {
+    "name": "For Rest",
+    "id": "forrest",
     "tl": "never"
   },
   {
