@@ -90,6 +90,11 @@ const external: help[] = [
 // forkers: feel free to add yourself here, if you don't I'll do it myself
 const forks: help[] = [
   {
+    name: 'pzwboy',
+    contribution: 'Simplified Chinese 4 pannel comics',
+    tier: null
+  },
+  {
     name: 'SELEKCJONER',
     contribution: 'Automatic Skel version checker ( development QoL )',
     tier: 'SELEKCJONER'
