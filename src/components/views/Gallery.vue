@@ -190,6 +190,7 @@ import icedragonsaga from '@/utils/json/Gallery/icedragonsaga.json'
 import dragondungeonrun from '@/utils/json/Gallery/dragondungeonrun.json'
 import footstepwalkrun from '@/utils/json/Gallery/footstepwalkrun.json'
 import secondquest from '@/utils/json/Gallery/secondquest.json'
+import fourkoma_zh from '@/utils/json/Gallery/4koma_zh.json'
 
 const market = useMarket()
 
@@ -262,6 +263,7 @@ const buttonListCommunity = [
   { data: fourkoma_en },
   { data: fourkoma_jp },
   { data: fourkoma_kr },
+  { data: fourkoma_zh },
 ] as buttonInterface[]
 
 const checkMobile = () => {
