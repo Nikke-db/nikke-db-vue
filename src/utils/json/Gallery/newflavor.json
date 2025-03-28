@@ -1,0 +1,12 @@
+{
+  "path": "newflavor/",
+  "type": "large",
+  "id": "newflavor",
+  "title": "New Flavor",
+  "content": [
+    {
+      "name": "newflavor_list_normal_bg",
+      "text": "New Flavor 1"
+    }
+  ]
+}

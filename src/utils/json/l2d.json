@@ -120,11 +120,6 @@
     "tl": "nikke"
   },
   {
-    "name": "liqueur",
-    "id": "c053",
-    "tl": "never"
-  },
-  {
     "name": "Belorta",
     "id": "c060",
     "tl": "nikke"
@@ -188,11 +183,6 @@
     "name": "Centi Supreme Holiday",
     "id": "c080_01",
     "tl": "skin"
-  },
-  {
-    "name": "Acre",
-    "id": "c081",
-    "tl": "never"
   },
   {
     "name": "Liter",
@@ -318,11 +308,6 @@
     "name": "Anne: Miracle Fairy",
     "id": "c121",
     "tl": "nikke"
-  },
-  {
-    "name": "c122",
-    "id": "c122",
-    "tl": "never"
   },
   {
     "name": "Mary",
@@ -563,11 +548,6 @@
     "name": "Exia Gamer",
     "id": "c210_02",
     "tl": "skin"
-  },
-  {
-    "name": "c211",
-    "id": "c211",
-    "tl": "never"
   },
   {
     "name": "Novel",
@@ -860,6 +840,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Ade Maid In Spring",
+    "id": "c310_01",
+    "tl": "skin"
+  },
+  {
     "name": "Cocoa",
     "id": "c311",
     "tl": "nikke"
@@ -878,11 +863,6 @@
     "name": "Soda: Twinkling Bunny",
     "id": "c314",
     "tl": "nikke"
-  },
-  {
-    "name": "Bibli",
-    "id": "c320",
-    "tl": "never"
   },
   {
     "name": "Marciana",
@@ -908,16 +888,6 @@
     "name": "Chime",
     "id": "c331",
     "tl": "NPC"
-  },
-  {
-    "name": "Siren",
-    "id": "c340",
-    "tl": "never"
-  },
-  {
-    "name": "Pin",
-    "id": "c342",
-    "tl": "never"
   },
   {
     "name": "Mast",
@@ -983,11 +953,6 @@
     "name": "T.A.L.O.S (Kilo)",
     "id": "c361",
     "tl": "nikke"
-  },
-  {
-    "name": "Endless",
-    "id": "c371",
-    "tl": "never"
   },
   {
     "name": "Nero",
@@ -1145,6 +1110,11 @@
     "tl": "skin"
   },
   {
+    "name": "Tia Sweet Chef",
+    "id": "c451_02",
+    "tl": "skin"
+  },
+  {
     "name": "Red Hood",
     "id": "c470",
     "tl": "nikke"
@@ -1205,13 +1175,23 @@
     "tl": "nikke"
   },
   {
-    "name": "Little Mermaid",
+    "name": "Little Mermaid | Siren",
     "id": "c513",
     "tl": "npc"
   },
   {
     "name": "Grave the Great (GraGre)",
     "id": "c514",
+    "tl": "nikke"
+  },
+  {
+    "name": "Bready",
+    "id": "c520",
+    "tl": "nikke"
+  },
+  {
+    "name": "Crust",
+    "id": "c521",
     "tl": "nikke"
   },
   {
@@ -1525,11 +1505,6 @@
     "tl": "NPCnever"
   },
   {
-    "name": "c913",
-    "id": "c913",
-    "tl": "NPCnever"
-  },
-  {
     "name": "Burningum",
     "id": "c914",
     "tl": "NPCnever"
@@ -1815,16 +1790,6 @@
     "tl": "NPCnever"
   },
   {
-    "name": "Self",
-    "id": "c9999",
-    "tl": "never"
-  },
-  {
-    "name": "Choice",
-    "id": "c9999",
-    "tl": "never"
-  },
-  {
     "name": "Blue Water Island",
     "id": "bluewaterisland",
     "tl": "never"
@@ -2097,6 +2062,11 @@
   {
     "name": "For Rest",
     "id": "forrest",
+    "tl": "never"
+  },
+  {
+    "name": "New Flavor",
+    "id": "newflavor",
     "tl": "never"
   },
   {

@@ -394,5 +394,17 @@
   {
     "date": "March 16th 2025",
     "update": "Added Simplified Chinese 4koma by pzwboy (GitHub)"
+  },
+  {
+    "date": "March 28th 2025",
+    "update": "Development QoL, removed a middle-man verification layer to import more safely assets + completed automated renaming script"
+  },
+  {
+    "date": "March 28th 2025",
+    "update": "Live2d: Added Bready, Crust, Ade & Tia Skins. Added New Flavor scene. Updated Helm post shower for the starfish emote"
+  },
+  {
+    "date": "March 28th 2025",
+    "update": "Gallery: Added For Rest & New Flavor galleries."
   }
 ]

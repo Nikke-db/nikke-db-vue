@@ -2,8 +2,6 @@ import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { type AttachmentInterface, type live2d_interface } from '@/utils/interfaces/live2d'
 import l2d from '@/utils/json/l2d.json'
-// @ts-ignore
-import { RELEASED_UNITS } from '@/utils/json/released_units.js'
 
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
@@ -58,11 +56,6 @@ export const useLive2dStore = defineStore('live2d', () => {
     filtered_l2d_Array.value = base_array.sort(
       (a: live2d_interface, b: live2d_interface) => {
         return a.name.localeCompare(b.name)
-      }
-    )
-    filtered_l2d_Array.value = filtered_l2d_Array.value.filter(
-      (item: live2d_interface) => {
-        return RELEASED_UNITS.includes(item.name)
       }
     )
   }

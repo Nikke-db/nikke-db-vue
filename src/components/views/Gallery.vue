@@ -191,6 +191,8 @@ import dragondungeonrun from '@/utils/json/Gallery/dragondungeonrun.json'
 import footstepwalkrun from '@/utils/json/Gallery/footstepwalkrun.json'
 import secondquest from '@/utils/json/Gallery/secondquest.json'
 import fourkoma_zh from '@/utils/json/Gallery/4koma_zh.json'
+import newflavor from '@/utils/json/Gallery/newflavor.json'
+import forrest from '@/utils/json/Gallery/forrest.json'
 
 const market = useMarket()
 
@@ -248,7 +250,9 @@ const buttonListEvents = [
   { data: oldtales },
   { data: icedragonsaga },
   { data: footstepwalkrun },
-  { data: secondquest }
+  { data: secondquest },
+  { data: forrest },
+  { data: newflavor }
 ] as buttonInterface[]
 
 const buttonListOther = [

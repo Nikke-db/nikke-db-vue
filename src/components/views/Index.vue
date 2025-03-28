@@ -8,7 +8,8 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="success">
-        Happy birthday everyone ! It is the 10th chapter anniversary of no Live2d Scene in the main story of Nikke !
+        Looking for information on how to get my hands on the chinese assets to add their exclusive content. <br/>
+        Not caring about the censored characters, but the unique Privaty skin and new Mustang sprites are stuff I'm interested on top of other and future assets.
       </n-alert>
 
       <n-divider />
