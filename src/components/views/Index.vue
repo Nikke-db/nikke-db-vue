@@ -7,12 +7,12 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="success">
-        Looking for information on how to get my hands on the chinese assets to add their exclusive content. <br/>
-        Not caring about the censored characters, but the unique Privaty skin and new Mustang sprites are stuff I'm interested on top of other and future assets.
-      </n-alert>
+<!--      <n-alert type="success">-->
+<!--        Looking for information on how to get my hands on the chinese assets to add their exclusive content. <br/>-->
+<!--        Not caring about the censored characters, but the unique Privaty skin and new Mustang sprites are stuff I'm interested on top of other and future assets.-->
+<!--      </n-alert>-->
 
-      <n-divider />
+<!--      <n-divider />-->
 
 
       <n-alert type="error">

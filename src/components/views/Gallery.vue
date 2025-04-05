@@ -193,6 +193,7 @@ import secondquest from '@/utils/json/Gallery/secondquest.json'
 import fourkoma_zh from '@/utils/json/Gallery/4koma_zh.json'
 import newflavor from '@/utils/json/Gallery/newflavor.json'
 import forrest from '@/utils/json/Gallery/forrest.json'
+import foolburstday from '@/utils/json/Gallery/foolburstday.json'
 
 const market = useMarket()
 
@@ -252,7 +253,8 @@ const buttonListEvents = [
   { data: footstepwalkrun },
   { data: secondquest },
   { data: forrest },
-  { data: newflavor }
+  { data: newflavor },
+  { data: foolburstday }
 ] as buttonInterface[]
 
 const buttonListOther = [

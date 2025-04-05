@@ -1,0 +1,20 @@
+{
+  "path": "foolburstday/",
+  "type": "large",
+  "id": "foolburstday",
+  "title": "Fool Burst Day",
+  "content": [
+    {
+      "name": "2025FoolsDay",
+      "text": "Fool Burst Day 1"
+    },
+    {
+      "name": "EventScene_foolburstday_01",
+      "text": "Fool Burst Day 2"
+    },
+    {
+      "name": "EventScene_foolburstday_02",
+      "text": "Fool Burst Day 3"
+    }
+  ]
+}

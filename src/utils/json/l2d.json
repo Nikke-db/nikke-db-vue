@@ -415,6 +415,11 @@
     "tl": "skin"
   },
   {
+    "name": "Privaty (CN)",
+    "id": "c170_03",
+    "tl": "skin"
+  },
+  {
     "name": "Yulha",
     "id": "c171",
     "tl": "nikke"
@@ -1450,6 +1455,11 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Mustang (CN)",
+    "id": "c902_01",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Andersen",
     "id": "c903",
     "tl": "NPCnever"
@@ -1782,6 +1792,11 @@
   {
     "name": "Rapi",
     "id": "c992",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Mecha Shifty",
+    "id": "c993",
     "tl": "NPCnever"
   },
   {
