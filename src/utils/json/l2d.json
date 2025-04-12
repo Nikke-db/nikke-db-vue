@@ -1805,6 +1805,11 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Leviathan",
+    "id": "c996",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Blue Water Island",
     "id": "bluewaterisland",
     "tl": "never"
@@ -2082,6 +2087,11 @@
   {
     "name": "New Flavor",
     "id": "newflavor",
+    "tl": "never"
+  },
+  {
+    "name": "True Flavor",
+    "id": "trueflavor",
     "tl": "never"
   },
   {

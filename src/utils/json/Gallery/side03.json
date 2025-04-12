@@ -1,0 +1,71 @@
+{
+  "path": "side03/",
+  "type": "large",
+  "id": "side03",
+  "title": "Side Story 03",
+  "notice": "Images are compressed. from 85mb to 5.",
+  "content": [
+    {
+      "name": "EventScene_Side_03_01_1",
+      "text": "Side Story 03-1"
+    },
+    {
+      "name": "EventScene_Side_03_01_2",
+      "text": "Side Story 03-2"
+    },
+    {
+      "name": "EventScene_Side_03_01_3",
+      "text": "Side Story 03-3"
+    },
+    {
+      "name": "EventScene_Side_03_02_1",
+      "text": "Side Story 03-4"
+    },
+    {
+      "name": "EventScene_Side_03_02_2",
+      "text": "Side Story 03-5"
+    },    {
+      "name": "EventScene_Side_03_02_3",
+      "text": "Side Story 03-6"
+    },
+    {
+      "name": "EventScene_Side_03_02_4",
+      "text": "Side Story 03-7"
+    },
+    {
+      "name": "EventScene_Side_03_02_5",
+      "text": "Side Story 03-8"
+    },
+    {
+      "name": "EventScene_Side_03_03_1",
+      "text": "Side Story 03-9"
+    },
+    {
+      "name": "EventScene_Side_03_03_2",
+      "text": "Side Story 03-10"
+    },    {
+      "name": "EventScene_Side_03_03_3",
+      "text": "Side Story 03-11"
+    },
+    {
+      "name": "EventScene_Side_03_04_1",
+      "text": "Side Story 03-12"
+    },
+    {
+      "name": "EventScene_Side_03_04_2",
+      "text": "Side Story 03-13"
+    },
+    {
+      "name": "EventScene_Side_03_04_3",
+      "text": "Side Story 03-14"
+    },
+    {
+      "name": "EventScene_Side_03_04_4",
+      "text": "Side Story 03-15"
+    },
+    {
+      "name": "EventScene_Side_03_04_5",
+      "text": "Side Story 03-16"
+    }
+  ]
+}
