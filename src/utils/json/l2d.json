@@ -275,6 +275,21 @@
     "tl": "skin"
   },
   {
+    "name": "Laplace",
+    "id": "c103",
+    "tl": "skin"
+  },
+  {
+    "name": "Drake",
+    "id": "c104",
+    "tl": "skin"
+  },
+  {
+    "name": "Maxwell",
+    "id": "c105",
+    "tl": "skin"
+  },
+  {
     "name": "Crow",
     "id": "c110",
     "tl": "nikke"
@@ -395,9 +410,14 @@
     "tl": "nikke"
   },
   {
-    "name": "Mihara",
+    "name": "Mihara: Bonding Chain",
     "id": "c162",
-    "tl": "npc"
+    "tl": "nikke"
+  },
+  {
+    "name": "Mihara Paint Eater",
+    "id": "c162_01",
+    "tl": "skin"
   },
   {
     "name": "Privaty",
@@ -1180,14 +1200,29 @@
     "tl": "nikke"
   },
   {
+    "name": "Anachiro | Cinderella Beatiful Me",
+    "id": "c511_02",
+    "tl": "nikke"
+  },
+  {
     "name": "Little Mermaid | Siren",
     "id": "c513",
-    "tl": "npc"
+    "tl": "nikke"
+  },
+  {
+    "name": "Little Mermaid | Siren Abyss Flower",
+    "id": "c513_01",
+    "tl": "skin"
   },
   {
     "name": "Grave the Great (GraGre)",
     "id": "c514",
     "tl": "nikke"
+  },
+  {
+    "name": "Grave the Great (GraGre) Beatiful You",
+    "id": "c514_01",
+    "tl": "skin"
   },
   {
     "name": "Bready",
@@ -1228,6 +1263,21 @@
     "name": "Phantom",
     "id": "c580",
     "tl": "nikke"
+  },
+  {
+    "name": "Mori",
+    "id": "c590",
+    "tl": "nikke"
+  },
+  {
+    "name": "Mint",
+    "id": "c600",
+    "tl": "npc"
+  },
+  {
+    "name": "Prika",
+    "id": "c601",
+    "tl": "npc"
   },
   {
     "name": "Makima",
@@ -2092,6 +2142,11 @@
   {
     "name": "True Flavor",
     "id": "trueflavor",
+    "tl": "never"
+  },
+  {
+    "name": "Unbreakable Sphere",
+    "id": "unbreakablesphere",
     "tl": "never"
   },
   {

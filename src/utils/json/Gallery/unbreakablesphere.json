@@ -1,0 +1,125 @@
+{
+  "path": "unbreakablesphere/",
+  "type": "large",
+  "id": "unbreakablesphere",
+  "title": "Unbreakable Sphere",
+  "notice": "Compressed from 140mb total to 7mb",
+  "content": [
+    {
+      "name": "EventScene_unbreakablesphere_01_1",
+      "text": "Unbreakable Sphere 1"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_01_2",
+      "text": "Unbreakable Sphere 2"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_02_1",
+      "text": "Unbreakable Sphere 3"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_02_2",
+      "text": "Unbreakable Sphere 4"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_02_3",
+      "text": "Unbreakable Sphere 5"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_03_1",
+      "text": "Unbreakable Sphere 6"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_03_2",
+      "text": "Unbreakable Sphere 7"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_03_3",
+      "text": "Unbreakable Sphere 8"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_04",
+      "text": "Unbreakable Sphere 9"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_05",
+      "text": "Unbreakable Sphere 10"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_06",
+      "text": "Unbreakable Sphere 11"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_07_1",
+      "text": "Unbreakable Sphere 12"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_07_2",
+      "text": "Unbreakable Sphere 13"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_07_3",
+      "text": "Unbreakable Sphere 14"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_08_1",
+      "text": "Unbreakable Sphere 15"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_08_2",
+      "text": "Unbreakable Sphere 16"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_09",
+      "text": "Unbreakable Sphere 17"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_10_1",
+      "text": "Unbreakable Sphere 18"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_10_2",
+      "text": "Unbreakable Sphere 19"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_11_1",
+      "text": "Unbreakable Sphere 20"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_11_2",
+      "text": "Unbreakable Sphere 21"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_11_3",
+      "text": "Unbreakable Sphere 22"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_11_4",
+      "text": "Unbreakable Sphere 23"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_11_5",
+      "text": "Unbreakable Sphere 24"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_11_6",
+      "text": "Unbreakable Sphere 25"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_12",
+      "text": "Unbreakable Sphere 26"
+    },
+    {
+      "name": "EventScene_unbreakablesphere_13",
+      "text": "Unbreakable Sphere 27"
+    },
+    {
+      "name": "unbreakablesphere_list_part2_nor_bg_01",
+      "text": "Unbreakable Sphere 28"
+    },
+    {
+      "name": "unbreakablesphere_list_part2_hard_list_top",
+      "text": "Unbreakable Sphere 29"
+    }
+  ]
+}

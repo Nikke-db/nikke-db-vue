@@ -65,11 +65,11 @@ const router = createRouter({
       name: 'gallery',
       component: Gallery
     },
-    {
-      path: '/tierlistmaker',
-      name: 'tierlistmaker',
-      component: TierListMaker
-    },
+    // {
+    //   path: '/tierlistmaker',
+    //   name: 'tierlistmaker',
+    //   component: TierListMaker
+    // },
     {
       path: '/notice/HQvqLQAssets',
       name: 'HQvqLQAssets',

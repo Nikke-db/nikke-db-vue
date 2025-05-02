@@ -155,6 +155,7 @@ import story4 from '@/utils/json/Gallery/story4.json'
 import story5 from '@/utils/json/Gallery/story5.json'
 import story6 from '@/utils/json/Gallery/story6.json'
 import story7 from '@/utils/json/Gallery/story7.json'
+import story8 from '@/utils/json/Gallery/story8.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -195,6 +196,7 @@ import fourkoma_zh from '@/utils/json/Gallery/4koma_zh.json'
 import newflavor from '@/utils/json/Gallery/newflavor.json'
 import forrest from '@/utils/json/Gallery/forrest.json'
 import foolburstday from '@/utils/json/Gallery/foolburstday.json'
+import unbreakablesphere from '@/utils/json/Gallery/unbreakablesphere.json'
 
 const market = useMarket()
 
@@ -214,7 +216,8 @@ const buttonListStory = [
   { data: story4 },
   { data: story5 },
   { data: story6 },
-  { data: story7 }
+  { data: story7 },
+  { data: story8 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [
@@ -256,7 +259,8 @@ const buttonListEvents = [
   { data: secondquest },
   { data: forrest },
   { data: newflavor },
-  { data: foolburstday }
+  { data: foolburstday },
+  { data: unbreakablesphere }
 ] as buttonInterface[]
 
 const buttonListOther = [

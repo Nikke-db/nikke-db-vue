@@ -1,16 +1,10 @@
 <template>
   <div style="opacity: 25%;" :class="props.display">
-    <a href='https://www.free-website-hit-counter.com' style="display: flex; flex-direction: column; justify-content: right">
-      <img :src="`https://www.free-website-hit-counter.com/zc.php?d=9&id=${getVisitorId}&s=8`" border='0' alt='Free Website Hit Counter'>
-      <small>
-        <a href='https://www.free-website-hit-counter.com' class="hit-counter" title="Free Website Hit Counter" target="_blank">
-          Free website hit counter
-        </a>
-      </small>
-    </a>
+    <div align=center>
+      <img :src="getVisitorId" alt="visits">
+    </div>
   </div>
 </template>
-
 <script lang="ts" setup>
 
 import { computed } from 'vue'
@@ -20,8 +14,8 @@ const props = defineProps<{
 }>()
 
 const getVisitorId = computed(() => {
-  if (window.location.hostname === 'localhost') return 2875
-  else return 2876
+  if (window.location.hostname === 'localhost') return 'https://visit-counter.vercel.app/counter.png?page=https%3A%2F%2Fnikke-db-legacy.pages.dev&s=40&c=ffffff&bg=000000&no=9&ff=digii&tb=&ta='
+  else return 'https://visit-counter.vercel.app/counter.png?page=https%3A%2F%2Fnikke-db.pages.dev&s=40&c=ffffff&bg=000000&no=9&ff=digii&tb=&ta='
 })
 </script>
 

@@ -24,10 +24,10 @@ export const ROUTES: route2DisplayInterface[] = [
     path: 'gallery',
     text: 'Gallery',
     mobile: true
-  },
-  {
-    path: 'tierlistmaker',
-    text: 'Tier List Maker',
-    mobile: false
   }
+  // {
+  //   path: 'tierlistmaker',
+  //   text: 'Tier List Maker',
+  //   mobile: false
+  // }
 ]
