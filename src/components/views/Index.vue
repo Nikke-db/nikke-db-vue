@@ -8,7 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        guess the visitor counter service got shut down. Going back from scratch with a new one.
+        Late update, was busy on limbus's new canto and clair obscure. sorry to the 9 arcana fans.
       </n-alert>
 
       <n-divider />

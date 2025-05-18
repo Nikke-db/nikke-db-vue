@@ -1270,6 +1270,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Arcana",
+    "id": "c581",
+    "tl": "nikke"
+  },
+  {
     "name": "Mori",
     "id": "c590",
     "tl": "nikke"
@@ -2152,6 +2157,11 @@
   {
     "name": "Unbreakable Sphere",
     "id": "unbreakablesphere",
+    "tl": "never"
+  },
+  {
+    "name": "Arcane Archive",
+    "id": "arcanearchive",
     "tl": "never"
   },
   {
