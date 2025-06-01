@@ -755,6 +755,11 @@
     "tl": "skin"
   },
   {
+    "name": "Blanc No. 77 Batter",
+    "id": "c270_02",
+    "tl": "skin"
+  },
+  {
     "name": "Noir",
     "id": "c271",
     "tl": "nikke"
@@ -762,6 +767,11 @@
   {
     "name": "Noir Black Rabbit",
     "id": "c271_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Noir Baseball Cheerleader",
+    "id": "c271_02",
     "tl": "skin"
   },
   {
@@ -783,6 +793,11 @@
     "name": "Moran",
     "id": "c281",
     "tl": "nikke"
+  },
+  {
+    "name": "Moran Off-Duty Queen",
+    "id": "c281_01",
+    "tl": "skin"
   },
   {
     "name": "Sakura",
@@ -2162,6 +2177,11 @@
   {
     "name": "Arcane Archive",
     "id": "arcanearchive",
+    "tl": "never"
+  },
+  {
+    "name": "Lord For Justice",
+    "id": "lordforjustice",
     "tl": "never"
   },
   {
