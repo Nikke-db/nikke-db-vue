@@ -123,7 +123,6 @@ const customSpineLoader = () => {
   }
 
   const spineCanvasOptions = {
-    skelUrl: market.live2d.customSkel.title,
     atlasUrl: market.live2d.customAtlas.title,
     rawDataURIs: {
       [market.live2d.customSkel.title]: market.live2d.customSkel.URI,
@@ -168,6 +167,8 @@ const customSpineLoader = () => {
   for (let i = 0; i < market.live2d.customPng.length; i++) {
     spineCanvasOptions.rawDataURIs[market.live2d.customPng[i].title] = market.live2d.customPng[i].URI
   }
+  // whether to load json or skel
+  spineCanvasOptions[market.live2d.customLoader === 'skel' ? 'skelUrl' : 'jsonUrl'] = market.live2d.customSkel.title
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
 }

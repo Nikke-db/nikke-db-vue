@@ -2,7 +2,7 @@
 
   <n-upload
       directory-dnd
-      :accept="`.${props.fileType}`"
+      :accept="`${props.accept}`"
       v-model:file-list="fileList"
       @change="(e: any) => handleMultipleListChange(e)"
       @update:file-list="handleFileListChange()"
@@ -30,6 +30,7 @@ const market = useMarket()
 
 const props = withDefaults(defineProps<{
   fileType: 'png' | 'skel' | 'atlas',
+  accept: string,
   multiple: boolean
 }>(), {
   multiple: false
@@ -68,7 +69,16 @@ const handleFileListChange = () => {
 
   const file = fileList.value[0].file!
 
-  if (file.name.endsWith(`.${props.fileType}`)) {
+  const accepts = props.accept.split(',').map((m) => {
+    return m.trim()
+  })
+
+  let correctFormat = false
+  for (const accept of accepts) {
+    if (file.name.endsWith(accept)) correctFormat = true
+  }
+
+  if (correctFormat) {
     switch (props.fileType) {
       case 'atlas': market.live2d.initCustomAtlas(file); break
       case 'png': market.live2d.initCustomPng(file); market.live2d.customPng = []; break

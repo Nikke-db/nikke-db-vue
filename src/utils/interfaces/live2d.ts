@@ -19,3 +19,8 @@ export interface AttachmentItemInterface {
 export interface AttachmentInterface {
   [key: string]: AttachmentItemInterface
 }
+
+export interface RailStyleInterface {
+  focused: boolean,
+  checked: boolean
+}

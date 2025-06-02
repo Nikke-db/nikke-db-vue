@@ -160,4 +160,14 @@ blockquote.twitter-tweet a:focus {
 .wideModalDialogWidth {
   width: 60vw !important;
 }
+
+.coloredSwitch {
+  .n-icon {
+    color: @main-dark-theme;
+  }
+
+  .n-switch__checked, .n-switch__unchecked {
+    color: @main-dark-theme !important;
+  }
+}
 </style>

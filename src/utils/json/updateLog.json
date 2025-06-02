@@ -446,5 +446,9 @@
   {
     "date": "June 1st 2025",
     "update": "Live2d: K blanc noir moran lord for justice"
+  },
+  {
+    "date": "June 2nd 2025",
+    "update": "Live2d: Added liter chinese skin, also added a new toggle for custom spine loader to allow JSON skeleton data"
   }
 ]

@@ -26,9 +26,9 @@
             Nothing will be saved on a server or your localhost.
 
             <div class="fileFlexWrap marginTop">
-              <CustomLoaderItem fileType="skel" />
+              <CustomLoaderItem fileType="skel" accept=".skel, .json, .prefab"/>
 
-              <CustomLoaderItem fileType="png" :multiple="additionalPng"/>
+              <CustomLoaderItem fileType="png" :multiple="additionalPng" accept=".png"/>
 
               <n-button
                 dashed type="info"
@@ -38,7 +38,7 @@
                 <n-icon :component="!additionalPng ? PlusCircleOutlined : MinusCircleOutlined" :size="32"></n-icon>
               </n-button>
 
-              <CustomLoaderItem fileType="atlas" />
+              <CustomLoaderItem fileType="atlas" accept=".atlas"/>
 
             </div>
 
@@ -60,11 +60,32 @@
                 class="marginTop"
             />
 
+            <n-switch
+                class="marginTop coloredSwitch"
+                v-model:value="loader"
+                checked-value="skel"
+                unchecked-value="json"
+                :rail-style="(e: RailStyleInterface) => railstyle(e)"
+            >
+              <template #checked>
+                Use Skel Binary
+              </template>
+              <template #unchecked>
+                Use Json
+              </template>
+              <template #checked-icon>
+                <n-icon :component="Binary" />
+              </template>
+              <template #unchecked-icon>
+                <n-icon :component="Json" />
+              </template>
+            </n-switch>
+
             <n-button
-            @click="triggerCustomLoad()"
-            class="marginTop submit"
-            type="primary"
-            round
+              @click="triggerCustomLoad()"
+              class="marginTop submit"
+              type="primary"
+              round
             >
               Load the custom assets
             </n-button>
@@ -84,10 +105,13 @@
 import { useMarket } from '@/stores/market'
 import { messagesEnum } from '@/utils/enum/globalParams'
 import type { UploadFileInfo } from 'naive-ui'
-import { ref, type Ref, watch } from 'vue'
+import { type CSSProperties, ref, type Ref, watch } from 'vue'
 import { PlusCircleOutlined, MinusCircleOutlined } from '@vicons/antd'
+import { Json } from '@vicons/carbon'
+import { Binary } from '@vicons/tabler'
 import AlphaConverters from '@/components/common/Tools/AlphaConverters.vue'
 import CustomLoaderItem from '@/components/common/Spine/Tools/CustomLoaderItem.vue'
+import type { RailStyleInterface } from '@/utils/interfaces/live2d'
 
 const market = useMarket()
 
@@ -129,6 +153,7 @@ const getFormattedBooleanTemplate = (str: string) => {
 const spineVersion = ref(4.1)
 const premultipliedAlpha = ref(true)
 const defaultIdleAnimation = ref(true)
+const loader = ref<'skel' | 'json'>('skel')
 
 const customSpineModal = ref(false)
 
@@ -148,6 +173,10 @@ watch(defaultIdleAnimation, () => {
   market.live2d.setCustomDefaultAnimationIdle(defaultIdleAnimation.value)
 })
 
+watch(loader, () => {
+  market.live2d.setCustomLoader(loader.value)
+})
+
 const triggerCustomLoad = () => {
   market.live2d.current_pose = 'fb'
   market.live2d.triggerCustomLoad()
@@ -160,6 +189,19 @@ const triggerAdditionalPng = () => {
     additionalPngFileList.value = []
     market.message.getMessage().error(messagesEnum.MESSAGE_UNLOAD)
   }
+}
+
+// font color handled in css .
+const railstyle = ( e: RailStyleInterface ) => {
+  const style: CSSProperties = {}
+
+  if (e.checked) {
+    style.backgroundColor = '#63e2b7'
+  } else {
+    style.backgroundColor = '#ffd700'
+  }
+
+  return style
 }
 </script>
 
@@ -197,4 +239,5 @@ const triggerAdditionalPng = () => {
     }
   }
 }
+
 </style>

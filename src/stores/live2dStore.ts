@@ -50,6 +50,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const customPremultipliedAlpha = ref(true)
   const customLoad = ref(0)
   const customDefaultAnimationIdle = ref(true)
+  const customLoader = ref<'skel' | 'json'>('skel') // whether the load a skel or json
 
   const filter = () => {
     const base_array: live2d_interface[] = l2d
@@ -218,6 +219,11 @@ export const useLive2dStore = defineStore('live2d', () => {
     customDefaultAnimationIdle.value = newBoolean
   }
 
+  const setCustomLoader = (newBoolean: boolean) => {
+    console.log('setting loader')
+    customLoader.value = newBoolean
+  }
+
   const triggerCustomLoad = () => {
     customLoad.value = new Date().getTime()
   }
@@ -273,6 +279,8 @@ export const useLive2dStore = defineStore('live2d', () => {
     setPremultipliedAlpha,
     customDefaultAnimationIdle,
     setCustomDefaultAnimationIdle,
+    customLoader,
+    setCustomLoader,
     customLoad,
     triggerCustomLoad,
     triggerHideUI,
