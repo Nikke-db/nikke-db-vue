@@ -219,8 +219,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     customDefaultAnimationIdle.value = newBoolean
   }
 
-  const setCustomLoader = (newBoolean: boolean) => {
-    console.log('setting loader')
+  const setCustomLoader = (newBoolean: 'skel' | 'json') => {
     customLoader.value = newBoolean
   }
 
