@@ -8,20 +8,15 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        Answer me, Shift-Up. Dare speak your mind - what does Hongyuan need ? A Chinese server ? A Stellar Blade collab ? <br/>
-        Do not allow the judgment of investors to guide your tongue. <br/>
-        I ask you again. What virtue must the game possess ? What does Hongyuan need the most ? <br />
-        To swallow one's words when it is their turn to speak is to hide them. <br/>
-        Bring forth a real answer, do not let it languish behind your tongue. <br/>
-        Shift up. You have abandoned your Way in gacha games. <br/>
-        But this Way of mine, learned beyond Destiny Child's hedges. <br/>
-        ...It taugh me 30 pulls per maintenance, gave me peace. <br/>
-        So what lies within, Shift Up ? What has slumbered, nestled within you all those years ?<br/><br/>
-
-        What Hongyuan needs... Is the same Quality of Lifes as our Chinese fellas, those of which should've been made global for years.
+        SB collab followed by nier rerun collab followed by summer limiteds followed by september collab followed by christmas limiteds.<br/>
+        Good luck with your gems
       </n-alert>
 
       <n-divider />
+
+      <n-alert type="info">
+        SB gallery and event scene will be added at the event's end as usual with 3 weeks long events.
+      </n-alert><n-divider />
 
 
       <n-alert type="error">

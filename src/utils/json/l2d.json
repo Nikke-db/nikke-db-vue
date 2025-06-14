@@ -185,6 +185,11 @@
     "tl": "skin"
   },
   {
+    "name": "Centi Ocean Repair",
+    "id": "c080_02",
+    "tl": "skin"
+  },
+  {
     "name": "Liter",
     "id": "c082",
     "tl": "nikke"
@@ -613,6 +618,11 @@
     "name": "Scarlet",
     "id": "c222",
     "tl": "nikke"
+  },
+  {
+    "name": "Scarlet Racer's High",
+    "id": "c222_01",
+    "tl": "skin"
   },
   {
     "name": "Snow White: Innocent Days",
@@ -1520,6 +1530,51 @@
     "tl": "nikke"
   },
   {
+    "name": "EVE",
+    "id": "c850",
+    "tl": "nikke"
+  },
+  {
+    "name": "EVE Keyhole Dress",
+    "id": "c850_01",
+    "tl": "skin"
+  },
+  {
+    "name": "EVE Neurolink Suit",
+    "id": "c850_02",
+    "tl": "skin"
+  },
+  {
+    "name": "EVE Skin Suit",
+    "id": "c850_03",
+    "tl": "skin"
+  },
+  {
+    "name": "Raven Keyhole Dress",
+    "id": "c851",
+    "tl": "nikke"
+  },
+  {
+    "name": "Raven Planet Diving Suit (6th) V2",
+    "id": "c851_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Raven Midsummer Alice",
+    "id": "c851_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Lily",
+    "id": "c852",
+    "tl": "nikke"
+  },
+  {
+    "name": "Adam",
+    "id": "c853",
+    "tl": "npc"
+  },
+  {
     "name": "Ingrid",
     "id": "c900",
     "tl": "NPCnever"
@@ -1672,6 +1727,11 @@
   {
     "name": "Collection Robot",
     "id": "c931",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Com",
+    "id": "c931_01",
     "tl": "NPCnever"
   },
   {

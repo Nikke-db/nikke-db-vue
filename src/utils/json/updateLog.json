@@ -450,5 +450,9 @@
   {
     "date": "June 2nd 2025",
     "update": "Live2d: Added liter chinese skin, also added a new toggle for custom spine loader to allow JSON skeleton data"
+  },
+  {
+    "date": "June 14th 2025",
+    "update": "Live2d: Updated the name of Privaty (CN) to Privaty Destined in Blue. Added Centi & Scarlet skins. Added Eve, Raven, Lily, Adam, Com and the respective skins."
   }
 ]
