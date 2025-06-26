@@ -112,11 +112,12 @@
             />
           </div>
           <n-h3 style="text-align: center;">
-            <span v-if="data.text.includes('https://twitter.com/')">
+            <span v-if="data.text.includes('https://twitter.com/') || data.text.includes('https://t.bilibili.com/')">
               <n-a :href="data.text" target="_blank">
                 <span v-if="data.text.includes('NIKKE_en')">Original Tweet</span>
                 <span v-else-if="data.text.includes('NIKKE_japan')">元のツイート</span>
                 <span v-else-if="data.text.includes('NIKKE_kr')">원본 트윗</span>
+                <span v-else-if="data.text.includes('bilibili')">查看原动态</span>
               </n-a>
             </span>
             <span v-else>
