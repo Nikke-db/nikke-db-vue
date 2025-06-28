@@ -109,6 +109,7 @@
             :fallback-src="maids"
             style="max-width: 95%; max-height:80vh; object-fit: cover;"
             object-fit='contain'
+            loading="lazy"
             />
           </div>
           <n-h3 style="text-align: center;">
@@ -198,6 +199,7 @@ import newflavor from '@/utils/json/Gallery/newflavor.json'
 import forrest from '@/utils/json/Gallery/forrest.json'
 import foolburstday from '@/utils/json/Gallery/foolburstday.json'
 import unbreakablesphere from '@/utils/json/Gallery/unbreakablesphere.json'
+import memoriesteller from '@/utils/json/Gallery/memoriesteller.json'
 
 const market = useMarket()
 
@@ -261,7 +263,8 @@ const buttonListEvents = [
   { data: forrest },
   { data: newflavor },
   { data: foolburstday },
-  { data: unbreakablesphere }
+  { data: unbreakablesphere },
+  { data: memoriesteller }
 ] as buttonInterface[]
 
 const buttonListOther = [

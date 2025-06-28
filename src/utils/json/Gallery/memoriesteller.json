@@ -1,0 +1,69 @@
+{
+  "path": "memoriesteller/",
+  "type": "large",
+  "id": "memoriesteller",
+  "title": "Memories Teller",
+  "notice": "Compressed from 86.4mb to 5.5mb",
+  "content": [
+    {
+      "name": "EventScene_memoriesteller_01",
+      "text": "Memories Teller 1"
+    },
+    {
+      "name": "EventScene_memoriesteller_02",
+      "text": "Memories Teller 2"
+    },
+    {
+      "name": "EventScene_memoriesteller_03",
+      "text": "Memories Teller 3"
+    },
+    {
+      "name": "EventScene_memoriesteller_04_01",
+      "text": "Memories Teller 4"
+    },
+    {
+      "name": "EventScene_memoriesteller_04_02",
+      "text": "Memories Teller 5"
+    },
+    {
+      "name": "EventScene_memoriesteller_04_03",
+      "text": "Memories Teller 6"
+    },
+    {
+      "name": "EventScene_memoriesteller_04_04",
+      "text": "Memories Teller 7"
+    },
+    {
+      "name": "EventScene_memoriesteller_04_05",
+      "text": "Memories Teller 8"
+    },
+    {
+      "name": "EventScene_memoriesteller_05_01",
+      "text": "Memories Teller 9"
+    },
+    {
+      "name": "EventScene_memoriesteller_05_02",
+      "text": "Memories Teller 10"
+    },
+    {
+      "name": "EventScene_memoriesteller_06",
+      "text": "GYATDAMN GIRL"
+    },
+    {
+      "name": "EventScene_memoriesteller_07",
+      "text": "Memories Teller 12"
+    },
+    {
+      "name": "EventScene_memoriesteller_08",
+      "text": "Memories Teller 13"
+    },
+    {
+      "name": "EventScene_memoriesteller_09_5",
+      "text": "Memories Teller 14"
+    },
+    {
+      "name": "EventScene_memoriesteller_09_5_1",
+      "text": "Memories Teller 15"
+    }
+  ]
+}

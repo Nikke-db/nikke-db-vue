@@ -14,11 +14,6 @@
 
       <n-divider />
 
-      <n-alert type="info">
-        SB gallery and event scene will be added at the event's end as usual with 3 weeks long events.
-      </n-alert><n-divider />
-
-
       <n-alert type="error">
         Now stopping to answer DMs asking how to datamine or extracting specific files for your own use.<br/>
         Please only come for feedback about the website.

@@ -1950,6 +1950,11 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Hermin",
+    "id": "c998",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Blue Water Island",
     "id": "bluewaterisland",
     "tl": "never"
@@ -2247,6 +2252,16 @@
   {
     "name": "Lord For Justice",
     "id": "lordforjustice",
+    "tl": "never"
+  },
+  {
+    "name": "Memories Teller 1",
+    "id": "memoriesteller_1",
+    "tl": "never"
+  },
+  {
+    "name": "Memories Teller 2",
+    "id": "memoriesteller_2",
     "tl": "never"
   },
   {

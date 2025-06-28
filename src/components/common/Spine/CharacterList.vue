@@ -19,7 +19,7 @@
           @click="changeSpine(character)"
         >
           <template #prefix>
-            <img :src="getSiIcon(character.id)" class="si_img" />
+            <img :src="getSiIcon(character.id)" class="si_img" loading="lazy"/>
           </template>
 
           <n-h5>{{ character.name }}</n-h5>
