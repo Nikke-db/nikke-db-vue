@@ -445,7 +445,7 @@
     "tl": "skin"
   },
   {
-    "name": "Privaty (CN)",
+    "name": "Privaty Destined in Blue",
     "id": "c170_03",
     "tl": "skin"
   },
@@ -1275,6 +1275,21 @@
     "tl": "nikke"
   },
   {
+    "name": "Sky",
+    "id": "c530",
+    "tl": "npc"
+  },
+  {
+    "name": "Cielo",
+    "id": "c531",
+    "tl": "npc"
+  },
+  {
+    "name": "Sora",
+    "id": "c532",
+    "tl": "nikke"
+  },
+  {
     "name": "Bay",
     "id": "c550",
     "tl": "nikke"
@@ -1380,6 +1395,11 @@
     "tl": "skin"
   },
   {
+    "name": "2B Unofficial Waterfront Gear 1",
+    "id": "c810_03",
+    "tl": "skin"
+  },
+  {
     "name": "A2",
     "id": "c811",
     "tl": "nikke"
@@ -1392,6 +1412,11 @@
   {
     "name": "A2 YoRHa Uniform Prototype",
     "id": "c811_02",
+    "tl": "skin"
+  },
+  {
+    "name": "A2 Unofficial Waterfront Gear Prototype",
+    "id": "c811_03",
     "tl": "skin"
   },
   {
@@ -2272,6 +2297,11 @@
   {
     "name": "Memories Teller 2",
     "id": "memoriesteller_2",
+    "tl": "never"
+  },
+  {
+    "name": "Over the Horizon",
+    "id": "overthehorizon",
     "tl": "never"
   },
   {

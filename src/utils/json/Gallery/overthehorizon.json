@@ -1,0 +1,20 @@
+{
+  "path": "overthehorizon/",
+  "type": "large",
+  "id": "overthehorizon",
+  "title": "Over the Horizon",
+  "content": [
+    {
+      "name": "EventTitle_overthehorizon_01",
+      "text": "Over the Horizon 1"
+    },
+    {
+      "name": "overthehorizon_list_nor_top",
+      "text": "Over the Horizon 2"
+    },
+    {
+      "name": "overthehorizon_list_hard_top",
+      "text": "Over the Horizon 3"
+    }
+  ]
+}
