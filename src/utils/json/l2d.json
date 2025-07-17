@@ -55,6 +55,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Rapi: Red Hood Red Flavor",
+    "id": "c016_01",
+    "tl": "skin"
+  },
+  {
     "name": "Delta",
     "id": "c020",
     "tl": "nikke"
@@ -520,6 +525,11 @@
     "tl": "skin"
   },
   {
+    "name": "Tove Sunblaze",
+    "id": "c192_02",
+    "tl": "skin"
+  },
+  {
     "name": "Neve",
     "id": "c193",
     "tl": "nikke"
@@ -672,6 +682,11 @@
   {
     "name": "Dorothy",
     "id": "c233",
+    "tl": "nikke"
+  },
+  {
+    "name": "Dorothy: Serendipity",
+    "id": "c234",
     "tl": "nikke"
   },
   {
@@ -1223,6 +1238,11 @@
     "name": "Trony Sweet Step",
     "id": "c501_01",
     "tl": "skin"
+  },
+  {
+    "name": "Elegg: Boom and Shock",
+    "id": "c502",
+    "tl": "nikke"
   },
   {
     "name": "Grave",
@@ -1860,17 +1880,17 @@
     "tl": "NPCnever"
   },
   {
-    "name": "Ghost: Lumi",
+    "name": "Ghost - Lumi",
     "id": "c967",
     "tl": "NPCnever"
   },
   {
-    "name": "Ghost: Lua",
+    "name": "Ghost - Lua",
     "id": "c968",
     "tl": "NPCnever"
   },
   {
-    "name": "Ghost: Lena",
+    "name": "Ghost - Lena",
     "id": "c969",
     "tl": "NPCnever"
   },
@@ -1987,6 +2007,46 @@
   {
     "name": "Hermin",
     "id": "c998",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Alfred",
+    "id": "c9000",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Neaty",
+    "id": "c9000_01",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Sizzly",
+    "id": "c9000_02",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Fixy",
+    "id": "c9000_03",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Detaily",
+    "id": "c9000_05",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Sellsy",
+    "id": "c9000_06",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost",
+    "id": "c9000_07",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Ghost - Pinne",
+    "id": "c9001",
     "tl": "NPCnever"
   },
   {

@@ -8,8 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        SB collab followed by nier rerun collab followed by summer limiteds followed by september collab followed by christmas limiteds.<br/>
-        Good luck with your gems
+        You know the drill, summer event scene and gallery when hardmode is done to avoid spoilers.
       </n-alert>
 
       <n-divider />
