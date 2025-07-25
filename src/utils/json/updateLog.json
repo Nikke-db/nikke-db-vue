@@ -472,15 +472,27 @@
     "update": "Live2d: Added Dorothy and Modernia skins exclusive to Chinese server"
   },
   {
-    "date": "July 5th",
+    "date": "July 5th 2025",
     "update": "Live2d: Apparently on June 14th I did not rename privaty's cn skin, so I 've done it this time for sure. Added Sora, Sky, Cielo, 2b'skin a2'skin. Added Over the Horizon scene"
   },
   {
-    "date": "July 5th",
+    "date": "July 5th 2025",
     "update": "Gallery: Added Over the Horizon gallery"
   },
   {
-    "date": "July 17th",
+    "date": "July 17th 2025",
     "update": "Live2d : Added Tove and rapipi skins, added summer elegg and dorothy. Added the 8 ghosts from summer event"
+  },
+  {
+    "date": "July 25th 2025",
+    "update": "Live2d : Added the 4 new favorites with merged animation. Fixed by Bingle. Shift up is still letting the intern work on those."
+  },
+  {
+    "date": "July 25th 2025",
+    "update": "Live2d : Fixed an issue in the layer editor where occasionnaly some layers would not appear in the list and couldn't be edited. This was most recently discovered with Elegg Boom and Shock because 90% of her bra was one of those layers. Fixed for live edition, export and import features."
+  },
+  {
+    "date": "July 25th 2025",
+    "update": "Live2d : Finally decided to update the Background Image Pack on mega, check it out ! There's about 150 new images and the old ones have a higher quality than before."
   }
 ]

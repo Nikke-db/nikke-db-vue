@@ -2535,6 +2535,11 @@
     "tl": "never"
   },
   {
+    "name": "Favorite: Poli",
+    "id": "favorite_c030",
+    "tl": "never"
+  },
+  {
     "name": "Favorite: Miranda",
     "id": "favorite_c032",
     "tl": "never"
@@ -2570,6 +2575,16 @@
     "tl": "never"
   },
   {
+    "name": "Favorite: Julia",
+    "id": "favorite_c150",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Tove",
+    "id": "favorite_c192",
+    "tl": "never"
+  },
+  {
     "name": "Favorite: Exia",
     "id": "favorite_c210",
     "tl": "never"
@@ -2577,6 +2592,11 @@
   {
     "name": "Favorite: Helm",
     "id": "favorite_c352",
+    "tl": "never"
+  },
+  {
+    "name": "Favorite: Bay",
+    "id": "favorite_c550",
     "tl": "never"
   },
   {
