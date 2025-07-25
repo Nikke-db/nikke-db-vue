@@ -16,6 +16,7 @@ const emits = defineEmits(['updateAttachment'])
 
 const props = defineProps<{
   index: number,
+  subIndex: number,
   item: AttachmentItemInterface,
   searchQuery: string
 }>()

@@ -185,12 +185,13 @@ watch(() => market.live2d.finishedLoading, () => {
     market.live2d.attachments.forEach((a) => {
       const keys = Object.keys(a)
       if (keys.length > 0) {
-        const key = keys[0]
-        const keyInContent = getKeyOfContentByString(content, key)
+        keys.forEach((k) => {
+          const keyInContent = getKeyOfContentByString(content, k)
 
-        if (keyInContent === undefined) return
+          if (keyInContent === undefined) return
 
-        a[key].color = { ...keyInContent }
+          a[k].color = { ...keyInContent }
+        })
       }
 
     })

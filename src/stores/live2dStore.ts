@@ -6,7 +6,7 @@ import l2d from '@/utils/json/l2d.json'
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
   const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
-  const current_id = ref('c010') as Ref<string>
+  const current_id = ref('c502') as Ref<string>
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover' | 'temp'>
   const resetPlacement = ref(0)
   const isExportingAnimation = ref(false)

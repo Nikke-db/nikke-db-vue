@@ -14,13 +14,6 @@ export interface layerEditorImportableInterface {
 
 }
 
-// TODO : export this and replace the one in AttachmentEditor.vue
-const grabKey = (item: AttachmentInterface) => {
-  const keys = Object.keys(item)
-  return keys[0]
-}
-
-
 export const getExportableContent = (cid: string, pose: 'fb' | 'cover' | 'aim' | 'temp', layers: AttachmentInterface[]) => {
   const content: layerEditorImportableInterface = {
     author: 'Default',
@@ -35,8 +28,11 @@ export const getExportableContent = (cid: string, pose: 'fb' | 'cover' | 'aim' |
   layers.forEach((l: AttachmentInterface) => {
     if (l === undefined) content.layers.push({ 'undefined' : 'undefined' })
     else {
-      content.layers.push({
-        [grabKey(l)]: { ...l[grabKey(l)].color }
+      const keys = Object.keys(l)
+      keys.forEach((k) => {
+        content.layers.push({
+          [k]: { ...l[k].color }
+        })
       })
     }
   })
