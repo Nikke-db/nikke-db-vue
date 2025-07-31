@@ -1,0 +1,48 @@
+{
+  "path": "bfgcleanup/",
+  "type": "large",
+  "id": "bfgcleanup",
+  "title": "BFG Clean UP !",
+  "content": [
+    {
+      "name": "clear_scene_1",
+      "text": "Door Should Be Smashed With an Ax"
+    },
+    {
+      "name": "clear_scene_2",
+      "text": "The Clown Is Always Smiling"
+    },
+    {
+      "name": "clear_scene_3",
+      "text": "The Horror Under the Covers"
+    },
+    {
+      "name": "clear_scene_4",
+      "text": "Monsters of Silent Hill"
+    },
+    {
+      "name": "clear_scene_5",
+      "text": "Scream and Shout!"
+    },
+    {
+      "name": "clear_scene_skill_1",
+      "text": "Body Burster!"
+    },
+    {
+      "name": "clear_scene_skill_2",
+      "text": "It's Freezing in the Well"
+    },
+    {
+      "name": "bg_basic",
+      "text": "Boom and Shock"
+    },
+    {
+      "name": "bg_middle",
+      "text": "Red Flavor"
+    },
+    {
+      "name": "bg_high",
+      "text": "Serendipity"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "path": "boomtheghost/",
+  "type": "large",
+  "id": "boomtheghost",
+  "title": "Boom the Ghost",
+  "notice": "Compressed from 60mb to 6mb",
+  "content": [
+    {
+      "name": "EventScene_boomtheghost_01_1",
+      "text": "Boom the Ghost 1"
+    },
+    {
+      "name": "EventScene_boomtheghost_01_2",
+      "text": "Boom the Ghost 2"
+    },
+    {
+      "name": "EventScene_boomtheghost_01_3",
+      "text": "Boom the Ghost 3"
+    },
+    {
+      "name": "EventScene_boomtheghost_01_4",
+      "text": "Boom the Ghost 4"
+    },
+
+    {
+      "name": "EventScene_boomtheghost_02_1",
+      "text": "Boom the Ghost 5"
+    },
+    {
+      "name": "EventScene_boomtheghost_02_2",
+      "text": "Boom the Ghost 6"
+    },
+    {
+      "name": "EventScene_boomtheghost_02_2",
+      "text": "Boom the Ghost 7"
+    },
+    {
+      "name": "EventScene_boomtheghost_03_2",
+      "text": "Boom the Ghost 8"
+    },
+    {
+      "name": "EventScene_boomtheghost_04",
+      "text": "Boom the Ghost 9"
+    },
+    {
+      "name": "EventScene_boomtheghost_05_1",
+      "text": "Boom the Ghost 10"
+    },
+    {
+      "name": "EventScene_boomtheghost_05_2",
+      "text": "Boom the Ghost 11"
+    },
+    {
+      "name": "EventScene_boomtheghost_06_1",
+      "text": "Boom the Ghost 12"
+    },
+    {
+      "name": "EventScene_boomtheghost_06_2",
+      "text": "Boom the Ghost 13"
+    },
+    {
+      "name": "EventScene_boomtheghost_07",
+      "text": "Boom the Ghost 14"
+    },
+    {
+      "name": "EventScene_boomtheghost_08",
+      "text": "Boom the Ghost 15"
+    },
+    {
+      "name": "boomtheghost_main_part2_ex",
+      "text": "Boom the Ghost 16"
+    },
+    {
+      "name": "boomtheghost_opening_fullshot",
+      "text": "Boom the Ghost 17"
+    },
+    {
+      "name": "boomtheghost_opening_char_elegg",
+      "text": "Boom the Ghost 18"
+    },
+    {
+      "name": "boomtheghost_attendance_chr",
+      "text": "Boom the Ghost 19"
+    },
+    {
+      "name": "boomtheghost_main_part1_ghost_bg_01",
+      "text": "Boom the Ghost 20"
+    }
+  ]
+}

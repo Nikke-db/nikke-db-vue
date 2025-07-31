@@ -8,7 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        You know the drill, summer event scene and gallery when hardmode is done to avoid spoilers.
+        Summer galleries added. Time to enjoy the Time Ripper intervallo once more.
       </n-alert>
 
       <n-divider />

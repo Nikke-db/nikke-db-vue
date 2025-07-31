@@ -201,6 +201,8 @@ import foolburstday from '@/utils/json/Gallery/foolburstday.json'
 import unbreakablesphere from '@/utils/json/Gallery/unbreakablesphere.json'
 import memoriesteller from '@/utils/json/Gallery/memoriesteller.json'
 import overthehorizon from '@/utils/json/Gallery/overthehorizon.json'
+import boomtheghost from '@/utils/json/Gallery/boomtheghost.json'
+import bfgcleanup from '@/utils/json/Gallery/bfgcleanup.json'
 
 const market = useMarket()
 
@@ -266,7 +268,8 @@ const buttonListEvents = [
   { data: foolburstday },
   { data: unbreakablesphere },
   { data: memoriesteller },
-  { data: overthehorizon }
+  { data: overthehorizon },
+  { data: boomtheghost }
 ] as buttonInterface[]
 
 const buttonListOther = [
@@ -274,7 +277,8 @@ const buttonListOther = [
   { data: bonds },
   { data: bbqmaster },
   { data: voltroad },
-  { data: dragondungeonrun }
+  { data: dragondungeonrun },
+  { data: bfgcleanup }
 ] as buttonInterface[]
 
 const buttonListCommunity = [
