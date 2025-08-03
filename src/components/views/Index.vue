@@ -8,7 +8,9 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        Summer galleries added. Time to enjoy the Time Ripper intervallo once more.
+        Added a small preview feature for the layer editor ! When hovering the Eye icon, the dedicated layer on the Nikke will start blinking Red, Green and Blue. <br/>
+        This feature was made as a Qol request from this <n-a href="https://github.com/Nikke-db/nikke-db-vue/issues/53">GitHub link</n-a>. <br/>
+        The code have been written to handle several different preview modes ( blinking, flat color, other possibilities ). As such for any feedback, ideas or bug please refer to the github linked to contact me.
       </n-alert>
 
       <n-divider />

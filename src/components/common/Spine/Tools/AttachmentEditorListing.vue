@@ -8,7 +8,9 @@
               :item="item[subitem]"
               :index="index"
               :subIndex="subindex"
-              @updateAttachment="(key: string, index: number) => updateAttachments(key, index)"
+              @updateAttachment="(key: string, i: number) => updateAttachments(key, i)"
+              @triggerpreview="(key: string, i: number) => triggerPreview(key, i)"
+              @stoppreview="(key: string, i: number) => stopPreview(key, i)"
               :searchQuery="props.searchQuery"
               :colors="props.colors"
           />
@@ -39,6 +41,24 @@ const props = defineProps<{
 const updateAttachments = (key: string, index: number) => {
   market.live2d.attachments[index][key].color = props.colors
   market.live2d.triggerApplyAttachments()
+}
+
+const triggerPreview = (key: string, index: number) => {
+  market.live2d.layerEditorPreviewObj = {
+    index: index,
+    key: key,
+    preview: true
+  }
+  market.live2d.triggerLayerPreviewMode()
+}
+
+const stopPreview = (key: string, index: number) => {
+  market.live2d.layerEditorPreviewObj = {
+    index: index,
+    key: key,
+    preview: false
+  }
+  market.live2d.triggerLayerPreviewMode()
 }
 
 </script>

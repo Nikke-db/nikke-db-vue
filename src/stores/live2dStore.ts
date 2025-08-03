@@ -25,6 +25,12 @@ export const useLive2dStore = defineStore('live2d', () => {
   const selectAttachments = ref(0)
   const canLoadSpine = ref(true)
   const finishedLoading = ref(0)
+  const layerPreviewMode = ref(0)
+  const layerEditorPreviewObj = ref({
+    index: 0,
+    key: '',
+    preview : false // false = stop preview, true = previewing
+  })
 
   const fr = new FileReader()
 
@@ -256,6 +262,10 @@ export const useLive2dStore = defineStore('live2d', () => {
     finishedLoading.value = new Date().getTime()
   }
 
+  const triggerLayerPreviewMode = () => {
+    layerPreviewMode.value = new Date().getTime()
+  }
+
   return {
     filtered_l2d_Array,
     current_id,
@@ -304,6 +314,9 @@ export const useLive2dStore = defineStore('live2d', () => {
     selectionAttachments,
     canLoadSpine,
     finishedLoading,
-    triggerFinishedLoading
+    triggerFinishedLoading,
+    layerEditorPreviewObj,
+    layerPreviewMode,
+    triggerLayerPreviewMode
   }
 })

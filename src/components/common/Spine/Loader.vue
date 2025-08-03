@@ -15,6 +15,7 @@ import spine40 from '@/utils/spine/spine-player4.0'
 import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
+import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
 
 let canvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
@@ -609,6 +610,54 @@ watch(() => market.live2d.isYapping, (value) => {
 watch(() => market.live2d.applyAttachments, () => {
   spineCanvas.animationState.data.skeletonData.defaultSkin.attachments = [ ...market.live2d.attachments ]
 }, { deep: true })
+
+
+// preview layer
+// if we ARE previewing :
+// first off we find the requested layer
+// afterward we backup it's color data
+// then we apply the preview
+// once we stop previewing we apply the backedup color back to the layer
+let backupColors = {
+  a: 1,
+  b: 1,
+  g: 1,
+  r: 1
+} as AttachmentItemColorInterface
+let intervalid = null as null | number
+
+watch(() => market.live2d.layerPreviewMode, () => {
+  if (market.live2d.layerEditorPreviewObj.preview) {
+    backupColors = spineCanvas.animationState.data.skeletonData.defaultSkin.attachments[market.live2d.layerEditorPreviewObj.index][market.live2d.layerEditorPreviewObj.key].color
+
+    const PREVIEW_MODE = 1
+
+    if (PREVIEW_MODE === 1) {
+      triggerPreview1()
+    }
+  } else {
+    if (intervalid) {
+      clearInterval(intervalid)
+    }
+    spineCanvas.animationState.data.skeletonData.defaultSkin.attachments[market.live2d.layerEditorPreviewObj.index][market.live2d.layerEditorPreviewObj.key].color = backupColors
+  }
+})
+
+const triggerPreview1 = () => {
+  let toShow = 'r'
+
+  intervalid = setInterval(() => {
+    const colors = {
+      r: toShow === 'r' ? 2 : 0,
+      g: toShow === 'g' ? 2 : 0,
+      b: toShow === 'b' ? 2 : 0,
+      a: 1
+    }
+    toShow = toShow === 'r' ? 'g' : toShow === 'g' ? 'b' : 'r'
+    spineCanvas.animationState.data.skeletonData.defaultSkin.attachments[market.live2d.layerEditorPreviewObj.index][market.live2d.layerEditorPreviewObj.key].color = colors
+
+  }, 250) as any
+}
 
 </script>
 
