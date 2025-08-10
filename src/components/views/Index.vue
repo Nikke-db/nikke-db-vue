@@ -8,6 +8,14 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
+        Absolute gallery when the event is over to avoid part 2 spoilers. <br />
+        Chapter 39 and 40 galleries when I'm done with them ( should be around the 16th/17th <br />
+        If there are new l2d characters in chapter 40 I'll add them alongside the gallery. I've only cleared ch39 for now.
+      </n-alert>
+
+      <n-divider />
+
+      <n-alert type="info">
         Added a small preview feature for the layer editor ! When hovering the Eye icon, the dedicated layer on the Nikke will start blinking Red, Green and Blue. <br/>
         This feature was made as a Qol request from this <n-a href="https://github.com/Nikke-db/nikke-db-vue/issues/53">GitHub link</n-a>. <br/>
         The code have been written to handle several different preview modes ( blinking, flat color, other possibilities ). As such for any feedback, ideas or bug please refer to the github linked to contact me.

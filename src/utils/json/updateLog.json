@@ -506,5 +506,13 @@
   {
     "date": "August 3rd 2025",
     "update": "Live2d: Added a preview mode to the layer editor. The layer will blink to show which is going to be modified without testing using the sliders. The Eye icon need to be hovered."
+  },
+  {
+    "date": "August 10th 2025",
+    "update": "Live2d: Updated the Eunhwa, Vesti, Emma tactical upgrades. Added Eunhwa TU skin, Julia summer skin, Exia bunny skin. Added Endless & Eternity. Added Raptures from the Absolute event. Added Nayuta"
+  },
+  {
+    "date": "August 10th 2025",
+    "update": "Gallery: Fixed Boom the Ghost 7."
   }
 ]

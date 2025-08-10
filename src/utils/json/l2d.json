@@ -245,19 +245,24 @@
     "tl": "nikke"
   },
   {
-    "name": "Emma",
+    "name": "Emma: Tactical Upgrade",
     "id": "c093",
-    "tl": "npc"
+    "tl": "nikke"
   },
   {
-    "name": "Vesti",
+    "name": "Vesti: Tactical Upgrade",
     "id": "c094",
-    "tl": "npc"
+    "tl": "nikke"
   },
   {
-    "name": "Eunhwa",
+    "name": "Eunhwa: Tactical Upgrade",
     "id": "c095",
-    "tl": "npc"
+    "tl": "nikke"
+  },
+  {
+    "name": "Eunhwa: Tactical Upgrade Day Off",
+    "id": "c095_01",
+    "tl": "skin"
   },
   {
     "name": "Laplace",
@@ -407,6 +412,11 @@
   {
     "name": "Julia Mild Nocturne",
     "id": "c150_01",
+    "tl": "skin"
+  },
+  {
+    "name": "Julia Summer Romance",
+    "id": "c150_02",
     "tl": "skin"
   },
   {
@@ -592,6 +602,11 @@
   {
     "name": "Exia Gamer",
     "id": "c210_02",
+    "tl": "skin"
+  },
+  {
+    "name": "Exia Hacker Rabbit",
+    "id": "c210_03",
     "tl": "skin"
   },
   {
@@ -1033,6 +1048,16 @@
     "name": "T.A.L.O.S (Kilo)",
     "id": "c361",
     "tl": "nikke"
+  },
+  {
+    "name": "Eternity",
+    "id": "c370",
+    "tl": "npc"
+  },
+  {
+    "name": "Endless",
+    "id": "c371",
+    "tl": "npc"
   },
   {
     "name": "Nero",
@@ -2047,6 +2072,21 @@
   {
     "name": "Ghost - Pinne",
     "id": "c9001",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Rapture",
+    "id": "c9005",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Rapture",
+    "id": "c9005_01",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Nayuta",
+    "id": "c9008",
     "tl": "NPCnever"
   },
   {
