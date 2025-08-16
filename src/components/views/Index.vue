@@ -8,9 +8,7 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        Absolute gallery when the event is over to avoid part 2 spoilers. <br />
-        Chapter 39 and 40 galleries when I'm done with them ( should be around the 16th/17th <br />
-        If there are new l2d characters in chapter 40 I'll add them alongside the gallery. I've only cleared ch39 for now.
+        Absolute gallery when the event is over to avoid part 2 spoilers.
       </n-alert>
 
       <n-divider />

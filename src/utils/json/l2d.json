@@ -670,6 +670,11 @@
     "tl": "nikke"
   },
   {
+    "name": "Pinoccio",
+    "id": "c227",
+    "tl": "npc"
+  },
+  {
     "name": "Harran",
     "id": "c230",
     "tl": "nikke"
@@ -1880,6 +1885,26 @@
     "tl": "NPCnever"
   },
   {
+    "name": "Faceless NPC 10",
+    "id": "c947",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Faceless NPC 11",
+    "id": "c948",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Faceless NPC 12",
+    "id": "c951",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Faceless NPC 13",
+    "id": "c952",
+    "tl": "NPCnever"
+  },
+  {
     "name": "Freesia",
     "id": "c960",
     "tl": "NPCnever"
@@ -2072,6 +2097,11 @@
   {
     "name": "Ghost - Pinne",
     "id": "c9001",
+    "tl": "NPCnever"
+  },
+  {
+    "name": "Mrs. Miss",
+    "id": "c9003",
     "tl": "NPCnever"
   },
   {
@@ -2407,6 +2437,11 @@
   {
     "name": "Boom the Ghost",
     "id": "boomtheghost",
+    "tl": "never"
+  },
+  {
+    "name": "Absolute",
+    "id": "absolute",
     "tl": "never"
   },
   {
