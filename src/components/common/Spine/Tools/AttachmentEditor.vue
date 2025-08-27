@@ -12,7 +12,7 @@
         default-width="500"
         :mask-closable="false"
         :show-mask="false">
-      <n-drawer-content closable :native-scrollbar="false">
+      <n-drawer-content closable :native-scrollbar="false" resizable>
 
         <template #header>
           Layer Editor <br/>

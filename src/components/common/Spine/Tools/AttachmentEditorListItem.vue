@@ -7,7 +7,7 @@
           :size="16"
           style="cursor: pointer;"
           @mouseover="previewhovering()"
-          @mouseleave="previerout()"
+          @mouseleave="previewout()"
       />
     </div>
     <n-checkbox v-model:checked="isAttachmentChecked">
@@ -77,7 +77,7 @@ const previewing = ref(false)
 const previewhovering = () => {
   previewing.value = true
 }
-const previerout = () => {
+const previewout = () => {
   previewing.value = false
 }
 

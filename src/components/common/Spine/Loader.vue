@@ -15,7 +15,7 @@ import spine40 from '@/utils/spine/spine-player4.0'
 import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
-import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
+import type { AttachmentInterface, AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
 
 let canvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
@@ -94,6 +94,21 @@ const spineLoader = () => {
         viewport: spineViewport,
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
+
+          spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
+            const keys = Object.keys(a)
+            if (keys !== null && keys !== undefined && keys.length > 0) {
+              keys.forEach((k: string) => {
+                a[k as any].color = {
+                  r: 1,
+                  g: 1,
+                  b: 1,
+                  a: 1
+                }
+              })
+            }
+          })
+
           spinePlayer = player
           market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
           market.live2d.triggerFinishedLoading()
@@ -618,17 +633,21 @@ watch(() => market.live2d.applyAttachments, () => {
 // afterward we backup it's color data
 // then we apply the preview
 // once we stop previewing we apply the backedup color back to the layer
-let backupColors = {
-  a: 1,
-  b: 1,
-  g: 1,
-  r: 1
-} as AttachmentItemColorInterface
+let allColorsBackedUp = new Map() as Map<string, AttachmentItemColorInterface>
 let intervalid = null as null | number
+
 
 watch(() => market.live2d.layerPreviewMode, () => {
   if (market.live2d.layerEditorPreviewObj.preview) {
-    backupColors = spineCanvas.animationState.data.skeletonData.defaultSkin.attachments[market.live2d.layerEditorPreviewObj.index][market.live2d.layerEditorPreviewObj.key].color
+
+    spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
+      const keys = Object.keys(a)
+      if (keys !== null && keys !== undefined && keys.length > 0) {
+        keys.forEach((k: string) => {
+          allColorsBackedUp.set(k, JSON.parse(JSON.stringify(a[k as any].color)))
+        })
+      }
+    })
 
     const PREVIEW_MODE = 1
 
@@ -639,7 +658,16 @@ watch(() => market.live2d.layerPreviewMode, () => {
     if (intervalid) {
       clearInterval(intervalid)
     }
-    spineCanvas.animationState.data.skeletonData.defaultSkin.attachments[market.live2d.layerEditorPreviewObj.index][market.live2d.layerEditorPreviewObj.key].color = backupColors
+
+    spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
+      const keys = Object.keys(a)
+      if (keys !== null && keys !== undefined && keys.length > 0) {
+        keys.forEach((k: string) => {
+          a[k as any].color = allColorsBackedUp.get(k)
+        })
+      }
+    })
+
   }
 })
 
