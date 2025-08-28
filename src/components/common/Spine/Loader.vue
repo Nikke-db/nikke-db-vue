@@ -96,16 +96,18 @@ const spineLoader = () => {
         success: (player: any) => {
 
           spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
-            const keys = Object.keys(a)
-            if (keys !== null && keys !== undefined && keys.length > 0) {
-              keys.forEach((k: string) => {
-                a[k as any].color = {
-                  r: 1,
-                  g: 1,
-                  b: 1,
-                  a: 1
-                }
-              })
+            if (a) {
+              const keys = Object.keys(a)
+              if (keys !== null && keys !== undefined && keys.length > 0) {
+                keys.forEach((k: string) => {
+                  a[k as any].color = {
+                    r: 1,
+                    g: 1,
+                    b: 1,
+                    a: 1
+                  }
+                })
+              }
             }
           })
 
@@ -641,11 +643,13 @@ watch(() => market.live2d.layerPreviewMode, () => {
   if (market.live2d.layerEditorPreviewObj.preview) {
 
     spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
-      const keys = Object.keys(a)
-      if (keys !== null && keys !== undefined && keys.length > 0) {
-        keys.forEach((k: string) => {
-          allColorsBackedUp.set(k, JSON.parse(JSON.stringify(a[k as any].color)))
-        })
+      if (a) {
+        const keys = Object.keys(a)
+        if (keys !== null && keys !== undefined && keys.length > 0) {
+          keys.forEach((k: string) => {
+            allColorsBackedUp.set(k, JSON.parse(JSON.stringify(a[k as any].color)))
+          })
+        }
       }
     })
 
@@ -660,11 +664,13 @@ watch(() => market.live2d.layerPreviewMode, () => {
     }
 
     spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
-      const keys = Object.keys(a)
-      if (keys !== null && keys !== undefined && keys.length > 0) {
-        keys.forEach((k: string) => {
-          a[k as any].color = allColorsBackedUp.get(k)
-        })
+      if (a) {
+        const keys = Object.keys(a)
+        if (keys !== null && keys !== undefined && keys.length > 0) {
+          keys.forEach((k: string) => {
+            a[k as any].color = allColorsBackedUp.get(k)
+          })
+        }
       }
     })
 
