@@ -8,15 +8,8 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info">
-        Absolute gallery when the event is over to avoid part 2 spoilers.
-      </n-alert>
-
-      <n-divider />
-
-      <n-alert type="info">
-        Added a small preview feature for the layer editor ! When hovering the Eye icon, the dedicated layer on the Nikke will start blinking Red, Green and Blue. <br/>
-        This feature was made as a Qol request from this <n-a href="https://github.com/Nikke-db/nikke-db-vue/issues/53">GitHub link</n-a>. <br/>
-        The code have been written to handle several different preview modes ( blinking, flat color, other possibilities ). As such for any feedback, ideas or bug please refer to the github linked to contact me.
+        Absolute gallery when the event is over to avoid part 2 spoilers.<br/>
+        I forgot about absolute stuff so I'll do it alongside the bunnies gallery. Velvet when she is visible in game outside of CGs. y'all know I can't leak characters
       </n-alert>
 
       <n-divider />
