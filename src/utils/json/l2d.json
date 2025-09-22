@@ -2470,6 +2470,11 @@
     "tl": "never"
   },
   {
+    "name": "Coins In Rush",
+    "id": "coinsinrush",
+    "tl": "never"
+  },
+  {
     "name": "Smol Ade",
     "id": "smol_ade",
     "tl": "never"

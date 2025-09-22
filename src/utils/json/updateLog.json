@@ -530,5 +530,17 @@
   {
     "date": "September 14th 2025",
     "update": "Live2d: Added Velvet"
+  },
+  {
+    "date": "September 22nd 2025",
+    "update": "Fluff: Automated the process of building gallery json. Also will be using my own compressor that I've coded while developping Limbus DB ages ago. Kind of a paused project from too much work and lack of user interest, but there's some useful tools in it. Who knows maybe I'll use the multi lingual system I've made for it for nikke one day."
+  },
+  {
+    "date": "September 22nd 2025",
+    "update": "Gallery: Added the ABSOLUTE gallery, Coins In Rush album, Coins In Rush gallery, Made In Rush gallery"
+  },
+  {
+    "date": "September 22nd 2025",
+    "update": "Live2d: Added the ABSOLUTE and Coins In Rush event scenes"
   }
 ]

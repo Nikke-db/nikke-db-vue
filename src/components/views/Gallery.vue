@@ -74,7 +74,7 @@
         <n-carousel-item v-for="data in carouselData.content" :key="data.name">
           <div v-if="carouselData.type === 'img'">
             <n-image
-              :src="globalParams.GALLERY + carouselData.path + data.name +'.png'"
+              :src="globalParams.GALLERY + carouselData.path + data.name + (data.name.includes('.') ? '' : '.png')"
               :fallback-src="maids"
               style="height:20vw; max-height: 512px;"
             />
@@ -105,7 +105,7 @@
         <n-carousel-item v-for="data in carouselData.content" :key="data.name">
           <div style="text-align:center; width:100%;">
             <img
-            :src="globalParams.GALLERY + carouselData.path + data.name +'.png'"
+            :src="globalParams.GALLERY + carouselData.path + data.name + (data.name.includes('.') ? '' : '.png')"
             :fallback-src="maids"
             style="max-width: 95%; max-height:80vh; object-fit: cover;"
             object-fit='contain'
@@ -204,6 +204,9 @@ import memoriesteller from '@/utils/json/Gallery/memoriesteller.json'
 import overthehorizon from '@/utils/json/Gallery/overthehorizon.json'
 import boomtheghost from '@/utils/json/Gallery/boomtheghost.json'
 import bfgcleanup from '@/utils/json/Gallery/bfgcleanup.json'
+import absolute from '@/utils/json/Gallery/absolute.json'
+import madeinrush from '@/utils/json/Gallery/madeinrush.json'
+import coinsinrush from '@/utils/json/Gallery/coinsinrush.json'
 
 const market = useMarket()
 
@@ -271,7 +274,9 @@ const buttonListEvents = [
   { data: unbreakablesphere },
   { data: memoriesteller },
   { data: overthehorizon },
-  { data: boomtheghost }
+  { data: boomtheghost },
+  { data: absolute },
+  { data: coinsinrush }
 ] as buttonInterface[]
 
 const buttonListOther = [
@@ -280,7 +285,8 @@ const buttonListOther = [
   { data: bbqmaster },
   { data: voltroad },
   { data: dragondungeonrun },
-  { data: bfgcleanup }
+  { data: bfgcleanup },
+  { data: madeinrush }
 ] as buttonInterface[]
 
 const buttonListCommunity = [

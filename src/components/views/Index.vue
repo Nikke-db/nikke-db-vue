@@ -7,9 +7,8 @@
     >
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
-      <n-alert type="info">
-        Absolute gallery when the event is over to avoid part 2 spoilers.<br/>
-        I forgot about absolute stuff so I'll do it alongside the bunnies gallery. Velvet when she is visible in game outside of CGs. y'all know I can't leak characters
+      <n-alert type="info" class="ytb">
+        <iframe class="ytb-iframe" src="https://www.youtube.com/embed/O3s8Ejek1r4?si=YminAjjyknd4LSY1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </n-alert>
 
       <n-divider />
@@ -96,6 +95,20 @@ const checkMobile = () => {
 
 .latest-date {
   color: @naive-green;
+}
+
+.ytb {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+
+  .ytb-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 </style>
