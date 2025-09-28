@@ -12,7 +12,7 @@
         class="iconDiv"
         :size="80"
       />
-      <VisitorCounter display="mobile"/>
+<!--      <VisitorCounter display="mobile"/>-->
     </div>
 
     <n-drawer

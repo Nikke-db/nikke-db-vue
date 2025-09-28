@@ -23,7 +23,7 @@
         {{ route.text }}
       </RouterLink>
 
-      <VisitorCounter display="PC" style="margin-left: auto"/>
+<!--      <VisitorCounter display="PC" style="margin-left: auto"/>-->
 
     </span>
   </div>

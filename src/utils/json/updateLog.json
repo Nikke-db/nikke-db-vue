@@ -542,5 +542,13 @@
   {
     "date": "September 22nd 2025",
     "update": "Live2d: Added the ABSOLUTE and Coins In Rush event scenes"
+  },
+  {
+    "date": "September 28th 2025",
+    "update": "Fluff: Wrote regex helpers for datamining QoL"
+  },
+  {
+    "date": "September 28th 2025",
+    "update": "Live2d: Added all Ada, Jill and Claire assets. Added K and D killer wife skins. Added Deipara"
   }
 ]

@@ -1,2842 +1,2314 @@
 [
   {
     "name": "Rapi",
-    "id": "c010",
-    "tl": "nikke"
+    "id": "c010"
   },
   {
     "name": "Rapi_old",
-    "id": "c010_01",
-    "tl": "never"
+    "id": "c010_01"
   },
   {
     "name": "Rapi White Promise",
-    "id": "c010_02",
-    "tl": "skin"
+    "id": "c010_02"
   },
   {
     "name": "Rapi Classic Vacation",
-    "id": "c010_03",
-    "tl": "skin"
+    "id": "c010_03"
   },
   {
     "name": "Neon",
-    "id": "c011",
-    "tl": "nikke"
+    "id": "c011"
   },
   {
     "name": "Neon Bling Bullet",
-    "id": "c011_01",
-    "tl": "skin"
+    "id": "c011_01"
   },
   {
     "name": "Anis",
-    "id": "c012",
-    "tl": "nikke"
+    "id": "c012"
   },
   {
     "name": "Marian",
-    "id": "c013",
-    "tl": "nikke"
+    "id": "c013"
   },
   {
     "name": "Neon: Blue Ocean",
-    "id": "c014",
-    "tl": "nikke"
+    "id": "c014"
   },
   {
     "name": "Anis: Sparkling Summer",
-    "id": "c015",
-    "tl": "nikke"
+    "id": "c015"
   },
   {
     "name": "Rapi: Red Hood",
-    "id": "c016",
-    "tl": "nikke"
+    "id": "c016"
   },
   {
     "name": "Rapi: Red Hood Red Flavor",
-    "id": "c016_01",
-    "tl": "skin"
+    "id": "c016_01"
   },
   {
     "name": "Delta",
-    "id": "c020",
-    "tl": "nikke"
+    "id": "c020"
   },
   {
     "name": "Signal",
-    "id": "c022",
-    "tl": "nikke"
+    "id": "c022"
   },
   {
     "name": "Signal Dramatic Chocolate",
-    "id": "c022_01",
-    "tl": "skin"
+    "id": "c022_01"
   },
   {
     "name": "Poli",
-    "id": "c030",
-    "tl": "nikke"
+    "id": "c030"
   },
   {
     "name": "Poli Sweet Holic",
-    "id": "c030_01",
-    "tl": "skin"
+    "id": "c030_01"
   },
   {
     "name": "Poli Cheer Up Police",
-    "id": "c030_02",
-    "tl": "skin"
+    "id": "c030_02"
   },
   {
     "name": "Miranda",
-    "id": "c032",
-    "tl": "nikke"
+    "id": "c032"
   },
   {
     "name": "Miranda Thief of Justice",
-    "id": "c032_01",
-    "tl": "skin"
+    "id": "c032_01"
   },
   {
     "name": "Quiry",
-    "id": "c033",
-    "tl": "nikke"
+    "id": "c033"
   },
   {
     "name": "D",
-    "id": "c040",
-    "tl": "nikke"
+    "id": "c040"
   },
   {
     "name": "K",
-    "id": "c041",
-    "tl": "nikke"
+    "id": "c041"
+  },
+  {
+    "name": "K Undercover",
+    "id": "c041_01"
   },
   {
     "name": "D: Killer Wife",
-    "id": "c043",
-    "tl": "nikke"
+    "id": "c043"
   },
   {
     "name": "D: Killer Wife Secret Party Cleaner",
-    "id": "c043_01",
-    "tl": "nikke"
+    "id": "c043_01"
+  },
+  {
+    "name": "D: Killer Wife Secret Police",
+    "id": "c043_02"
   },
   {
     "name": "Belorta",
-    "id": "c060",
-    "tl": "nikke"
+    "id": "c060"
   },
   {
     "name": "Mica",
-    "id": "c061",
-    "tl": "nikke"
+    "id": "c061"
   },
   {
     "name": "Mica: Snow Buddy",
-    "id": "c062",
-    "tl": "nikke"
+    "id": "c062"
   },
   {
     "name": "Brid",
-    "id": "c070",
-    "tl": "nikke"
+    "id": "c070"
   },
   {
     "name": "Brid Model Worker",
-    "id": "c070_01",
-    "tl": "skin"
+    "id": "c070_01"
   },
   {
     "name": "Brid Black Moon",
-    "id": "c070_02",
-    "tl": "skin"
+    "id": "c070_02"
   },
   {
     "name": "Soline",
-    "id": "c071",
-    "tl": "nikke"
+    "id": "c071"
   },
   {
     "name": "Diesel",
-    "id": "c072",
-    "tl": "nikke"
+    "id": "c072"
   },
   {
     "name": "Diesel Black Sunday",
-    "id": "c072_01",
-    "tl": "skin"
+    "id": "c072_01"
   },
   {
     "name": "Diesel Strawberry Flower",
-    "id": "c072_02",
-    "tl": "skin"
+    "id": "c072_02"
   },
   {
     "name": "Diesel Midnight Strawberry",
-    "id": "c072_04",
-    "tl": "skin"
+    "id": "c072_04"
   },
   {
     "name": "Centi",
-    "id": "c080",
-    "tl": "nikke"
+    "id": "c080"
   },
   {
     "name": "Centi Supreme Holiday",
-    "id": "c080_01",
-    "tl": "skin"
+    "id": "c080_01"
   },
   {
     "name": "Centi Ocean Repair",
-    "id": "c080_02",
-    "tl": "skin"
+    "id": "c080_02"
   },
   {
     "name": "Liter",
-    "id": "c082",
-    "tl": "nikke"
+    "id": "c082"
   },
   {
     "name": "Liter Guardfish",
-    "id": "c082_01",
-    "tl": "skin"
+    "id": "c082_01"
   },
   {
     "name": "Liter Cute Sunflower",
-    "id": "c082_02",
-    "tl": "skin"
+    "id": "c082_02"
   },
   {
     "name": "Liter (CN)",
-    "id": "c082_80",
-    "tl": "skin"
+    "id": "c082_80"
   },
   {
     "name": "Emma",
-    "id": "c090",
-    "tl": "nikke"
+    "id": "c090"
   },
   {
     "name": "Emma Color Me Red",
-    "id": "c090_01",
-    "tl": "skin"
+    "id": "c090_01"
   },
   {
     "name": "Emma Office Therapy",
-    "id": "c090_02",
-    "tl": "skin"
+    "id": "c090_02"
   },
   {
     "name": "Vesti",
-    "id": "c091",
-    "tl": "nikke"
+    "id": "c091"
   },
   {
     "name": "Vesti Ark Mage",
-    "id": "c091_01",
-    "tl": "skin"
+    "id": "c091_01"
   },
   {
     "name": "Eunhwa",
-    "id": "c092",
-    "tl": "nikke"
+    "id": "c092"
   },
   {
     "name": "Emma: Tactical Upgrade",
-    "id": "c093",
-    "tl": "nikke"
+    "id": "c093"
   },
   {
     "name": "Vesti: Tactical Upgrade",
-    "id": "c094",
-    "tl": "nikke"
+    "id": "c094"
   },
   {
     "name": "Eunhwa: Tactical Upgrade",
-    "id": "c095",
-    "tl": "nikke"
+    "id": "c095"
   },
   {
     "name": "Eunhwa: Tactical Upgrade Day Off",
-    "id": "c095_01",
-    "tl": "skin"
+    "id": "c095_01"
   },
   {
     "name": "Laplace",
-    "id": "c100",
-    "tl": "nikke"
+    "id": "c100"
   },
   {
     "name": "Drake",
-    "id": "c101",
-    "tl": "nikke"
+    "id": "c101"
   },
   {
     "name": "Drake Villain Racer",
-    "id": "c101_01",
-    "tl": "skin"
+    "id": "c101_01"
   },
   {
     "name": "Drake Maid For Villain",
-    "id": "c101_02",
-    "tl": "skin"
+    "id": "c101_02"
   },
   {
     "name": "Maxwell",
-    "id": "c102",
-    "tl": "nikke"
+    "id": "c102"
   },
   {
     "name": "Maxwell Mechanic White",
-    "id": "c102_01",
-    "tl": "skin"
+    "id": "c102_01"
   },
   {
     "name": "Laplace",
-    "id": "c103",
-    "tl": "skin"
+    "id": "c103"
   },
   {
     "name": "Drake",
-    "id": "c104",
-    "tl": "skin"
+    "id": "c104"
   },
   {
     "name": "Maxwell",
-    "id": "c105",
-    "tl": "skin"
+    "id": "c105"
   },
   {
     "name": "Crow",
-    "id": "c110",
-    "tl": "nikke"
+    "id": "c110"
   },
   {
     "name": "Jackal",
-    "id": "c111",
-    "tl": "nikke"
+    "id": "c111"
   },
   {
     "name": "Viper",
-    "id": "c112",
-    "tl": "nikke"
+    "id": "c112"
   },
   {
     "name": "Viper Toxic Rabbit",
-    "id": "c112_01",
-    "tl": "skin"
+    "id": "c112_01"
   },
   {
     "name": "Viper Shine of Love",
-    "id": "c112_02",
-    "tl": "skin"
+    "id": "c112_02"
   },
   {
     "name": "N102",
-    "id": "c120",
-    "tl": "nikke"
+    "id": "c120"
   },
   {
     "name": "Anne: Miracle Fairy",
-    "id": "c121",
-    "tl": "nikke"
+    "id": "c121"
   },
   {
     "name": "Mary",
-    "id": "c130",
-    "tl": "nikke"
+    "id": "c130"
   },
   {
     "name": "Mary Medical Rabbit",
-    "id": "c130_01",
-    "tl": "skin"
+    "id": "c130_01"
   },
   {
     "name": "Pepper",
-    "id": "c131",
-    "tl": "nikke"
+    "id": "c131"
   },
   {
     "name": "Pepper Ocean Vitamin",
-    "id": "c131_01",
-    "tl": "skin"
+    "id": "c131_01"
   },
   {
     "name": "Mary: Bay Goddess",
-    "id": "c132",
-    "tl": "nikke"
+    "id": "c132"
   },
   {
     "name": "Sugar",
-    "id": "c140",
-    "tl": "nikke"
+    "id": "c140"
   },
   {
     "name": "Sugar Hard-Boiled",
-    "id": "c140_01",
-    "tl": "skin"
+    "id": "c140_01"
   },
   {
     "name": "Sugar Wild Backyard",
-    "id": "c140_02",
-    "tl": "skin"
+    "id": "c140_02"
   },
   {
     "name": "Milk",
-    "id": "c141",
-    "tl": "nikke"
+    "id": "c141"
   },
   {
     "name": "Milk Extreme Fighter",
-    "id": "c141_01",
-    "tl": "skin"
+    "id": "c141_01"
   },
   {
     "name": "Frima",
-    "id": "c142",
-    "tl": "nikke"
+    "id": "c142"
   },
   {
     "name": "Frima Sea of Sloth",
-    "id": "c142_01",
-    "tl": "skin"
+    "id": "c142_01"
   },
   {
     "name": "Milk: Blooming Bunny",
-    "id": "c143",
-    "tl": "nikke"
+    "id": "c143"
   },
   {
     "name": "Julia",
-    "id": "c150",
-    "tl": "nikke"
+    "id": "c150"
   },
   {
     "name": "Julia Mild Nocturne",
-    "id": "c150_01",
-    "tl": "skin"
+    "id": "c150_01"
   },
   {
     "name": "Julia Summer Romance",
-    "id": "c150_02",
-    "tl": "skin"
+    "id": "c150_02"
   },
   {
     "name": "Yuni",
-    "id": "c160",
-    "tl": "nikke"
+    "id": "c160"
   },
   {
     "name": "Yuni Pretty In Pink",
-    "id": "c160_01",
-    "tl": "skin"
+    "id": "c160_01"
   },
   {
     "name": "Mihara",
-    "id": "c161",
-    "tl": "nikke"
+    "id": "c161"
   },
   {
     "name": "Mihara: Bonding Chain",
-    "id": "c162",
-    "tl": "nikke"
+    "id": "c162"
   },
   {
     "name": "Mihara Paint Eater",
-    "id": "c162_01",
-    "tl": "skin"
+    "id": "c162_01"
   },
   {
     "name": "Privaty",
-    "id": "c170",
-    "tl": "nikke"
+    "id": "c170"
   },
   {
     "name": "Privaty Government Grunt",
-    "id": "c170_01",
-    "tl": "skin"
+    "id": "c170_01"
   },
   {
     "name": "Privaty Banquet Princess",
-    "id": "c170_02",
-    "tl": "skin"
+    "id": "c170_02"
   },
   {
     "name": "Privaty Destined in Blue",
-    "id": "c170_03",
-    "tl": "skin"
+    "id": "c170_03"
   },
   {
     "name": "Yulha",
-    "id": "c171",
-    "tl": "nikke"
+    "id": "c171"
   },
   {
     "name": "Admi",
-    "id": "c172",
-    "tl": "nikke"
+    "id": "c172"
   },
   {
     "name": "Guillotine",
-    "id": "c180",
-    "tl": "nikke"
+    "id": "c180"
   },
   {
     "name": "Guillotine Dark Tracer",
-    "id": "c180_01",
-    "tl": "skin"
+    "id": "c180_01"
   },
   {
     "name": "Maiden",
-    "id": "c181",
-    "tl": "nikke"
+    "id": "c181"
   },
   {
     "name": "Guillotine Winter Slayer",
-    "id": "c182",
-    "tl": "nikke"
+    "id": "c182"
   },
   {
     "name": "Maiden Ice Rose",
-    "id": "c183",
-    "tl": "nikke"
+    "id": "c183"
   },
   {
     "name": "Maiden Covert Nurse",
-    "id": "c181_01",
-    "tl": "skin"
+    "id": "c181_01"
   },
   {
     "name": "Maiden Under the Sun",
-    "id": "c181_02",
-    "tl": "skin"
+    "id": "c181_02"
   },
   {
     "name": "Ludmilla",
-    "id": "c190",
-    "tl": "nikke"
+    "id": "c190"
   },
   {
     "name": "Alice",
-    "id": "c191",
-    "tl": "nikke"
+    "id": "c191"
   },
   {
     "name": "Alice Sweet Home",
-    "id": "c191_01",
-    "tl": "skin"
+    "id": "c191_01"
   },
   {
     "name": "Tove",
-    "id": "c192",
-    "tl": "nikke"
+    "id": "c192"
   },
   {
     "name": "Tove Baseball Fan",
-    "id": "c192_01",
-    "tl": "skin"
+    "id": "c192_01"
   },
   {
     "name": "Tove Sunblaze",
-    "id": "c192_02",
-    "tl": "skin"
+    "id": "c192_02"
   },
   {
     "name": "Neve",
-    "id": "c193",
-    "tl": "nikke"
+    "id": "c193"
   },
   {
     "name": "Ludmilla: Winter Owner",
-    "id": "c194",
-    "tl": "nikke"
+    "id": "c194"
   },
   {
     "name": "Alice: Wonderland Bunny",
-    "id": "c195",
-    "tl": "nikke"
+    "id": "c195"
   },
   {
     "name": "Rupee",
-    "id": "c200",
-    "tl": "nikke"
+    "id": "c200"
   },
   {
     "name": "Rupee Rabbit Deluxe",
-    "id": "c200_01",
-    "tl": "skin"
+    "id": "c200_01"
   },
   {
     "name": "Yan",
-    "id": "c201",
-    "tl": "nikke"
+    "id": "c201"
   },
   {
     "name": "Yan Sunrise Market",
-    "id": "c201_01",
-    "tl": "skin"
+    "id": "c201_01"
   },
   {
     "name": "Dolla",
-    "id": "c202",
-    "tl": "nikke"
+    "id": "c202"
   },
   {
     "name": "Dolla Dark Rose",
-    "id": "c202_01",
-    "tl": "skin"
+    "id": "c202_01"
   },
   {
     "name": "Rupee: Winter Shopper",
-    "id": "c203",
-    "tl": "nikke"
+    "id": "c203"
   },
   {
     "name": "Exia",
-    "id": "c210",
-    "tl": "nikke"
+    "id": "c210"
   },
   {
     "name": "Exia Joy to the Nerds",
-    "id": "c210_01",
-    "tl": "skin"
+    "id": "c210_01"
   },
   {
     "name": "Exia Gamer",
-    "id": "c210_02",
-    "tl": "skin"
+    "id": "c210_02"
   },
   {
     "name": "Exia Hacker Rabbit",
-    "id": "c210_03",
-    "tl": "skin"
+    "id": "c210_03"
   },
   {
     "name": "Novel",
-    "id": "c212",
-    "tl": "nikke"
+    "id": "c212"
   },
   {
     "name": "Novel Penguin Holmes",
-    "id": "c212_01",
-    "tl": "skin"
+    "id": "c212_01"
   },
   {
     "name": "Novel Detective Nurse",
-    "id": "c212_02",
-    "tl": "skin"
+    "id": "c212_02"
   },
   {
     "name": "Snow White",
-    "id": "c220",
-    "tl": "nikke"
+    "id": "c220"
   },
   {
     "name": "Snow White White Knight",
-    "id": "c220_01",
-    "tl": "skin"
+    "id": "c220_01"
   },
   {
     "name": "Rapunzel",
-    "id": "c221",
-    "tl": "nikke"
+    "id": "c221"
   },
   {
     "name": "Scarlet",
-    "id": "c222",
-    "tl": "nikke"
+    "id": "c222"
   },
   {
     "name": "Scarlet Racer's High",
-    "id": "c222_01",
-    "tl": "skin"
+    "id": "c222_01"
   },
   {
     "name": "Snow White: Innocent Days",
-    "id": "c224",
-    "tl": "nikke"
+    "id": "c224"
   },
   {
     "name": "Scarlet: Black Shadow",
-    "id": "c225",
-    "tl": "nikke"
+    "id": "c225"
   },
   {
     "name": "Scarlet: Black Shadow Longing Flower",
-    "id": "c225_01",
-    "tl": "nikke"
+    "id": "c225_01"
   },
   {
     "name": "Rapunzel: Pure Grace",
-    "id": "c226",
-    "tl": "nikke"
+    "id": "c226"
   },
   {
     "name": "Pinoccio",
-    "id": "c227",
-    "tl": "npc"
+    "id": "c227"
   },
   {
     "name": "Harran",
-    "id": "c230",
-    "tl": "nikke"
+    "id": "c230"
   },
   {
     "name": "Harran Banquet Witch",
-    "id": "c230_01",
-    "tl": "skin"
+    "id": "c230_01"
   },
   {
     "name": "Isabel",
-    "id": "c231",
-    "tl": "nikke"
+    "id": "c231"
   },
   {
     "name": "Isabel Honeymoon Party",
-    "id": "c231_01",
-    "tl": "skin"
+    "id": "c231_01"
   },
   {
     "name": "Noah",
-    "id": "c232",
-    "tl": "nikke"
+    "id": "c232"
   },
   {
     "name": "Dorothy",
-    "id": "c233",
-    "tl": "nikke"
+    "id": "c233"
   },
   {
     "name": "Dorothy: Serendipity",
-    "id": "c234",
-    "tl": "nikke"
+    "id": "c234"
   },
   {
     "name": "Dorothy Nostalgia",
-    "id": "c233_01",
-    "tl": "skin"
+    "id": "c233_01"
   },
   {
     "name": "Dorothy (CN)",
-    "id": "c233_80",
-    "tl": "skin"
+    "id": "c233_80"
   },
   {
     "name": "Rumani",
-    "id": "c240",
-    "tl": "nikke"
+    "id": "c240"
   },
   {
     "name": "Epinel",
-    "id": "c241",
-    "tl": "nikke"
+    "id": "c241"
   },
   {
     "name": "Folkwang",
-    "id": "c242",
-    "tl": "nikke"
+    "id": "c242"
   },
   {
     "name": "Folkwang Moist Bunny",
-    "id": "c242_01",
-    "tl": "skin"
+    "id": "c242_01"
   },
   {
     "name": "Mass Produced Red",
-    "id": "c250",
-    "tl": "nikke"
+    "id": "c250"
   },
   {
     "name": "Mass Produced Blue",
-    "id": "c251",
-    "tl": "NPC"
+    "id": "c251"
   },
   {
     "name": "Mass Produced Orange",
-    "id": "c252",
-    "tl": "NPC"
+    "id": "c252"
   },
   {
     "name": "Mass Produced Green",
-    "id": "c253",
-    "tl": "NPC"
+    "id": "c253"
   },
   {
     "name": "Mass Produced Purple",
-    "id": "c254",
-    "tl": "NPC"
+    "id": "c254"
   },
   {
     "name": "Mass Produced White",
-    "id": "c255",
-    "tl": "NPC"
+    "id": "c255"
   },
   {
     "name": "Modernia",
-    "id": "c260",
-    "tl": "nikke"
+    "id": "c260"
   },
   {
     "name": "Modernia First Affection",
-    "id": "c260_01",
-    "tl": "skin"
+    "id": "c260_01"
   },
   {
     "name": "Modernia Second Affection",
-    "id": "c260_02",
-    "tl": "skin"
+    "id": "c260_02"
   },
   {
     "name": "Modernia (CN)",
-    "id": "c260_80",
-    "tl": "skin"
+    "id": "c260_80"
   },
   {
     "name": "Nihilister",
-    "id": "c261",
-    "tl": "nikke"
+    "id": "c261"
   },
   {
     "name": "Liberalio",
-    "id": "c262",
-    "tl": "nikke"
+    "id": "c262"
   },
   {
     "name": "Indivilia",
-    "id": "c263",
-    "tl": "nikke"
+    "id": "c263"
   },
   {
     "name": "Blanc",
-    "id": "c270",
-    "tl": "nikke"
+    "id": "c270"
   },
   {
     "name": "Blanc White Rabbit",
-    "id": "c270_01",
-    "tl": "skin"
+    "id": "c270_01"
   },
   {
     "name": "Blanc No. 77 Batter",
-    "id": "c270_02",
-    "tl": "skin"
+    "id": "c270_02"
   },
   {
     "name": "Noir",
-    "id": "c271",
-    "tl": "nikke"
+    "id": "c271"
   },
   {
     "name": "Noir Black Rabbit",
-    "id": "c271_01",
-    "tl": "skin"
+    "id": "c271_01"
   },
   {
     "name": "Noir Baseball Cheerleader",
-    "id": "c271_02",
-    "tl": "skin"
+    "id": "c271_02"
   },
   {
     "name": "Rouge",
-    "id": "c272",
-    "tl": "nikke"
+    "id": "c272"
   },
   {
     "name": "Rouge Unlucky Rabbit or something idk 60$ for the worst reverse bunny girl in multi media is quite the scam. Should've released Jaune and gave her a skin instead of 'this'",
-    "id": "c272_01",
-    "tl": "skin"
+    "id": "c272_01"
   },
   {
     "name": "Rosanna",
-    "id": "c280",
-    "tl": "nikke"
+    "id": "c280"
   },
   {
     "name": "Rosanna Ms. Dangerous",
-    "id": "c280_01",
-    "tl": "skin"
+    "id": "c280_01"
   },
   {
     "name": "Moran",
-    "id": "c281",
-    "tl": "nikke"
+    "id": "c281"
   },
   {
     "name": "Moran Off-Duty Queen",
-    "id": "c281_01",
-    "tl": "skin"
+    "id": "c281_01"
   },
   {
     "name": "Sakura",
-    "id": "c282",
-    "tl": "nikke"
+    "id": "c282"
   },
   {
     "name": "Sakura Midnight Stealth",
-    "id": "c282_01",
-    "tl": "skin"
+    "id": "c282_01"
   },
   {
     "name": "Rosanna: Chic Ocean",
-    "id": "c283",
-    "tl": "nikke"
+    "id": "c283"
   },
   {
     "name": "Sakura: Bloom in Summer",
-    "id": "c284",
-    "tl": "nikke"
+    "id": "c284"
   },
   {
     "name": "Mana",
-    "id": "c290",
-    "tl": "nikke"
+    "id": "c290"
   },
   {
     "name": "Ether",
-    "id": "c291",
-    "tl": "nikke"
+    "id": "c291"
   },
   {
     "name": "Soldier EG",
-    "id": "c300",
-    "tl": "nikke"
+    "id": "c300"
   },
   {
     "name": "Soldier FA",
-    "id": "c301",
-    "tl": "nikke"
+    "id": "c301"
   },
   {
     "name": "Product 08",
-    "id": "c302",
-    "tl": "nikke"
+    "id": "c302"
   },
   {
     "name": "Product 12",
-    "id": "c303",
-    "tl": "nikke"
+    "id": "c303"
   },
   {
     "name": "iDoll Flower",
-    "id": "c304",
-    "tl": "nikke"
+    "id": "c304"
   },
   {
     "name": "iDoll Ocean",
-    "id": "c305",
-    "tl": "nikke"
+    "id": "c305"
   },
   {
     "name": "Soldier OW",
-    "id": "c306",
-    "tl": "nikke"
+    "id": "c306"
   },
   {
     "name": "Product 23",
-    "id": "c307",
-    "tl": "nikke"
+    "id": "c307"
   },
   {
     "name": "iDoll Sun",
-    "id": "c308",
-    "tl": "nikke"
+    "id": "c308"
   },
   {
     "name": "Ade",
-    "id": "c310",
-    "tl": "nikke"
+    "id": "c310"
   },
   {
     "name": "Ade Maid In Spring",
-    "id": "c310_01",
-    "tl": "skin"
+    "id": "c310_01"
   },
   {
     "name": "Cocoa",
-    "id": "c311",
-    "tl": "nikke"
+    "id": "c311"
   },
   {
     "name": "Soda",
-    "id": "c312",
-    "tl": "nikke"
+    "id": "c312"
   },
   {
     "name": "Privaty: Unkind Maid",
-    "id": "c313",
-    "tl": "nikke"
+    "id": "c313"
   },
   {
     "name": "Soda: Twinkling Bunny",
-    "id": "c314",
-    "tl": "nikke"
+    "id": "c314"
   },
   {
     "name": "Ade: Agent Bunny",
-    "id": "c315",
-    "tl": "nikke"
+    "id": "c315"
   },
   {
     "name": "Marciana",
-    "id": "c321",
-    "tl": "nikke"
+    "id": "c321"
   },
   {
     "name": "Marciana School Days",
-    "id": "c321_01",
-    "tl": "skin"
+    "id": "c321_01"
   },
   {
     "name": "Crown",
-    "id": "c330",
-    "tl": "nikke"
+    "id": "c330"
   },
   {
     "name": "Crown Naked King",
-    "id": "c330_01",
-    "tl": "skin"
+    "id": "c330_01"
   },
   {
     "name": "Chime",
-    "id": "c331",
-    "tl": "NPC"
+    "id": "c331"
   },
   {
     "name": "Mast",
-    "id": "c350",
-    "tl": "nikke"
+    "id": "c350"
   },
   {
     "name": "Mast A Pirate's Heart",
-    "id": "c350_01",
-    "tl": "skin"
+    "id": "c350_01"
   },
   {
     "name": "Mast the Diver",
-    "id": "c350_02",
-    "tl": "skin"
+    "id": "c350_02"
   },
   {
     "name": "Mast_old",
-    "id": "c350_old",
-    "tl": "never"
+    "id": "c350_old"
   },
   {
     "name": "Anchor",
-    "id": "c351",
-    "tl": "nikke"
+    "id": "c351"
   },
   {
     "name": "Anchor the Diver",
-    "id": "c351_01",
-    "tl": "skin"
+    "id": "c351_01"
   },
   {
     "name": "Helm",
-    "id": "c352",
-    "tl": "nikke"
+    "id": "c352"
   },
   {
     "name": "Helm Chandelier",
-    "id": "c352_01",
-    "tl": "skin"
+    "id": "c352_01"
   },
   {
     "name": "Helm Post-Shower Moment",
-    "id": "c352_02",
-    "tl": "skin"
+    "id": "c352_02"
   },
   {
     "name": "Helm: Aquamarine",
-    "id": "c353",
-    "tl": "nikke"
+    "id": "c353"
   },
   {
     "name": "Mast: Romantic Maid",
-    "id": "c354",
-    "tl": "nikke"
+    "id": "c354"
   },
   {
     "name": "Anchor: Innocent Maid",
-    "id": "c355",
-    "tl": "nikke"
+    "id": "c355"
   },
   {
     "name": "T.A.L.O.S (Kilo)",
-    "id": "c361",
-    "tl": "nikke"
+    "id": "c361"
   },
   {
     "name": "Eternity",
-    "id": "c370",
-    "tl": "npc"
+    "id": "c370"
   },
   {
     "name": "Endless",
-    "id": "c371",
-    "tl": "npc"
+    "id": "c371"
   },
   {
     "name": "Nero",
-    "id": "c380",
-    "tl": "nikke"
+    "id": "c380"
   },
   {
     "name": "Biscuit",
-    "id": "c381",
-    "tl": "nikke"
+    "id": "c381"
   },
   {
     "name": "Biscuit Spring Puppy",
-    "id": "c381_01",
-    "tl": "skin"
+    "id": "c381_01"
   },
   {
     "name": "Leona",
-    "id": "c382",
-    "tl": "nikke"
+    "id": "c382"
   },
   {
     "name": "Leona Zoo Keeper",
-    "id": "c382_01",
-    "tl": "skin"
+    "id": "c382_01"
   },
   {
     "name": "Zwei",
-    "id": "c390",
-    "tl": "nikke"
+    "id": "c390"
   },
   {
     "name": "Zwei First Festa",
-    "id": "c390_01",
-    "tl": "skin"
+    "id": "c390_01"
   },
   {
     "name": "Ein",
-    "id": "c391",
-    "tl": "nikke"
+    "id": "c391"
   },
   {
     "name": "Ein Handmade Festa",
-    "id": "c391_01",
-    "tl": "skin"
+    "id": "c391_01"
   },
   {
     "name": "Rei",
-    "id": "c392",
-    "tl": "nikke"
+    "id": "c392"
   },
   {
     "name": "Guilty",
-    "id": "c400",
-    "tl": "nikke"
+    "id": "c400"
   },
   {
     "name": "Guilty Wave of Disbelief",
-    "id": "c400_01",
-    "tl": "skin"
+    "id": "c400_01"
   },
   {
     "name": "Sin",
-    "id": "c401",
-    "tl": "nikke"
+    "id": "c401"
   },
   {
     "name": "Sin Backstreet Dream",
-    "id": "c401_01",
-    "tl": "skin"
+    "id": "c401_01"
   },
   {
     "name": "Quency",
-    "id": "c402",
-    "tl": "nikke"
+    "id": "c402"
   },
   {
     "name": "Quency Escape Queen",
-    "id": "c403",
-    "tl": "nikke"
+    "id": "c403"
   },
   {
     "name": "Flora",
-    "id": "c411",
-    "tl": "nikke"
+    "id": "c411"
   },
   {
     "name": "Trina",
-    "id": "c412",
-    "tl": "nikke"
+    "id": "c412"
   },
   {
     "name": "Noise",
-    "id": "c430",
-    "tl": "nikke"
+    "id": "c430"
   },
   {
     "name": "Noise Cherry Blossom Stage",
-    "id": "c430_01",
-    "tl": "skin"
+    "id": "c430_01"
   },
   {
     "name": "Noise Classic Diva",
-    "id": "c430_02",
-    "tl": "skin"
+    "id": "c430_02"
   },
   {
     "name": "Volume",
-    "id": "c431",
-    "tl": "nikke"
+    "id": "c431"
   },
   {
     "name": "Volume Beat the Gun",
-    "id": "c431_01",
-    "tl": "skin"
+    "id": "c431_01"
   },
   {
     "name": "Aria",
-    "id": "c432",
-    "tl": "nikke"
+    "id": "c432"
   },
   {
     "name": "Eyeri",
-    "id": "c440",
-    "tl": "npc"
+    "id": "c440"
   },
   {
     "name": "Avista",
-    "id": "c441",
-    "tl": "npc"
+    "id": "c441"
   },
   {
     "name": "Naga",
-    "id": "c450",
-    "tl": "nikke"
+    "id": "c450"
   },
   {
     "name": "Naga Elegant Date",
-    "id": "c450_01",
-    "tl": "skin"
+    "id": "c450_01"
   },
   {
     "name": "Naga Last Girlhood",
-    "id": "c450_02",
-    "tl": "skin"
+    "id": "c450_02"
   },
   {
     "name": "Tia",
-    "id": "c451",
-    "tl": "nikke"
+    "id": "c451"
   },
   {
     "name": "Tia Lovely Date",
-    "id": "c451_01",
-    "tl": "skin"
+    "id": "c451_01"
   },
   {
     "name": "Tia Sweet Chef",
-    "id": "c451_02",
-    "tl": "skin"
+    "id": "c451_02"
   },
   {
     "name": "Red Hood",
-    "id": "c470",
-    "tl": "nikke"
+    "id": "c470"
   },
   {
     "name": "Red Hood Nonsense Red",
-    "id": "c470_01",
-    "tl": "skin"
+    "id": "c470_01"
   },
   {
     "name": "Liveryn",
-    "id": "c480",
-    "tl": "NPC"
+    "id": "c480"
   },
   {
     "name": "Fragile",
-    "id": "c481",
-    "tl": "NPC"
+    "id": "c481"
   },
   {
     "name": "Hammering",
-    "id": "c490",
-    "tl": "NPC"
+    "id": "c490"
   },
   {
     "name": "Drilley",
-    "id": "c491",
-    "tl": "NPC"
+    "id": "c491"
   },
   {
     "name": "Elegg",
-    "id": "c500",
-    "tl": "nikke"
+    "id": "c500"
   },
   {
     "name": "Trony",
-    "id": "c501",
-    "tl": "nikke"
+    "id": "c501"
   },
   {
     "name": "Trony Sweet Step",
-    "id": "c501_01",
-    "tl": "skin"
+    "id": "c501_01"
   },
   {
     "name": "Elegg: Boom and Shock",
-    "id": "c502",
-    "tl": "nikke"
+    "id": "c502"
   },
   {
     "name": "Grave",
-    "id": "c510",
-    "tl": "NPC"
+    "id": "c510"
   },
   {
     "name": "Anachiro | Cinderella",
-    "id": "c511",
-    "tl": "nikke"
+    "id": "c511"
   },
   {
     "name": "Anachiro | Cinderella Glass Princess",
-    "id": "c511_01",
-    "tl": "nikke"
+    "id": "c511_01"
   },
   {
     "name": "Anachiro | Cinderella Beatiful Me",
-    "id": "c511_02",
-    "tl": "nikke"
+    "id": "c511_02"
   },
   {
     "name": "Little Mermaid | Siren",
-    "id": "c513",
-    "tl": "nikke"
+    "id": "c513"
   },
   {
     "name": "Little Mermaid | Siren Abyss Flower",
-    "id": "c513_01",
-    "tl": "skin"
+    "id": "c513_01"
   },
   {
     "name": "Grave the Great (GraGre)",
-    "id": "c514",
-    "tl": "nikke"
+    "id": "c514"
   },
   {
     "name": "Grave the Great (GraGre) Beatiful You",
-    "id": "c514_01",
-    "tl": "skin"
+    "id": "c514_01"
   },
   {
     "name": "Bready",
-    "id": "c520",
-    "tl": "nikke"
+    "id": "c520"
   },
   {
     "name": "Crust",
-    "id": "c521",
-    "tl": "nikke"
+    "id": "c521"
   },
   {
     "name": "Sky",
-    "id": "c530",
-    "tl": "npc"
+    "id": "c530"
   },
   {
     "name": "Cielo",
-    "id": "c531",
-    "tl": "npc"
+    "id": "c531"
   },
   {
     "name": "Sora",
-    "id": "c532",
-    "tl": "nikke"
+    "id": "c532"
   },
   {
     "name": "Bay",
-    "id": "c550",
-    "tl": "nikke"
+    "id": "c550"
   },
   {
     "name": "Bay Radiant Rabbit",
-    "id": "c550_01",
-    "tl": "skin"
+    "id": "c550_01"
   },
   {
     "name": "Clay",
-    "id": "c551",
-    "tl": "nikke"
+    "id": "c551"
   },
   {
     "name": "Behemoth",
-    "id": "c560",
-    "tl": "NPC"
+    "id": "c560"
   },
   {
     "name": "Ziz",
-    "id": "c561",
-    "tl": "NPC"
+    "id": "c561"
   },
   {
     "name": "Leviathan",
-    "id": "c562",
-    "tl": "NPC"
+    "id": "c562"
   },
   {
     "name": "Black Ark Ranger",
-    "id": "c570",
-    "tl": "NPC"
+    "id": "c570"
   },
   {
     "name": "Phantom",
-    "id": "c580",
-    "tl": "nikke"
+    "id": "c580"
   },
   {
     "name": "Arcana",
-    "id": "c581",
-    "tl": "nikke"
+    "id": "c581"
   },
   {
     "name": "Mori",
-    "id": "c590",
-    "tl": "nikke"
+    "id": "c590"
   },
   {
     "name": "Mint",
-    "id": "c600",
-    "tl": "npc"
+    "id": "c600"
   },
   {
     "name": "Prika",
-    "id": "c601",
-    "tl": "npc"
+    "id": "c601"
   },
   {
     "name": "Makima",
-    "id": "c800",
-    "tl": "nikke"
+    "id": "c800"
   },
   {
     "name": "Makima Coat Off",
-    "id": "c800_01",
-    "tl": "skin"
+    "id": "c800_01"
   },
   {
     "name": "Power",
-    "id": "c801",
-    "tl": "nikke"
+    "id": "c801"
   },
   {
     "name": "Himeno",
-    "id": "c802",
-    "tl": "nikke"
+    "id": "c802"
   },
   {
     "name": "Denji",
-    "id": "c803",
-    "tl": "never"
+    "id": "c803"
   },
   {
     "name": "Denji Chainsaw Man",
-    "id": "c803_01",
-    "tl": "never"
+    "id": "c803_01"
   },
   {
     "name": "Aki Hayakawa",
-    "id": "c804",
-    "tl": "never"
+    "id": "c804"
   },
   {
     "name": "2B",
-    "id": "c810",
-    "tl": "nikke"
+    "id": "c810"
   },
   {
     "name": "2B Metamorphic Damage",
-    "id": "c810_01",
-    "tl": "NPC"
+    "id": "c810_01"
   },
   {
     "name": "2B YoRHa Uniform 1",
-    "id": "c810_02",
-    "tl": "skin"
+    "id": "c810_02"
   },
   {
     "name": "2B Unofficial Waterfront Gear 1",
-    "id": "c810_03",
-    "tl": "skin"
+    "id": "c810_03"
   },
   {
     "name": "A2",
-    "id": "c811",
-    "tl": "nikke"
+    "id": "c811"
   },
   {
     "name": "A2 Metamorphic Damage",
-    "id": "c811_01",
-    "tl": "skin"
+    "id": "c811_01"
   },
   {
     "name": "A2 YoRHa Uniform Prototype",
-    "id": "c811_02",
-    "tl": "skin"
+    "id": "c811_02"
   },
   {
     "name": "A2 Unofficial Waterfront Gear Prototype",
-    "id": "c811_03",
-    "tl": "skin"
+    "id": "c811_03"
   },
   {
     "name": "Pascal",
-    "id": "c812",
-    "tl": "nikke"
+    "id": "c812"
   },
   {
     "name": "9S",
-    "id": "c813",
-    "tl": "never"
+    "id": "c813"
   },
   {
     "name": "Rem",
-    "id": "c820",
-    "tl": "nikke"
+    "id": "c820"
   },
   {
     "name": "Rem Handy Maid",
-    "id": "c820_01",
-    "tl": "skin"
+    "id": "c820_01"
   },
   {
     "name": "Rem Pure Blossom",
-    "id": "c820_02",
-    "tl": "skin"
+    "id": "c820_02"
   },
   {
     "name": "Emilia",
-    "id": "c821",
-    "tl": "nikke"
+    "id": "c821"
   },
   {
     "name": "Emilia Clumsy Maid",
-    "id": "c821_01",
-    "tl": "skin"
+    "id": "c821_01"
   },
   {
     "name": "Emilia Spring Breeze",
-    "id": "c821_02",
-    "tl": "skin"
+    "id": "c821_02"
   },
   {
     "name": "Ram",
-    "id": "c822",
-    "tl": "nikke"
+    "id": "c822"
   },
   {
     "name": "Asuka Shikinami",
-    "id": "c830",
-    "tl": "nikke"
+    "id": "c830"
   },
   {
     "name": "Asuka Shikinami Asuka's School Uniform",
-    "id": "c830_01",
-    "tl": "skin"
+    "id": "c830_01"
   },
   {
     "name": "Asuka Shikinami Cynical Street",
-    "id": "c830_02",
-    "tl": "skin"
+    "id": "c830_02"
   },
   {
     "name": "Asuka Shikinami Test Plugsuit",
-    "id": "c830_03",
-    "tl": "skin"
+    "id": "c830_03"
   },
   {
     "name": "Rei Ayanami",
-    "id": "c831",
-    "tl": "nikke"
+    "id": "c831"
   },
   {
     "name": "Rei Ayanami Rei's School Uniform",
-    "id": "c831_01",
-    "tl": "skin"
+    "id": "c831_01"
   },
   {
     "name": "Rei Ayanami Peaceful Vacation",
-    "id": "c831_02",
-    "tl": "skin"
+    "id": "c831_02"
   },
   {
     "name": "Mari Makinami",
-    "id": "c832",
-    "tl": "nikke"
+    "id": "c832"
   },
   {
     "name": "Mari Makinami Mari's School Uniform",
-    "id": "c832_01",
-    "tl": "skin"
+    "id": "c832_01"
   },
   {
     "name": "Mari Makinami Leisure Travel",
-    "id": "c832_02",
-    "tl": "skin"
+    "id": "c832_02"
   },
   {
     "name": "Mari Makinami Final Battle",
-    "id": "c832_03",
-    "tl": "skin"
+    "id": "c832_03"
   },
   {
     "name": "Mari Makinami Mystery Muse",
-    "id": "c832_04",
-    "tl": "skin"
+    "id": "c832_04"
   },
   {
     "name": "Misato Katsuragi",
-    "id": "c833",
-    "tl": "nikke"
+    "id": "c833"
   },
   {
     "name": "Rei Ayanami (Tentative Name)",
-    "id": "c834",
-    "tl": "nikke"
+    "id": "c834"
   },
   {
     "name": "Rei Ayanami Miss Lookalike from Village-3",
-    "id": "c834_01",
-    "tl": "skin"
+    "id": "c834_01"
   },
   {
     "name": "Rei Ayanami Soul Connect",
-    "id": "c834_02",
-    "tl": "skin"
+    "id": "c834_02"
   },
   {
     "name": "Asuka Shikinami WILLE",
-    "id": "c835",
-    "tl": "nikke"
+    "id": "c835"
   },
   {
     "name": "Asuka Shikinami Final Battle",
-    "id": "c835_01",
-    "tl": "skin"
+    "id": "c835_01"
   },
   {
     "name": "Asuka Shikinami Ocean's Lament",
-    "id": "c835_02",
-    "tl": "skin"
+    "id": "c835_02"
   },
   {
     "name": "Sakura Suzuhara",
-    "id": "c836",
-    "tl": "nikke"
+    "id": "c836"
+  },
+  {
+    "name": "Ada",
+    "id": "c840"
+  },
+  {
+    "name": "Ada Seperate Ways",
+    "id": "c840_01"
+  },
+  {
+    "name": "Ada Dress",
+    "id": "c840_02"
+  },
+  {
+    "name": "Jill",
+    "id": "c841"
+  },
+  {
+    "name": "Jill Classic",
+    "id": "c841_01"
+  },
+  {
+    "name": "Jill Battle Suit",
+    "id": "c841_02"
+  },
+  {
+    "name": "Claire",
+    "id": "c842"
   },
   {
     "name": "EVE",
-    "id": "c850",
-    "tl": "nikke"
+    "id": "c850"
   },
   {
     "name": "EVE Keyhole Dress",
-    "id": "c850_01",
-    "tl": "skin"
+    "id": "c850_01"
   },
   {
     "name": "EVE Neurolink Suit",
-    "id": "c850_02",
-    "tl": "skin"
+    "id": "c850_02"
   },
   {
     "name": "EVE Skin Suit",
-    "id": "c850_03",
-    "tl": "skin"
+    "id": "c850_03"
   },
   {
     "name": "Raven Keyhole Dress",
-    "id": "c851",
-    "tl": "nikke"
+    "id": "c851"
   },
   {
     "name": "Raven Planet Diving Suit (6th) V2",
-    "id": "c851_01",
-    "tl": "skin"
+    "id": "c851_01"
   },
   {
     "name": "Raven Midsummer Alice",
-    "id": "c851_02",
-    "tl": "skin"
+    "id": "c851_02"
   },
   {
     "name": "Lily",
-    "id": "c852",
-    "tl": "nikke"
+    "id": "c852"
   },
   {
     "name": "Adam",
-    "id": "c853",
-    "tl": "npc"
+    "id": "c853"
   },
   {
     "name": "Ingrid",
-    "id": "c900",
-    "tl": "NPCnever"
+    "id": "c900"
   },
   {
     "name": "Syuen",
-    "id": "c901",
-    "tl": "NPCnever"
+    "id": "c901"
   },
   {
     "name": "Mustang",
-    "id": "c902",
-    "tl": "NPCnever"
+    "id": "c902"
   },
   {
     "name": "Mustang (CN)",
-    "id": "c902_01",
-    "tl": "NPCnever"
+    "id": "c902_01"
   },
   {
     "name": "Andersen",
-    "id": "c903",
-    "tl": "NPCnever"
+    "id": "c903"
   },
   {
     "name": "Andersen Soaked",
-    "id": "c903_01",
-    "tl": "NPCnever"
+    "id": "c903_01"
   },
   {
     "name": "Enikk",
-    "id": "c904",
-    "tl": "NPCnever"
+    "id": "c904"
   },
   {
     "name": "Rian",
-    "id": "c905",
-    "tl": "NPCnever"
+    "id": "c905"
   },
   {
     "name": "Shifty",
-    "id": "c907",
-    "tl": "NPCnever"
+    "id": "c907"
   },
   {
     "name": "Shifty_old",
-    "id": "c907_01",
-    "tl": "NPCnever"
+    "id": "c907_01"
   },
   {
     "id": "c908",
-    "name": "Papillon",
-    "tl": "NPCnever"
+    "name": "Papillon"
   },
   {
     "name": "Hologram",
-    "id": "c910",
-    "tl": "NPCnever"
+    "id": "c910"
   },
   {
     "name": "Sweet Johnny",
-    "id": "c910_01",
-    "tl": "NPCnever"
+    "id": "c910_01"
   },
   {
     "name": "Faceless Man",
-    "id": "c911",
-    "tl": "NPCnever"
+    "id": "c911"
   },
   {
     "name": "Faceless Woman",
-    "id": "c912",
-    "tl": "NPCnever"
+    "id": "c912"
   },
   {
     "name": "Burningum",
-    "id": "c914",
-    "tl": "NPCnever"
+    "id": "c914"
   },
   {
     "name": "Raptillion",
-    "id": "c915",
-    "tl": "NPCnever"
+    "id": "c915"
   },
   {
     "name": "Faceless NPC 1",
-    "id": "c916",
-    "tl": "NPCnever"
+    "id": "c916"
   },
   {
     "name": "Faceless NPC 2",
-    "id": "c917",
-    "tl": "NPCnever"
+    "id": "c917"
   },
   {
     "name": "Faceless NPC 3",
-    "id": "c918",
-    "tl": "NPCnever"
+    "id": "c918"
   },
   {
     "name": "Faceless NPC 4",
-    "id": "c919",
-    "tl": "NPCnever"
+    "id": "c919"
   },
   {
     "name": "Faceless NPC 5",
-    "id": "c920",
-    "tl": "NPCnever"
+    "id": "c920"
   },
   {
     "name": "Faceless NPC 6",
-    "id": "c921",
-    "tl": "NPCnever"
+    "id": "c921"
   },
   {
     "name": "Faceless NPC 7",
-    "id": "c922",
-    "tl": "NPCnever"
+    "id": "c922"
   },
   {
     "name": "Faceless NPC 8",
-    "id": "c923",
-    "tl": "NPCnever"
+    "id": "c923"
   },
   {
     "name": "Faceless NPC 9",
-    "id": "c924",
-    "tl": "NPCnever"
+    "id": "c924"
   },
   {
     "name": "Johan",
-    "id": "c925",
-    "tl": "NPCnever"
+    "id": "c925"
   },
   {
     "name": "Einkk",
-    "id": "c928",
-    "tl": "NPCnever"
+    "id": "c928"
   },
   {
     "name": "Cecil",
-    "id": "c929",
-    "tl": "NPCnever"
+    "id": "c929"
   },
   {
     "name": "Beatrice",
-    "id": "c930",
-    "tl": "NPCnever"
+    "id": "c930"
   },
   {
     "name": "Collection Robot",
-    "id": "c931",
-    "tl": "NPCnever"
+    "id": "c931"
   },
   {
     "name": "Com",
-    "id": "c931_01",
-    "tl": "NPCnever"
+    "id": "c931_01"
   },
   {
     "name": "Bolt Junior",
-    "id": "c932",
-    "tl": "NPCnever"
+    "id": "c932"
   },
   {
     "name": "Bolt",
-    "id": "c933",
-    "tl": "NPCnever"
+    "id": "c933"
   },
   {
     "name": "Angelina",
-    "id": "c934",
-    "tl": "NPCnever"
+    "id": "c934"
   },
   {
     "name": "Joseph",
-    "id": "c935",
-    "tl": "NPCnever"
+    "id": "c935"
   },
   {
     "name": "Max",
-    "id": "c936",
-    "tl": "NPCnever"
+    "id": "c936"
   },
   {
     "name": "Booboo",
-    "id": "c937",
-    "tl": "NPCnever"
+    "id": "c937"
   },
   {
     "name": "Doban",
-    "id": "c939",
-    "tl": "NPCnever"
+    "id": "c939"
   },
   {
     "name": "E.H.",
-    "id": "c940",
-    "tl": "NPCnever"
+    "id": "c940"
   },
   {
     "name": "Pinne",
-    "id": "c941",
-    "tl": "NPCnever"
+    "id": "c941"
   },
   {
     "name": "Commander (GODDESS)",
-    "id": "c942",
-    "tl": "NPCnever"
+    "id": "c942"
   },
   {
     "name": "Liliweiss",
-    "id": "c943",
-    "tl": "NPCnever"
+    "id": "c943"
   },
   {
     "name": "Katie",
-    "id": "c945",
-    "tl": "NPCnever"
+    "id": "c945"
   },
   {
     "name": "Ruru",
-    "id": "c946",
-    "tl": "NPCnever"
+    "id": "c946"
   },
   {
     "name": "Faceless NPC 10",
-    "id": "c947",
-    "tl": "NPCnever"
+    "id": "c947"
   },
   {
     "name": "Faceless NPC 11",
-    "id": "c948",
-    "tl": "NPCnever"
+    "id": "c948"
   },
   {
     "name": "Faceless NPC 12",
-    "id": "c951",
-    "tl": "NPCnever"
+    "id": "c951"
   },
   {
     "name": "Faceless NPC 13",
-    "id": "c952",
-    "tl": "NPCnever"
+    "id": "c952"
   },
   {
     "name": "Freesia",
-    "id": "c960",
-    "tl": "NPCnever"
+    "id": "c960"
   },
   {
     "name": "Oswald",
-    "id": "c961",
-    "tl": "NPCnever"
+    "id": "c961"
   },
   {
     "name": "Product 12: B-0006",
-    "id": "c962",
-    "tl": "NPCnever"
+    "id": "c962"
   },
   {
     "name": "Product 12: C-1002",
-    "id": "c963",
-    "tl": "NPCnever"
+    "id": "c963"
   },
   {
     "name": "Product 12: 6000-D",
-    "id": "c964",
-    "tl": "NPCnever"
+    "id": "c964"
   },
   {
     "name": "Ghost - Lumi",
-    "id": "c967",
-    "tl": "NPCnever"
+    "id": "c967"
   },
   {
     "name": "Ghost - Lua",
-    "id": "c968",
-    "tl": "NPCnever"
+    "id": "c968"
   },
   {
     "name": "Ghost - Lena",
-    "id": "c969",
-    "tl": "NPCnever"
+    "id": "c969"
   },
   {
     "name": "Lumi",
-    "id": "c970",
-    "tl": "NPCnever"
+    "id": "c970"
   },
   {
     "name": "Rose",
-    "id": "c971",
-    "tl": "NPCnever"
+    "id": "c971"
   },
   {
     "name": "Jien",
-    "id": "c973",
-    "tl": "NPCnever"
+    "id": "c973"
   },
   {
     "name": "Mass Produced Melee",
-    "id": "c974",
-    "tl": "NPCnever"
+    "id": "c974"
   },
   {
     "name": "Mass Produced Melee 2",
-    "id": "c974_01",
-    "tl": "NPCnever"
+    "id": "c974_01"
   },
   {
     "name": "Timi",
-    "id": "c975",
-    "tl": "NPCnever"
+    "id": "c975"
   },
   {
     "name": "T.Rony",
-    "id": "c976",
-    "tl": "NPCnever"
+    "id": "c976"
   },
   {
     "name": "Kilo",
-    "id": "c977",
-    "tl": "NPCnever"
+    "id": "c977"
   },
   {
     "name": "Abe",
-    "id": "c979",
-    "tl": "NPCnever"
+    "id": "c979"
   },
   {
     "name": "Hansel",
-    "id": "c980",
-    "tl": "NPCnever"
+    "id": "c980"
   },
   {
     "name": "Gretel",
-    "id": "c981",
-    "tl": "NPCnever"
+    "id": "c981"
   },
   {
     "name": "Red Shoes",
-    "id": "c982",
-    "tl": "NPCnever"
+    "id": "c982"
   },
   {
     "name": "Nadia",
-    "id": "c983",
-    "tl": "NPCnever"
+    "id": "c983"
   },
   {
     "name": "Yuni",
-    "id": "c985",
-    "tl": "NPCnever"
+    "id": "c985"
   },
   {
     "name": "Chloe - Village Guardian",
-    "id": "c988",
-    "tl": "NPCnever"
+    "id": "c988"
   },
   {
     "name": "Rapi",
-    "id": "c989",
-    "tl": "NPCnever"
+    "id": "c989"
   },
   {
     "name": "Rapi",
-    "id": "c990",
-    "tl": "NPCnever"
+    "id": "c990"
   },
   {
     "name": "D.E.E.P",
-    "id": "c991",
-    "tl": "NPCnever"
+    "id": "c991"
   },
   {
     "name": "Rapi",
-    "id": "c992",
-    "tl": "NPCnever"
+    "id": "c992"
   },
   {
     "name": "Mecha Shifty",
-    "id": "c993",
-    "tl": "NPCnever"
+    "id": "c993"
   },
   {
     "name": "Rapi",
-    "id": "c994",
-    "tl": "NPCnever"
+    "id": "c994"
   },
   {
     "name": "Leviathan",
-    "id": "c996",
-    "tl": "NPCnever"
+    "id": "c996"
   },
   {
     "name": "Hermin",
-    "id": "c998",
-    "tl": "NPCnever"
+    "id": "c998"
   },
   {
     "name": "Ghost - Alfred",
-    "id": "c9000",
-    "tl": "NPCnever"
+    "id": "c9000"
   },
   {
     "name": "Ghost - Neaty",
-    "id": "c9000_01",
-    "tl": "NPCnever"
+    "id": "c9000_01"
   },
   {
     "name": "Ghost - Sizzly",
-    "id": "c9000_02",
-    "tl": "NPCnever"
+    "id": "c9000_02"
   },
   {
     "name": "Ghost - Fixy",
-    "id": "c9000_03",
-    "tl": "NPCnever"
+    "id": "c9000_03"
   },
   {
     "name": "Ghost - Detaily",
-    "id": "c9000_05",
-    "tl": "NPCnever"
+    "id": "c9000_05"
   },
   {
     "name": "Ghost - Sellsy",
-    "id": "c9000_06",
-    "tl": "NPCnever"
+    "id": "c9000_06"
   },
   {
     "name": "Ghost",
-    "id": "c9000_07",
-    "tl": "NPCnever"
+    "id": "c9000_07"
   },
   {
     "name": "Ghost - Pinne",
-    "id": "c9001",
-    "tl": "NPCnever"
+    "id": "c9001"
   },
   {
     "name": "Mrs. Miss",
-    "id": "c9003",
-    "tl": "NPCnever"
+    "id": "c9003"
   },
   {
     "name": "Velvet",
-    "id": "c9004",
-    "tl": "NPCnever"
+    "id": "c9004"
   },
   {
     "name": "Rapture",
-    "id": "c9005",
-    "tl": "NPCnever"
+    "id": "c9005"
   },
   {
     "name": "Rapture",
-    "id": "c9005_01",
-    "tl": "NPCnever"
+    "id": "c9005_01"
+  },
+  {
+    "name": "Deipara",
+    "id": "c9006"
   },
   {
     "name": "Nayuta",
-    "id": "c9008",
-    "tl": "NPCnever"
+    "id": "c9008"
   },
   {
     "name": "Blue Water Island",
-    "id": "bluewaterisland",
-    "tl": "never"
+    "id": "bluewaterisland"
   },
   {
     "name": "Bow Wow Paradise",
-    "id": "bowwowparadise",
-    "tl": "NPCnever"
+    "id": "bowwowparadise"
   },
   {
     "name": "White Memory 1",
-    "id": "whitememory1",
-    "tl": "NPCnever"
+    "id": "whitememory1"
   },
   {
     "name": "White Memory 2",
-    "id": "whitememory2",
-    "tl": "NPCnever"
+    "id": "whitememory2"
   },
   {
     "name": "777",
-    "id": "777",
-    "tl": "never"
+    "id": "777"
   },
   {
     "name": "Cherry Blossom",
-    "id": "cherryblossom",
-    "tl": "never"
+    "id": "cherryblossom"
   },
   {
     "name": "License to Kill",
-    "id": "ltk",
-    "tl": "never"
+    "id": "ltk"
   },
   {
     "name": "Maid in Valentine",
-    "id": "maidinvalentine",
-    "tl": "never"
+    "id": "maidinvalentine"
   },
   {
     "name": "Queen's Order",
-    "id": "queensorder",
-    "tl": "never"
+    "id": "queensorder"
   },
   {
     "name": "Nya Nya Paradise",
-    "id": "nyanyaparadise",
-    "tl": "never"
+    "id": "nyanyaparadise"
   },
   {
     "name": "Golden Ship",
-    "id": "goldenship",
-    "tl": "never"
+    "id": "goldenship"
   },
   {
     "name": "Sea You Again",
-    "id": "seayouagain",
-    "tl": "never"
+    "id": "seayouagain"
   },
   {
     "name": "Outer Automata",
-    "id": "outerautomata",
-    "tl": "never"
+    "id": "outerautomata"
   },
   {
     "name": "No Caller ID",
-    "id": "nocallerid",
-    "tl": "never"
+    "id": "nocallerid"
   },
   {
     "name": "School Of Lock",
-    "id": "schooloflock",
-    "tl": "never"
+    "id": "schooloflock"
   },
   {
     "name": "Dazzling Cupid: Tia",
-    "id": "dazzlingcupid_tia",
-    "tl": "never"
+    "id": "dazzlingcupid_tia"
   },
   {
     "name": "Dazzling Cupid: Naga",
-    "id": "dazzlingcupid_naga",
-    "tl": "never"
+    "id": "dazzlingcupid_naga"
   },
   {
     "name": "ACPU FREEZE",
-    "id": "acpufreeze",
-    "tl": "never"
+    "id": "acpufreeze"
   },
   {
     "name": "RED ASH 1",
-    "id": "redash1",
-    "tl": "never"
+    "id": "redash1"
   },
   {
     "name": "RED ASH 2",
-    "id": "redash2",
-    "tl": "never"
+    "id": "redash2"
   },
   {
     "name": "Alone Survivor",
-    "id": "alonesurvivor",
-    "tl": "never"
+    "id": "alonesurvivor"
   },
   {
     "name": "Miracle Snow",
-    "id": "miraclesnow",
-    "tl": "never"
+    "id": "miraclesnow"
   },
   {
     "name": "Neverland",
-    "id": "neverland",
-    "tl": "never"
+    "id": "neverland"
   },
   {
     "name": "New Year New Sword",
-    "id": "newyearnewsword",
-    "tl": "never"
+    "id": "newyearnewsword"
   },
   {
     "name": "Lion Heart",
-    "id": "lionheart",
-    "tl": "never"
+    "id": "lionheart"
   },
   {
     "name": "D Outsider",
-    "id": "doutsider",
-    "tl": "never"
+    "id": "doutsider"
   },
   {
     "name": "Dirty Backyard",
-    "id": "dirtybackyard",
-    "tl": "never"
+    "id": "dirtybackyard"
   },
   {
     "name": "Perfect Maid",
-    "id": "perfectmaid",
-    "tl": "never"
+    "id": "perfectmaid"
   },
   {
     "name": "BOOM's DAY",
-    "id": "boomsday",
-    "tl": "never"
+    "id": "boomsday"
   },
   {
     "name": "Kill The Lord",
-    "id": "killthelord",
-    "tl": "never"
+    "id": "killthelord"
   },
   {
     "name": "Re: Cipe For You",
-    "id": "recipeforyou",
-    "tl": "never"
+    "id": "recipeforyou"
   },
   {
     "name": "One More Time",
-    "id": "onemoretime",
-    "tl": "never"
+    "id": "onemoretime"
   },
   {
     "name": "Brand New Year",
-    "id": "brandnewyear",
-    "tl": "never"
+    "id": "brandnewyear"
   },
   {
     "name": "Last Kingdom",
-    "id": "lastkingdom",
-    "tl": "never"
+    "id": "lastkingdom"
   },
   {
     "name": "D.ARK HERO",
-    "id": "darkhero",
-    "tl": "never"
+    "id": "darkhero"
   },
   {
     "name": "High Tech Toy",
-    "id": "hightechtoy",
-    "tl": "never"
+    "id": "hightechtoy"
   },
   {
     "name": "Golden Coin Rush",
-    "id": "goldencoinrush",
-    "tl": "never"
+    "id": "goldencoinrush"
   },
   {
     "name": "Claymore",
-    "id": "claymore",
-    "tl": "never"
+    "id": "claymore"
   },
   {
     "name": "Aegis the Diver",
-    "id": "aegisthediver",
-    "tl": "never"
+    "id": "aegisthediver"
   },
   {
     "name": "Beauty Full Shot",
-    "id": "beautyfullshot",
-    "tl": "never"
+    "id": "beautyfullshot"
   },
   {
     "name": "Juvenile Days",
-    "id": "juveniledays",
-    "tl": "never"
+    "id": "juveniledays"
   },
   {
     "name": "Colorless",
-    "id": "colorless",
-    "tl": "never"
+    "id": "colorless"
   },
   {
     "name": "Evangelion",
-    "id": "evangelion",
-    "tl": "never"
+    "id": "evangelion"
   },
   {
     "name": "Jinx Player",
-    "id": "jinxplayer",
-    "tl": "never"
+    "id": "jinxplayer"
   },
   {
     "name": "Phantom Thief",
-    "id": "phantomthief",
-    "tl": "never"
+    "id": "phantomthief"
   },
   {
     "name": "Life Again",
-    "id": "lifeagain",
-    "tl": "never"
+    "id": "lifeagain"
   },
   {
     "name": "Old Tales",
-    "id": "oldtales",
-    "tl": "never"
+    "id": "oldtales"
   },
   {
     "name": "Secret Garden",
-    "id": "secretgarden",
-    "tl": "never"
+    "id": "secretgarden"
   },
   {
     "name": "Ice Dragon Saga",
-    "id": "icedragonsaga",
-    "tl": "never"
+    "id": "icedragonsaga"
   },
   {
     "name": "Footstep Walk Run",
-    "id": "footstepwalkrun",
-    "tl": "never"
+    "id": "footstepwalkrun"
   },
   {
     "name": "Wisdom Spring",
-    "id": "wisdomspring",
-    "tl": "never"
+    "id": "wisdomspring"
   },
   {
     "name": "Romantic Valentine",
-    "id": "romanticvalentine",
-    "tl": "never"
+    "id": "romanticvalentine"
   },
   {
     "name": "Second Quest",
-    "id": "secondquest1",
-    "tl": "never"
+    "id": "secondquest1"
   },
   {
     "name": "Second Quest",
-    "id": "secondquest2",
-    "tl": "never"
+    "id": "secondquest2"
   },
   {
     "name": "For Rest",
-    "id": "forrest",
-    "tl": "never"
+    "id": "forrest"
   },
   {
     "name": "New Flavor",
-    "id": "newflavor",
-    "tl": "never"
+    "id": "newflavor"
   },
   {
     "name": "True Flavor",
-    "id": "trueflavor",
-    "tl": "never"
+    "id": "trueflavor"
   },
   {
     "name": "Unbreakable Sphere",
-    "id": "unbreakablesphere",
-    "tl": "never"
+    "id": "unbreakablesphere"
   },
   {
     "name": "Arcane Archive",
-    "id": "arcanearchive",
-    "tl": "never"
+    "id": "arcanearchive"
   },
   {
     "name": "Lord For Justice",
-    "id": "lordforjustice",
-    "tl": "never"
+    "id": "lordforjustice"
   },
   {
     "name": "Memories Teller 1",
-    "id": "memoriesteller_1",
-    "tl": "never"
+    "id": "memoriesteller_1"
   },
   {
     "name": "Memories Teller 2",
-    "id": "memoriesteller_2",
-    "tl": "never"
+    "id": "memoriesteller_2"
   },
   {
     "name": "Over the Horizon",
-    "id": "overthehorizon",
-    "tl": "never"
+    "id": "overthehorizon"
   },
   {
     "name": "Boom the Ghost",
-    "id": "boomtheghost",
-    "tl": "never"
+    "id": "boomtheghost"
   },
   {
     "name": "Absolute",
-    "id": "absolute",
-    "tl": "never"
+    "id": "absolute"
   },
   {
     "name": "Coins In Rush",
-    "id": "coinsinrush",
-    "tl": "never"
+    "id": "coinsinrush"
   },
   {
     "name": "Smol Ade",
-    "id": "smol_ade",
-    "tl": "never"
+    "id": "smol_ade"
   },
   {
     "name": "Smol Anchor",
-    "id": "smol_anchor",
-    "tl": "never"
+    "id": "smol_anchor"
   },
   {
     "name": "Smol Anchor Pirate",
-    "id": "smol_anchor_pirate",
-    "tl": "never"
+    "id": "smol_anchor_pirate"
   },
   {
     "name": "Smol Bolt",
-    "id": "smol_bolt",
-    "tl": "never"
+    "id": "smol_bolt"
   },
   {
     "name": "Smol Frima",
-    "id": "smol_frima",
-    "tl": "never"
+    "id": "smol_frima"
   },
   {
     "name": "Smol Helm",
-    "id": "smol_helm",
-    "tl": "never"
+    "id": "smol_helm"
   },
   {
     "name": "Smol Liter",
-    "id": "smol_liter",
-    "tl": "never"
+    "id": "smol_liter"
   },
   {
     "name": "Smol Mary",
-    "id": "smol_mary",
-    "tl": "never"
+    "id": "smol_mary"
   },
   {
     "name": "Smol Mast",
-    "id": "smol_mast",
-    "tl": "never"
+    "id": "smol_mast"
   },
   {
     "name": "Smol Mast Pirate",
-    "id": "smol_mast_pirate",
-    "tl": "never"
+    "id": "smol_mast_pirate"
   },
   {
     "name": "Pirate Cafe",
-    "id": "piratecafe",
-    "tl": "never"
+    "id": "piratecafe"
   },
   {
     "name": "Smol Pepper",
-    "id": "smol_pepper",
-    "tl": "never"
+    "id": "smol_pepper"
   },
   {
     "name": "Smol Maid Privaty",
-    "id": "smol_mpriv",
-    "tl": "never"
+    "id": "smol_mpriv"
   },
   {
     "name": "Smol Sin Pirate",
-    "id": "smol_sin_pirate",
-    "tl": "never"
+    "id": "smol_sin_pirate"
   },
   {
     "name": "Smol Rapi",
-    "id": "smol_rapi",
-    "tl": "never"
+    "id": "smol_rapi"
   },
   {
     "name": "Smol Yan",
-    "id": "smol_yan",
-    "tl": "never"
+    "id": "smol_yan"
   },
   {
     "name": "Smol Rem",
-    "id": "smol_rem",
-    "tl": "never"
+    "id": "smol_rem"
   },
   {
     "name": "Smol Ram",
-    "id": "smol_ram",
-    "tl": "never"
+    "id": "smol_ram"
   },
   {
     "name": "Smol Emilia",
-    "id": "smol_emilia",
-    "tl": "never"
+    "id": "smol_emilia"
   },
   {
     "name": "Boss: Mother Whale",
-    "id": "bba001",
-    "tl": "never"
+    "id": "bba001"
   },
   {
     "name": "Boss: Harvester",
-    "id": "bbg001",
-    "tl": "never"
+    "id": "bbg001"
   },
   {
     "name": "Boss: Chatterbox",
-    "id": "bbg002",
-    "tl": "never"
+    "id": "bbg002"
   },
   {
     "name": "Boss: Blacksmith",
-    "id": "bbg003",
-    "tl": "never"
+    "id": "bbg003"
   },
   {
     "name": "Boss: Storm Bringer",
-    "id": "eba001",
-    "tl": "never"
+    "id": "eba001"
   },
   {
     "name": "Boss: Gatekeeper Blue",
-    "id": "eba003",
-    "tl": "never"
+    "id": "eba003"
   },
   {
     "name": "Boss: Gatekeeper Green",
-    "id": "eba003_green",
-    "tl": "never"
+    "id": "eba003_green"
   },
   {
     "name": "Boss: Gatekeeper Red",
-    "id": "eba003_hsta",
-    "tl": "never"
+    "id": "eba003_hsta"
   },
   {
     "name": "Boss: Land Eater",
-    "id": "ebg001",
-    "tl": "never"
+    "id": "ebg001"
   },
   {
     "name": "Boss: Material H",
-    "id": "ebg002",
-    "tl": "never"
+    "id": "ebg002"
   },
   {
     "name": "Boss: Nihilister",
-    "id": "mba002",
-    "tl": "never"
+    "id": "mba002"
   },
   {
     "name": "Boss: Alteisen",
-    "id": "mbg001",
-    "tl": "never"
+    "id": "mbg001"
   },
   {
     "name": "Boss: Grave Digger",
-    "id": "mbg002",
-    "tl": "never"
+    "id": "mbg002"
   },
   {
     "name": "Boss: Modernia",
-    "id": "mbg004",
-    "tl": "never"
+    "id": "mbg004"
   },
   {
     "name": "Boss: Modernia Intro",
-    "id": "mbg004_appearance",
-    "tl": "never"
+    "id": "mbg004_appearance"
   },
   {
     "name": "Favorite: Poli",
-    "id": "favorite_c030",
-    "tl": "never"
+    "id": "favorite_c030"
   },
   {
     "name": "Favorite: Miranda",
-    "id": "favorite_c032",
-    "tl": "never"
+    "id": "favorite_c032"
   },
   {
     "name": "Favorite: Diesel",
-    "id": "favorite_c072",
-    "tl": "never"
+    "id": "favorite_c072"
   },
   {
     "name": "Favorite: Laplace",
-    "id": "favorite_c100",
-    "tl": "never"
+    "id": "favorite_c100"
   },
   {
     "name": "Favorite: Drake",
-    "id": "favorite_c101",
-    "tl": "never"
+    "id": "favorite_c101"
   },
   {
     "name": "Favorite: Viper",
-    "id": "favorite_c112",
-    "tl": "never"
+    "id": "favorite_c112"
   },
   {
     "name": "Favorite: Milk",
-    "id": "favorite_c141",
-    "tl": "never"
+    "id": "favorite_c141"
   },
   {
     "name": "Favorite: Frima",
-    "id": "favorite_c142",
-    "tl": "never"
+    "id": "favorite_c142"
   },
   {
     "name": "Favorite: Julia",
-    "id": "favorite_c150",
-    "tl": "never"
+    "id": "favorite_c150"
   },
   {
     "name": "Favorite: Tove",
-    "id": "favorite_c192",
-    "tl": "never"
+    "id": "favorite_c192"
   },
   {
     "name": "Favorite: Exia",
-    "id": "favorite_c210",
-    "tl": "never"
+    "id": "favorite_c210"
   },
   {
     "name": "Favorite: Helm",
-    "id": "favorite_c352",
-    "tl": "never"
+    "id": "favorite_c352"
   },
   {
     "name": "Favorite: Bay",
-    "id": "favorite_c550",
-    "tl": "never"
+    "id": "favorite_c550"
   },
   {
     "name": "Story 00-01",
-    "id": "story0001",
-    "tl": "never"
+    "id": "story0001"
   },
   {
     "name": "Story 00-01 no filter",
-    "id": "story0001_2",
-    "tl": "never"
+    "id": "story0001_2"
   },
   {
     "name": "Story 00-02",
-    "id": "story0002",
-    "tl": "never"
+    "id": "story0002"
   },
   {
     "name": "Story 00-02 no filter",
-    "id": "story0002_2",
-    "tl": "never"
+    "id": "story0002_2"
   },
   {
     "name": "Story 00-03",
-    "id": "story0003",
-    "tl": "never"
+    "id": "story0003"
   },
   {
     "name": "Story 02-01",
-    "id": "story0201",
-    "tl": "never"
+    "id": "story0201"
   },
   {
     "name": "Story 04-01",
-    "id": "story0401",
-    "tl": "never"
+    "id": "story0401"
   },
   {
     "name": "Story 04-02",
-    "id": "story0401_2",
-    "tl": "never"
+    "id": "story0401_2"
   },
   {
     "name": "Story 04-02 (CN)",
-    "id": "story0401_3",
-    "tl": "never"
+    "id": "story0401_3"
   },
   {
     "name": "Story 04-05",
-    "id": "story0405",
-    "tl": "never"
+    "id": "story0405"
   },
   {
     "name": "Story 07-02",
-    "id": "story0702",
-    "tl": "never"
+    "id": "story0702"
   },
   {
     "name": "Story 12-01",
-    "id": "story1201",
-    "tl": "never"
+    "id": "story1201"
   },
   {
     "name": "Story 13-02",
-    "id": "story1302",
-    "tl": "never"
+    "id": "story1302"
   },
   {
     "name": "Story 13-03",
-    "id": "story1303",
-    "tl": "never"
+    "id": "story1303"
   },
   {
     "name": "Story 14-01",
-    "id": "story1401",
-    "tl": "never"
+    "id": "story1401"
   },
   {
     "name": "Story 14-03",
-    "id": "story1403",
-    "tl": "never"
+    "id": "story1403"
   },
   {
     "name": "Story 14-05",
-    "id": "story1405",
-    "tl": "never"
+    "id": "story1405"
   },
   {
     "name": "Story 15-01",
-    "id": "story1501",
-    "tl": "never"
+    "id": "story1501"
   },
   {
     "name": "Story 19-01",
-    "id": "story1902",
-    "tl": "never"
+    "id": "story1902"
   },
   {
     "name": "Story 20-01",
-    "id": "story2002",
-    "tl": "never"
+    "id": "story2002"
   },
   {
     "name": "Story 21-01",
-    "id": "story2101",
-    "tl": "never"
+    "id": "story2101"
   },
   {
     "name": "Story 22-01",
-    "id": "story2201",
-    "tl": "never"
+    "id": "story2201"
   },
   {
     "name": "Story 22-02",
-    "id": "story2202",
-    "tl": "never"
+    "id": "story2202"
   },
   {
     "name": "Story 22-06",
-    "id": "story2206",
-    "tl": "never"
+    "id": "story2206"
   },
   {
     "name": "Story 25-01",
-    "id": "story2501",
-    "tl": "never"
+    "id": "story2501"
   },
   {
     "name": "Story 26-02",
-    "id": "story2602",
-    "tl": "never"
+    "id": "story2602"
   }
 ]
