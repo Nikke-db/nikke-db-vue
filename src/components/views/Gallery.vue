@@ -101,6 +101,7 @@
       :space-between="50"
       @update:current-index="(e: number) => updateIndex(e)"
       style="max-width: 95%"
+      :key="carouselData.id"
       >
         <n-carousel-item v-for="data in carouselData.content" :key="data.name">
           <div style="text-align:center; width:100%;">
@@ -182,6 +183,7 @@ import liarsend from '@/utils/json/Gallery/liarsend.json'
 import side01 from '@/utils/json/Gallery/side01.json'
 import side02 from '@/utils/json/Gallery/side02.json'
 import side03 from '@/utils/json/Gallery/side03.json'
+import side04 from '@/utils/json/Gallery/side04.json'
 import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
 import darkhero from '@/utils/json/Gallery/darkhero.json'
 import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
@@ -207,6 +209,8 @@ import bfgcleanup from '@/utils/json/Gallery/bfgcleanup.json'
 import absolute from '@/utils/json/Gallery/absolute.json'
 import madeinrush from '@/utils/json/Gallery/madeinrush.json'
 import coinsinrush from '@/utils/json/Gallery/coinsinrush.json'
+import rebornevil from '@/utils/json/Gallery/rebornevil.json'
+import goninjathief from '@/utils/json/Gallery/goninjathief.json'
 
 const market = useMarket()
 
@@ -234,7 +238,8 @@ const buttonListStory = [
 const buttonListSideStory = [
   { data: side01 },
   { data: side02 },
-  { data: side03 }
+  { data: side03 },
+  { data: side04 }
 ] as buttonInterface[]
 
 const buttonListEvents = [
@@ -276,7 +281,9 @@ const buttonListEvents = [
   { data: overthehorizon },
   { data: boomtheghost },
   { data: absolute },
-  { data: coinsinrush }
+  { data: coinsinrush },
+  { data: rebornevil },
+  { data: goninjathief }
 ] as buttonInterface[]
 
 const buttonListOther = [
@@ -316,7 +323,7 @@ const loadData = (dataToLoad: galleryInterface) => {
   setTimeout(() => {
     document.querySelector('#scrollTo')?.scrollIntoView({ behavior: 'smooth' })
     successFeedback()
-  }, 50)
+  }, 150)
 }
 
 const updateIndex = (newIndex: number) => {

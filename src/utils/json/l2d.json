@@ -48,6 +48,10 @@
     "id": "c016_01"
   },
   {
+    "name": "Rapi: Red Hood Cherished Red",
+    "id": "c016_02"
+  },
+  {
     "name": "Delta",
     "id": "c020"
   },
@@ -58,6 +62,10 @@
   {
     "name": "Signal Dramatic Chocolate",
     "id": "c022_01"
+  },
+  {
+    "name": "Delta: Ninja Thief",
+    "id": "c023"
   },
   {
     "name": "Poli",
@@ -2018,6 +2026,14 @@
   {
     "name": "Coins In Rush",
     "id": "coinsinrush"
+  },
+  {
+    "name": "Reborn Evil",
+    "id": "rebornevil"
+  },
+  {
+    "name": "Go! Ninja Thief",
+    "id": "goninjathief"
   },
   {
     "name": "Smol Ade",
