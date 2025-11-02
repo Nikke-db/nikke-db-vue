@@ -121,6 +121,8 @@ export const useLive2dStore = defineStore('live2d', () => {
         return 'weapon_2'
       case 'c233':
       case 'c233_01':
+      case 'c223':
+      case 'c223_01':
         return 'part_1'
       default:
         return 'default'
@@ -149,6 +151,7 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c355':
       case 'c532':
       case 'c043_02':
+      case 'c017':
         return 'acc'
       case 'c015':
       case 'c351':
@@ -180,6 +183,7 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c850_03':
       case 'c016_01':
       case 'c272_01':
+      case 'c223':
         return 'bg'
       case 'c441':
         return 'acc+bg' // merged acc & bg skins of Avista, by Bingle

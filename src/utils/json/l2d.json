@@ -52,6 +52,10 @@
     "id": "c016_02"
   },
   {
+    "name": "Anis",
+    "id": "c017"
+  },
+  {
     "name": "Delta",
     "id": "c020"
   },
@@ -540,6 +544,14 @@
     "id": "c222_01"
   },
   {
+    "name": "Nayuta",
+    "id": "c223"
+  },
+  {
+    "name": "Nayuta Wu Wei",
+    "id": "c223_01"
+  },
+  {
     "name": "Snow White: Innocent Days",
     "id": "c224"
   },
@@ -816,6 +828,10 @@
     "id": "c330_01"
   },
   {
+    "name": "Crown Glorious Flower",
+    "id": "c330_02"
+  },
+  {
     "name": "Chime",
     "id": "c331"
   },
@@ -1016,12 +1032,20 @@
     "id": "c470_01"
   },
   {
+    "name": "Red Hood Retro Days",
+    "id": "c470_02"
+  },
+  {
     "name": "Liveryn",
     "id": "c480"
   },
   {
     "name": "Fragile",
     "id": "c481"
+  },
+  {
+    "name": "#000000 - Logey",
+    "id": "c482"
   },
   {
     "name": "Hammering",
@@ -1070,6 +1094,10 @@
   {
     "name": "Little Mermaid | Siren Abyss Flower",
     "id": "c513_01"
+  },
+  {
+    "name": "Little Mermaid | Siren Beautiful Bubble",
+    "id": "c513_02"
   },
   {
     "name": "Grave the Great (GraGre)",
@@ -1122,6 +1150,10 @@
   {
     "name": "Leviathan",
     "id": "c562"
+  },
+  {
+    "name": "Bahamut",
+    "id": "c563"
   },
   {
     "name": "Black Ark Ranger",
@@ -1624,6 +1656,10 @@
     "id": "c971"
   },
   {
+    "name": "Rose - Mirror",
+    "id": "c971_01"
+  },
+  {
     "name": "Jien",
     "id": "c973"
   },
@@ -1762,6 +1798,10 @@
   {
     "name": "Nayuta",
     "id": "c9008"
+  },
+  {
+    "name": "Nihilister",
+    "id": "c9009"
   },
   {
     "name": "Blue Water Island",

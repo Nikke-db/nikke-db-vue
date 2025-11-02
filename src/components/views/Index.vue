@@ -8,7 +8,13 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info" class="ytb">
-        <iframe class="ytb-iframe" src="https://www.youtube.com/embed/O3s8Ejek1r4?si=YminAjjyknd4LSY1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <iframe class="ytb-iframe" src="https://www.youtube.com/embed/OBX7O675uW4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </n-alert>
+
+      <n-divider />
+
+      <n-alert type="info">
+        event & chapters 41/42 galleries when event is over
       </n-alert>
 
       <n-divider />
