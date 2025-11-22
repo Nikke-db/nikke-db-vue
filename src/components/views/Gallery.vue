@@ -160,6 +160,7 @@ import story6 from '@/utils/json/Gallery/story6.json'
 import story7 from '@/utils/json/Gallery/story7.json'
 import story8 from '@/utils/json/Gallery/story8.json'
 import story9 from '@/utils/json/Gallery/story9.json'
+import story10 from '@/utils/json/Gallery/story10.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -211,6 +212,8 @@ import madeinrush from '@/utils/json/Gallery/madeinrush.json'
 import coinsinrush from '@/utils/json/Gallery/coinsinrush.json'
 import rebornevil from '@/utils/json/Gallery/rebornevil.json'
 import goninjathief from '@/utils/json/Gallery/goninjathief.json'
+import goddessfall from '@/utils/json/Gallery/goddessfall.json'
+import blankticket from '@/utils/json/Gallery/blankticket.json'
 
 const market = useMarket()
 
@@ -232,7 +235,8 @@ const buttonListStory = [
   { data: story6 },
   { data: story7 },
   { data: story8 },
-  { data: story9 }
+  { data: story9 },
+  { data: story10 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [
@@ -283,7 +287,9 @@ const buttonListEvents = [
   { data: absolute },
   { data: coinsinrush },
   { data: rebornevil },
-  { data: goninjathief }
+  { data: goninjathief },
+  { data: goddessfall },
+  { data: blankticket }
 ] as buttonInterface[]
 
 const buttonListOther = [

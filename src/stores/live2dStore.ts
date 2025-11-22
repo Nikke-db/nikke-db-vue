@@ -152,6 +152,7 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c532':
       case 'c043_02':
       case 'c017':
+      case 'c074':
         return 'acc'
       case 'c015':
       case 'c351':

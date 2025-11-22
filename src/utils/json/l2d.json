@@ -164,6 +164,10 @@
     "id": "c072_04"
   },
   {
+    "name": "Soline: Frost Ticket",
+    "id": "c074"
+  },
+  {
     "name": "Centi",
     "id": "c080"
   },
@@ -274,6 +278,10 @@
   {
     "name": "Jackal",
     "id": "c111"
+  },
+  {
+    "name": "Jackal Class Troublemaker",
+    "id": "c111_01"
   },
   {
     "name": "Viper",
@@ -1740,6 +1748,10 @@
     "id": "c996"
   },
   {
+    "name": "Only One",
+    "id": "c997"
+  },
+  {
     "name": "Hermin",
     "id": "c998"
   },
@@ -1774,6 +1786,10 @@
   {
     "name": "Ghost - Pinne",
     "id": "c9001"
+  },
+  {
+    "name": "NPC: TBA",
+    "id": "c9002"
   },
   {
     "name": "Mrs. Miss",
@@ -2074,6 +2090,10 @@
   {
     "name": "Go! Ninja Thief",
     "id": "goninjathief"
+  },
+  {
+    "name": "Blank Ticket",
+    "id": "blankticket"
   },
   {
     "name": "Smol Ade",
