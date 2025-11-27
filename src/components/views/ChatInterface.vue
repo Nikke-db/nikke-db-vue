@@ -213,40 +213,89 @@ const sendMessage = async () => {
   showRetry.value = false
   lastPrompt.value = text
 
-  try {
-    const response = await callAI()
-    if (!isStopped.value) {
-      await processAIResponse(response)
+  let attempts = 0
+  const maxAttempts = 3
+  let success = false
+
+  while (attempts < maxAttempts && !success && !isStopped.value) {
+    attempts++
+    try {
+      const response = await callAI()
+      if (!isStopped.value) {
+        await processAIResponse(response)
+        success = true
+      }
+    } catch (error: any) {
+      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
+        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+        continue
+      }
+
+      console.error('AI Error:', error)
+      let errorMessage = 'Error: Failed to get response from AI.'
+      if (error.message && error.message.includes('503')) {
+        errorMessage = 'Error 503: Model Overloaded. Please try again.'
+        showRetry.value = true
+      } else if (error.message === 'JSON_PARSE_ERROR') {
+        errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+        showRetry.value = true
+      }
+      chatHistory.value.push({ role: 'system', content: errorMessage })
+      break
     }
-  } catch (error: any) {
-    console.error('AI Error:', error)
-    let errorMessage = 'Error: Failed to get response from AI.'
-    if (error.message && error.message.includes('503')) {
-      errorMessage = 'Error 503: Model Overloaded. Please try again.'
-      showRetry.value = true
-    }
-    chatHistory.value.push({ role: 'system', content: errorMessage })
-  } finally {
-    isLoading.value = false
-    scrollToBottom()
   }
+
+  isLoading.value = false
+  scrollToBottom()
 }
 
-const retryLastMessage = () => {
-  if (lastPrompt.value) {
-    userInput.value = lastPrompt.value
-    
-    // Remove the last system error message
-    if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
-      chatHistory.value.pop()
-    }
-    // Remove the last user message (since sendMessage will add it back)
-    if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'user' && chatHistory.value[chatHistory.value.length - 1].content === lastPrompt.value) {
-      chatHistory.value.pop()
-    }
-    
-    sendMessage()
+const retryLastMessage = async () => {
+  // Remove the last system error message
+  if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
+    chatHistory.value.pop()
   }
+
+  const text = '[Send as JSON and retry turn]'
+  chatHistory.value.push({ role: 'user', content: text })
+  scrollToBottom()
+  isLoading.value = true
+  isStopped.value = false
+  showRetry.value = false
+
+  let attempts = 0
+  const maxAttempts = 3
+  let success = false
+
+  while (attempts < maxAttempts && !success && !isStopped.value) {
+    attempts++
+    try {
+      const response = await callAI()
+      if (!isStopped.value) {
+        await processAIResponse(response)
+        success = true
+      }
+    } catch (error: any) {
+      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
+        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+        continue
+      }
+
+      console.error('AI Error:', error)
+      let errorMessage = 'Error: Failed to get response from AI.'
+      if (error.message && error.message.includes('503')) {
+        errorMessage = 'Error 503: Model Overloaded. Please try again.'
+        showRetry.value = true
+      } else if (error.message === 'JSON_PARSE_ERROR') {
+        errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+        showRetry.value = true
+      }
+      chatHistory.value.push({ role: 'system', content: errorMessage })
+      break
+    }
+  }
+
+  isLoading.value = false
+  scrollToBottom()
 }
 
 const stopGeneration = () => {
@@ -281,23 +330,40 @@ const continueStory = async () => {
   showRetry.value = false
   lastPrompt.value = text
 
-  try {
-    const response = await callAI()
-    if (!isStopped.value) {
-      await processAIResponse(response)
+  let attempts = 0
+  const maxAttempts = 3
+  let success = false
+
+  while (attempts < maxAttempts && !success && !isStopped.value) {
+    attempts++
+    try {
+      const response = await callAI()
+      if (!isStopped.value) {
+        await processAIResponse(response)
+        success = true
+      }
+    } catch (error: any) {
+      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
+        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+        continue
+      }
+
+      console.error('AI Error:', error)
+      let errorMessage = 'Error: Failed to get response from AI.'
+      if (error.message && error.message.includes('503')) {
+        errorMessage = 'Error 503: Model Overloaded. Please try again.'
+        showRetry.value = true
+      } else if (error.message === 'JSON_PARSE_ERROR') {
+        errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+        showRetry.value = true
+      }
+      chatHistory.value.push({ role: 'system', content: errorMessage })
+      break
     }
-  } catch (error: any) {
-    console.error('AI Error:', error)
-    let errorMessage = 'Error: Failed to get response from AI.'
-    if (error.message && error.message.includes('503')) {
-      errorMessage = 'Error 503: Model Overloaded. Please try again.'
-      showRetry.value = true
-    }
-    chatHistory.value.push({ role: 'system', content: errorMessage })
-  } finally {
-    isLoading.value = false
-    scrollToBottom()
   }
+
+  isLoading.value = false
+  scrollToBottom()
 }
 
 const callAI = async () => {
@@ -518,14 +584,7 @@ const processAIResponse = async (responseStr: string) => {
     
   } catch (e) {
     console.error('Failed to parse JSON response', e)
-    // Try to continue by handling the plaintext as action
-    const fallbackAction = {
-      text: responseStr,
-      character: 'current',
-      animation: 'idle',
-      speaking: true
-    }
-    await executeAction(fallbackAction)
+    throw new Error('JSON_PARSE_ERROR')
   }
 }
 
