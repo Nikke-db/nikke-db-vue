@@ -268,7 +268,9 @@ const nextAction = () => {
 const continueStory = async () => {
   if (isLoading.value) return
   
-  const text = mode.value === 'story' ? 'Continue the story.' : 'Continue.'
+  const text = mode.value === 'story' 
+    ? 'Continue the story. Do not repeat previous events.' 
+    : '[Continue the roleplay. Do not repeat the last response.]'
   // Don't add "Continue" to chat history to keep it clean, or add it as a system note?
   // Let's add it as a user prompt but maybe hidden? Or just standard user prompt.
   // For now, standard user prompt is fine to show intent.
@@ -409,7 +411,10 @@ const generateSystemPrompt = () => {
   - CRITICAL: Do NOT output numbered lists, outlines, plans, or thoughts. Output ONLY the JSON array. Do not include any text before or after the JSON.
   - In Story Mode, use THIRD PERSON narration. Refer to the protagonist as "The Commander", NEVER as "you".
   - In Story Mode, NEVER display the Commander sprite. Use 'character': 'none' when the Commander is speaking or acting.
-  - In Roleplay Mode, generate 1-3 turns of dialogue/action. If the user clicks "Continue", DO NOT repeat the last action. ADVANCE the plot or reaction. If the conversation has stalled, introduce a new topic or event based on the character's personality.
+  - In Roleplay Mode, generate 1-3 turns of dialogue/action. If the conversation has stalled, introduce a new topic or event based on the character's personality.
+  - CRITICAL: If the user clicks "Continue", DO NOT repeat the last action. ADVANCE the plot or reaction. NEVER repeat the user's dialogue or the last character's dialogue. You must ALWAYS provide a NEW response or reaction.
+  - CRITICAL: Do not rephrase the previous turn. Move the story FORWARD.
+  - CRITICAL: If you are in Roleplay Mode, NEVER output dialogue that is identical or nearly identical to the User's previous input. You speak for the NPCs. Only perform actions for the user if explicitly instructed in [] or if it is missing from the user's input and absolutely necessary in a logic sense to proceed.
   `
   return prompt
 }
