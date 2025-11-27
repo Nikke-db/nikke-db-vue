@@ -743,7 +743,7 @@ const executeAction = async (data: any) => {
 
 .settings-btn {
   position: absolute;
-  top: 50px;
+  top: 150px;
   right: 20px;
   pointer-events: auto;
   z-index: 1001;
