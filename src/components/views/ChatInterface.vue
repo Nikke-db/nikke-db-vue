@@ -371,6 +371,7 @@ const generateSystemPrompt = () => {
   - Research how characters address EACH OTHER. (e.g. Chime calls Crown "Your Majesty").
   - FAILURE to act according to personality (e.g. Chime accepting insults calmly) is a critical error.
   - FAILURE to mimic the character's unique voice/tone (e.g. Chime's archaic/royal speech) is a critical error.
+  - IMPORTANT: Remember that the Commander is a man. Do not use neutral pronouns when characters address him.
 
   You must output your response in JSON format ONLY. Do not include any text outside the JSON object.
   
