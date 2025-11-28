@@ -137,11 +137,14 @@ let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const chatHistoryRef = ref<HTMLElement | null>(null)
+const openRouterModels = ref<{label: string, value: string}[]>([])
 
 // Options
 const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
-  { label: 'Gemini', value: 'gemini' }
+  { label: 'Gemini', value: 'gemini' },
+  { label: 'OpenRouter (Free)', value: 'openrouter-free' },
+  { label: 'OpenRouter (All)', value: 'openrouter-all' }
 ]
 
 const modelOptions = computed(() => {
@@ -150,12 +153,15 @@ const modelOptions = computed(() => {
       { label: 'Sonar', value: 'sonar' },
       { label: 'Sonar Pro', value: 'sonar-pro' },
     ]
-  } else {
+  } else if (apiProvider.value === 'gemini') {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
     ]
+  } else if (apiProvider.value.startsWith('openrouter')) {
+    return openRouterModels.value
   }
+  return []
 })
 
 const modeOptions = [
@@ -173,14 +179,40 @@ watch(apiKey, (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
 })
 
-watch(apiProvider, () => {
+watch(apiProvider, async () => {
   // Reset model when provider changes
   if (apiProvider.value === 'perplexity') {
     model.value = 'sonar'
-  } else {
+  } else if (apiProvider.value === 'gemini') {
     model.value = 'gemini-2.5-flash'
+  } else if (apiProvider.value.startsWith('openrouter')) {
+    model.value = ''
+    await fetchOpenRouterModels()
+    if (openRouterModels.value.length > 0) {
+      model.value = openRouterModels.value[0].value
+    }
   }
 })
+
+const fetchOpenRouterModels = async () => {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models')
+    const data = await response.json()
+    let models = data.data
+    
+    if (apiProvider.value === 'openrouter-free') {
+      models = models.filter((m: any) => m.pricing.prompt === '0' && m.pricing.completion === '0')
+    }
+    
+    openRouterModels.value = models.map((m: any) => ({
+      label: m.name,
+      value: m.id
+    })).sort((a: any, b: any) => a.label.localeCompare(b.label))
+    
+  } catch (error) {
+    console.error('Failed to fetch OpenRouter models:', error)
+  }
+}
 
 // Methods
 const renderMarkdown = (text: string) => {
@@ -233,12 +265,12 @@ const sendMessage = async () => {
 
       console.error('AI Error:', error)
       let errorMessage = 'Error: Failed to get response from AI.'
+      showRetry.value = true
+
       if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
-        showRetry.value = true
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
-        showRetry.value = true
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
       break
@@ -282,12 +314,12 @@ const retryLastMessage = async () => {
 
       console.error('AI Error:', error)
       let errorMessage = 'Error: Failed to get response from AI.'
+      showRetry.value = true
+
       if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
-        showRetry.value = true
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
-        showRetry.value = true
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
       break
@@ -350,12 +382,12 @@ const continueStory = async () => {
 
       console.error('AI Error:', error)
       let errorMessage = 'Error: Failed to get response from AI.'
+      showRetry.value = true
+
       if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
-        showRetry.value = true
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
-        showRetry.value = true
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
       break
@@ -409,7 +441,7 @@ const callAI = async () => {
     ]
     logDebug('Sending to Perplexity:', messages)
     return await callPerplexity(messages)
-  } else {
+  } else if (apiProvider.value === 'gemini') {
     // Gemini: Original behavior (context as separate message at end)
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -421,6 +453,16 @@ const callAI = async () => {
     })
     logDebug('Sending to Gemini:', messages)
     return await callGemini(messages)
+  } else if (apiProvider.value.startsWith('openrouter')) {
+    // OpenRouter: Use standard OpenAI format with context in system prompt
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    
+    const messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    logDebug('Sending to OpenRouter:', messages)
+    return await callOpenRouter(messages)
   }
 }
 
@@ -483,6 +525,31 @@ const generateSystemPrompt = () => {
   - CRITICAL: If you are in Roleplay Mode, NEVER output dialogue that is identical or nearly identical to the User's previous input. You speak for the NPCs. Only perform actions for the user if explicitly instructed in [] or if it is missing from the user's input and absolutely necessary in a logic sense to proceed.
   `
   return prompt
+}
+
+const callOpenRouter = async (messages: any[]) => {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey.value}`,
+      'HTTP-Referer': window.location.href,
+      'X-Title': 'Nikke DB Story Gen',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model.value,
+      messages: messages,
+      plugins: [{ id: "web", engine: "native" }]
+    })
+  })
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('OpenRouter API Error Details:', errorData)
+    throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+  const data = await response.json()
+  return data.choices[0].message.content
 }
 
 const callPerplexity = async (messages: any[]) => {
