@@ -40,12 +40,35 @@
           <n-form-item label="API Provider">
             <n-select v-model:value="apiProvider" :options="providerOptions" />
           </n-form-item>
+          
+          <n-alert type="warning" style="margin-bottom: 12px" title="Cost Warning">
+            Users are responsible for any possible cost using this functionality.
+          </n-alert>
+
           <n-form-item label="API Key">
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
           <n-form-item label="Model">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
+
+          <n-alert type="info" style="margin-bottom: 12px" title="Web Search Cost">
+            Note: Web search functionality may incur additional costs. Please consult your API provider's pricing documentation.
+            <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+              <template #trigger>
+                <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                  <Help />
+                </n-icon>
+              </template>
+              <div>
+                <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wikia to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
+                <p>The model will execute the web search only the first time a character appears in a scene, and will only obtain limited information, however certain providers may charge a fee after a certain amount of web searches, even if you are using a free model.</p>
+                <p>It is strongly suggested to check your provider's documentation and model page for information regarding possible costs.</p>
+                <p>It is also recommended to select a limit on your API key to prevent unexpected charges.</p>
+              </div>
+            </n-popover>
+          </n-alert>
+
           <n-form-item>
             <template #label>
               Mode
@@ -106,7 +129,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useMarket } from '@/stores/market'
 import { Settings, Help } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover } from 'naive-ui'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import { marked } from 'marked'
 
@@ -137,14 +160,13 @@ let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const chatHistoryRef = ref<HTMLElement | null>(null)
-const openRouterModels = ref<{label: string, value: string}[]>([])
+const openRouterModels = ref<any[]>([])
 
 // Options
 const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
   { label: 'Gemini', value: 'gemini' },
-  { label: 'OpenRouter (Free)', value: 'openrouter-free' },
-  { label: 'OpenRouter (All)', value: 'openrouter-all' }
+  { label: 'OpenRouter', value: 'openrouter' }
 ]
 
 const modelOptions = computed(() => {
@@ -158,7 +180,7 @@ const modelOptions = computed(() => {
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
     ]
-  } else if (apiProvider.value.startsWith('openrouter')) {
+  } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
   }
   return []
@@ -185,7 +207,7 @@ watch(apiProvider, async () => {
     model.value = 'sonar'
   } else if (apiProvider.value === 'gemini') {
     model.value = 'gemini-2.5-flash'
-  } else if (apiProvider.value.startsWith('openrouter')) {
+  } else if (apiProvider.value === 'openrouter') {
     model.value = ''
     await fetchOpenRouterModels()
     if (openRouterModels.value.length > 0) {
@@ -200,14 +222,19 @@ const fetchOpenRouterModels = async () => {
     const data = await response.json()
     let models = data.data
     
-    if (apiProvider.value === 'openrouter-free') {
-      models = models.filter((m: any) => m.pricing.prompt === '0' && m.pricing.completion === '0')
-    }
-    
-    openRouterModels.value = models.map((m: any) => ({
-      label: m.name,
-      value: m.id
-    })).sort((a: any, b: any) => a.label.localeCompare(b.label))
+    openRouterModels.value = models.map((m: any) => {
+      const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
+      return {
+        label: (isFree ? '[FREE] ' : '') + m.name,
+        value: m.id,
+        isFree: isFree,
+        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+      }
+    }).sort((a: any, b: any) => {
+      if (a.isFree && !b.isFree) return -1
+      if (!a.isFree && b.isFree) return 1
+      return a.label.localeCompare(b.label)
+    })
     
   } catch (error) {
     console.error('Failed to fetch OpenRouter models:', error)
@@ -453,7 +480,7 @@ const callAI = async () => {
     })
     logDebug('Sending to Gemini:', messages)
     return await callGemini(messages)
-  } else if (apiProvider.value.startsWith('openrouter')) {
+  } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
     
@@ -475,10 +502,10 @@ const generateSystemPrompt = () => {
   Mode: ${mode.value === 'roleplay' ? 'Roleplay Mode. The user plays as the Commander. You control all other characters.' : 'Story Mode. You narrate the scene based on user prompts. The user is an observer.'}
   
   CRITICAL RESEARCH INSTRUCTION:
-  ${isStart ? 'Since this is the START of the conversation, you MUST use the Google Search tool to verify the speech patterns, personality, and backstory of the characters involved on the NIKKE Wiki (https://nikke-goddess-of-victory-international.fandom.com/wiki/). Search for "[Character Name] Nikke Wiki Story" and look for the "Honorific" section. EXAMPLE: Chime calls the Commander "Rapscallion". Also research their personality traits (e.g. Chime is proud and easily offended by doubts about her competence).' : 'Recall the honorifics, personality, and speech patterns you researched at the start of the conversation. Do not search again unless a NEW character is introduced.'}
+  ${isStart ? 'Since this is the START of the conversation, you MUST use the Web Search tool to verify the speech patterns, personality, and backstory of the characters involved on the NIKKE Wiki (https://nikke-goddess-of-victory-international.fandom.com/wiki/). Search for "[Character Name] Nikke Wiki Story" and look for the "Honorific" section. EXAMPLE: Chime calls the Commander "Rapscallion". Also research their personality traits (e.g. Chime is proud and easily offended by doubts about her competence).' : 'Recall the honorifics, personality, and speech patterns you researched at the start of the conversation. Do not search again unless a NEW character is introduced.'}
   - FAILURE to use the correct honorific (e.g. having Chime say "Commander") is a critical error.
   - CRITICAL: The honorifics you find (e.g. "Rapscallion", "Master") are EXCLUSIVE to the Commander. NEVER use them when characters address each other.
-  - Research how characters address EACH OTHER. (e.g. Chime calls Crown "Your Majesty").
+  - Research how characters address EACH OTHER. (e.g. Chime calls Crown "Her Highness").
   - FAILURE to act according to personality (e.g. Chime accepting insults calmly) is a critical error.
   - FAILURE to mimic the character's unique voice/tone (e.g. Chime's archaic/royal speech) is a critical error.
   - IMPORTANT: Remember that the Commander is a man. Do not use neutral pronouns when characters address him.
@@ -539,7 +566,7 @@ const callOpenRouter = async (messages: any[]) => {
     body: JSON.stringify({
       model: model.value,
       messages: messages,
-      plugins: [{ id: "web", engine: "native" }]
+      plugins: [{ id: "web" }]
     })
   })
   
