@@ -812,6 +812,11 @@ const executeAction = async (data: any) => {
   right: 20px;
   pointer-events: auto;
   z-index: 1001;
+
+  @media (max-width: 768px) {
+    top: 150px;
+    right: 10px;
+  }
 }
 
 .chat-container {
@@ -827,6 +832,14 @@ const executeAction = async (data: any) => {
   padding: 10px;
   pointer-events: auto;
   transition: opacity 0.3s;
+
+  @media (max-width: 768px) {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    max-height: 50vh;
+  }
 }
 
 .chat-history {
@@ -835,6 +848,10 @@ const executeAction = async (data: any) => {
   margin-bottom: 10px;
   max-height: 400px;
   
+  @media (max-width: 768px) {
+    max-height: none;
+  }
+
   .message {
     margin-bottom: 8px;
     padding: 8px;
@@ -843,10 +860,12 @@ const executeAction = async (data: any) => {
     &.user {
       background: rgba(0, 123, 255, 0.5);
       align-self: flex-end;
+      max-width: 85%;
     }
     
     &.assistant {
       background: rgba(255, 255, 255, 0.1);
+      max-width: 95%;
     }
     
     &.system {
@@ -857,6 +876,11 @@ const executeAction = async (data: any) => {
     .message-content {
       color: white;
       word-wrap: break-word;
+
+      :deep(img) {
+        max-width: 100%;
+        height: auto;
+      }
     }
   }
 }
@@ -864,5 +888,20 @@ const executeAction = async (data: any) => {
 .chat-input-area {
   display: flex;
   gap: 10px;
+  align-items: flex-end;
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    
+    .n-input {
+      width: 100%;
+      order: 1;
+    }
+    
+    .n-button {
+      flex: 1;
+      order: 2;
+    }
+  }
 }
 </style>
