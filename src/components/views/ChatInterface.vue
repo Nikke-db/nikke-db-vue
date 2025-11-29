@@ -351,6 +351,7 @@ const fetchOpenRouterModels = async () => {
     
     openRouterModels.value = models.map((m: any) => {
       const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
+
       return {
         label: (isFree ? '[FREE] ' : '') + m.name,
         value: m.id,
@@ -360,6 +361,7 @@ const fetchOpenRouterModels = async () => {
     }).sort((a: any, b: any) => {
       if (a.isFree && !b.isFree) return -1
       if (!a.isFree && b.isFree) return 1
+
       return a.label.localeCompare(b.label)
     })
     
@@ -406,6 +408,7 @@ const initializeSettings = async () => {
     
     // Validate and set model
     let validModels: string[] = []
+
     if (savedProvider === 'perplexity') {
       validModels = ['sonar', 'sonar-pro']
     } else if (savedProvider === 'gemini') {
@@ -1003,6 +1006,7 @@ const sanitizeActions = (actions: any[]) => {
   for (const action of actions) {
     if (!action.text || typeof action.text !== 'string') {
       newActions.push(action)
+
       continue
     }
 
@@ -1028,6 +1032,7 @@ const sanitizeActions = (actions: any[]) => {
          // This handles cases where the AI forgets quotes around dialogue
       }
       newActions.push(action)
+
       continue
     }
 
@@ -1039,6 +1044,7 @@ const sanitizeActions = (actions: any[]) => {
     
     if (parts.length === 0) {
       newActions.push(action)
+
       continue
     }
 
@@ -1047,7 +1053,8 @@ const sanitizeActions = (actions: any[]) => {
     const isQuote = (s: string) => /^[“"][\s\S]*[”"]$/.test(s.trim())
 
     // Merge trailing punctuation into previous part to avoid tiny separate messages
-    const mergedParts: { text: string, isQuoted: boolean }[] = []
+    const mergedParts: { text: string, isQuoted: boolean, characterId: string }[] = []
+    let effectiveCharacterId = action.character
     
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
@@ -1056,6 +1063,15 @@ const sanitizeActions = (actions: any[]) => {
       // Filter out standalone speaker labels (e.g. "**Anis:** ")
       // These are often artifacts from splitting "Name: Quote"
       if (isSpeakerLabel(part) && !quoted) {
+        // Try to extract the name and update the effective character ID for subsequent parts
+        const match = part.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*(?:\*\*)?\s*$/)
+        if (match) {
+            const name = match[1].trim()
+            const char = l2d.find(c => c.name.toLowerCase() === name.toLowerCase())
+            if (char) {
+                effectiveCharacterId = char.id
+            }
+        }
         continue
       }
 
@@ -1064,13 +1080,13 @@ const sanitizeActions = (actions: any[]) => {
       if (mergedParts.length > 0 && !quoted && /^[.,;!?\s]+$/.test(part)) {
         mergedParts[mergedParts.length - 1].text += part
       } else {
-        mergedParts.push({ text: part, isQuoted: quoted })
+        mergedParts.push({ text: part, isQuoted: quoted, characterId: effectiveCharacterId })
       }
     }
 
     for (const partObj of mergedParts) {
       // Create new action
-      const newAction = { ...action, text: partObj.text }
+      const newAction = { ...action, text: partObj.text, character: partObj.characterId }
       
       if (partObj.isQuoted) {
         newAction.speaking = true
@@ -1099,6 +1115,7 @@ const processAIResponse = async (responseStr: string) => {
     // Attempt to extract JSON array if mixed with text
     const start = jsonStr.indexOf('[')
     const end = jsonStr.lastIndexOf(']')
+
     if (start !== -1 && end !== -1) {
       jsonStr = jsonStr.substring(start, end + 1)
     }
@@ -1124,6 +1141,7 @@ const processAIResponse = async (responseStr: string) => {
     
   } catch (e) {
     console.error('Failed to parse JSON response', e)
+
     throw new Error('JSON_PARSE_ERROR')
   }
 }
@@ -1131,7 +1149,9 @@ const processAIResponse = async (responseStr: string) => {
 const getCharacterName = (id: string): string | null => {
   if (!id || id === 'none') return null
   if (id === 'current') return getCharacterName(market.live2d.current_id)
+
   const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
+
   return char ? char.name : id
 }
 
@@ -1199,6 +1219,25 @@ const executeAction = async (data: any) => {
     } 
     // Handle 'current' character
     else if (data.character === 'current') {
+      // If the text contains a speaker name (e.g. "**Anis:**"), we should try to switch to that character
+      // instead of blindly trusting 'current', because the AI often messes this up.
+      const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
+      if (speakerMatch) {
+        const speakerName = speakerMatch[1].trim()
+        // Try to find character by name
+        const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
+        
+        if (charObj && charObj.id !== market.live2d.current_id) {
+           logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
+           // Recursively call with corrected character ID
+           // We only update the character part, skipping text addition since it's already added
+           const newData = { ...data, character: charObj.id, text: null } 
+           await executeAction(newData)
+
+           return // Stop execution of this 'current' branch since we delegated to the recursive call
+        }
+      }
+
       // Ensure visible if it was hidden
       if (!market.live2d.isVisible) {
         logDebug('[Chat] Showing current character sprite')
