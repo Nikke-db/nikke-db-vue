@@ -17,6 +17,7 @@ import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 import type { AttachmentInterface, AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
+import { animationMappings } from '@/utils/animationMappings'
 
 let canvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
@@ -38,6 +39,26 @@ onMounted(() => {
 const SPINE_DEFAULT_MIX = 0.25
 let spinePlayer: any = null
 
+const resetAttachmentColors = (player: any) => {
+  if (!player?.animationState?.data?.skeletonData?.defaultSkin?.attachments) return
+
+  player.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
+    if (a) {
+      const keys = Object.keys(a)
+      if (keys !== null && keys !== undefined && keys.length > 0) {
+        keys.forEach((k: string) => {
+          a[k as any].color = {
+            r: 1,
+            g: 1,
+            b: 1,
+            a: 1
+          }
+        })
+      }
+    }
+  })
+}
+
 const resolveAnimation = (requested: string, available: string[]): string | null => {
   console.log(`[Loader] Resolving animation: '${requested}' against available:`, available)
 
@@ -50,13 +71,29 @@ const resolveAnimation = (requested: string, available: string[]): string | null
   const lowerRequested = requested.toLowerCase()
 
   // Special handling for multi-stage anger (e.g. Chime)
-  if (available.includes('angry_02') && (lowerRequested.includes('very angry') || lowerRequested.includes('furious') || lowerRequested.includes('rage'))) {
-    console.log(`[Loader] Mapped '${requested}' to 'angry_02'`)
-    return 'angry_02'
-  }
-  if (available.includes('angry_03') && (lowerRequested.includes('annoyed') || lowerRequested.includes('frown') || lowerRequested.includes('slightly angry'))) {
-    console.log(`[Loader] Mapped '${requested}' to 'angry_03'`)
-    return 'angry_03'
+  const specialMappings = [
+    {
+      target: 'angry',
+      condition: (avail: string[]) => avail.filter(a => a.toLowerCase().includes('angry')).length > 1,
+      triggers: ['irritated', 'bothered', 'grumpy', 'frustrated', 'annoyed', 'displeased']
+    },
+    {
+      target: 'angry_02',
+      condition: (avail: string[]) => avail.includes('angry_02'),
+      triggers: ['very angry', 'furious', 'rage', 'shouting', 'yelling', 'livid', 'outraged', 'irate']
+    },
+    {
+      target: 'angry_03',
+      condition: (avail: string[]) => avail.includes('angry_03'),
+      triggers: ['stern', 'frown', 'slightly angry', 'serious', 'disapproving', 'cold', 'glaring']
+    }
+  ]
+
+  for (const { target, condition, triggers } of specialMappings) {
+    if (condition(available) && triggers.some(t => lowerRequested.includes(t))) {
+      console.log(`[Loader] Mapped '${requested}' to '${target}'`)
+      return target
+    }
   }
 
   // Direct fuzzy match
@@ -67,17 +104,7 @@ const resolveAnimation = (requested: string, available: string[]): string | null
   }
 
   // Semantic mapping
-  const mappings: Record<string, string[]> = {
-    'happy': ['delight', 'joy', 'smile', 'laugh', 'excited'],
-    'sad': ['cry', 'depressed', 'sorrow', 'tear', 'gloom'],
-    'angry': ['furious', 'annoyed', 'mad', 'rage', 'shout'],
-    'surprise': ['shock', 'surprised', 'startle', 'gasp'],
-    'shy': ['blush', 'embarrassed'],
-    'no': ['frowning', 'disapproval', 'skeptical', 'indifferent', 'unimpressed'],
-    'idle': ['stand', 'wait', 'default']
-  }
-
-  for (const [targetAnim, triggers] of Object.entries(mappings)) {
+  for (const [targetAnim, triggers] of Object.entries(animationMappings)) {
     // If requested animation contains the target name OR any of the triggers
     if (lowerRequested.includes(targetAnim) || triggers.some((t) => lowerRequested.includes(t))) {
 
@@ -185,6 +212,7 @@ const spineLoader = () => {
         success: (player: any) => {
 
           spinePlayer = player
+          resetAttachmentColors(player)
           market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
           market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
 
@@ -262,6 +290,7 @@ const customSpineLoader = () => {
     defaultMix: SPINE_DEFAULT_MIX,
     success: (player: any) => {
       spinePlayer = player
+      resetAttachmentColors(player)
       market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
       market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
 

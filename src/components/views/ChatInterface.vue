@@ -192,6 +192,7 @@ import { Settings, Help } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NCard } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import { marked } from 'marked'
+import { animationMappings } from '@/utils/animationMappings'
 
 const market = useMarket()
 
@@ -598,7 +599,7 @@ const generateSystemPrompt = () => {
       "text": "The dialogue or narration text to display to the user.",
       "character": "The ID of the character to display on screen (e.g., c010). If no character change is needed, use 'current'. If no character should be shown, use 'none'.",
       "animation": "The name of the animation to play (e.g., idle, happy, angry). Use 'idle' as default.",
-      "speaking": true/false, // Whether the character is speaking (lip-sync)
+      "speaking": true/false, // Set to TRUE ONLY if the character is actually saying words. Set to FALSE for narration, internal thoughts, or descriptions of actions.
       "duration": 2000 // Duration in milliseconds for the animation/speaking.
     }
   ]
@@ -612,12 +613,16 @@ const generateSystemPrompt = () => {
   - If the user uses [], it is a stage direction.
   - Choose the most appropriate character to show based on who is speaking or the focus of the scene.
   - Choose animations that match the emotion.
-  - Check the "Available Animations" list provided in the context. If you see animations with suffixes like "_02" or "_03", they often indicate intensity variations.
-  - "_02" usually means HIGH intensity (e.g. very angry, furious, laughing hard).
-  - "_03" usually means LOW intensity (e.g. annoyed, frowning, chuckling).
-  - PREFER using the specific animation name from the list (e.g. "angry_02") if it matches the scene's intensity.
-  - If you are unsure, you can use descriptive terms like "very angry" or "furious", and the system will try to map them.
+  - Check the "Available Animations" list provided in the context for the CURRENT character.
+  - If the character is the CURRENT one, you MUST pick an animation from that list.
+  - SUFFIX GUIDE: "_02" usually indicates HIGH intensity (e.g. furious, laughing), and "_03" usually indicates LOW intensity (e.g. annoyed, chuckling). Use these if they appear in the list and match the scene's intensity.
+  - If the character is NEW (not current), you do not know their specific animations. In this case, use one of these GENERIC emotion categories: ${Object.keys(animationMappings).join(', ')}.
+  - Do NOT use specific suffixes like '_02' for NEW characters, as they might not exist. Use the generic category (e.g. 'angry') and the system will find the best match.
+  - If you are unsure, you can use descriptive terms like "very angry" or "furious", and the system will try to map them using these patterns: ${JSON.stringify(animationMappings)}.
   - CRITICAL: Do NOT reset animations to 'idle' during narration steps if the character is still emotional. Only change the animation if the emotion changes or the character calms down.
+  - CRITICAL: If a character is performing an action described by the narrator, set 'character' to that character's ID, even if they are not speaking. Only use 'none' if NO character should be visible (e.g. scene transition, or focus on environment).
+  - CRITICAL: Set 'speaking' to FALSE if the text is narration (e.g. "Neon looks around nervously.") or internal thought. Only set 'speaking' to TRUE if the text contains spoken dialogue (e.g. "I am nervous.").
+  - CRITICAL: When a character speaks, you MUST set 'character' to that character's ID. Only use 'current' if you are SURE that character is already on screen. Do NOT use 'current' when switching speakers.
   - In Story Mode, you MUST generate a long, detailed sequence of actions (an array) to play out the scene fully, switching characters as they speak. Do not summarize. Write out the full dialogue.
   - CRITICAL: Do NOT return a single large block of text. Split dialogue and narration into multiple small steps in the array to create a dynamic flow. Each step should be one sentence or one turn of dialogue.
   - CRITICAL: Do NOT output numbered lists, outlines, plans, or thoughts. Output ONLY the JSON array. Do not include any text before or after the JSON.
@@ -806,8 +811,12 @@ const executeAction = async (data: any) => {
         // We check for "Name:", "**Name:**", "Name :", etc.
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
+        
+        // Also check for ANY bolded name at the start (e.g. "**Chime:**") to prevent double naming
+        // if the AI messed up the character ID but got the text right.
+        const anyNamePattern = /^\*\*[^*]+\*\*:/
 
-        if (!namePattern.test(content)) {
+        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
           content = `**${name}:** ${content}`
         }
       }
@@ -815,12 +824,6 @@ const executeAction = async (data: any) => {
 
     chatHistory.value.push({ role: 'assistant', content: content })
     scrollToBottom()
-  }
-    
-  // Play Animation
-  if (data.animation) {
-    logDebug(`[Chat] Requesting animation: ${data.animation}`)
-    market.live2d.current_animation = data.animation
   }
 
   // Update Character
@@ -890,6 +893,12 @@ const executeAction = async (data: any) => {
         }
       }
     }
+  }
+    
+  // Play Animation
+  if (data.animation) {
+    logDebug(`[Chat] Requesting animation: ${data.animation}`)
+    market.live2d.current_animation = data.animation
   }
     
   // Speaking
