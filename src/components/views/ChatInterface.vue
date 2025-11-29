@@ -6,6 +6,12 @@
       </template>
     </n-button>
 
+    <n-button class="help-btn" circle @click="showGuide = true">
+      <template #icon>
+        <n-icon><Help /></n-icon>
+      </template>
+    </n-button>
+
     <div class="chat-container">
       <div class="chat-history" ref="chatHistoryRef">
         <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role]">
@@ -40,20 +46,18 @@
           <n-form-item label="API Provider">
             <n-select v-model:value="apiProvider" :options="providerOptions" />
           </n-form-item>
-          
-          <n-alert type="warning" style="margin-bottom: 12px" title="Cost Warning">
-            Users are responsible for any possible cost using this functionality.
-          </n-alert>
 
           <n-form-item label="API Key">
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
-          <n-form-item label="Model">
-            <n-select v-model:value="model" :options="modelOptions" />
-          </n-form-item>
-
-          <n-alert type="info" style="margin-bottom: 12px" title="Web Search Cost">
-            Note: Web search functionality may incur additional costs. Please consult your API provider's pricing documentation.
+          <n-alert type="info" style="margin-bottom: 12px" title="">
+            Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB or any other server except the API provider when making requests.
+          </n-alert>
+          <n-alert type="warning" style="margin-bottom: 12px" title="">
+            Users are responsible for any possible cost using this functionality.
+          </n-alert>
+          <n-alert type="warning" style="margin-bottom: 12px" title="">
+            Web search functionality (mandatory) may incur additional costs, even with free models. Please consult your API provider's pricing documentation.
             <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
               <template #trigger>
                 <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -68,6 +72,9 @@
               </div>
             </n-popover>
           </n-alert>
+          <n-form-item label="Model">
+            <n-select v-model:value="model" :options="modelOptions" />
+          </n-form-item>
 
           <n-form-item>
             <template #label>
@@ -122,14 +129,67 @@
         </n-form>
       </n-drawer-content>
     </n-drawer>
+
+    <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw;">
+      <div class="guide-content">
+        <p>In this section you can create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
+        
+        <h3>🔑 Getting Started</h3>
+        <ul>
+          <li><strong>API Key Required:</strong> You need an API key to use this feature. We support <strong>Perplexity</strong>, <strong>Google Gemini</strong>, and <strong>OpenRouter</strong>.</li>
+          <li><strong>Setup:</strong> Click the <strong>Settings (Gear Icon)</strong> to enter your API key and select a model.</li>
+          <li><strong>Privacy:</strong> Your API key is stored locally in your browser and is sent directly to the API provider. It never touches our servers.</li>
+          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled by default for character accuracy) may incur additional costs.</li>
+        </ul>
+
+        <h3>🎭 Modes</h3>
+        <ul>
+          <li><strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the Nikkes.
+            <ul>
+              <li>Use <code>[brackets]</code> for actions or descriptions (e.g., <code>[I nod slowly]</code>).</li>
+              <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
+            </ul>
+          </li>
+          <li><strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
+            <ul>
+              <li><strong>Tip:</strong> In your first message, clearly state the <strong>Setting</strong> and <strong>Characters</strong> you want in the scene.</li>
+              <li>Example: <code>Scene: The Command Center. Characters: Rapi, Anis, Neon. They are discussing the next mission.</code></li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>✨ Features</h3>
+        <ul>
+          <li><strong>Yap Mode:</strong> When enabled in Settings, characters on screen will lip-sync to the generated text.</li>
+          <li><strong>Playback Control:</strong>
+            <ul>
+              <li><strong>Auto:</strong> The story advances automatically after each message, while giving you enough time to read through it.</li>
+              <li><strong>Manual:</strong> The story waits for you to click 'Next' or 'Continue'.</li>
+            </ul>
+          </li>
+          <li>If you do not want to perform any action and let the AI move the story forward, simply press <strong>Continue</strong>.</li>
+        </ul>
+
+        <h3>💡 Tips</h3>
+        <ul>
+          <li>If you receive an error message, use the <strong>Retry</strong> button.</li>
+          <li>You can switch between modes in Settings at any time, though it is strongly recommended to start fresh if you do so.</li>
+          <li>Check your API usage regularly on your provider's dashboard, and set limits to prevent from overspending or being charged while using a free model.</li>
+        </ul>
+        
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+          <n-button type="primary" @click="closeGuide">Got it!</n-button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useMarket } from '@/stores/market'
 import { Settings, Help } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert } from 'naive-ui'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NCard } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import { marked } from 'marked'
 
@@ -144,6 +204,7 @@ const logDebug = (...args: any[]) => {
 
 // State
 const showSettings = ref(false)
+const showGuide = ref(false)
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
@@ -240,6 +301,22 @@ const fetchOpenRouterModels = async () => {
     console.error('Failed to fetch OpenRouter models:', error)
   }
 }
+
+const checkGuide = () => {
+  const seen = localStorage.getItem('chat-guide-seen')
+  if (!seen) {
+    showGuide.value = true
+  }
+}
+
+const closeGuide = () => {
+  showGuide.value = false
+  localStorage.setItem('chat-guide-seen', 'true')
+}
+
+onMounted(() => {
+  checkGuide()
+})
 
 // Methods
 const renderMarkdown = (text: string) => {
@@ -725,7 +802,14 @@ const executeAction = async (data: any) => {
       }
 
       if (name) {
-        content = `**${name}:** ${content}`
+        // Check if the text already starts with the name to avoid duplication
+        // We check for "Name:", "**Name:**", "Name :", etc.
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
+
+        if (!namePattern.test(content)) {
+          content = `**${name}:** ${content}`
+        }
       }
     }
 
@@ -913,6 +997,19 @@ const executeAction = async (data: any) => {
   }
 }
 
+.help-btn {
+  position: absolute;
+  top: 150px;
+  right: 70px;
+  pointer-events: auto;
+  z-index: 1001;
+
+  @media (max-width: 768px) {
+    top: 150px;
+    right: 60px;
+  }
+}
+
 .chat-container {
   position: absolute;
   bottom: 20px;
@@ -996,6 +1093,35 @@ const executeAction = async (data: any) => {
       flex: 1;
       order: 2;
     }
+  }
+}
+
+.guide-content {
+  padding: 20px;
+  color: #333;
+
+  h3 {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-size: 18px;
+    color: #111;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+
+    li {
+      margin-bottom: 8px;
+    }
+  }
+
+  code {
+    background: #f4f4f4;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 14px;
   }
 }
 </style>

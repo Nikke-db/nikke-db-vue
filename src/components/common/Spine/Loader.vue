@@ -73,6 +73,7 @@ const resolveAnimation = (requested: string, available: string[]): string | null
     'angry': ['furious', 'annoyed', 'mad', 'rage', 'shout'],
     'surprise': ['shock', 'surprised', 'startle', 'gasp'],
     'shy': ['blush', 'embarrassed'],
+    'no': ['frowning', 'disapproval', 'skeptical', 'indifferent', 'unimpressed'],
     'idle': ['stand', 'wait', 'default']
   }
 
