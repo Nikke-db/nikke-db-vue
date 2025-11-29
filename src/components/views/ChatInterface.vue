@@ -14,35 +14,57 @@
 
     <div class="chat-container">
       <div class="chat-history" ref="chatHistoryRef">
-        <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role]">
-          <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
-        </div>
-        <div v-if="isLoading" class="message assistant">
-          <div class="message-content">...</div>
+      <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role]">
+        <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
+        <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role !== 'system'" class="message-actions">
+          <n-button size="tiny" circle type="error" @click="deleteLastMessage" title="Delete last message">
+            <template #icon><n-icon><TrashCan /></n-icon></template>
+          </n-button>
         </div>
       </div>
+      <div v-if="isLoading" class="message assistant">
+      <div class="message-content">...</div>
+      </div>
+      </div>
 
-      <div class="chat-input-area">
-        <n-input
-          v-model:value="userInput"
-          type="textarea"
-          :placeholder="apiKey ? 'Type your message...' : 'Please enter API Key in settings'"
-          :disabled="!apiKey"
-          :autosize="{ minRows: 1, maxRows: 4 }"
-          @keydown.enter.prevent="handleEnter"
-        />
-        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || !apiKey">Send</n-button>
-        <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
-        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
-        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
-          {{ waitingForNext ? 'Next' : 'Continue' }}
-        </n-button>
+      <div class="chat-input-area" style="gap: 6px;">
+      <n-input
+      v-model:value="userInput"
+      type="textarea"
+      :placeholder="apiKey ? 'Type your message...' : 'Please enter API Key in settings'"
+      :disabled="!apiKey"
+      :autosize="{ minRows: 1, maxRows: 4 }"
+      @keydown.enter.prevent="handleEnter"
+      />
+      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || !apiKey">Send</n-button>
+      <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
+      <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
+      <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
+      {{ waitingForNext ? 'Next' : 'Continue' }}
+      </n-button>
+      </div>
+
+      <div class="session-controls" style="justify-content: flex-start; gap: 2px;">
+      <n-button
+      type="error"
+      size="small"
+      @click="saveSession"
+      :disabled="chatHistory.length === 0 || isLoading"
+      :style="{ opacity: (chatHistory.length === 0 || isLoading) ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
+      >
+      <template #icon><n-icon><Save /></n-icon></template>
+      Save
+      </n-button>
+      <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+      <template #icon><n-icon><Upload /></n-icon></template>
+      Load
+      </n-button>
       </div>
     </div>
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
-        <n-form>
+      <n-form>
           <n-form-item label="API Provider">
             <n-select v-model:value="apiProvider" :options="providerOptions" />
           </n-form-item>
@@ -130,6 +152,14 @@
       </n-drawer-content>
     </n-drawer>
 
+    <input
+      type="file"
+      ref="fileInput"
+      style="display: none"
+      accept=".json"
+      @change="handleFileUpload"
+    />
+
     <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw;">
       <div class="guide-content">
         <p>In this section you can create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
@@ -138,8 +168,8 @@
         <ul>
           <li><strong>API Key Required:</strong> You need an API key to use this feature. We support <strong>Perplexity</strong>, <strong>Google Gemini</strong>, and <strong>OpenRouter</strong>.</li>
           <li><strong>Setup:</strong> Click the <strong>Settings (Gear Icon)</strong> to enter your API key and select a model.</li>
-          <li><strong>Privacy:</strong> Your API key is stored locally in your browser and is sent directly to the API provider. It never touches our servers.</li>
-          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled by default for character accuracy) may incur additional costs.</li>
+          <li><strong>Privacy:</strong> Your API key is stored locally and sent only to the selected API provider. Stories and keys are never shared with Nikke-DB; check your provider's policy, as some may use data for training.</li>
+          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled and mandatory for character accuracy) may incur additional costs, even for free models.</li>
         </ul>
 
         <h3>🎭 Modes</h3>
@@ -167,13 +197,15 @@
               <li><strong>Manual:</strong> The story waits for you to click 'Next' or 'Continue'.</li>
             </ul>
           </li>
+          <li>If you don't like the last message, you can delete it by clicking the trash can icon on the left side of the message bubble. You can then write something different, or press <strong>Continue</strong>.</li>
           <li>If you do not want to perform any action and let the AI move the story forward, simply press <strong>Continue</strong>.</li>
+          <li>You can <strong>Save</strong> and <strong>Load</strong> your session at any time.</li>
         </ul>
 
         <h3>💡 Tips</h3>
         <ul>
           <li>If you receive an error message, use the <strong>Retry</strong> button.</li>
-          <li>You can switch between modes in Settings at any time, though it is strongly recommended to start fresh if you do so.</li>
+          <li>The quality of the session highly depends on the model that you have selected.</li>
           <li>Check your API usage regularly on your provider's dashboard, and set limits to prevent from overspending or being charged while using a free model.</li>
         </ul>
         
@@ -188,8 +220,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useMarket } from '@/stores/market'
-import { Settings, Help } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NCard } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
@@ -222,7 +254,9 @@ let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const chatHistoryRef = ref<HTMLElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
+const isRestoring = ref(false)
 
 // Options
 const providerOptions = [
@@ -263,7 +297,27 @@ watch(apiKey, (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
 })
 
-watch(apiProvider, async () => {
+watch(mode, (newVal) => {
+  localStorage.setItem('nikke_mode', newVal)
+})
+
+watch(playbackMode, (newVal) => {
+  localStorage.setItem('nikke_playback_mode', newVal)
+})
+
+watch(model, (newVal) => {
+  if (newVal) localStorage.setItem('nikke_model', newVal)
+})
+
+watch(() => market.live2d.yapEnabled, (newVal) => {
+  localStorage.setItem('nikke_yap_enabled', String(newVal))
+})
+
+watch(apiProvider, async (newVal) => {
+  localStorage.setItem('nikke_api_provider', newVal)
+  
+  if (isRestoring.value) return
+
   // Reset model when provider changes
   if (apiProvider.value === 'perplexity') {
     model.value = 'sonar'
@@ -315,11 +369,193 @@ const closeGuide = () => {
   localStorage.setItem('chat-guide-seen', 'true')
 }
 
+const initializeSettings = async () => {
+  isRestoring.value = true
+  
+  // Load simple settings
+  const savedMode = localStorage.getItem('nikke_mode')
+  if (savedMode && modeOptions.some((m) => m.value === savedMode)) mode.value = savedMode
+  
+  const savedPlayback = localStorage.getItem('nikke_playback_mode')
+  if (savedPlayback && playbackOptions.some((p) => p.value === savedPlayback)) playbackMode.value = savedPlayback
+  
+  const savedYap = localStorage.getItem('nikke_yap_enabled')
+  if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
+
+  // Load Provider and Model
+  const savedProvider = localStorage.getItem('nikke_api_provider')
+  const savedModel = localStorage.getItem('nikke_model')
+  
+  if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
+    apiProvider.value = savedProvider
+    
+    if (savedProvider === 'openrouter') {
+      await fetchOpenRouterModels()
+    }
+    
+    // Validate and set model
+    let validModels: string[] = []
+    if (savedProvider === 'perplexity') {
+      validModels = ['sonar', 'sonar-pro']
+    } else if (savedProvider === 'gemini') {
+      validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
+    } else if (savedProvider === 'openrouter') {
+      validModels = openRouterModels.value.map((m) => m.value)
+    }
+    
+    if (savedModel && validModels.includes(savedModel)) {
+      model.value = savedModel
+    } else {
+      // Fallback to default if saved model is invalid
+      if (savedProvider === 'perplexity') model.value = 'sonar'
+      else if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
+      else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
+      
+      if (savedModel) {
+        console.warn(`Saved model '${savedModel}' is invalid or unavailable. Using default.`)
+      }
+    }
+  }
+  
+  isRestoring.value = false
+}
+
 onMounted(() => {
   checkGuide()
+  initializeSettings()
 })
 
 // Methods
+const deleteLastMessage = () => {
+  if (chatHistory.value.length > 0) {
+    chatHistory.value.pop()
+  }
+}
+
+const saveSession = () => {
+  const sessionData = {
+    chatHistory: chatHistory.value,
+    characterProfiles: characterProfiles.value,
+    mode: mode.value,
+    timestamp: new Date().toISOString(),
+    settings: {
+      apiProvider: apiProvider.value,
+      model: model.value,
+      playbackMode: playbackMode.value,
+      yapEnabled: market.live2d.yapEnabled
+    }
+  }
+  
+  const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const now = new Date()
+  const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`
+  a.download = `nikke-session-${timestamp}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+const triggerRestore = () => {
+  fileInput.value?.click()
+}
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    const file = target.files[0]
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string
+        const data = JSON.parse(content)
+        
+        isRestoring.value = true
+
+        if (data.chatHistory && Array.isArray(data.chatHistory)) {
+          chatHistory.value = data.chatHistory
+        }
+        if (data.characterProfiles) {
+          characterProfiles.value = data.characterProfiles
+        }
+        if (data.mode) {
+          mode.value = data.mode
+        }
+        
+        // Restore Settings
+        if (data.settings) {
+          // Restore simple settings
+          if (data.settings.playbackMode && playbackOptions.some((p) => p.value === data.settings.playbackMode)) {
+            playbackMode.value = data.settings.playbackMode
+          }
+          
+          if (typeof data.settings.yapEnabled === 'boolean') {
+            market.live2d.yapEnabled = data.settings.yapEnabled
+          }
+          
+          // Restore Provider and Model
+          const savedProvider = data.settings.apiProvider
+          const savedModel = data.settings.model
+          
+          if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
+            apiProvider.value = savedProvider
+            
+            if (savedProvider === 'openrouter') {
+              await fetchOpenRouterModels()
+            }
+            
+            // Validate and set model
+            let validModels: string[] = []
+            if (savedProvider === 'perplexity') {
+              validModels = ['sonar', 'sonar-pro']
+            } else if (savedProvider === 'gemini') {
+              validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
+            } else if (savedProvider === 'openrouter') {
+              validModels = openRouterModels.value.map((m) => m.value)
+            }
+            
+            if (savedModel && validModels.includes(savedModel)) {
+              model.value = savedModel
+            } else {
+              // Fallback to default if saved model is invalid
+              if (savedProvider === 'perplexity') model.value = 'sonar'
+              else if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
+              else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
+              
+              if (savedModel) {
+                chatHistory.value.push({ role: 'system', content: `Warning: Saved model '${savedModel}' is invalid or unavailable. Using default.` })
+              }
+            }
+          }
+        }
+        
+        isRestoring.value = false
+
+        // Clear input value so same file can be selected again if needed
+        target.value = ''
+        
+        // Close settings
+        showSettings.value = false
+        
+        // Scroll to bottom
+        scrollToBottom()
+        
+        // Add system message to confirm restore
+        chatHistory.value.push({ role: 'system', content: 'Session restored successfully.' })
+        
+      } catch (error) {
+        console.error('Failed to parse session file:', error)
+        chatHistory.value.push({ role: 'system', content: 'Error: Failed to restore session. Invalid JSON file.' })
+        isRestoring.value = false
+      }
+    }
+    reader.readAsText(file)
+  }
+}
+
 const renderMarkdown = (text: string) => {
   return marked(text)
 }
@@ -616,12 +852,15 @@ const generateSystemPrompt = () => {
   - Check the "Available Animations" list provided in the context for the CURRENT character.
   - If the character is the CURRENT one, you MUST pick an animation from that list.
   - SUFFIX GUIDE: "_02" usually indicates HIGH intensity (e.g. furious, laughing), and "_03" usually indicates LOW intensity (e.g. annoyed, chuckling). Use these if they appear in the list and match the scene's intensity.
-  - If the character is NEW (not current), you do not know their specific animations. In this case, use one of these GENERIC emotion categories: ${Object.keys(animationMappings).join(', ')}.
-  - Do NOT use specific suffixes like '_02' for NEW characters, as they might not exist. Use the generic category (e.g. 'angry') and the system will find the best match.
+  - If the character is NEW (not current), prefer using DESCRIPTIVE emotion words (e.g. 'furious', 'annoyed', 'gloom') instead of the generic category if you want to convey intensity. The system will map these to the best available animation (e.g. 'furious' -> 'angry_02').
+  - Do NOT use specific suffixes like '_02' for NEW characters. Use the descriptive word (e.g. 'furious') and let the system handle the mapping.
   - If you are unsure, you can use descriptive terms like "very angry" or "furious", and the system will try to map them using these patterns: ${JSON.stringify(animationMappings)}.
   - CRITICAL: Do NOT reset animations to 'idle' during narration steps if the character is still emotional. Only change the animation if the emotion changes or the character calms down.
   - CRITICAL: If a character is performing an action described by the narrator, set 'character' to that character's ID, even if they are not speaking. Only use 'none' if NO character should be visible (e.g. scene transition, or focus on environment).
-  - CRITICAL: Set 'speaking' to FALSE if the text is narration (e.g. "Neon looks around nervously.") or internal thought. Only set 'speaking' to TRUE if the text contains spoken dialogue (e.g. "I am nervous.").
+  - CRITICAL: Set 'speaking' to FALSE if the text is narration (e.g. "Neon looks around nervously.") or internal thought.
+  - RULE OF THUMB: If the text does NOT contain quotation marks (" "), 'speaking' MUST be FALSE.
+  - Only set 'speaking' to TRUE if the text contains spoken dialogue inside quotation marks.
+  - CRITICAL: If the text contains BOTH narration and dialogue (e.g. 'She sighed. "Fine."'), you MUST split it into two separate steps in the array. Step 1: Narration (speaking: false). Step 2: Dialogue (speaking: true).
   - CRITICAL: When a character speaks, you MUST set 'character' to that character's ID. Only use 'current' if you are SURE that character is already on screen. Do NOT use 'current' when switching speakers.
   - In Story Mode, you MUST generate a long, detailed sequence of actions (an array) to play out the scene fully, switching characters as they speak. Do not summarize. Write out the full dialogue.
   - CRITICAL: Do NOT return a single large block of text. Split dialogue and narration into multiple small steps in the array to create a dynamic flow. Each step should be one sentence or one turn of dialogue.
@@ -648,7 +887,7 @@ const callOpenRouter = async (messages: any[]) => {
     body: JSON.stringify({
       model: model.value,
       messages: messages,
-      plugins: [{ id: "web" }]
+      plugins: [{ id: 'web' }]
     })
   })
   
@@ -729,6 +968,82 @@ const callGemini = async (messages: any[]) => {
   return data.candidates[0].content.parts[0].text
 }
 
+const sanitizeActions = (actions: any[]) => {
+  const newActions: any[] = []
+  
+  for (const action of actions) {
+    if (!action.text || typeof action.text !== 'string') {
+      newActions.push(action)
+      continue
+    }
+
+    // Check if text contains quotes
+    // We look for standard quotes " and smart quotes “ ”
+    const hasQuotes = /["“”]/.test(action.text)
+    
+    if (!hasQuotes) {
+      // Case 1: No quotes at all.
+      // If it was marked as speaking, force it to false (Narration/Action)
+      if (action.speaking) {
+        action.speaking = false
+      }
+      newActions.push(action)
+      continue
+    }
+
+    // Case 2: Has quotes. We need to split.
+    // Regex to match quoted sections including the quotes
+    const splitRegex = /([“"][^”"]*[”"])/g
+    
+    const parts = action.text.split(splitRegex).filter((p: string) => p.trim().length > 0)
+    
+    if (parts.length === 0) {
+      newActions.push(action)
+      continue
+    }
+
+    // Helper to determine if a part is a quote
+    // Use [\s\S] to match any character including newlines
+    const isQuote = (s: string) => /^[“"][\s\S]*[”"]$/.test(s.trim())
+
+    // Merge trailing punctuation into previous part to avoid tiny separate messages
+    const mergedParts: { text: string, isQuoted: boolean }[] = []
+    
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]
+      const quoted = isQuote(part)
+      
+      // If this part is just punctuation/space and we have a previous part, merge it
+      // This handles cases like: "Hello". -> "Hello" + .
+      if (i > 0 && !quoted && /^[.,;!?\s]+$/.test(part)) {
+        mergedParts[mergedParts.length - 1].text += part
+      } else {
+        mergedParts.push({ text: part, isQuoted: quoted })
+      }
+    }
+
+    for (const partObj of mergedParts) {
+      // Create new action
+      const newAction = { ...action, text: partObj.text }
+      
+      if (partObj.isQuoted) {
+        newAction.speaking = true
+      } else {
+        newAction.speaking = false
+      }
+      
+      // Remove fixed duration so it gets recalculated based on text length
+      if (newAction.duration) {
+        delete newAction.duration
+      }
+      
+      newActions.push(newAction)
+    }
+  }
+  
+  return newActions
+}
+
 const processAIResponse = async (responseStr: string) => {
   logDebug('Raw AI Response:', responseStr)
   try {
@@ -747,6 +1062,9 @@ const processAIResponse = async (responseStr: string) => {
     if (!Array.isArray(data)) {
       data = [data]
     }
+
+    // Sanitize and split actions to ensure narration/dialogue separation
+    data = sanitizeActions(data)
 
     logDebug('Parsed Action Sequence:', data)
 
@@ -1056,6 +1374,7 @@ const executeAction = async (data: any) => {
     margin-bottom: 8px;
     padding: 8px;
     border-radius: 8px;
+    position: relative;
     
     &.user {
       background: rgba(0, 123, 255, 0.5);
@@ -1082,6 +1401,18 @@ const executeAction = async (data: any) => {
         height: auto;
       }
     }
+
+    .message-actions {
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+      
+      &:hover {
+        opacity: 1;
+      }
+    }
   }
 }
 
@@ -1103,6 +1434,15 @@ const executeAction = async (data: any) => {
       order: 2;
     }
   }
+}
+
+.session-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .guide-content {

@@ -74,13 +74,13 @@ const resolveAnimation = (requested: string, available: string[]): string | null
   const specialMappings = [
     {
       target: 'angry',
-      condition: (avail: string[]) => avail.filter(a => a.toLowerCase().includes('angry')).length > 1,
+      condition: (avail: string[]) => avail.filter((a) => a.toLowerCase().includes('angry')).length > 1,
       triggers: ['irritated', 'bothered', 'grumpy', 'frustrated', 'annoyed', 'displeased']
     },
     {
       target: 'angry_02',
       condition: (avail: string[]) => avail.includes('angry_02'),
-      triggers: ['very angry', 'furious', 'rage', 'shouting', 'yelling', 'livid', 'outraged', 'irate']
+      triggers: ['very angry', 'furious', 'rage', 'shouting', 'yelling', 'livid', 'outraged', 'irate', 'mad']
     },
     {
       target: 'angry_03',
@@ -90,7 +90,7 @@ const resolveAnimation = (requested: string, available: string[]): string | null
   ]
 
   for (const { target, condition, triggers } of specialMappings) {
-    if (condition(available) && triggers.some(t => lowerRequested.includes(t))) {
+    if (condition(available) && triggers.some((t) => lowerRequested.includes(t))) {
       console.log(`[Loader] Mapped '${requested}' to '${target}'`)
       return target
     }
