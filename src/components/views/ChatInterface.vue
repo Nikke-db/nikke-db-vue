@@ -996,6 +996,10 @@ const callGemini = async (messages: any[]) => {
 const sanitizeActions = (actions: any[]) => {
   const newActions: any[] = []
   
+  // Helper to identify speaker labels
+  // Updated to handle cases where bold tags wrap the colon (e.g. **Name:**)
+  const isSpeakerLabel = (s: string) => /^\s*(?:\*\*)?[^*]+?(?:\*\*)?\s*:\s*(?:\*\*)?\s*$/.test(s)
+
   for (const action of actions) {
     if (!action.text || typeof action.text !== 'string') {
       newActions.push(action)
@@ -1008,9 +1012,20 @@ const sanitizeActions = (actions: any[]) => {
     
     if (!hasQuotes) {
       // Case 1: No quotes at all.
-      // If it was marked as speaking, force it to false (Narration/Action)
+      
+      // Filter out standalone speaker labels
+      if (isSpeakerLabel(action.text)) {
+        continue
+      }
+
+      // If it was marked as speaking, only force to false if it looks like a stage direction
       if (action.speaking) {
-        action.speaking = false
+         // Check for stage directions starting with *, (, or [
+         if (/^[\s]*[\[\(*]/.test(action.text)) {
+            action.speaking = false
+         }
+         // Otherwise, trust the AI's speaking flag even without quotes
+         // This handles cases where the AI forgets quotes around dialogue
       }
       newActions.push(action)
       continue
@@ -1038,9 +1053,15 @@ const sanitizeActions = (actions: any[]) => {
       const part = parts[i]
       const quoted = isQuote(part)
       
+      // Filter out standalone speaker labels (e.g. "**Anis:** ")
+      // These are often artifacts from splitting "Name: Quote"
+      if (isSpeakerLabel(part) && !quoted) {
+        continue
+      }
+
       // If this part is just punctuation/space and we have a previous part, merge it
       // This handles cases like: "Hello". -> "Hello" + .
-      if (i > 0 && !quoted && /^[.,;!?\s]+$/.test(part)) {
+      if (mergedParts.length > 0 && !quoted && /^[.,;!?\s]+$/.test(part)) {
         mergedParts[mergedParts.length - 1].text += part
       } else {
         mergedParts.push({ text: part, isQuoted: quoted })
