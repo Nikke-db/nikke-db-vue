@@ -59,6 +59,16 @@
       <template #icon><n-icon><Upload /></n-icon></template>
       Load
       </n-button>
+      <n-button
+        type="error"
+        size="small"
+        @click="resetSession"
+        :disabled="isLoading || chatHistory.length === 0"
+        :style="{ marginLeft: '4px', opacity: (chatHistory.length === 0 || isLoading) ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
+      >
+        <template #icon><n-icon><Reset /></n-icon></template>
+        Reset
+      </n-button>
       </div>
     </div>
 
@@ -166,7 +176,7 @@
         
         <h3>🔑 Getting Started</h3>
         <ul>
-          <li><strong>API Key Required:</strong> You need an API key to use this feature. We support <strong>Perplexity</strong>, <strong>Google Gemini</strong>, and <strong>OpenRouter</strong>.</li>
+          <li><strong>API Key Required:</strong> You need an API key to use this feature. Currently supported providers: <strong>Perplexity</strong>, <strong>Google Gemini</strong>, and <strong>OpenRouter</strong>.</li>
           <li><strong>Setup:</strong> Click the <strong>Settings (Gear Icon)</strong> to enter your API key and select a model.</li>
           <li><strong>Privacy:</strong> Your API key is stored locally and sent only to the selected API provider. Stories and keys are never shared with Nikke-DB; check your provider's policy, as some may use data for training.</li>
           <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled and mandatory for character accuracy) may incur additional costs, even for free models.</li>
@@ -218,9 +228,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import { marked } from 'marked'
@@ -423,6 +434,20 @@ const initializeSettings = async () => {
 onMounted(() => {
   checkGuide()
   initializeSettings()
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeRouteLeave((to, from) => {
+  if (chatHistory.value.length > 0) {
+    const confirmed = window.confirm('Are you sure you want to leave? All unsaved progress will be lost.')
+    if (!confirmed) {
+      return false
+    }
+  }
 })
 
 // Methods
@@ -1298,6 +1323,24 @@ const executeAction = async (data: any) => {
   }
 }
 
+const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+  if (chatHistory.value.length > 0) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+
+const resetSession = () => {
+  if (chatHistory.value.length === 0) return
+  
+  const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
+  if (confirmed) {
+    chatHistory.value = []
+    characterProfiles.value = {}
+    lastPrompt.value = ''
+    market.live2d.isVisible = false
+  }
+}
 </script>
 
 <style scoped lang="less">
