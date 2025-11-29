@@ -1063,15 +1063,6 @@ const sanitizeActions = (actions: any[]) => {
       // Filter out standalone speaker labels (e.g. "**Anis:** ")
       // These are often artifacts from splitting "Name: Quote"
       if (isSpeakerLabel(part) && !quoted) {
-        // Try to extract the name and update the effective character ID for subsequent parts
-        const match = part.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*(?:\*\*)?\s*$/)
-        if (match) {
-            const name = match[1].trim()
-            const char = l2d.find(c => c.name.toLowerCase() === name.toLowerCase())
-            if (char) {
-                effectiveCharacterId = char.id
-            }
-        }
         continue
       }
 
