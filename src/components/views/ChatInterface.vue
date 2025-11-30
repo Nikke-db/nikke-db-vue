@@ -89,7 +89,7 @@
             Users are responsible for any possible cost using this functionality.
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
-            Web search functionality (mandatory) may incur additional costs, even with free models. Please consult your API provider's pricing documentation.
+            Web search may incur additional costs, even with free models. Please consult your API provider's pricing documentation.
             <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
               <template #trigger>
                 <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -98,7 +98,7 @@
               </template>
               <div>
                 <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wikia to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
-                <p>The model will execute the web search only the first time a character appears in a scene, and will only obtain limited information, however certain providers may charge a fee after a certain amount of web searches, even if you are using a free model.</p>
+                <p>Web search is used on the first turn and when new characters are introduced. The system minimizes searches to reduce costs.</p>
                 <p>It is strongly suggested to check your provider's documentation and model page for information regarding possible costs.</p>
                 <p>It is also recommended to select a limit on your API key to prevent unexpected charges.</p>
               </div>
@@ -208,7 +208,7 @@
             </ul>
           </li>
           <li>If you don't like the last message, you can delete it by clicking the trash can icon on the left side of the message bubble. You can then write something different, or press <strong>Continue</strong>.</li>
-          <li>If you do not want to perform any action and let the AI move the story forward, simply press <strong>Continue</strong>.</li>
+          <li>If you do not want to perform any action, simply press <strong>Continue</strong>.</li>
           <li>You can <strong>Save</strong> and <strong>Load</strong> your session at any time.</li>
         </ul>
 
@@ -216,6 +216,7 @@
         <ul>
           <li>If you receive an error message, use the <strong>Retry</strong> button.</li>
           <li>The quality of the session highly depends on the model that you have selected.</li>
+          <li>Be patient. Some providers/models may take a while to respond to the first prompt in particular.</li>
           <li>Check your API usage regularly on your provider's dashboard, and set limits to prevent from overspending or being charged while using a free model.</li>
         </ul>
         
@@ -234,8 +235,14 @@ import { useMarket } from '@/stores/market'
 import { Settings, Help, Save, Upload, TrashCan, Reset } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
+import characterHonorifics from '@/utils/json/honorifics.json'
 import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
+
+// Helper to get honorific with fallback to "Commander"
+const getHonorific = (characterName: string): string => {
+  return (characterHonorifics as Record<string, string>)[characterName] || 'Commander'
+}
 
 const market = useMarket()
 
@@ -702,6 +709,13 @@ const retryLastMessage = async () => {
 const stopGeneration = () => {
   isStopped.value = true
   isLoading.value = false
+
+  // If we are waiting for user input (Manual mode), cancel that wait so the loop can exit
+  if (waitingForNext.value && nextActionResolver) {
+    nextActionResolver()
+    nextActionResolver = null
+    waitingForNext.value = false
+  }
 }
 
 const nextAction = () => {
@@ -767,8 +781,14 @@ const continueStory = async () => {
   scrollToBottom()
 }
 
-const callAI = async () => {
-  const systemPrompt = generateSystemPrompt()
+const callAI = async (): Promise<string> => {
+  // Determine if this is the first turn (web search needed for initial characters)
+  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
+  const enableWebSearch = isFirstTurn
+  
+  logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
+  
+  const systemPrompt = generateSystemPrompt(enableWebSearch)
   
   // Add current context
   const filteredAnimations = market.live2d.animations.filter((a) => 
@@ -778,6 +798,8 @@ const callAI = async () => {
     a !== 'action'
   )
   const contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+
+  let response: string
 
   if (apiProvider.value === 'perplexity') {
     // Perplexity: Merge context into system prompt
@@ -809,7 +831,7 @@ const callAI = async () => {
       ...sanitizedHistory
     ]
     logDebug('Sending to Perplexity:', messages)
-    return await callPerplexity(messages)
+    response = await callPerplexity(messages, enableWebSearch)
   } else if (apiProvider.value === 'gemini') {
     // Gemini: Original behavior (context as separate message at end)
     const messages = [
@@ -821,7 +843,7 @@ const callAI = async () => {
       content: contextMsg
     })
     logDebug('Sending to Gemini:', messages)
-    return await callGemini(messages)
+    response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
@@ -831,23 +853,337 @@ const callAI = async () => {
       ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
     ]
     logDebug('Sending to OpenRouter:', messages)
-    return await callOpenRouter(messages)
+    response = await callOpenRouter(messages, enableWebSearch)
+  } else {
+    throw new Error('Unknown API provider')
+  }
+
+  // Check if the model needs to search for new characters
+  const searchRequest = await checkForSearchRequest(response)
+  if (searchRequest && searchRequest.length > 0) {
+    logDebug('[callAI] Model requested search for characters:', searchRequest)
+    // Perform search for unknown characters
+    await searchForCharacters(searchRequest)
+    // Re-call the AI with updated character profiles (search disabled this time)
+    return await callAIWithoutSearch()
+  }
+
+  return response
+}
+
+// Separate function to call AI without search (after character lookup)
+const callAIWithoutSearch = async (): Promise<string> => {
+  const systemPrompt = generateSystemPrompt(false)
+  
+  const filteredAnimations = market.live2d.animations.filter((a) => 
+    a !== 'talk_start' && 
+    a !== 'talk_end' && 
+    a !== 'expression_0' && 
+    a !== 'action'
+  )
+  const contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+
+  if (apiProvider.value === 'perplexity') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    const rawHistory = chatHistory.value.filter((m) => m.role !== 'system')
+    const sanitizedHistory: any[] = []
+    
+    if (rawHistory.length > 0) {
+      let currentMsg = { role: rawHistory[0].role, content: rawHistory[0].content }
+      for (let i = 1; i < rawHistory.length; i++) {
+        const msg = rawHistory[i]
+        if (msg.role === currentMsg.role) {
+          currentMsg.content += '\n\n' + msg.content
+        } else {
+          sanitizedHistory.push(currentMsg)
+          currentMsg = { role: msg.role, content: msg.content }
+        }
+      }
+      sanitizedHistory.push(currentMsg)
+    }
+
+    const messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...sanitizedHistory
+    ]
+    return await callPerplexity(messages, false)
+  } else if (apiProvider.value === 'gemini') {
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    messages.push({ role: 'system', content: contextMsg })
+    return await callGemini(messages, false)
+  } else if (apiProvider.value === 'openrouter') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    const messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    return await callOpenRouter(messages, false)
+  }
+  
+  throw new Error('Unknown API provider')
+}
+
+// Check if the AI response contains a search request for unknown characters
+const checkForSearchRequest = async (response: string): Promise<string[] | null> => {
+  try {
+    let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
+    const start = jsonStr.indexOf('[')
+    const end = jsonStr.lastIndexOf(']')
+    
+    // Try array format first
+    if (start !== -1 && end !== -1) {
+      jsonStr = jsonStr.substring(start, end + 1)
+    }
+    
+    let data = JSON.parse(jsonStr)
+    if (!Array.isArray(data)) {
+      data = [data]
+    }
+    
+    // Look for needs_search field in any action
+    for (const action of data) {
+      if (action.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
+        // Filter out characters we already have profiles for
+        const unknownChars = action.needs_search.filter(
+          (name: string) => !characterProfiles.value[name]
+        )
+        if (unknownChars.length > 0) {
+          return unknownChars
+        }
+      }
+    }
+  } catch (e) {
+    // If parsing fails, no search request
+  }
+  return null
+}
+
+// Search for character information using web search
+const searchForCharacters = async (characterNames: string[]): Promise<void> => {
+  logDebug('[searchForCharacters] Searching for:', characterNames)
+  
+  // For Perplexity, search each character individually for better results
+  if (apiProvider.value === 'perplexity') {
+    await searchForCharactersPerplexity(characterNames)
+    return
+  }
+  
+  // For OpenRouter/Gemini, also search individually to ensure all characters are found
+  for (const name of characterNames) {
+    if (characterProfiles.value[name]) continue
+
+    const searchPrompt = `Search the NIKKE Wiki (https://nikke-goddess-of-victory-international.fandom.com/wiki/) for the character "${name}" and provide their information:
+- Find their personality traits, speech patterns/voice, and how they address OTHER NIKKE characters.
+
+IMPORTANT: Do NOT include how they address the Commander - that information is already provided separately.
+
+Return ONLY a JSON object with the character profile in this format:
+{
+  "${name}": {
+    "personality": "Brief personality description",
+    "speech_style": "How they speak (formal, casual, archaic, playful, etc.)",
+    "relationships": { "OtherNikkeName": "What they CALL them + relationship dynamic (e.g. 'Her Highness - deeply devoted')" }
+  }
+}
+Do NOT include Commander in relationships. Do not include any other text.`
+
+    const messages = [
+      { role: 'system', content: 'You are a research assistant. Search the wiki and return character information in JSON format only.' },
+      { role: 'user', content: searchPrompt }
+    ]
+
+    let attempts = 0
+    const maxAttempts = 3
+    let success = false
+
+    while (attempts < maxAttempts && !success) {
+      attempts++
+      try {
+        let result: string
+        
+        if (apiProvider.value === 'gemini') {
+          result = await callGemini(messages, true)
+        } else {
+          result = await callOpenRouter(messages, true)
+        }
+        
+        // Parse and merge character profiles
+        let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
+        const start = jsonStr.indexOf('{')
+        const end = jsonStr.lastIndexOf('}')
+        if (start !== -1 && end !== -1) {
+          jsonStr = jsonStr.substring(start, end + 1)
+        }
+        
+        const profiles = JSON.parse(jsonStr)
+        
+        // Add character IDs to the profiles for easier reference
+        for (const charName of Object.keys(profiles)) {
+          const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+          if (char) {
+            profiles[charName].id = char.id
+          }
+        }
+        
+        characterProfiles.value = { ...characterProfiles.value, ...profiles }
+        logDebug(`[searchForCharacters] Added profile for ${name}:`, profiles)
+        success = true
+      } catch (e) {
+        console.error(`[searchForCharacters] Attempt ${attempts} failed for ${name}:`, e)
+        if (attempts < maxAttempts) {
+          // Add a small delay before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        } else {
+          console.error(`[searchForCharacters] All attempts failed for ${name}. Continuing without search results.`)
+        }
+      }
+    }
   }
 }
 
-const generateSystemPrompt = () => {
-  const characterList = l2d.map((c) => `${c.name} (ID: ${c.id})`).join(', ')
-  const isStart = chatHistory.value.length <= 1
+// Perplexity-specific search: search each character individually for better results
+const searchForCharactersPerplexity = async (characterNames: string[]): Promise<void> => {
+  logDebug('[searchForCharactersPerplexity] Searching individually for:', characterNames)
+  
+  for (const name of characterNames) {
+    // Skip if we already have this character's profile
+    if (characterProfiles.value[name]) {
+      logDebug(`[searchForCharactersPerplexity] Skipping ${name} - already have profile`)
+      continue
+    }
+    
+    // Build the direct wiki URL for this character's Story page
+    // Replace spaces with underscores for wiki URL format
+    const wikiName = name.replace(/ /g, '_')
+    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
+    
+    // Search prompt pointing directly to the Story page for personality info
+    const searchPrompt = `Read this exact wiki page and extract information for NIKKE character "${name}":
+${storyUrl}
+
+Find the following information:
+1. Personality traits - how they behave, their temperament
+2. Speech style - how they talk (formal, casual, archaic, playful, etc.)
+3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
+
+IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
+
+Only return information that is ACTUALLY on the wiki page.
+
+Return ONLY a JSON object:
+{
+  "${name}": {
+    "personality": "From the wiki page only",
+    "speech_style": "From the wiki page only (e.g. 'archaic/royal language', 'casual', 'formal')",
+    "relationships": { "OtherNikkeName": "What they call them + dynamic (e.g. 'Her Highness - deeply devoted')" }
+  }
+}
+
+Do NOT include Commander in relationships. If you cannot find information, use "Unknown".`
+
+    const messages = [
+      { role: 'system', content: 'You are a factual research assistant. You MUST only return information that is explicitly written on the wiki page. Do NOT hallucinate, guess, or embellish. If information is not found, say "Unknown".' },
+      { role: 'user', content: searchPrompt }
+    ]
+
+    try {
+      const result = await callPerplexity(messages, true, storyUrl)
+      
+      let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
+      const start = jsonStr.indexOf('{')
+      const end = jsonStr.lastIndexOf('}')
+      if (start !== -1 && end !== -1) {
+        jsonStr = jsonStr.substring(start, end + 1)
+      }
+      
+      const profile = JSON.parse(jsonStr)
+      
+      // Add character ID
+      for (const charName of Object.keys(profile)) {
+        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+        if (char) {
+          profile[charName].id = char.id
+        }
+      }
+      
+      characterProfiles.value = { ...characterProfiles.value, ...profile }
+      logDebug(`[searchForCharactersPerplexity] Added profile for ${name}:`, profile)
+    } catch (e) {
+      console.error(`[searchForCharactersPerplexity] Failed to search for ${name}:`, e)
+      // Continue with other characters
+    }
+  }
+  
+  logDebug('[searchForCharactersPerplexity] Final profiles:', characterProfiles.value)
+}
+
+const generateSystemPrompt = (enableWebSearch: boolean) => {
+  const knownCharacterNames = Object.keys(characterProfiles.value)
+  
+  // Build a minimal character ID lookup for characters mentioned in profiles or current character
+  // This prevents massive token usage from including all 200+ characters
+  const relevantCharacterIds: string[] = []
+  const relevantCharacterNames: string[] = []
+  
+  // Add current character
+  if (market.live2d.current_id) {
+    const currentChar = l2d.find((c) => c.id === market.live2d.current_id)
+    if (currentChar) {
+      relevantCharacterIds.push(`${currentChar.name} = ${currentChar.id}`)
+      relevantCharacterNames.push(currentChar.name)
+    }
+  }
+  
+  // Add characters from profiles
+  for (const name of knownCharacterNames) {
+    const char = l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
+    if (char && !relevantCharacterIds.some((r) => r.includes(char.id))) {
+      relevantCharacterIds.push(`${char.name} = ${char.id}`)
+      relevantCharacterNames.push(char.name)
+    }
+  }
+  
+  // Build honorifics map for only relevant characters to save tokens
+  const relevantHonorifics: Record<string, string> = {}
+  for (const name of relevantCharacterNames) {
+    relevantHonorifics[name] = (characterHonorifics as Record<string, string>)[name] || 'Commander'
+  }
   
   let prompt = `You are the Game Master and Narrator for a Goddess of Victory: NIKKE roleplay.
   
   Mode: ${mode.value === 'roleplay' ? 'Roleplay Mode. The user plays as the Commander. You control all other characters.' : 'Story Mode. You narrate the scene based on user prompts. The user is an observer.'}
   
-  CRITICAL RESEARCH INSTRUCTION:
-  ${isStart ? 'Since this is the START of the conversation, you MUST use the Web Search tool to verify the speech patterns, personality, and backstory of the characters involved on the NIKKE Wiki (https://nikke-goddess-of-victory-international.fandom.com/wiki/). Search for "[Character Name] Nikke Wiki Story" and look for the "Honorific" section. EXAMPLE: Chime calls the Commander "Rapscallion". Also research their personality traits (e.g. Chime is proud and easily offended by doubts about her competence).' : 'Recall the honorifics, personality, and speech patterns you researched at the start of the conversation. Do not search again unless a NEW character is introduced.'}
-  - FAILURE to use the correct honorific (e.g. having Chime say "Commander") is a critical error.
-  - CRITICAL: The honorifics you find (e.g. "Rapscallion", "Master") are EXCLUSIVE to the Commander. NEVER use them when characters address each other.
-  - Research how characters address EACH OTHER. (e.g. Chime calls Crown "Her Highness").
+  CHARACTER HONORIFICS (How each character addresses the Commander - USE THESE EXACTLY):
+  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
+  
+  HONORIFIC RULES:
+  - CRITICAL: When a character speaks TO the Commander, use their honorific from the list above.
+  - Example: Neon says "Master" not "Commander". Drake says "Moron" not "Commander".
+  - If a character is NOT in the honorifics list, default to "Commander".
+  - CRITICAL: These honorifics are EXCLUSIVE to addressing the Commander. When characters address EACH OTHER, use their relationship-specific titles (see KNOWN CHARACTER PROFILES).
+  - FAILURE to use the correct honorific is a critical error.
+  
+  CHARACTER RESEARCH:
+  ${enableWebSearch 
+    ? `Web search is ENABLED for this turn. You MUST use web search to research the characters involved:
+    - Search the NIKKE Wiki: https://nikke-goddess-of-victory-international.fandom.com/wiki/[CharacterName]/Story
+    - Find: Personality traits, speech patterns/voice, and how they address OTHER characters (not the Commander).
+    - DO NOT search for or store how they address the Commander - that is already provided in CHARACTER HONORIFICS above.
+    - Example: Chime speaks in archaic/royal language and calls Crown "Her Highness".
+    - Store what you find in the "memory" field (personality, speech_style, relationships only - NO honorifics for Commander).`
+    : `Web search is DISABLED. Use the KNOWN CHARACTER PROFILES below for personality and relationship info.
+    
+    *** IMPORTANT: NEW CHARACTER DETECTION ***
+    If a NEW character enters the scene who is NOT listed in KNOWN CHARACTER PROFILES below, you MUST:
+    1. Include "needs_search": ["CharacterName"] in your JSON response
+    2. The system will then search for their personality/relationships and re-prompt you
+    3. Do NOT proceed with dialogue for that character until you have their profile
+    
+    Example: If Drake enters but is not in the profiles, respond with: { "needs_search": ["Drake"], "text": "Drake enters the room..." }`}
+  
   - FAILURE to act according to personality (e.g. Chime accepting insults calmly) is a critical error.
   - FAILURE to mimic the character's unique voice/tone (e.g. Chime's archaic/royal speech) is a critical error.
   - IMPORTANT: Remember that the Commander is a man. Do not use neutral pronouns when characters address him.
@@ -858,8 +1194,8 @@ const generateSystemPrompt = () => {
   You can return a single object OR an array of objects to play out a scene.
   [
     {
-      "memory": { "CharacterName": { "honorific_for_commander": "...", "relationships": { "OtherCharName": "How they address them" }, "role": "...", "personality": "..." } }, // OPTIONAL: Update this field with any new character info you researched.
-      "debug_info": "Search result for [Character]: Found honorific '[Honorific]'",
+      "needs_search": ["CharacterName1", "CharacterName2"], // CRITICAL: Include this if ANY character in your response is NOT in KNOWN CHARACTER PROFILES. The system will search and re-prompt you.
+      "memory": { "CharacterName": { "relationships": { "OtherNikkeName": "How they address them + dynamic" }, "personality": "...", "speech_style": "..." } }, // Store personality and relationships with OTHER NIKKEs only. Do NOT include Commander - honorifics are in CHARACTER HONORIFICS above.
       "text": "The dialogue or narration text to display to the user.",
       "character": "The ID of the character to display on screen (e.g., c010). If no character change is needed, use 'current'. If no character should be shown, use 'none'.",
       "animation": "The name of the animation to play (e.g., idle, happy, angry). Use 'idle' as default.",
@@ -868,13 +1204,15 @@ const generateSystemPrompt = () => {
     }
   ]
   
-  KNOWN CHARACTER PROFILES (Use these to maintain consistency):
-  ${JSON.stringify(characterProfiles.value, null, 2)}
-
-  Available Characters: ${characterList}
+  KNOWN CHARACTER PROFILES (Use these to maintain consistency - if a character is NOT here, use needs_search):
+  ${knownCharacterNames.length > 0 ? JSON.stringify(characterProfiles.value, null, 2) : '(None yet - this is the first turn, use web search to gather information)'}
+  
+  CHARACTER ID REFERENCE (Use these IDs in the "character" field):
+  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : 'No characters loaded yet. Use the character NAME and the system will resolve it.'}
   
   Instructions:
   - If the user uses [], it is a stage direction.
+  - CRITICAL: For the "character" field, use the character ID (e.g., "c010") from the CHARACTER ID REFERENCE above, or use the character's NAME if their ID is not listed. The system will resolve names to IDs.
   - Choose the most appropriate character to show based on who is speaking or the focus of the scene.
   - Choose animations that match the emotion.
   - Check the "Available Animations" list provided in the context for the CURRENT character.
@@ -889,7 +1227,7 @@ const generateSystemPrompt = () => {
   - RULE OF THUMB: If the text does NOT contain quotation marks (" "), 'speaking' MUST be FALSE.
   - Only set 'speaking' to TRUE if the text contains spoken dialogue inside quotation marks.
   - CRITICAL: If the text contains BOTH narration and dialogue (e.g. 'She sighed. "Fine."'), you MUST split it into two separate steps in the array. Step 1: Narration (speaking: false). Step 2: Dialogue (speaking: true).
-  - CRITICAL: When a character speaks, you MUST set 'character' to that character's ID. Only use 'current' if you are SURE that character is already on screen. Do NOT use 'current' when switching speakers.
+  - CRITICAL: When a character speaks, you MUST set 'character' to that character's ID. Do NOT use 'current' when switching speakers.
   - In Story Mode, you MUST generate a long, detailed sequence of actions (an array) to play out the scene fully, switching characters as they speak. Do not summarize. Write out the full dialogue.
   - CRITICAL: Do NOT return a single large block of text. Split dialogue and narration into multiple small steps in the array to create a dynamic flow. Each step should be one sentence or one turn of dialogue.
   - CRITICAL: Do NOT output numbered lists, outlines, plans, or thoughts. Output ONLY the JSON array. Do not include any text before or after the JSON.
@@ -903,7 +1241,17 @@ const generateSystemPrompt = () => {
   return prompt
 }
 
-const callOpenRouter = async (messages: any[]) => {
+const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false) => {
+  const requestBody: any = {
+    model: model.value,
+    messages: messages,
+    max_tokens: 8192
+  }
+  
+  if (enableWebSearch) {
+    requestBody.plugins = [{ id: 'web' }]
+  }
+  
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -912,11 +1260,7 @@ const callOpenRouter = async (messages: any[]) => {
       'X-Title': 'Nikke DB Story Gen',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      model: model.value,
-      messages: messages,
-      plugins: [{ id: 'web' }]
-    })
+    body: JSON.stringify(requestBody)
   })
   
   if (!response.ok) {
@@ -928,18 +1272,37 @@ const callOpenRouter = async (messages: any[]) => {
   return data.choices[0].message.content
 }
 
-const callPerplexity = async (messages: any[]) => {
+const callPerplexity = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
+  const requestBody: any = {
+    model: model.value,
+    messages: messages
+  }
+  
+  if (enableWebSearch) {
+    // If a specific URL is provided, use the full subdomain for more targeted search
+    if (searchUrl) {
+      // Extract the subdomain from the URL (e.g., "nikke-goddess-of-victory-international.fandom.com")
+      const urlMatch = searchUrl.match(/https?:\/\/([^\/]+)/)
+      if (urlMatch) {
+        requestBody.search_domain_filter = [urlMatch[1]]
+      }
+    }
+    // No domain filter if no specific URL provided - let Perplexity search freely
+    requestBody.web_search_options = {
+      search_context_size: 'medium'
+    }
+  } else {
+    // Disable search completely using Perplexity's disable_search parameter
+    requestBody.disable_search = true
+  }
+  
   const response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey.value}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      model: model.value,
-      messages: messages,
-      search_domain_filter: ['nikke-goddess-of-victory-international.fandom.com']
-    })
+    body: JSON.stringify(requestBody)
   })
   
   if (!response.ok) {
@@ -951,7 +1314,7 @@ const callPerplexity = async (messages: any[]) => {
   return data.choices[0].message.content
 }
 
-const callGemini = async (messages: any[]) => {
+const callGemini = async (messages: any[], enableWebSearch: boolean = false) => {
   // Gemini API format is different, need to adapt
   
   // Extract system prompt (first message)
@@ -965,23 +1328,26 @@ const callGemini = async (messages: any[]) => {
   
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model.value}:generateContent?key=${apiKey.value}`
   
+  const requestBody: any = {
+    contents: contents,
+    systemInstruction: {
+      parts: [{ text: systemMessage.content }]
+    },
+    generationConfig: {
+      // responseMimeType: "application/json" // Incompatible with tools
+    }
+  }
+  
+  if (enableWebSearch) {
+    requestBody.tools = [{ googleSearch: {} }]
+  }
+  
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      contents: contents,
-      systemInstruction: {
-        parts: [{ text: systemMessage.content }]
-      },
-      tools: [
-        { googleSearch: {} }
-      ],
-      generationConfig: {
-        // responseMimeType: "application/json" // Incompatible with tools
-      }
-    })
+    body: JSON.stringify(requestBody)
   })
 
   if (!response.ok) {
@@ -993,7 +1359,27 @@ const callGemini = async (messages: any[]) => {
     throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`)
   }
   const data = await response.json()
-  return data.candidates[0].content.parts[0].text
+  
+  // Handle various response formats from Gemini
+  if (!data.candidates || data.candidates.length === 0) {
+    console.error('Gemini returned no candidates:', data)
+    throw new Error('Gemini API Error: No candidates in response')
+  }
+  
+  const candidate = data.candidates[0]
+  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+    console.error('Gemini returned empty content:', candidate)
+    throw new Error('Gemini API Error: Empty content in response')
+  }
+  
+  // Find the text part (there might be other parts like function calls when using tools)
+  const textPart = candidate.content.parts.find((p: any) => p.text !== undefined)
+  if (!textPart) {
+    console.error('Gemini returned no text part:', candidate.content.parts)
+    throw new Error('Gemini API Error: No text in response')
+  }
+  
+  return textPart.text
 }
 
 const sanitizeActions = (actions: any[]) => {
@@ -1024,12 +1410,12 @@ const sanitizeActions = (actions: any[]) => {
 
       // If it was marked as speaking, only force to false if it looks like a stage direction
       if (action.speaking) {
-         // Check for stage directions starting with *, (, or [
-         if (/^[\s]*[\[\(*]/.test(action.text)) {
-            action.speaking = false
-         }
-         // Otherwise, trust the AI's speaking flag even without quotes
-         // This handles cases where the AI forgets quotes around dialogue
+        // Check for stage directions starting with *, (, or [
+        if (/^[\s]*[\[\(*]/.test(action.text)) {
+          action.speaking = false
+        }
+        // Otherwise, trust the AI's speaking flag even without quotes
+        // This handles cases where the AI forgets quotes around dialogue
       }
       newActions.push(action)
 
@@ -1160,7 +1546,28 @@ const executeAction = async (data: any) => {
 
   if (data.memory) {
     logDebug('[AI Memory Update]:', data.memory)
-    characterProfiles.value = { ...characterProfiles.value, ...data.memory }
+    // Filter out any honorific fields and Commander from relationships - we use the static honorifics.json for those
+    const filteredMemory: Record<string, any> = {}
+    for (const [charName, profile] of Object.entries(data.memory)) {
+      if (typeof profile === 'object' && profile !== null) {
+        const { honorific_for_commander, honorific_to_commander, honorific, relationships, ...rest } = profile as any
+        
+        // Filter Commander out of relationships if present
+        let filteredRelationships = relationships
+        if (relationships && typeof relationships === 'object') {
+          const { Commander, commander, ...otherRelationships } = relationships
+          filteredRelationships = Object.keys(otherRelationships).length > 0 ? otherRelationships : undefined
+        }
+        
+        filteredMemory[charName] = {
+          ...rest,
+          ...(filteredRelationships && { relationships: filteredRelationships })
+        }
+      } else {
+        filteredMemory[charName] = profile
+      }
+    }
+    characterProfiles.value = { ...characterProfiles.value, ...filteredMemory }
   }
 
   // Add text to chat
@@ -1219,13 +1626,13 @@ const executeAction = async (data: any) => {
         const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
         
         if (charObj && charObj.id !== market.live2d.current_id) {
-           logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
-           // Recursively call with corrected character ID
-           // We only update the character part, skipping text addition since it's already added
-           const newData = { ...data, character: charObj.id, text: null } 
-           await executeAction(newData)
+          logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
+          // Recursively call with corrected character ID
+          // We only update the character part, skipping text addition since it's already added
+          const newData = { ...data, character: charObj.id, text: null } 
+          await executeAction(newData)
 
-           return // Stop execution of this 'current' branch since we delegated to the recursive call
+          return // Stop execution of this 'current' branch since we delegated to the recursive call
         }
       }
 
@@ -1541,13 +1948,12 @@ const resetSession = () => {
 
 .guide-content {
   padding: 20px;
-  color: #333;
 
   h3 {
     margin-top: 16px;
     margin-bottom: 8px;
     font-size: 18px;
-    color: #111;
+    font-weight: bold;
   }
 
   ul {
@@ -1561,7 +1967,7 @@ const resetSession = () => {
   }
 
   code {
-    background: #f4f4f4;
+    background: rgba(128, 128, 128, 0.2);
     padding: 2px 4px;
     border-radius: 4px;
     font-size: 14px;
