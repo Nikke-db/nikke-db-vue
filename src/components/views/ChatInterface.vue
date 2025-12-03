@@ -127,6 +127,27 @@
           </n-form-item>
           <n-form-item>
             <template #label>
+              Tokens Usage
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Controls how often the story is summarized to save tokens. Will affect costs and speed.<br><br>Does not affect the Save and Load functionality.<br><br>
+                  <strong>Low:</strong> Summarizes every 10 turns. Cost-efficient.<br>
+                  <strong>Medium:</strong> Summarizes every 30 turns. Balanced.<br>
+                  <strong>High:</strong> Summarizes every 60 turns. Uses more tokens.<br>
+                  <strong>Goddess:</strong> Disables summarization and sends the full history to the model on every turn. This may result in higher costs and slower responses in time, but provides the best context for the AI.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="tokenUsage" :options="tokenUsageOptions" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
               Playback
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
@@ -157,6 +178,29 @@
               </n-popover>
             </template>
             <n-switch v-model:value="market.live2d.yapEnabled" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
+              Text to Speech (EXPERIMENTAL)
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Enables TTS using a local AllTalk instance.<br>
+                  Requires AllTalk running with XTTSv2.<br><br>
+                  Character voices must be in the AllTalk voices folder (e.g. "anis.wav").
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="ttsEnabled" />
+          </n-form-item>
+
+          <n-form-item label="AllTalk Endpoint" v-if="ttsEnabled">
+            <n-input v-model:value="ttsEndpoint" placeholder="http://localhost:7851" />
           </n-form-item>
         </n-form>
       </n-drawer-content>
@@ -261,12 +305,16 @@ const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
 const mode = ref('roleplay')
 const playbackMode = ref('auto')
+const ttsEnabled = ref(false)
+const ttsEndpoint = ref('http://localhost:7851')
 const userInput = ref('')
 const isLoading = ref(false)
 const isStopped = ref(false)
 const waitingForNext = ref(false)
 const showRetry = ref(false)
 const lastPrompt = ref('')
+const storySummary = ref('')
+const lastSummarizedIndex = ref(0)
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
@@ -275,6 +323,7 @@ const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
 const isRestoring = ref(false)
+const tokenUsage = ref('medium')
 
 // Options
 const providerOptions = [
@@ -310,6 +359,13 @@ const playbackOptions = [
   { label: 'Manual', value: 'manual' }
 ]
 
+const tokenUsageOptions = [
+  { label: 'Low (10 turns)', value: 'low' },
+  { label: 'Medium (30 turns)', value: 'medium' },
+  { label: 'High (60 turns)', value: 'high' },
+  { label: 'Goddess', value: 'goddess' }
+]
+
 // Watchers
 watch(apiKey, (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
@@ -321,6 +377,14 @@ watch(mode, (newVal) => {
 
 watch(playbackMode, (newVal) => {
   localStorage.setItem('nikke_playback_mode', newVal)
+})
+
+watch(ttsEnabled, (newVal) => {
+  localStorage.setItem('nikke_tts_enabled', String(newVal))
+})
+
+watch(ttsEndpoint, (newVal) => {
+  localStorage.setItem('nikke_tts_endpoint', newVal)
 })
 
 watch(model, (newVal) => {
@@ -348,6 +412,10 @@ watch(apiProvider, async (newVal) => {
       model.value = openRouterModels.value[0].value
     }
   }
+})
+
+watch(tokenUsage, (newVal) => {
+  localStorage.setItem('nikke_token_usage', newVal)
 })
 
 const fetchOpenRouterModels = async () => {
@@ -402,6 +470,15 @@ const initializeSettings = async () => {
   const savedYap = localStorage.getItem('nikke_yap_enabled')
   if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
 
+  const savedTts = localStorage.getItem('nikke_tts_enabled')
+  if (savedTts !== null) ttsEnabled.value = (savedTts === 'true')
+
+  const savedTtsEndpoint = localStorage.getItem('nikke_tts_endpoint')
+  if (savedTtsEndpoint) ttsEndpoint.value = savedTtsEndpoint
+
+  const savedTokenUsage = localStorage.getItem('nikke_token_usage')
+  if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
+
   // Load Provider and Model
   const savedProvider = localStorage.getItem('nikke_api_provider')
   const savedModel = localStorage.getItem('nikke_model')
@@ -441,6 +518,13 @@ const initializeSettings = async () => {
   isRestoring.value = false
 }
 
+const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+  if (chatHistory.value.length > 0) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+
 onMounted(() => {
   checkGuide()
   initializeSettings()
@@ -471,13 +555,18 @@ const saveSession = () => {
   const sessionData = {
     chatHistory: chatHistory.value,
     characterProfiles: characterProfiles.value,
+    storySummary: storySummary.value,
+    lastSummarizedIndex: lastSummarizedIndex.value,
     mode: mode.value,
     timestamp: new Date().toISOString(),
     settings: {
       apiProvider: apiProvider.value,
       model: model.value,
       playbackMode: playbackMode.value,
-      yapEnabled: market.live2d.yapEnabled
+      yapEnabled: market.live2d.yapEnabled,
+      ttsEnabled: ttsEnabled.value,
+      ttsEndpoint: ttsEndpoint.value,
+      tokenUsage: tokenUsage.value
     }
   }
   
@@ -516,6 +605,12 @@ const handleFileUpload = (event: Event) => {
         if (data.characterProfiles) {
           characterProfiles.value = data.characterProfiles
         }
+        if (data.storySummary) {
+          storySummary.value = data.storySummary
+        }
+        if (data.lastSummarizedIndex !== undefined) {
+          lastSummarizedIndex.value = data.lastSummarizedIndex
+        }
         if (data.mode) {
           mode.value = data.mode
         }
@@ -529,6 +624,18 @@ const handleFileUpload = (event: Event) => {
           
           if (typeof data.settings.yapEnabled === 'boolean') {
             market.live2d.yapEnabled = data.settings.yapEnabled
+          }
+
+          if (typeof data.settings.ttsEnabled === 'boolean') {
+            ttsEnabled.value = data.settings.ttsEnabled
+          }
+          
+          if (data.settings.ttsEndpoint) {
+            ttsEndpoint.value = data.settings.ttsEndpoint
+          }
+
+          if (data.settings.tokenUsage && tokenUsageOptions.some((t) => t.value === data.settings.tokenUsage)) {
+            tokenUsage.value = data.settings.tokenUsage
           }
           
           // Restore Provider and Model
@@ -797,7 +904,43 @@ const callAI = async (): Promise<string> => {
     a !== 'expression_0' && 
     a !== 'action'
   )
-  const contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+  let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+
+  // Optimization: Limit history to prevent token overflow
+  // Tumbling window: Summarize every X turns
+  
+  let historyLimit = 30
+  if (tokenUsage.value === 'low') historyLimit = 10
+  else if (tokenUsage.value === 'medium') historyLimit = 30
+  else if (tokenUsage.value === 'high') historyLimit = 60
+  else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
+
+  if (tokenUsage.value !== 'goddess') {
+     let userMsgCount = 0
+     // Count user messages in the unsummarized portion, excluding the current pending prompt
+     for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
+       if (chatHistory.value[i].role === 'user') {
+         userMsgCount++
+       }
+     }
+
+     if (userMsgCount >= historyLimit) {
+       const endIndex = chatHistory.value.length - 1
+       const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
+       logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+       await summarizeChunk(chunkToSummarize)
+       lastSummarizedIndex.value = endIndex
+     }
+  }
+
+  if (storySummary.value && tokenUsage.value !== 'goddess') {
+    contextMsg += `\n\nPREVIOUS STORY SUMMARY:\n${storySummary.value}`
+  }
+
+  let historyToSend = chatHistory.value
+  if (tokenUsage.value !== 'goddess') {
+    historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
+  }
 
   let response: string
 
@@ -808,7 +951,7 @@ const callAI = async (): Promise<string> => {
     // Sanitize history for Perplexity (Strict alternation required)
     // 1. Filter out system messages from history (we provide our own system prompt)
     // 2. Merge consecutive messages of the same role
-    const rawHistory = chatHistory.value.filter((m) => m.role !== 'system')
+    const rawHistory = historyToSend.filter((m) => m.role !== 'system')
     const sanitizedHistory: any[] = []
     
     if (rawHistory.length > 0) {
@@ -836,7 +979,7 @@ const callAI = async (): Promise<string> => {
     // Gemini: Original behavior (context as separate message at end)
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     messages.push({
       role: 'system',
@@ -850,7 +993,7 @@ const callAI = async (): Promise<string> => {
     
     const messages = [
       { role: 'system', content: fullSystemPrompt },
-      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, enableWebSearch)
@@ -881,11 +1024,47 @@ const callAIWithoutSearch = async (): Promise<string> => {
     a !== 'expression_0' && 
     a !== 'action'
   )
-  const contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+  let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+
+  // Optimization: Limit history to prevent token overflow
+  // Tumbling window: Summarize every X turns
+  
+  let historyLimit = 30
+  if (tokenUsage.value === 'low') historyLimit = 10
+  else if (tokenUsage.value === 'medium') historyLimit = 30
+  else if (tokenUsage.value === 'high') historyLimit = 60
+  else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
+
+  if (tokenUsage.value !== 'goddess') {
+     let userMsgCount = 0
+     // Count user messages in the unsummarized portion, excluding the current pending prompt
+     for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
+       if (chatHistory.value[i].role === 'user') {
+         userMsgCount++
+       }
+     }
+
+     if (userMsgCount >= historyLimit) {
+       const endIndex = chatHistory.value.length - 1
+       const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
+       logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+       await summarizeChunk(chunkToSummarize)
+       lastSummarizedIndex.value = endIndex
+     }
+  }
+
+  if (storySummary.value && tokenUsage.value !== 'goddess') {
+    contextMsg += `\n\nPREVIOUS STORY SUMMARY:\n${storySummary.value}`
+  }
+
+  let historyToSend = chatHistory.value
+  if (tokenUsage.value !== 'goddess') {
+    historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
+  }
 
   if (apiProvider.value === 'perplexity') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
-    const rawHistory = chatHistory.value.filter((m) => m.role !== 'system')
+    const rawHistory = historyToSend.filter((m) => m.role !== 'system')
     const sanitizedHistory: any[] = []
     
     if (rawHistory.length > 0) {
@@ -910,7 +1089,7 @@ const callAIWithoutSearch = async (): Promise<string> => {
   } else if (apiProvider.value === 'gemini') {
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     messages.push({ role: 'system', content: contextMsg })
     return await callGemini(messages, false)
@@ -918,7 +1097,7 @@ const callAIWithoutSearch = async (): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
     const messages = [
       { role: 'system', content: fullSystemPrompt },
-      ...chatHistory.value.map((m) => ({ role: m.role, content: m.content }))
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     return await callOpenRouter(messages, false)
   }
@@ -1179,7 +1358,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     *** IMPORTANT: NEW CHARACTER DETECTION ***
     If a NEW character enters the scene who is NOT listed in KNOWN CHARACTER PROFILES below, you MUST:
     1. Include "needs_search": ["CharacterName"] in your JSON response
-    2. The system will then search for their personality/relationships and re-prompt you
+    2. The system will search for their personality/relationships and re-prompt you
     3. Do NOT proceed with dialogue for that character until you have their profile
     
     Example: If Drake enters but is not in the profiles, respond with: { "needs_search": ["Drake"], "text": "Drake enters the room..." }`}
@@ -1196,7 +1375,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     {
       "needs_search": ["CharacterName1", "CharacterName2"], // CRITICAL: Include this if ANY character in your response is NOT in KNOWN CHARACTER PROFILES. The system will search and re-prompt you.
       "memory": { "CharacterName": { "relationships": { "OtherNikkeName": "How they address them + dynamic" }, "personality": "...", "speech_style": "..." } }, // Store personality and relationships with OTHER NIKKEs only. Do NOT include Commander - honorifics are in CHARACTER HONORIFICS above.
-      "text": "The dialogue or narration text to display to the user.",
+            "text": "The dialogue or narration text to display to the user.",
       "character": "The ID of the character to display on screen (e.g., c010). If no character change is needed, use 'current'. If no character should be shown, use 'none'.",
       "animation": "The name of the animation to play (e.g., idle, happy, angry). Use 'idle' as default.",
       "speaking": true/false, // Set to TRUE ONLY if the character is actually saying words. Set to FALSE for narration, internal thoughts, or descriptions of actions.
@@ -1405,6 +1584,7 @@ const sanitizeActions = (actions: any[]) => {
       
       // Filter out standalone speaker labels
       if (isSpeakerLabel(action.text)) {
+
         continue
       }
 
@@ -1532,6 +1712,89 @@ const getCharacterName = (id: string): string | null => {
   return char ? char.name : id
 }
 
+const playTTS = async (text: string, characterName: string) => {
+  if (!ttsEnabled.value || !characterName) return
+
+  // Clean up character name to match filename
+  // Remove special chars, replace spaces with underscores
+  // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer.wav"
+  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
+  const voiceFile = `${cleanName}.wav`
+  
+  logDebug(`[TTS] Requesting TTS for ${characterName} (${voiceFile})`)
+
+  try {
+    let baseUrl = ttsEndpoint.value
+    // Clean up the base URL to ensure we have the root (remove /v1, /api, trailing slashes)
+    baseUrl = baseUrl.replace(/\/$/, '').replace(/\/v1$/, '').replace(/\/api$/, '')
+    
+    // Handle CORS in dev mode by using Vite proxy
+    // This requires the proxy to be configured in vite.config.ts
+    if (import.meta.env.DEV && (baseUrl.includes('localhost:7851') || baseUrl.includes('127.0.0.1:7851'))) {
+        baseUrl = '/alltalk'
+    }
+
+    // Use Standard API via proxy (better support for custom filenames)
+    const url = `${baseUrl}/api/tts-generate`
+    
+    logDebug(`[TTS] Calling URL: ${url}`)
+
+    const params = new URLSearchParams()
+    params.append('text_input', text)
+    params.append('character_voice_gen', voiceFile)
+    params.append('narrator_enabled', 'false')
+    params.append('text_not_inside', 'character')
+    params.append('language', 'en')
+    params.append('output_file_name', 'nikke_tts_gen')
+    params.append('output_file_timestamp', 'true')
+    params.append('autoplay', 'false')
+    params.append('autoplay_volume', '0.8')
+    params.append('text_filtering', 'standard')
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params
+    })
+
+    if (!response.ok) {
+       const errText = await response.text()
+       console.error(`[TTS] API Error: ${response.status} - ${errText}`)
+       return
+    }
+
+    const data = await response.json()
+    
+    if (data.status === 'generate-success' && data.output_file_url) {
+        // Construct audio URL using the same base (proxy or direct)
+        // data.output_file_url usually starts with /audio/
+        const audioUrl = `${baseUrl}${data.output_file_url}`
+        const audio = new Audio(audioUrl)
+        audio.volume = 1.0
+        
+        // Sync yapping with audio
+        audio.onplay = () => {
+            market.live2d.isYapping = true
+        }
+        audio.onended = () => {
+            market.live2d.isYapping = false
+        }
+        audio.onerror = () => {
+            market.live2d.isYapping = false
+        }
+        
+        audio.play().catch(e => {
+            console.error('[TTS] Playback failed:', e)
+            market.live2d.isYapping = false
+        })
+    }
+  } catch (e) {
+    console.error('[TTS] Error:', e)
+  }
+}
+
 const executeAction = async (data: any) => {
   logDebug('Executing Action:', data)
 
@@ -1570,6 +1833,29 @@ const executeAction = async (data: any) => {
     characterProfiles.value = { ...characterProfiles.value, ...filteredMemory }
   }
 
+  // Resolve Character ID EARLY to ensure TTS gets the right name
+  let effectiveCharId = data.character
+  
+  // Handle 'current' character resolution and speaker detection
+  if (effectiveCharId === 'current') {
+      // Check for speaker override in text
+      const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
+      if (speakerMatch) {
+        const speakerName = speakerMatch[1].trim()
+        const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
+        if (charObj && charObj.id !== market.live2d.current_id) {
+             logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
+             effectiveCharId = charObj.id
+             // Update data.character so subsequent logic uses the new ID
+             data.character = effectiveCharId
+        } else {
+             effectiveCharId = market.live2d.current_id
+        }
+      } else {
+         effectiveCharId = market.live2d.current_id
+      }
+  }
+
   // Add text to chat
   if (data.text) {
     let content = data.text
@@ -1578,17 +1864,21 @@ const executeAction = async (data: any) => {
     if (data.speaking) {
       let name = null
         
-      if (data.character === 'none') {
+      if (effectiveCharId === 'none') {
         // If character is explicitly none, it's likely the Commander in Story Mode
         if (mode.value === 'story') {
           name = 'Commander'
         }
       } else {
-        const charId = (data.character) ? data.character : 'current'
-        name = getCharacterName(charId)
+        name = getCharacterName(effectiveCharId)
       }
 
       if (name) {
+        // Trigger TTS
+        if (ttsEnabled.value) {
+          playTTS(data.text, name)
+        }
+
         // Check if the text already starts with the name to avoid duplication
         // We check for "Name:", "**Name:**", "Name :", etc.
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -1615,34 +1905,7 @@ const executeAction = async (data: any) => {
       logDebug('[Chat] Hiding character sprite')
       market.live2d.isVisible = false
     } 
-    // Handle 'current' character
-    else if (data.character === 'current') {
-      // If the text contains a speaker name (e.g. "**Anis:**"), we should try to switch to that character
-      // instead of blindly trusting 'current', because the AI often messes this up.
-      const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
-      if (speakerMatch) {
-        const speakerName = speakerMatch[1].trim()
-        // Try to find character by name
-        const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
-        
-        if (charObj && charObj.id !== market.live2d.current_id) {
-          logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
-          // Recursively call with corrected character ID
-          // We only update the character part, skipping text addition since it's already added
-          const newData = { ...data, character: charObj.id, text: null } 
-          await executeAction(newData)
-
-          return // Stop execution of this 'current' branch since we delegated to the recursive call
-        }
-      }
-
-      // Ensure visible if it was hidden
-      if (!market.live2d.isVisible) {
-        logDebug('[Chat] Showing current character sprite')
-        market.live2d.isVisible = true
-      }
-    }
-    // Handle specific character switch
+    // Handle specific character switch (including resolved 'current')
     else {
       // Force 'none' if in Story Mode and character is Commander
       if (mode.value === 'story' && (data.character.toLowerCase().includes('commander') || data.character === 'c000')) {
@@ -1704,7 +1967,7 @@ const executeAction = async (data: any) => {
     
   // Speaking
   let calculatedYapDuration = 0
-  if (data.speaking) {
+  if (data.speaking && !ttsEnabled.value) {
     logDebug('Starting yap')
       
     // Clear previous timeout if exists
@@ -1781,13 +2044,6 @@ const executeAction = async (data: any) => {
   }
 }
 
-const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-  if (chatHistory.value.length > 0) {
-    e.preventDefault()
-    e.returnValue = ''
-  }
-}
-
 const resetSession = () => {
   if (chatHistory.value.length === 0) return
   
@@ -1795,8 +2051,42 @@ const resetSession = () => {
   if (confirmed) {
     chatHistory.value = []
     characterProfiles.value = {}
+    storySummary.value = ''
+    lastSummarizedIndex.value = 0
     lastPrompt.value = ''
     market.live2d.isVisible = false
+  }
+}
+
+const summarizeChunk = async (messages: { role: string, content: string }[]) => {
+  if (messages.length === 0) return
+
+  const textToSummarize = messages.map(m => `${m.role}: ${m.content}`).join('\n\n')
+  const prompt = `Summarize the following story events concisely, focusing on key plot points and character developments. Do not lose important details.\n\n${textToSummarize}`
+
+  const systemMsg = { role: 'system', content: 'You are a helpful assistant that summarizes story events.' }
+  const userMsg = { role: 'user', content: prompt }
+  const msgs = [systemMsg, userMsg]
+
+  try {
+    let summary = ''
+    if (apiProvider.value === 'perplexity') {
+      summary = await callPerplexity(msgs, false)
+    } else if (apiProvider.value === 'gemini') {
+      summary = await callGemini(msgs, false)
+    } else if (apiProvider.value === 'openrouter') {
+      summary = await callOpenRouter(msgs, false)
+    }
+    
+    if (summary) {
+      if (storySummary.value) {
+        storySummary.value += '\n\n' + summary
+      } else {
+        storySummary.value = summary
+      }
+    }
+  } catch (e) {
+    console.error('Failed to summarize chunk:', e)
   }
 }
 </script>
