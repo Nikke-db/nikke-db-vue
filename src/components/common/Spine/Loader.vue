@@ -21,6 +21,7 @@ import { animationMappings } from '@/utils/animationMappings'
 
 let canvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
+let currentLoadId = 0 // Track active load requests
 const market = useMarket()
 
 // http://esotericsoftware.com/spine-player#Viewports
@@ -153,6 +154,9 @@ const spineLoader = () => {
     return
   }
 
+  currentLoadId++
+  const thisLoadId = currentLoadId
+
   const skelUrl = getPathing('skel')
   const request = new XMLHttpRequest()
 
@@ -160,6 +164,11 @@ const spineLoader = () => {
   request.open('GET', skelUrl, true)
   request.send()
   request.onloadend = () => {
+    if (thisLoadId !== currentLoadId) {
+      console.log('[Loader] Ignoring stale load request')
+      return
+    }
+
     if (request.status !== 200) {
       console.error('Failed to load skel file:', request.statusText)
       return
@@ -590,7 +599,12 @@ async function exportAnimationFrames(timestamp: number) {
 const loadSpineAfterWatcher = () => {
   if (market.live2d.canLoadSpine) {
     if (spineCanvas) {
-      spineCanvas.dispose()
+      try {
+        spineCanvas.dispose()
+      } catch (e) {
+        console.warn('[Loader] Error disposing spineCanvas:', e)
+      }
+      spineCanvas = null
     }
     market.load.beginLoad()
     spineLoader()
