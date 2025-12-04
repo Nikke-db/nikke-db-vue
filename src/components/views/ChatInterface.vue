@@ -327,6 +327,10 @@ const tokenUsage = ref('medium')
 const needsJsonReminder = ref(false)
 const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
 
+// Models/providers that have native web search in OpenRouter
+const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
+const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some(prefix => modelId.startsWith(prefix))
+
 // Options
 const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
@@ -844,8 +848,8 @@ const continueStory = async () => {
   if (isLoading.value) return
   
   const text = mode.value === 'story' 
-    ? 'Continue the story. Do not repeat previous events.' 
-    : '[Continue the roleplay. Do not repeat the last response.]'
+    ? 'Continue the story with multiple dialogue exchanges and/or actions. Do not repeat previous events, dialogue or actions.' 
+    : '[Continue the roleplay with the characters responding and reacting, or the action moving forward. Do not repeat the last actions or dialogue.]'
   // Don't add "Continue" to chat history to keep it clean, or add it as a system note?
   // Let's add it as a user prompt but maybe hidden? Or just standard user prompt.
   // For now, standard user prompt is fine to show intent.
@@ -959,6 +963,49 @@ Example of correct format:
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
 
+  // Build hidden honorifics instruction for first turn only
+  // This is injected into the first user message but NOT saved to history
+  const buildHonorificsReminder = (): string => {
+    if (!isFirstTurn) return ''
+    
+    // Get relevant honorifics from the characterHonorifics JSON
+    const knownNames = Object.keys(characterProfiles.value)
+    if (knownNames.length === 0) return ''
+    
+    const honorificExamples: string[] = []
+    for (const name of knownNames) {
+      const honorific = (characterHonorifics as Record<string, string>)[name]
+      if (honorific && honorific !== 'Commander') {
+        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
+      }
+    }
+    
+    if (honorificExamples.length === 0) return ''
+    
+    return `\n\n[IMPORTANT REMINDER - HONORIFICS USAGE]
+The CHARACTER HONORIFICS table shows how each character addresses the COMMANDER ONLY.
+${honorificExamples.join('. ')}.
+These honorifics are EXCLUSIVE to the Commander - characters do NOT use these terms for other NIKKEs.
+For example, if Chime's honorific is "Rapscallion", she calls ONLY the Commander that, not other characters.
+When characters address each other, use their relationship-specific names from the KNOWN CHARACTER PROFILES.`
+  }
+
+  // Helper to inject honorifics reminder into the last user message (first turn only)
+  const injectHonorificsReminder = (messages: any[]): any[] => {
+    const reminder = buildHonorificsReminder()
+    if (!reminder) return messages
+    
+    // Find the last user message and append the reminder
+    const result = [...messages]
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (result[i].role === 'user') {
+        result[i] = { ...result[i], content: result[i].content + reminder }
+        break
+      }
+    }
+    return result
+  }
+
   let response: string
 
   if (apiProvider.value === 'perplexity') {
@@ -986,15 +1033,17 @@ Example of correct format:
       sanitizedHistory.push(currentMsg)
     }
 
-    const messages = [
+    let messages = [
       { role: 'system', content: fullSystemPrompt },
       ...sanitizedHistory
     ]
+    // Inject honorifics reminder for first turn (not saved to history)
+    messages = injectHonorificsReminder(messages)
     logDebug('Sending to Perplexity:', messages)
     response = await callPerplexity(messages, enableWebSearch)
   } else if (apiProvider.value === 'gemini') {
     // Gemini: Original behavior (context as separate message at end)
-    const messages = [
+    let messages = [
       { role: 'system', content: systemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
@@ -1002,16 +1051,20 @@ Example of correct format:
       role: 'system',
       content: contextMsg + retryInstruction
     })
+    // Inject honorifics reminder for first turn (not saved to history)
+    messages = injectHonorificsReminder(messages)
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     
-    const messages = [
+    let messages = [
       { role: 'system', content: fullSystemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
+    // Inject honorifics reminder for first turn (not saved to history)
+    messages = injectHonorificsReminder(messages)
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, enableWebSearch)
   } else {
@@ -1180,27 +1233,189 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
     return
   }
   
-  // For OpenRouter/Gemini, also search individually to ensure all characters are found
+  // For Gemini, use native search
+  if (apiProvider.value === 'gemini') {
+    await searchForCharactersWithNativeSearch(characterNames)
+    return
+  }
+  
+  // For OpenRouter, check if model has native search
+  if (apiProvider.value === 'openrouter') {
+    if (hasNativeSearch(model.value)) {
+      // Use native web search for OpenAI, Anthropic, Perplexity, xAI models
+      await searchForCharactersWithNativeSearch(characterNames)
+    } else {
+      // For models without native search (e.g., Claude via OpenRouter, DeepSeek, etc.)
+      // Fetch wiki pages directly and have the model summarize
+      await searchForCharactersViaWikiFetch(characterNames)
+    }
+    return
+  }
+}
+
+// Fetch wiki page content directly and have the model summarize it
+// Used for OpenRouter models that don't have native web search.
+// We are using a Cloudflare Worker proxy to avoid CORS issues.
+// Its code is open-sourced and available in the 
+const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
+
+const fetchWikiContent = async (characterName: string): Promise<string | null> => {
+  const wikiName = characterName.replace(/ /g, '_')
+  
+  try {
+    // Fetch the Story page via our Cloudflare Worker proxy
+    // The worker fetches only Description, Personality, and Backstory sections
+    const response = await fetch(`${WIKI_PROXY_URL}?page=${encodeURIComponent(wikiName + '/Story')}`)
+    const data = await response.json()
+    
+    // Check for errors
+    if (data.error) {
+      console.warn(`[fetchWikiContent] Wiki page not found for ${characterName}:`, data.error)
+      return null
+    }
+    
+    // Extract wikitext from parse response
+    const wikitext = data.parse?.wikitext?.['*']
+    if (!wikitext) {
+      console.warn(`[fetchWikiContent] No content found for ${characterName}`)
+      return null
+    }
+    
+    return wikitext
+  } catch (e) {
+    console.error(`[fetchWikiContent] Error fetching wiki for ${characterName}:`, e)
+    return null
+  }
+}
+
+// Clean up wikitext for the model
+const cleanWikiContent = (wikitext: string): string => {
+  let text = wikitext
+  // Remove wiki markup templates like {{...}}
+  text = text.replace(/\{\{[^}]*\}\}/g, '')
+  // Remove [[ ]] link markup but keep the text
+  text = text.replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, '$1')
+  // Remove remaining brackets
+  text = text.replace(/\[|\]/g, '')
+  // Remove HTML comments
+  text = text.replace(/<!--[\s\S]*?-->/g, '')
+  // Remove section headers markup (== Header ==)
+  text = text.replace(/^=+\s*(.+?)\s*=+$/gm, '$1:')
+  // Clean up whitespace
+  text = text.replace(/\n{3,}/g, '\n\n')
+  text = text.replace(/\s+/g, ' ').trim()
+  // Limit length to avoid token limits
+  if (text.length > 4000) {
+    text = text.substring(0, 4000) + '...'
+  }
+  return text
+}
+
+// Search for characters by fetching wiki pages directly (for models without native search)
+const searchForCharactersViaWikiFetch = async (characterNames: string[]): Promise<void> => {
+  logDebug('[searchForCharactersViaWikiFetch] Fetching wiki pages for:', characterNames)
+  
+  for (const name of characterNames) {
+    if (characterProfiles.value[name]) continue
+    
+    const wikiContent = await fetchWikiContent(name)
+    if (!wikiContent) {
+      console.warn(`[searchForCharactersViaWikiFetch] No wiki content found for ${name}`)
+      continue
+    }
+    
+    const cleanedContent = cleanWikiContent(wikiContent)
+    logDebug(`[searchForCharactersViaWikiFetch] Fetched ${cleanedContent.length} chars for ${name}`)
+    
+    const summarizePrompt = `Based on the following wiki content about the NIKKE character "${name}", extract their character information.
+
+WIKI CONTENT:
+${cleanedContent}
+
+Extract the following information about "${name}":
+1. Personality traits - how they behave, their temperament
+2. Speech style - be DETAILED: how they talk, their tone, vocabulary level, any verbal quirks, accent patterns, or unique speech mannerisms
+3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
+
+IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
+
+Return ONLY a JSON object:
+{
+  "${name}": {
+    "personality": "Brief personality description from the wiki",
+    "speech_style": "Detailed description of how they speak - include tone, vocabulary, verbal quirks, accent, mannerisms, etc.",
+    "relationships": { "OtherNikkeName": "What they call them + dynamic" }
+  }
+}
+Do NOT include Commander in relationships.`
+
+    const messages = [
+      { role: 'system', content: 'You are a helpful assistant that extracts character information from wiki content and returns it in JSON format.' },
+      { role: 'user', content: summarizePrompt }
+    ]
+    
+    try {
+      // Call OpenRouter WITHOUT web search - we already have the content
+      const result = await callOpenRouter(messages, false)
+      
+      let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
+      const start = jsonStr.indexOf('{')
+      const end = jsonStr.lastIndexOf('}')
+      if (start !== -1 && end !== -1) {
+        jsonStr = jsonStr.substring(start, end + 1)
+      }
+      
+      const profiles = JSON.parse(jsonStr)
+      
+      // Add character IDs
+      for (const charName of Object.keys(profiles)) {
+        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+        if (char) {
+          profiles[charName].id = char.id
+        }
+      }
+      
+      characterProfiles.value = { ...characterProfiles.value, ...profiles }
+      logDebug(`[searchForCharactersViaWikiFetch] Added profile for ${name}:`, profiles)
+    } catch (e) {
+      console.error(`[searchForCharactersViaWikiFetch] Failed to process ${name}:`, e)
+    }
+  }
+}
+
+// Search for characters using native web search (Gemini, OpenRouter with native search)
+const searchForCharactersWithNativeSearch = async (characterNames: string[]): Promise<void> => {
+  logDebug('[searchForCharactersWithNativeSearch] Searching for:', characterNames)
+  
   for (const name of characterNames) {
     if (characterProfiles.value[name]) continue
 
-    const searchPrompt = `Search the NIKKE Wiki (https://nikke-goddess-of-victory-international.fandom.com/wiki/) for the character "${name}" and provide their information:
-- Find their personality traits, speech patterns/voice, and how they address OTHER NIKKE characters.
+    const wikiName = name.replace(/ /g, '_')
+    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
 
-IMPORTANT: Do NOT include how they address the Commander - that information is already provided separately.
+    const searchPrompt = `Search for information about the character "${name}" from the mobile game NIKKE: Goddess of Victory.
 
-Return ONLY a JSON object with the character profile in this format:
+The character's wiki page is at: ${storyUrl}
+
+Find the following information:
+1. Personality traits - how they behave, their temperament
+2. Speech style - be DETAILED: how they talk, their tone, vocabulary level, any verbal quirks, accent patterns, or unique speech mannerisms
+3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
+
+IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
+
+Return ONLY a JSON object:
 {
   "${name}": {
     "personality": "Brief personality description",
-    "speech_style": "How they speak (formal, casual, archaic, playful, etc.)",
-    "relationships": { "OtherNikkeName": "What they CALL them + relationship dynamic (e.g. 'Her Highness - deeply devoted')" }
+    "speech_style": "Detailed description of how they speak - include tone, vocabulary, verbal quirks, accent, mannerisms, etc.",
+    "relationships": { "OtherNikkeName": "What they call them + dynamic" }
   }
 }
-Do NOT include Commander in relationships. Do not include any other text.`
+Do NOT include Commander in relationships. If you cannot find information, use "Unknown".`
 
     const messages = [
-      { role: 'system', content: 'You are a research assistant. Search the wiki and return character information in JSON format only.' },
+      { role: 'system', content: 'You are a research assistant. Search for information about NIKKE: Goddess of Victory game characters and return what you find in JSON format.' },
       { role: 'user', content: searchPrompt }
     ]
 
@@ -1219,7 +1434,6 @@ Do NOT include Commander in relationships. Do not include any other text.`
           result = await callOpenRouter(messages, true)
         }
         
-        // Parse and merge character profiles
         let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
         const start = jsonStr.indexOf('{')
         const end = jsonStr.lastIndexOf('}')
@@ -1229,7 +1443,6 @@ Do NOT include Commander in relationships. Do not include any other text.`
         
         const profiles = JSON.parse(jsonStr)
         
-        // Add character IDs to the profiles for easier reference
         for (const charName of Object.keys(profiles)) {
           const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
           if (char) {
@@ -1238,15 +1451,14 @@ Do NOT include Commander in relationships. Do not include any other text.`
         }
         
         characterProfiles.value = { ...characterProfiles.value, ...profiles }
-        logDebug(`[searchForCharacters] Added profile for ${name}:`, profiles)
+        logDebug(`[searchForCharactersWithNativeSearch] Added profile for ${name}:`, profiles)
         success = true
       } catch (e) {
-        console.error(`[searchForCharacters] Attempt ${attempts} failed for ${name}:`, e)
+        console.error(`[searchForCharactersWithNativeSearch] Attempt ${attempts} failed for ${name}:`, e)
         if (attempts < maxAttempts) {
-          // Add a small delay before retrying
           await new Promise(resolve => setTimeout(resolve, 1000))
         } else {
-          console.error(`[searchForCharacters] All attempts failed for ${name}. Continuing without search results.`)
+          console.error(`[searchForCharactersWithNativeSearch] All attempts failed for ${name}.`)
         }
       }
     }
@@ -1275,7 +1487,7 @@ ${storyUrl}
 
 Find the following information:
 1. Personality traits - how they behave, their temperament
-2. Speech style - how they talk (formal, casual, archaic, playful, etc.)
+2. Speech style - be DETAILED: how they talk, their tone, vocabulary level, any verbal quirks, accent patterns, or unique speech mannerisms
 3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
 
 IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
@@ -1286,7 +1498,7 @@ Return ONLY a JSON object:
 {
   "${name}": {
     "personality": "From the wiki page only",
-    "speech_style": "From the wiki page only (e.g. 'archaic/royal language', 'casual', 'formal')",
+    "speech_style": "Detailed description of how they speak - include tone, vocabulary, verbal quirks, accent, mannerisms, etc.",
     "relationships": { "OtherNikkeName": "What they call them + dynamic (e.g. 'Her Highness - deeply devoted')" }
   }
 }
@@ -1450,12 +1662,21 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   return prompt
 }
 
-const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false) => {
+const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
   // Add a final user message to FORCE JSON output - models pay more attention to recent messages
   const messagesWithEnforcement = [
     ...messages,
     { role: 'user', content: 'CRITICAL SYSTEM INSTRUCTION: You MUST respond with ONLY a JSON array. No prose, no markdown, no explanation. Start your response with [ and end with ]. Any non-JSON response is a critical failure. Output the JSON array NOW:' }
   ]
+  
+  // Build web plugin configuration if web search is enabled
+  const buildWebPlugin = () => {
+    if (!enableWebSearch) return undefined
+    // Use default web plugin - Exa will search based on the prompt content
+    // For models with native search (OpenAI, Anthropic, etc.), this uses their built-in search
+    // For other models, it uses Exa search
+    return [{ id: 'web', max_results: 10 }]
+  }
   
   // Helper function to make the API call without json_object constraint
   const callWithoutJsonFormat = async () => {
@@ -1465,8 +1686,9 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false)
       max_tokens: 8192
     }
     
-    if (enableWebSearch) {
-      requestBody.plugins = [{ id: 'web' }]
+    const webPlugin = buildWebPlugin()
+    if (webPlugin) {
+      requestBody.plugins = webPlugin
     }
     
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -1513,8 +1735,9 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false)
     }
   }
   
-  if (enableWebSearch) {
-    requestBody.plugins = [{ id: 'web' }]
+  const webPlugin = buildWebPlugin()
+  if (webPlugin) {
+    requestBody.plugins = webPlugin
   }
   
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -1776,6 +1999,24 @@ const sanitizeActions = (actions: any[]) => {
       }
       
       newActions.push(newAction)
+    }
+  }
+  
+  // Post-process: If a narration action (speaking=false) is followed by a dialogue action (speaking=true)
+  // for the same character, copy the animation from the narration to the dialogue.
+  // This ensures the emotion set during narration persists into the dialogue.
+  for (let i = 1; i < newActions.length; i++) {
+    const prev = newActions[i - 1]
+    const curr = newActions[i]
+    
+    // Check if same character, previous is narration, current is dialogue
+    if (prev.character && curr.character && 
+        prev.character === curr.character && 
+        prev.speaking === false && 
+        curr.speaking === true &&
+        prev.animation && prev.animation !== 'idle') {
+      // Copy the narration animation to the dialogue
+      curr.animation = prev.animation
     }
   }
   
