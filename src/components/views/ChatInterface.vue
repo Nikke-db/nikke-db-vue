@@ -324,6 +324,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
 const isRestoring = ref(false)
 const tokenUsage = ref('medium')
+const needsJsonReminder = ref(false)
+const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
 
 // Options
 const providerOptions = [
@@ -735,7 +737,7 @@ const sendMessage = async () => {
   while (attempts < maxAttempts && !success && !isStopped.value) {
     attempts++
     try {
-      const response = await callAI()
+      const response = await callAI(attempts > 1)
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -750,7 +752,9 @@ const sendMessage = async () => {
       let errorMessage = 'Error: Failed to get response from AI.'
       showRetry.value = true
 
-      if (error.message && error.message.includes('503')) {
+      if (error.message === 'RATE_LIMITED') {
+        errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
+      } else if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
@@ -770,8 +774,6 @@ const retryLastMessage = async () => {
     chatHistory.value.pop()
   }
 
-  const text = '[Send as JSON and retry turn]'
-  chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
   isLoading.value = true
   isStopped.value = false
@@ -784,7 +786,7 @@ const retryLastMessage = async () => {
   while (attempts < maxAttempts && !success && !isStopped.value) {
     attempts++
     try {
-      const response = await callAI()
+      const response = await callAI(attempts > 1)
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -799,7 +801,9 @@ const retryLastMessage = async () => {
       let errorMessage = 'Error: Failed to get response from AI.'
       showRetry.value = true
 
-      if (error.message && error.message.includes('503')) {
+      if (error.message === 'RATE_LIMITED') {
+        errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
+      } else if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
@@ -859,7 +863,7 @@ const continueStory = async () => {
   while (attempts < maxAttempts && !success && !isStopped.value) {
     attempts++
     try {
-      const response = await callAI()
+      const response = await callAI(attempts > 1)
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -888,7 +892,7 @@ const continueStory = async () => {
   scrollToBottom()
 }
 
-const callAI = async (): Promise<string> => {
+const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
   const enableWebSearch = isFirstTurn
@@ -896,6 +900,19 @@ const callAI = async (): Promise<string> => {
   logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
   
   const systemPrompt = generateSystemPrompt(enableWebSearch)
+  let retryInstruction = isRetry ? '\n\nSYSTEM ALERT: Your previous response was invalid JSON. You MUST output ONLY a JSON array. Do not use Markdown blocks. Do not add conversational text.' : ''
+  
+  if (needsJsonReminder.value) {
+      retryInstruction += `\n\nSYSTEM REMINDER: Please ensure your response is a valid JSON array. Do not include any conversational text outside the JSON.
+Example of correct format:
+[
+  { "text": "Neon waves excitedly.", "character": "c010", "animation": "happy", "speaking": false },
+  { "text": "Commander!", "character": "c010", "animation": "happy", "speaking": true },
+  { "text": "Anis sighs.", "character": "c011", "animation": "idle", "speaking": false },
+  { "text": "Not again...", "character": "c011", "animation": "sigh", "speaking": true }
+]`
+      needsJsonReminder.value = false
+  }
   
   // Add current context
   const filteredAnimations = market.live2d.animations.filter((a) => 
@@ -946,7 +963,7 @@ const callAI = async (): Promise<string> => {
 
   if (apiProvider.value === 'perplexity') {
     // Perplexity: Merge context into system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     
     // Sanitize history for Perplexity (Strict alternation required)
     // 1. Filter out system messages from history (we provide our own system prompt)
@@ -983,13 +1000,13 @@ const callAI = async (): Promise<string> => {
     ]
     messages.push({
       role: 'system',
-      content: contextMsg
+      content: contextMsg + retryInstruction
     })
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     
     const messages = [
       { role: 'system', content: fullSystemPrompt },
@@ -1008,15 +1025,28 @@ const callAI = async (): Promise<string> => {
     // Perform search for unknown characters
     await searchForCharacters(searchRequest)
     // Re-call the AI with updated character profiles (search disabled this time)
-    return await callAIWithoutSearch()
+    return await callAIWithoutSearch(isRetry)
   }
 
   return response
 }
 
 // Separate function to call AI without search (after character lookup)
-const callAIWithoutSearch = async (): Promise<string> => {
+const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
   const systemPrompt = generateSystemPrompt(false)
+  let retryInstruction = isRetry ? '\n\nSYSTEM ALERT: Your previous response was invalid JSON. You MUST output ONLY a JSON array. Do not use Markdown blocks. Do not add conversational text.' : ''
+  
+  if (needsJsonReminder.value) {
+      retryInstruction += `\n\nSYSTEM REMINDER: Please ensure your response is a valid JSON array. Do not include any conversational text outside the JSON.
+Example of correct format:
+[
+  { "text": "Neon waves excitedly.", "character": "c010", "animation": "delight", "speaking": false },
+  { "text": "Commander!", "character": "c010", "animation": "delight", "speaking": true },
+  { "text": "Anis sighs.", "character": "c011", "animation": "no", "speaking": false },
+  { "text": "Not again...", "character": "c011", "animation": "no", "speaking": true }
+]`
+      needsJsonReminder.value = false
+  }
   
   const filteredAnimations = market.live2d.animations.filter((a) => 
     a !== 'talk_start' && 
@@ -1063,7 +1093,7 @@ const callAIWithoutSearch = async (): Promise<string> => {
   }
 
   if (apiProvider.value === 'perplexity') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     const rawHistory = historyToSend.filter((m) => m.role !== 'system')
     const sanitizedHistory: any[] = []
     
@@ -1091,10 +1121,10 @@ const callAIWithoutSearch = async (): Promise<string> => {
       { role: 'system', content: systemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
-    messages.push({ role: 'system', content: contextMsg })
+    messages.push({ role: 'system', content: contextMsg + retryInstruction })
     return await callGemini(messages, false)
   } else if (apiProvider.value === 'openrouter') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     const messages = [
       { role: 'system', content: fullSystemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
@@ -1421,10 +1451,66 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
 }
 
 const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false) => {
+  // Add a final user message to FORCE JSON output - models pay more attention to recent messages
+  const messagesWithEnforcement = [
+    ...messages,
+    { role: 'user', content: 'CRITICAL SYSTEM INSTRUCTION: You MUST respond with ONLY a JSON array. No prose, no markdown, no explanation. Start your response with [ and end with ]. Any non-JSON response is a critical failure. Output the JSON array NOW:' }
+  ]
+  
+  // Helper function to make the API call without json_object constraint
+  const callWithoutJsonFormat = async () => {
+    const requestBody: any = {
+      model: model.value,
+      messages: messagesWithEnforcement,
+      max_tokens: 8192
+    }
+    
+    if (enableWebSearch) {
+      requestBody.plugins = [{ id: 'web' }]
+    }
+    
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey.value}`,
+        'HTTP-Referer': window.location.href,
+        'X-Title': 'Nikke DB Story Gen',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('OpenRouter API Error Details:', errorData)
+      
+      // Check for 429 rate limit error
+      if (response.status === 429 && errorData?.error?.message?.includes('is temporarily rate-limited upstream')) {
+        throw new Error('RATE_LIMITED')
+      }
+      
+      throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    }
+    
+    const data = await response.json()
+    return data.choices[0].message.content
+  }
+  
+  // If this model is known to not support json_object, skip directly to fallback
+  if (modelsWithoutJsonSupport.has(model.value)) {
+    return callWithoutJsonFormat()
+  }
+  
   const requestBody: any = {
     model: model.value,
-    messages: messages,
-    max_tokens: 8192
+    messages: messagesWithEnforcement,
+    max_tokens: 8192,
+    // Force JSON output format
+    response_format: { type: 'json_object' },
+    // Require providers that actually support response_format
+    provider: {
+      require_parameters: true
+    }
   }
   
   if (enableWebSearch) {
@@ -1445,6 +1531,20 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false)
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     console.error('OpenRouter API Error Details:', errorData)
+    
+    // Check for 429 rate limit error
+    if (response.status === 429 && errorData?.error?.message?.includes('is temporarily rate-limited upstream')) {
+      throw new Error('RATE_LIMITED')
+    }
+    
+    // If error is 404 with exact "No endpoints found" message - model doesn't support json_object response format
+    // Remember this model and retry without response_format constraint (e.g., Claude models don't support it)
+    if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
+      console.warn(`Model ${model.value} does not support json_object response format, remembering and retrying without it...`)
+      modelsWithoutJsonSupport.add(model.value)
+      return callWithoutJsonFormat()
+    }
+    
     throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
@@ -1496,24 +1596,42 @@ const callPerplexity = async (messages: any[], enableWebSearch: boolean = false,
 const callGemini = async (messages: any[], enableWebSearch: boolean = false) => {
   // Gemini API format is different, need to adapt
   
-  // Extract system prompt (first message)
-  const systemMessage = messages[0]
+  // Check if we have a system message (first message with role 'system' or just need to treat first as system)
+  // If there's only one message, treat it as user content (no system instruction)
+  const hasSystemMessage = messages.length > 1 || messages[0]?.role === 'system'
   
-  // Filter out system message and map the rest to Gemini format
-  const contents = messages.slice(1).map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }]
-  }))
+  let contents: any[]
+  let systemMessage: any = null
+  
+  if (hasSystemMessage && messages.length > 1) {
+    // Extract system prompt (first message)
+    systemMessage = messages[0]
+    // Filter out system message and map the rest to Gemini format
+    contents = messages.slice(1).map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+  } else {
+    // No system message, all messages are content
+    contents = messages.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+  }
   
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model.value}:generateContent?key=${apiKey.value}`
   
   const requestBody: any = {
     contents: contents,
-    systemInstruction: {
-      parts: [{ text: systemMessage.content }]
-    },
     generationConfig: {
       // responseMimeType: "application/json" // Incompatible with tools
+    }
+  }
+  
+  // Only add systemInstruction if we have a system message
+  if (systemMessage) {
+    requestBody.systemInstruction = {
+      parts: [{ text: systemMessage.content }]
     }
   }
   
@@ -1626,8 +1744,9 @@ const sanitizeActions = (actions: any[]) => {
       const part = parts[i]
       const quoted = isQuote(part)
       
-      // Filter out standalone speaker labels (e.g. "**Anis:** ")
+      // Filter out standalone speaker labels (e.g. "**Anis:**")
       // These are often artifacts from splitting "Name: Quote"
+     
       if (isSpeakerLabel(part) && !quoted) {
         continue
       }
@@ -1663,21 +1782,309 @@ const sanitizeActions = (actions: any[]) => {
   return newActions
 }
 
+const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
+  logDebug('Enriching actions with animations...')
+  
+  const filteredAnimations = market.live2d.animations.filter((a) => 
+    a !== 'talk_start' && 
+    a !== 'talk_end' && 
+    a !== 'expression_0' && 
+    a !== 'action'
+  )
+  
+  const prompt = `
+  I have a sequence of story actions. I need you to assign the most appropriate animation/emotion to each action based on the text.
+  
+  Available Animations for Current Character (${market.live2d.current_id}): ${JSON.stringify(filteredAnimations)}
+  
+  Use this mapping guide to choose the correct intensity (e.g. 'angry_02' vs 'angry_03'):
+  ${JSON.stringify(animationMappings, null, 2)}
+  
+  IMPORTANT: If the text is in ALL CAPS (e.g. "STOP IT!"), you MUST assign a high-intensity 'angry' or 'surprise' animation (e.g. 'angry_02', 'shock').
+  
+  For other characters, use generic emotion names (e.g., happy, angry, sad, surprise, idle).
+  
+  Actions:
+  ${JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character })), null, 2)}
+  
+  Return ONLY a JSON array of strings representing the animation name for each action in order.
+  Example: ["idle", "angry_02", "happy"]
+  `
+  
+  const messages = [{ role: 'user', content: prompt }]
+  
+  try {
+      let response: string
+      if (apiProvider.value === 'perplexity') {
+        response = await callPerplexity(messages, false)
+      } else if (apiProvider.value === 'gemini') {
+        response = await callGemini(messages, false)
+      } else if (apiProvider.value === 'openrouter') {
+        response = await callOpenRouter(messages, false)
+      } else {
+        return actions
+      }
+      
+      let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
+      const start = jsonStr.indexOf('[')
+      const end = jsonStr.lastIndexOf(']')
+      if (start !== -1 && end !== -1) {
+        jsonStr = jsonStr.substring(start, end + 1)
+        const animations = JSON.parse(jsonStr)
+        
+        if (Array.isArray(animations) && animations.length === actions.length) {
+            return actions.map((action, index) => ({
+                ...action,
+                animation: animations[index]
+            }))
+        }
+      }
+  } catch (e) {
+      console.error('Failed to enrich animations via API, using local fallback', e)
+  }
+  
+  // Local fallback: use animationMappings to match keywords to animations
+  const availableAnimations = market.live2d.animations || []
+  return actions.map(action => {
+    const text = (action.text || '').toLowerCase()
+    let animation = 'idle'
+    
+    // Check for ALL CAPS (shouting/anger)
+    const originalText = action.text || ''
+    const capsWords = originalText.match(/\b[A-Z]{2,}\b/g)
+    const isShouting = capsWords && capsWords.length > 0
+    
+    if (isShouting) {
+      animation = availableAnimations.find((a: string) => a.includes('angry') || a.includes('shock')) || 'angry'
+    } else {
+      // Use animationMappings to find matching animation
+      for (const [animationType, keywords] of Object.entries(animationMappings)) {
+        const hasKeyword = keywords.some(keyword => text.includes(keyword.toLowerCase()))
+        if (hasKeyword) {
+          // Find the best available animation matching this type
+          const matchedAnim = availableAnimations.find((a: string) => a.includes(animationType))
+          if (matchedAnim) {
+            animation = matchedAnim
+          } else {
+            animation = animationType
+          }
+          break
+        }
+      }
+    }
+    
+    return { ...action, animation }
+  })
+}
+
+const splitNarration = (text: string): any[] => {
+  const actions: any[] = []
+  // Split into sentences, handling common punctuation. 
+  const sentences = text.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g)
+  
+  if (!sentences) {
+      return [{ text, character: 'none', animation: 'idle', speaking: false }]
+  }
+  
+  let currentAction: any = null
+  
+  for (const rawSentence of sentences) {
+    const sentence = rawSentence.trim()
+    if (!sentence) continue
+    
+    let foundCharId = null
+    
+    for (const char of l2d) {
+        const name = char.name
+        // Check for "Name " or "Name's" or "Name." or just "Name" at start
+        if (sentence.toLowerCase().startsWith(name.toLowerCase())) {
+            const nextChar = sentence.charAt(name.length)
+            if (!nextChar || /[\s'’.,!?]/.test(nextChar)) {
+                foundCharId = char.id
+                break
+            }
+        }
+    }
+    
+    if (foundCharId) {
+        if (currentAction) {
+            actions.push(currentAction)
+        }
+        currentAction = {
+            text: sentence,
+            character: foundCharId,
+            animation: 'idle',
+            speaking: false
+        }
+    } else {
+        if (currentAction) {
+            currentAction.text += ' ' + sentence
+        } else {
+            currentAction = {
+                text: sentence,
+                character: 'none', 
+                animation: 'idle',
+                speaking: false
+            }
+        }
+    }
+  }
+  
+  if (currentAction) {
+      actions.push(currentAction)
+  }
+  
+  return actions
+}
+
+const parseFallback = (text: string): any[] => {
+  const actions: any[] = []
+  // Remove bold markers to simplify regex matching
+  const cleanText = text.replace(/\*\*/g, '') 
+  
+  // Regex to find "Name: "Dialogue"" pattern
+  // Matches: Name (alphanumeric+spaces+dashes) followed by colon and quoted text
+  const regex = /([A-Za-z0-9\s\-\(\)]+):\s*(["“][\s\S]*?["”])/g
+  
+  let lastIndex = 0
+  let match
+  
+  while ((match = regex.exec(cleanText)) !== null) {
+    const fullMatch = match[0]
+    const name = match[1].trim()
+    const dialogue = match[2]
+    const index = match.index
+    
+    // 1. Narration (text before the speaker)
+    const narration = cleanText.substring(lastIndex, index).trim()
+    
+    // Resolve Character ID
+    let charId = 'current'
+    // Try exact match first
+    let charObj = l2d.find(c => c.name.toLowerCase() === name.toLowerCase())
+    // If not found, try partial match for names with spaces
+    if (!charObj) {
+       charObj = l2d.find(c => name.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(name.toLowerCase()))
+    }
+    if (charObj) charId = charObj.id
+    
+    if (narration) {
+      const narrationActions = splitNarration(narration)
+      
+      // If the last narration action has 'none' character, it might belong to the upcoming speaker
+      if (narrationActions.length > 0) {
+          const lastAction = narrationActions[narrationActions.length - 1]
+          if (lastAction.character === 'none') {
+              lastAction.character = charId
+          }
+      }
+      
+      actions.push(...narrationActions)
+    }
+    
+    // 2. Dialogue
+    actions.push({
+      text: dialogue,
+      character: charId,
+      animation: 'idle',
+      speaking: true
+    })
+    
+    lastIndex = index + fullMatch.length
+  }
+  
+  // Trailing text
+  const trailing = cleanText.substring(lastIndex).trim()
+  if (trailing) {
+     actions.push(...splitNarration(trailing))
+  }
+  
+  return actions
+}
+
 const processAIResponse = async (responseStr: string) => {
   logDebug('Raw AI Response:', responseStr)
+  
+  // Check for empty or too-short responses (model sometimes returns nothing)
+  if (!responseStr || responseStr.trim().length < 20) {
+    console.warn('Response too short or empty, triggering retry...')
+    throw new Error('JSON_PARSE_ERROR')
+  }
+  
+  let data: any[] = []
+  
   try {
-    // Clean up response if it contains markdown code blocks
-    let jsonStr = responseStr.replace(/```json\n?|\n?```/g, '').trim()
+    let jsonStr = responseStr
     
-    // Attempt to extract JSON array if mixed with text
-    const start = jsonStr.indexOf('[')
-    const end = jsonStr.lastIndexOf(']')
+    // FIRST: Try to extract JSON from markdown code blocks (highest priority)
+    const jsonBlockMatch = responseStr.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (jsonBlockMatch) {
+      jsonStr = jsonBlockMatch[1].trim()
+    } else {
+      // Remove any stray markdown markers
+      jsonStr = responseStr.replace(/```json\n?|\n?```/g, '').trim()
+    }
+    
+    // Attempt to extract JSON structure (array or object) if mixed with text
+    const firstOpenBrace = jsonStr.indexOf('{')
+    const firstOpenBracket = jsonStr.indexOf('[')
+    
+    let start = -1
+    let end = -1
+    
+    // Determine if we should look for an array or an object based on which appears first
+    if (firstOpenBracket !== -1 && (firstOpenBrace === -1 || firstOpenBracket < firstOpenBrace)) {
+      start = firstOpenBracket
+      end = jsonStr.lastIndexOf(']')
+    } else if (firstOpenBrace !== -1) {
+      start = firstOpenBrace
+      end = jsonStr.lastIndexOf('}')
+    }
 
     if (start !== -1 && end !== -1) {
       jsonStr = jsonStr.substring(start, end + 1)
     }
 
-    let data = JSON.parse(jsonStr)
+    // Try to repair common JSON errors
+    const tryParseJSON = (str: string): any => {
+      // First attempt: parse as-is
+      try {
+        return JSON.parse(str)
+      } catch (e) {
+        // Repair attempt: fix unbalanced braces/brackets
+        let repaired = str
+        
+        // Count braces and brackets
+        const openBraces = (repaired.match(/{/g) || []).length
+        const closeBraces = (repaired.match(/}/g) || []).length
+        const openBrackets = (repaired.match(/\[/g) || []).length
+        const closeBrackets = (repaired.match(/]/g) || []).length
+        
+        // Add missing closing braces
+        if (openBraces > closeBraces) {
+          repaired += '}'.repeat(openBraces - closeBraces)
+        }
+        // Add missing closing brackets
+        if (openBrackets > closeBrackets) {
+          repaired += ']'.repeat(openBrackets - closeBrackets)
+        }
+        
+        // Try again with repaired string
+        try {
+          return JSON.parse(repaired)
+        } catch (e2) {
+          // If still failing, try removing the memory object entirely (it's optional)
+          const withoutMemory = str.replace(/"memory"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
+          try {
+            return JSON.parse(withoutMemory)
+          } catch (e3) {
+            throw e // Throw original error
+          }
+        }
+      }
+    }
+
+    data = tryParseJSON(jsonStr)
     
     if (!Array.isArray(data)) {
       data = [data]
@@ -1685,21 +2092,37 @@ const processAIResponse = async (responseStr: string) => {
 
     // Sanitize and split actions to ensure narration/dialogue separation
     data = sanitizeActions(data)
-
-    logDebug('Parsed Action Sequence:', data)
-
-    for (const action of data) {
-      if (isStopped.value) {
-        logDebug('Execution stopped by user.')
-        break
-      }
-      await executeAction(action)
-    }
     
   } catch (e) {
-    console.error('Failed to parse JSON response', e)
+    console.warn('JSON parse failed, attempting text fallback parsing...', e)
+    
+    try {
+      data = parseFallback(responseStr)
+      if (data.length === 0) {
+         throw new Error('Fallback parsing yielded no actions')
+      }
+      logDebug('Fallback parsing successful:', data)
+      
+      // Enrich with animations via AI
+      data = await enrichActionsWithAnimations(data)
+      
+      // Fallback was successful, but we should remind the model to use JSON next time
+      needsJsonReminder.value = true
+      
+    } catch (fallbackError) {
+      console.error('Failed to parse JSON response and Fallback failed', e, fallbackError)
+      throw new Error('JSON_PARSE_ERROR')
+    }
+  }
 
-    throw new Error('JSON_PARSE_ERROR')
+  logDebug('Parsed Action Sequence:', data)
+
+  for (const action of data) {
+    if (isStopped.value) {
+      logDebug('Execution stopped by user.')
+      break
+    }
+    await executeAction(action)
   }
 }
 

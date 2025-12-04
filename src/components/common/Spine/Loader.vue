@@ -462,7 +462,14 @@ watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
 })
 
 watch(() => market.live2d.customLoad, () => {
-  spineCanvas.dispose()
+  if (spineCanvas) {
+    try {
+      spineCanvas.dispose()
+    } catch (e) {
+      console.warn('[Loader] Error disposing spineCanvas for customLoad:', e)
+    }
+    spineCanvas = null
+  }
   market.load.beginLoad()
   customSpineLoader()
   applyDefaultStyle2Canvas()
