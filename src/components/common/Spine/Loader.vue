@@ -2,6 +2,7 @@
   <div
     id="player-container"
     :class="checkMobile() ? 'mobile' : 'computer'"
+    :style="{ visibility: market.live2d.isVisible ? 'visible' : 'hidden', opacity: market.live2d.isVisible ? 1 : 0 }"
   ></div>
 </template>
 
@@ -16,9 +17,11 @@ import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 import type { AttachmentInterface, AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
+import { animationMappings } from '@/utils/animationMappings'
 
 let canvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
+let currentLoadId = 0 // Track active load requests
 const market = useMarket()
 
 // http://esotericsoftware.com/spine-player#Viewports
@@ -37,7 +40,123 @@ onMounted(() => {
 const SPINE_DEFAULT_MIX = 0.25
 let spinePlayer: any = null
 
+const resetAttachmentColors = (player: any) => {
+  if (!player?.animationState?.data?.skeletonData?.defaultSkin?.attachments) return
+
+  player.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
+    if (a) {
+      const keys = Object.keys(a)
+      if (keys !== null && keys !== undefined && keys.length > 0) {
+        keys.forEach((k: string) => {
+          a[k as any].color = {
+            r: 1,
+            g: 1,
+            b: 1,
+            a: 1
+          }
+        })
+      }
+    }
+  })
+}
+
+const resolveAnimation = (requested: string, available: string[]): string | null => {
+  console.log(`[Loader] Resolving animation: '${requested}' against available:`, available)
+
+  if (!requested || requested === 'none') return null
+  if (available.includes(requested)) {
+    console.log(`[Loader] Found exact match: ${requested}`)
+    return requested
+  }
+
+  const lowerRequested = requested.toLowerCase()
+
+  // Special handling for multi-stage anger (e.g. Chime)
+  const specialMappings = [
+    {
+      target: 'angry',
+      condition: (avail: string[]) => avail.filter((a) => a.toLowerCase().includes('angry')).length > 1,
+      triggers: ['irritated', 'bothered', 'grumpy', 'frustrated', 'annoyed', 'displeased']
+    },
+    {
+      target: 'angry_02',
+      condition: (avail: string[]) => avail.includes('angry_02'),
+      triggers: ['very angry', 'furious', 'rage', 'shouting', 'yelling', 'livid', 'outraged', 'irate', 'mad']
+    },
+    {
+      target: 'angry_03',
+      condition: (avail: string[]) => avail.includes('angry_03'),
+      triggers: ['stern', 'frown', 'slightly angry', 'serious', 'disapproving', 'cold', 'glaring']
+    }
+  ]
+
+  for (const { target, condition, triggers } of specialMappings) {
+    if (condition(available) && triggers.some((t) => lowerRequested.includes(t))) {
+      console.log(`[Loader] Mapped '${requested}' to '${target}'`)
+      return target
+    }
+  }
+
+  // Direct fuzzy match
+  const directMatch = available.find((a) => a.toLowerCase().includes(lowerRequested))
+  if (directMatch) {
+    console.log(`[Loader] Found direct fuzzy match: ${directMatch}`)
+    return directMatch
+  }
+
+  // Semantic mapping
+  for (const [targetAnim, triggers] of Object.entries(animationMappings)) {
+    // If requested animation contains the target name OR any of the triggers
+    if (lowerRequested.includes(targetAnim) || triggers.some((t) => lowerRequested.includes(t))) {
+
+      // Try to find the target animation in available
+      // exact match of targetAnim (fuzzy)...
+      let match = available.find((a) => a.toLowerCase().includes(targetAnim))
+      if (match) {
+        console.log(`[Loader] Found semantic match for ${targetAnim} (base): ${match}`)
+        return match
+      }
+
+      // ...or match any of the triggers in available
+      for (const trigger of triggers) {
+        match = available.find((a) => a.toLowerCase().includes(trigger))
+        if (match) {
+          console.log(`[Loader] Found semantic match for ${targetAnim} (trigger: ${trigger}): ${match}`)
+          return match
+        }
+      }
+    }
+  }
+
+  console.warn(`[Loader] No match found for animation: ${requested}`)
+  return null
+}
+
+watch(() => market.live2d.current_animation, (newAnim) => {
+  if (spinePlayer && newAnim) {
+    try {
+      const resolvedAnim = resolveAnimation(newAnim, market.live2d.animations)
+
+      if (resolvedAnim) {
+        spinePlayer.animationState.setAnimation(0, resolvedAnim, true)
+      } else {
+        console.warn(`Animation ${newAnim} not found and no fallback discovered.`)
+      }
+    } catch (e) {
+      console.error('Error setting animation:', e)
+    }
+  }
+})
+
 const spineLoader = () => {
+  if (!market.live2d.current_id) {
+    console.log('[Loader] No current_id set, skipping load.')
+    return
+  }
+
+  currentLoadId++
+  const thisLoadId = currentLoadId
+
   const skelUrl = getPathing('skel')
   const request = new XMLHttpRequest()
 
@@ -45,6 +164,11 @@ const spineLoader = () => {
   request.open('GET', skelUrl, true)
   request.send()
   request.onloadend = () => {
+    if (thisLoadId !== currentLoadId) {
+      console.log('[Loader] Ignoring stale load request')
+      return
+    }
+
     if (request.status !== 200) {
       console.error('Failed to load skel file:', request.statusText)
       return
@@ -85,6 +209,7 @@ const spineLoader = () => {
         atlasUrl: getPathing('atlas'),
         animation: getDefaultAnimation(),
         skin: market.live2d.getSkin(),
+        showControls: !market.live2d.hideUI && market.route.name !== 'story-gen',
         backgroundColor: '#00000000',
         alpha: true,
         premultipliedAlpha: true,
@@ -95,24 +220,42 @@ const spineLoader = () => {
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
 
-          spineCanvas.animationState.data.skeletonData.defaultSkin.attachments.forEach((a: any[]) => {
-            if (a) {
-              const keys = Object.keys(a)
-              if (keys !== null && keys !== undefined && keys.length > 0) {
-                keys.forEach((k: string) => {
-                  a[k as any].color = {
-                    r: 1,
-                    g: 1,
-                    b: 1,
-                    a: 1
-                  }
-                })
-              }
-            }
-          })
-
           spinePlayer = player
+          resetAttachmentColors(player)
           market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
+          market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
+
+          const currentAnim = market.live2d.current_animation
+          let resolvedAnim = resolveAnimation(currentAnim, market.live2d.animations)
+
+          if (!resolvedAnim) {
+            // Try default animation from config
+            resolvedAnim = resolveAnimation(player.config.animation, market.live2d.animations)
+          }
+
+          if (!resolvedAnim && market.live2d.animations.length > 0) {
+            // Fallback to first available animation
+            resolvedAnim = market.live2d.animations[0]
+            console.warn(`No valid animation found. Falling back to first available: ${resolvedAnim}`)
+          }
+
+          if (resolvedAnim) {
+            console.log(`[Loader] Setting initial animation to: ${resolvedAnim} (Requested: ${currentAnim})`)
+            market.live2d.current_animation = resolvedAnim
+
+            // Force set animation with a slight delay to ensure player is ready
+            setTimeout(() => {
+              try {
+                player.animationState.setAnimation(0, resolvedAnim, true)
+                player.play()
+              } catch (e) {
+                console.error('[Loader] Failed to set animation in timeout', e)
+              }
+            }, 100)
+          } else {
+            console.error('[Loader] No animations available for this character.')
+          }
+
           market.live2d.triggerFinishedLoading()
           successfullyLoaded()
         },
@@ -156,7 +299,19 @@ const customSpineLoader = () => {
     defaultMix: SPINE_DEFAULT_MIX,
     success: (player: any) => {
       spinePlayer = player
+      resetAttachmentColors(player)
       market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
+      market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
+
+      const currentAnim = market.live2d.current_animation
+      const hasAnim = market.live2d.animations.includes(currentAnim)
+
+      if (hasAnim) {
+        player.animationState.setAnimation(0, currentAnim, true)
+      } else {
+        market.live2d.current_animation = player.config.animation
+      }
+
       market.live2d.triggerFinishedLoading()
       successfullyLoaded()
       try {
@@ -307,7 +462,14 @@ watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
 })
 
 watch(() => market.live2d.customLoad, () => {
-  spineCanvas.dispose()
+  if (spineCanvas) {
+    try {
+      spineCanvas.dispose()
+    } catch (e) {
+      console.warn('[Loader] Error disposing spineCanvas for customLoad:', e)
+    }
+    spineCanvas = null
+  }
   market.load.beginLoad()
   customSpineLoader()
   applyDefaultStyle2Canvas()
@@ -315,7 +477,8 @@ watch(() => market.live2d.customLoad, () => {
 
 watch(() => market.live2d.hideUI, () => {
   const controls = document.querySelector('.spine-player-controls') as HTMLElement
-  if (market.live2d.hideUI === false) {
+  if (!controls) return
+  if (market.live2d.hideUI === false && market.route.name !== 'story-gen') {
     controls.style.visibility = 'visible'
   } else {
     controls.style.visibility = 'hidden'
@@ -442,7 +605,14 @@ async function exportAnimationFrames(timestamp: number) {
 
 const loadSpineAfterWatcher = () => {
   if (market.live2d.canLoadSpine) {
-    spineCanvas.dispose()
+    if (spineCanvas) {
+      try {
+        spineCanvas.dispose()
+      } catch (e) {
+        console.warn('[Loader] Error disposing spineCanvas:', e)
+      }
+      spineCanvas = null
+    }
     market.load.beginLoad()
     spineLoader()
     applyDefaultStyle2Canvas()
@@ -531,8 +701,8 @@ document.addEventListener('mousemove', (e) => {
     const newX = e.clientX
     const newY = e.clientY
 
-    const stylel = parseInt(canvas.style.left.replaceAll('px', ''))
-    const stylet = parseInt(canvas.style.top.replaceAll('px', ''))
+    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
+    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
 
     if (newX !== oldX) {
       canvas.style.left = stylel + (newX - oldX) + 'px'
@@ -604,20 +774,43 @@ const checkIfAssetCanYap = () => {
     })
   }
   setYappable(yappable)
+
+  if (yappable && market.live2d.isYapping && market.live2d.yapEnabled) {
+    try {
+      spineCanvas.animationState.setAnimation(1, YAP_TRACK, true)
+    } catch (e) {
+      console.warn('Could not add yap track on load', e)
+    }
+  }
 }
 
 const setYappable = (bool: boolean) => {
   market.live2d.canYap = bool
-  market.live2d.isYapping = false
+  if (!bool) {
+    market.live2d.isYapping = false
+  }
 }
 
 watch(() => market.live2d.isYapping, (value) => {
+  if (!spineCanvas || !spineCanvas.animationState) return
 
-  if (value) {
-    spineCanvas.animationState.addAnimation(1, YAP_TRACK)
-    spineCanvas.animationState.setAnimation(1, YAP_TRACK, true)
+  console.log(`[Loader] isYapping changed to: ${value}`)
+
+  // Only allow yapping if asset supports it AND user enabled it
+  if (value && market.live2d.canYap && market.live2d.yapEnabled) {
+    try {
+      console.log('[Loader] Setting yap animation')
+      spineCanvas.animationState.setAnimation(1, YAP_TRACK, true)
+    } catch (e) {
+      console.warn('Could not add yap track', e)
+    }
   } else {
-    spineCanvas.animationState.tracks = [spineCanvas.animationState.tracks[0]]
+    try {
+      console.log('[Loader] Clearing yap animation')
+      spineCanvas.animationState.setEmptyAnimation(1, 0)
+    } catch (e) {
+      console.warn('Could not clear yap track', e)
+    }
   }
 })
 

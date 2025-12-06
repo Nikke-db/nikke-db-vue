@@ -5,6 +5,7 @@ import Credits from '@/components/views/Credits.vue'
 import Tools from '@/components/views/Tools.vue'
 import Chibi from '@/components/views/Chibi.vue'
 import Gallery from '@/components/views/Gallery.vue'
+import StoryGenerator from '@/components/views/StoryGenerator.vue'
 import TierListMaker from '@/components/views/Tierlistmaker.vue'
 import HighAndLowQualityAssets from '@/components/views/notices/HighAndLowQualityAssets.vue'
 import AttachmentEditor from '@/components/views/notices/AttachmentEditor.vue'
@@ -64,6 +65,11 @@ const router = createRouter({
       path: '/gallery',
       name: 'gallery',
       component: Gallery
+    },
+    {
+      path: '/story-gen',
+      name: 'story-gen',
+      component: StoryGenerator
     },
     // {
     //   path: '/tierlistmaker',

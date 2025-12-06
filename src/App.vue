@@ -27,7 +27,7 @@ const checkMobile = () => {
   return market.globalParams.isMobile
 }
 const isL2d = () => {
-  return market.route.name === 'visualiser'
+  return market.route.name === 'visualiser' || market.route.name === 'story-gen'
 }
 const isChibiMobile = () => {
   return checkMobile() && market.route.name === 'chibi'
