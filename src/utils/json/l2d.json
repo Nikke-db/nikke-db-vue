@@ -164,8 +164,16 @@
     "id": "c072_04"
   },
   {
+    "name": "Brid: Silent Track",
+    "id": "c073"
+  },
+  {
     "name": "Soline: Frost Ticket",
     "id": "c074"
+  },
+  {
+    "name": "Diesel: Winter Sweets",
+    "id": "c075"
   },
   {
     "name": "Centi",
@@ -696,6 +704,10 @@
     "id": "c270_02"
   },
   {
+    "name": "Blanc Fortune Express",
+    "id": "c270_03"
+  },
+  {
     "name": "Noir",
     "id": "c271"
   },
@@ -1118,6 +1130,10 @@
   {
     "name": "Bready",
     "id": "c520"
+  },
+  {
+    "name": "Bready Frosty Bite",
+    "id": "c520_01"
   },
   {
     "name": "Crust",
