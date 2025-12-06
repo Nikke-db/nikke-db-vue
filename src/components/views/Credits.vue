@@ -36,6 +36,11 @@ const market = useMarket()
 
 const external: help[] = [
   {
+    name: 'Rhystic1',
+    contribution: 'Story/Roleplaying Generator',
+    tier: 'skyblue2'
+  },
+  {
     name: 'Bingle',
     contribution: 'Fixing favorite assets through Spine Pro.',
     tier: 'skyblue'

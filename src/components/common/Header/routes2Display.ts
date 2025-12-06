@@ -24,6 +24,11 @@ export const ROUTES: route2DisplayInterface[] = [
     path: 'gallery',
     text: 'Gallery',
     mobile: true
+  },
+  {
+    path: 'story-gen',
+    text: 'Story/Roleplaying Generator',
+    mobile: true
   }
   // {
   //   path: 'tierlistmaker',

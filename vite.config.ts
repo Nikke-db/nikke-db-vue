@@ -11,5 +11,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  server: {
+    proxy: {
+      '/alltalk': {
+        target: 'http://127.0.0.1:7851',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/alltalk/, '')
+      }
+    }
   }
 })
