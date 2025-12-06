@@ -13,8 +13,13 @@ import { theme } from '@/utils/enum/globalParams'
 import { onUnmounted } from 'vue'
 import WrapperPc from '@/components/common/Spine/WrapperPC.vue'
 import WrapperMobile from '@/components/common/Spine/WrapperMobile.vue'
+import { onMounted } from 'vue'
 
 const market = useMarket()
+
+if (!market.live2d.current_id) {
+  market.live2d.current_id = 'c010'
+}
 
 onUnmounted(() => {
   document.body.style.backgroundColor = theme.BACKGROUND_COLOR

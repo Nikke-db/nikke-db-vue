@@ -17,8 +17,12 @@ export const useLive2dStore = defineStore('live2d', () => {
   const HQassets = ref(true)
   const canAssetTalk = ref(false)
   const canYap = ref(true)
+  const yapEnabled = ref(true)
   const isYapping = ref(false)
   const attachments = ref<AttachmentInterface[]>([])
+  const animations = ref<string[]>([])
+  const current_animation = ref<string>('idle')
+  const isVisible = ref(true)
   const updateAttachments = ref(0)
   const applyAttachments = ref(0)
   const selectionAttachments = ref<'select' | 'unselect'>('select')
@@ -313,8 +317,12 @@ export const useLive2dStore = defineStore('live2d', () => {
     HQassets,
     canAssetTalk,
     canYap,
+    yapEnabled,
     isYapping,
     attachments,
+    animations,
+    current_animation,
+    isVisible,
     updateAttachments,
     applyAttachments,
     triggerUpdateAttachments,
