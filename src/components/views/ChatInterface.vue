@@ -190,17 +190,44 @@
                   </n-icon>
                 </template>
                 <div>
-                  Enables TTS using a local AllTalk instance.<br>
-                  Requires AllTalk running with XTTSv2.<br><br>
-                  Character voices must be in the AllTalk voices folder (e.g. "anis.wav").
+                  Enables TTS using a local TTS server.<br>
+                  Supports AllTalk (XTTSv2) or GPT-SoVits.<br><br>
+                  Character voices must be in the appropriate voices folder.
                 </div>
               </n-popover>
             </template>
             <n-switch v-model:value="ttsEnabled" />
           </n-form-item>
 
-          <n-form-item label="AllTalk Endpoint" v-if="ttsEnabled">
+          <n-form-item label="TTS Provider" v-if="ttsEnabled">
+            <n-select v-model:value="ttsProvider" :options="ttsProviderOptions" />
+          </n-form-item>
+
+          <n-form-item label="AllTalk Endpoint" v-if="ttsEnabled && ttsProvider === 'alltalk'">
             <n-input v-model:value="ttsEndpoint" placeholder="http://localhost:7851" />
+          </n-form-item>
+
+          <n-form-item label="GPT-SoVits Endpoint" v-if="ttsEnabled && ttsProvider === 'gptsovits'">
+            <n-input v-model:value="gptSovitsEndpoint" placeholder="http://localhost:9880" />
+          </n-form-item>
+
+          <n-form-item v-if="ttsEnabled && ttsProvider === 'gptsovits'">
+            <template #label>
+              GPT-SoVits Base Path
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Path to your GPT-SoVits installation folder.<br>
+                  Voice files should be at: <code>{basePath}/voices/{character}/{character}.wav</code><br>
+                  Prompt text at: <code>{basePath}/voices/{character}/{character}.txt</code>
+                </div>
+              </n-popover>
+            </template>
+            <n-input v-model:value="gptSovitsBasePath" placeholder="C:/GPT-SoVITS" />
           </n-form-item>
         </n-form>
       </n-drawer-content>
@@ -307,6 +334,10 @@ const mode = ref('roleplay')
 const playbackMode = ref('auto')
 const ttsEnabled = ref(false)
 const ttsEndpoint = ref('http://localhost:7851')
+const ttsProvider = ref<'alltalk' | 'gptsovits'>('alltalk')
+const gptSovitsEndpoint = ref('http://localhost:9880')
+const gptSovitsBasePath = ref('C:/GPT-SoVITS')
+const gptSovitsPromptTextCache = new Map<string, string>()
 const userInput = ref('')
 const isLoading = ref(false)
 const isStopped = ref(false)
@@ -336,6 +367,11 @@ const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
   { label: 'Gemini', value: 'gemini' },
   { label: 'OpenRouter', value: 'openrouter' }
+]
+
+const ttsProviderOptions = [
+  { label: 'AllTalk (XTTSv2)', value: 'alltalk' },
+  { label: 'GPT-SoVits', value: 'gptsovits' }
 ]
 
 const modelOptions = computed(() => {
@@ -391,6 +427,18 @@ watch(ttsEnabled, (newVal) => {
 
 watch(ttsEndpoint, (newVal) => {
   localStorage.setItem('nikke_tts_endpoint', newVal)
+})
+
+watch(ttsProvider, (newVal) => {
+  localStorage.setItem('nikke_tts_provider', newVal)
+})
+
+watch(gptSovitsEndpoint, (newVal) => {
+  localStorage.setItem('nikke_gptsovits_endpoint', newVal)
+})
+
+watch(gptSovitsBasePath, (newVal) => {
+  localStorage.setItem('nikke_gptsovits_basepath', newVal)
 })
 
 watch(model, (newVal) => {
@@ -482,6 +530,15 @@ const initializeSettings = async () => {
   const savedTtsEndpoint = localStorage.getItem('nikke_tts_endpoint')
   if (savedTtsEndpoint) ttsEndpoint.value = savedTtsEndpoint
 
+  const savedTtsProvider = localStorage.getItem('nikke_tts_provider')
+  if (savedTtsProvider === 'alltalk' || savedTtsProvider === 'gptsovits') ttsProvider.value = savedTtsProvider
+
+  const savedGptSovitsEndpoint = localStorage.getItem('nikke_gptsovits_endpoint')
+  if (savedGptSovitsEndpoint) gptSovitsEndpoint.value = savedGptSovitsEndpoint
+
+  const savedGptSovitsBasePath = localStorage.getItem('nikke_gptsovits_basepath')
+  if (savedGptSovitsBasePath) gptSovitsBasePath.value = savedGptSovitsBasePath
+
   const savedTokenUsage = localStorage.getItem('nikke_token_usage')
   if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
 
@@ -572,6 +629,9 @@ const saveSession = () => {
       yapEnabled: market.live2d.yapEnabled,
       ttsEnabled: ttsEnabled.value,
       ttsEndpoint: ttsEndpoint.value,
+      ttsProvider: ttsProvider.value,
+      gptSovitsEndpoint: gptSovitsEndpoint.value,
+      gptSovitsBasePath: gptSovitsBasePath.value,
       tokenUsage: tokenUsage.value
     }
   }
@@ -638,6 +698,18 @@ const handleFileUpload = (event: Event) => {
           
           if (data.settings.ttsEndpoint) {
             ttsEndpoint.value = data.settings.ttsEndpoint
+          }
+
+          if (data.settings.ttsProvider === 'alltalk' || data.settings.ttsProvider === 'gptsovits') {
+            ttsProvider.value = data.settings.ttsProvider
+          }
+
+          if (data.settings.gptSovitsEndpoint) {
+            gptSovitsEndpoint.value = data.settings.gptSovitsEndpoint
+          }
+
+          if (data.settings.gptSovitsBasePath) {
+            gptSovitsBasePath.value = data.settings.gptSovitsBasePath
           }
 
           if (data.settings.tokenUsage && tokenUsageOptions.some((t) => t.value === data.settings.tokenUsage)) {
@@ -2376,9 +2448,125 @@ const getCharacterName = (id: string): string | null => {
   return char ? char.name : id
 }
 
+const playTTSGptSovits = async (text: string, characterName: string) => {
+  // Clean up character name to match folder/filename
+  // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer"
+  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
+  
+  logDebug(`[TTS-GPTSoVits] Requesting TTS for ${characterName} (${cleanName})`)
+
+  try {
+    let baseUrl = gptSovitsEndpoint.value
+    baseUrl = baseUrl.replace(/\/$/, '')
+    
+    // Handle CORS in dev mode by using Vite proxy
+    if (import.meta.env.DEV && (baseUrl.includes('localhost:9880') || baseUrl.includes('127.0.0.1:9880'))) {
+      baseUrl = '/gptsovits'
+    }
+
+    // Construct paths for reference audio and prompt text
+    // User must place files at: {basePath}/GPT_SoVITS/voices/{character}/{character}.wav
+    // And prompt text at: {basePath}/GPT_SoVITS/voices/{character}/{character}.txt
+    // Clean up the base path: remove trailing slashes/backslashes, normalize to forward slashes
+    const basePath = gptSovitsBasePath.value
+      .replace(/[\\/]+$/, '')  // Remove trailing slashes (both / and \)
+      .replace(/\\/g, '/')     // Convert backslashes to forward slashes
+    const refAudioPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.wav`
+    const promptTextPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.txt`
+
+    // Fetch prompt text from cache or API
+    let promptText = gptSovitsPromptTextCache.get(cleanName)
+    if (!promptText) {
+      try {
+        const promptResponse = await fetch(`${baseUrl}/read_prompt_text?path=${encodeURIComponent(promptTextPath)}`)
+        if (promptResponse.ok) {
+          const promptData = await promptResponse.json()
+          promptText = promptData.text || ''
+          if (promptText) {
+            gptSovitsPromptTextCache.set(cleanName, promptText)
+            logDebug(`[TTS-GPTSoVits] Loaded prompt text for ${cleanName}: "${promptText}"`)
+          }
+        } else {
+          console.warn(`[TTS-GPTSoVits] Could not fetch prompt text for ${cleanName}`)
+          promptText = ''
+        }
+      } catch (e) {
+        console.warn(`[TTS-GPTSoVits] Error fetching prompt text for ${cleanName}:`, e)
+        promptText = ''
+      }
+    }
+
+    // Call the TTS endpoint
+    const payload = {
+      text: text,
+      text_lang: 'en',
+      text_split_method: 'cut0',
+      ref_audio_path: refAudioPath,
+      prompt_text: promptText,
+      prompt_lang: 'en',
+      media_type: 'wav',
+      streaming_mode: false,
+      // Quality parameters
+      top_k: 10,
+      top_p: 0.8,
+      temperature: 0.8,
+      speed_factor: 1.0
+    }
+
+    logDebug(`[TTS-GPTSoVits] Calling ${baseUrl}/tts with payload:`, payload)
+
+    const response = await fetch(`${baseUrl}/tts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      console.warn(`[TTS-GPTSoVits] API Error: ${response.status} - ${errText}`)
+      return
+    }
+
+    // Response is audio blob
+    const audioBlob = await response.blob()
+    const audioUrl = URL.createObjectURL(audioBlob)
+    const audio = new Audio(audioUrl)
+    audio.volume = 1.0
+
+    // Sync yapping with audio
+    audio.onplay = () => {
+      market.live2d.isYapping = true
+    }
+    audio.onended = () => {
+      market.live2d.isYapping = false
+      URL.revokeObjectURL(audioUrl) // Clean up
+    }
+    audio.onerror = () => {
+      market.live2d.isYapping = false
+      URL.revokeObjectURL(audioUrl)
+    }
+
+    audio.play().catch(e => {
+      console.warn('[TTS-GPTSoVits] Playback failed:', e)
+      market.live2d.isYapping = false
+      URL.revokeObjectURL(audioUrl)
+    })
+  } catch (e) {
+    console.warn('[TTS-GPTSoVits] Error:', e)
+  }
+}
+
 const playTTS = async (text: string, characterName: string) => {
   if (!ttsEnabled.value || !characterName) return
 
+  // Dispatch to appropriate TTS provider
+  if (ttsProvider.value === 'gptsovits') {
+    return playTTSGptSovits(text, characterName)
+  }
+
+  // AllTalk implementation (default)
   // Clean up character name to match filename
   // Remove special chars, replace spaces with underscores
   // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer.wav"

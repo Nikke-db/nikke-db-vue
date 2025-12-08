@@ -18,6 +18,11 @@ export default defineConfig({
         target: 'http://127.0.0.1:7851',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/alltalk/, '')
+      },
+      '/gptsovits': {
+        target: 'http://127.0.0.1:9880',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/gptsovits/, '')
       }
     }
   }
