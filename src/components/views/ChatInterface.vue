@@ -23,7 +23,12 @@
         </div>
       </div>
       <div v-if="isLoading" class="message assistant">
-      <div class="message-content">...</div>
+        <div class="message-content loading-container">
+          <n-spin size="small" v-if="isGenerating" />
+          <transition name="fade" mode="out-in">
+            <span :key="loadingStatus" class="loading-text">{{ loadingStatus }}</span>
+          </transition>
+        </div>
       </div>
       </div>
 
@@ -83,13 +88,13 @@
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
           <n-alert type="info" style="margin-bottom: 12px" title="">
-            Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB or any other server except the API provider when making requests.
+            Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB.
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Users are responsible for any possible cost using this functionality.
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
-            Web search may incur additional costs, even with free models. Please consult your API provider's pricing documentation.
+            Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
             <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
               <template #trigger>
                 <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -98,7 +103,7 @@
               </template>
               <div>
                 <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wikia to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
-                <p>Web search is used on the first turn and when new characters are introduced. The system minimizes searches to reduce costs.</p>
+                <p>Web search is used on the first turn and when new characters are introduced. You can disable this by enabling "Use Nikke-DB Knowledge".</p>
                 <p>It is strongly suggested to check your provider's documentation and model page for information regarding possible costs.</p>
                 <p>It is also recommended to select a limit on your API key to prevent unexpected charges.</p>
               </div>
@@ -106,6 +111,42 @@
           </n-alert>
           <n-form-item label="Model">
             <n-select v-model:value="model" :options="modelOptions" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
+              Use Nikke-DB Knowledge <span style="font-size: smaller;">(Recommended)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br><br>
+                  Faster and saves API costs.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="useLocalProfiles" />
+          </n-form-item>
+
+          <n-form-item v-if="useLocalProfiles">
+            <template #label>
+              Allow Web Search Fallback <span style="font-size: smaller;">(Recommended)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  If a character is not found in the local profiles, allow the model to search the web. Note that this may incur extra costs, depending on your API provider and model.<br><br>
+                  If disabled, the model will rely on its internal knowledge for unknown characters and may degrade the experience.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="allowWebSearchFallback" />
           </n-form-item>
 
           <n-form-item>
@@ -148,6 +189,25 @@
 
           <n-form-item>
             <template #label>
+              Context Caching <span style="font-size: smaller;">(Experimental)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Adds explicit caching headers for supported models (Claude, Gemini) on OpenRouter.<br><br>
+                  Significantly reduces costs for long conversations by caching the history.<br>
+                  Other models (OpenAI, DeepSeek) cache automatically without this setting.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="enableContextCaching" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
               Playback
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
@@ -182,7 +242,7 @@
 
           <n-form-item>
             <template #label>
-              Text to Speech (EXPERIMENTAL)
+              Text to Speech <span style="font-size: smaller;">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -250,7 +310,7 @@
           <li><strong>API Key Required:</strong> You need an API key to use this feature. Currently supported providers: <strong>Perplexity</strong>, <strong>Google Gemini</strong>, and <strong>OpenRouter</strong>.</li>
           <li><strong>Setup:</strong> Click the <strong>Settings (Gear Icon)</strong> to enter your API key and select a model.</li>
           <li><strong>Privacy:</strong> Your API key is stored locally and sent only to the selected API provider. Stories and keys are never shared with Nikke-DB; check your provider's policy, as some may use data for training.</li>
-          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled and mandatory for character accuracy) may incur additional costs, even for free models.</li>
+          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled by default for character accuracy) may incur additional costs. You can disable it in Settings by enabling "Use Nikke-DB Knowledge".</li>
         </ul>
 
         <h3>🎭 Modes</h3>
@@ -304,9 +364,12 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
 import { Settings, Help, Save, Upload, TrashCan, Reset } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal } from 'naive-ui'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
+import localCharacterProfiles from '@/utils/json/characterProfiles.json'
+import loadingMessages from '@/utils/json/loadingMessages.json'
+import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
 
@@ -327,10 +390,14 @@ const logDebug = (...args: any[]) => {
 // State
 const showSettings = ref(false)
 const showGuide = ref(false)
+const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') === 'true')
+const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') === 'true')
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
 const mode = ref('roleplay')
+const tokenUsage = ref('medium')
+const enableContextCaching = ref(false)
 const playbackMode = ref('auto')
 const ttsEnabled = ref(false)
 const ttsEndpoint = ref('http://localhost:7851')
@@ -340,6 +407,8 @@ const gptSovitsBasePath = ref('C:/GPT-SoVITS')
 const gptSovitsPromptTextCache = new Map<string, string>()
 const userInput = ref('')
 const isLoading = ref(false)
+const isGenerating = ref(false)
+const loadingStatus = ref('')
 const isStopped = ref(false)
 const waitingForNext = ref(false)
 const showRetry = ref(false)
@@ -354,9 +423,13 @@ const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
 const isRestoring = ref(false)
-const tokenUsage = ref('medium')
 const needsJsonReminder = ref(false)
 const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
+
+// Helper to set random loading message
+const setRandomLoadingMessage = () => {
+  loadingStatus.value = loadingMessages[Math.floor(Math.random() * loadingMessages.length)]
+}
 
 // Models/providers that have native web search in OpenRouter
 const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
@@ -413,8 +486,24 @@ watch(apiKey, (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
 })
 
+watch(useLocalProfiles, (newVal) => {
+  localStorage.setItem('nikke_use_local_profiles', String(newVal))
+})
+
+watch(allowWebSearchFallback, (newVal) => {
+  localStorage.setItem('nikke_allow_web_search_fallback', String(newVal))
+})
+
 watch(mode, (newVal) => {
   localStorage.setItem('nikke_mode', newVal)
+})
+
+watch(tokenUsage, (newVal) => {
+  localStorage.setItem('nikke_token_usage', newVal)
+})
+
+watch(enableContextCaching, (newVal) => {
+  localStorage.setItem('nikke_enable_context_caching', String(newVal))
 })
 
 watch(playbackMode, (newVal) => {
@@ -466,10 +555,6 @@ watch(apiProvider, async (newVal) => {
       model.value = openRouterModels.value[0].value
     }
   }
-})
-
-watch(tokenUsage, (newVal) => {
-  localStorage.setItem('nikke_token_usage', newVal)
 })
 
 const fetchOpenRouterModels = async () => {
@@ -541,6 +626,9 @@ const initializeSettings = async () => {
 
   const savedTokenUsage = localStorage.getItem('nikke_token_usage')
   if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
+
+  const savedContextCaching = localStorage.getItem('nikke_enable_context_caching')
+  if (savedContextCaching !== null) enableContextCaching.value = (savedContextCaching === 'true')
 
   // Load Provider and Model
   const savedProvider = localStorage.getItem('nikke_api_provider')
@@ -632,7 +720,10 @@ const saveSession = () => {
       ttsProvider: ttsProvider.value,
       gptSovitsEndpoint: gptSovitsEndpoint.value,
       gptSovitsBasePath: gptSovitsBasePath.value,
-      tokenUsage: tokenUsage.value
+      tokenUsage: tokenUsage.value,
+      enableContextCaching: enableContextCaching.value,
+      useLocalProfiles: useLocalProfiles.value,
+      allowWebSearchFallback: allowWebSearchFallback.value
     }
   }
   
@@ -715,6 +806,18 @@ const handleFileUpload = (event: Event) => {
           if (data.settings.tokenUsage && tokenUsageOptions.some((t) => t.value === data.settings.tokenUsage)) {
             tokenUsage.value = data.settings.tokenUsage
           }
+
+          if (typeof data.settings.enableContextCaching === 'boolean') {
+            enableContextCaching.value = data.settings.enableContextCaching
+          }
+
+          if (typeof data.settings.useLocalProfiles === 'boolean') {
+            useLocalProfiles.value = data.settings.useLocalProfiles
+          }
+
+          if (typeof data.settings.allowWebSearchFallback === 'boolean') {
+            allowWebSearchFallback.value = data.settings.allowWebSearchFallback
+          }
           
           // Restore Provider and Model
           const savedProvider = data.settings.apiProvider
@@ -749,6 +852,19 @@ const handleFileUpload = (event: Event) => {
                 chatHistory.value.push({ role: 'system', content: `Warning: Saved model '${savedModel}' is invalid or unavailable. Using default.` })
               }
             }
+          }
+        }
+
+        // FIX: Ensure we have a context window of at least 10 messages upon restore
+        // This prevents the AI from relying solely on potentially outdated summaries
+        if (tokenUsage.value !== 'goddess' && chatHistory.value.length > 0) {
+          const safeBuffer = 10
+          // If the current summarized index leaves less than safeBuffer messages, pull it back
+          if (chatHistory.value.length - lastSummarizedIndex.value < safeBuffer) {
+             lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
+             // We can't use logDebug here easily as it might not be in scope or I'd have to check imports, 
+             // but console.log is safe.
+             console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
           }
         }
         
@@ -802,6 +918,8 @@ const sendMessage = async () => {
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
   isLoading.value = true
+  isGenerating.value = true
+  setRandomLoadingMessage()
   isStopped.value = false
   showRetry.value = false
   lastPrompt.value = text
@@ -852,6 +970,8 @@ const retryLastMessage = async () => {
 
   scrollToBottom()
   isLoading.value = true
+  isGenerating.value = true
+  setRandomLoadingMessage()
   isStopped.value = false
   showRetry.value = false
 
@@ -920,14 +1040,16 @@ const continueStory = async () => {
   if (isLoading.value) return
   
   const text = mode.value === 'story' 
-    ? 'Continue the story with multiple dialogue exchanges and/or actions. Do not repeat previous events, dialogue or actions.' 
-    : '[Continue the roleplay with the characters responding and reacting, or the action moving forward. Do not repeat the last actions or dialogue.]'
+    ? prompts.continue.story 
+    : prompts.continue.roleplay
   // Don't add "Continue" to chat history to keep it clean, or add it as a system note?
   // Let's add it as a user prompt but maybe hidden? Or just standard user prompt.
   // For now, standard user prompt is fine to show intent.
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
   isLoading.value = true
+  isGenerating.value = true
+  setRandomLoadingMessage()
   isStopped.value = false
   showRetry.value = false
   lastPrompt.value = text
@@ -971,22 +1093,33 @@ const continueStory = async () => {
 const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
-  const enableWebSearch = isFirstTurn
+  
+  // If using local profiles, we disable initial web search to force the "needs_search" flow
+  // This allows us to check local JSON first before falling back to web search
+  const enableWebSearch = isFirstTurn && !useLocalProfiles.value
+  
+  // If using local profiles, pre-load profiles for any characters mentioned in the first prompt
+  if (isFirstTurn && useLocalProfiles.value && chatHistory.value.length > 0) {
+    const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
+    // Simple heuristic: check if any known local character name appears in the prompt
+    const localNames = Object.keys(localCharacterProfiles)
+    const foundNames = localNames.filter(name => 
+      firstPrompt.toLowerCase().includes(name.toLowerCase())
+    )
+    
+    if (foundNames.length > 0) {
+      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
+      await searchForCharacters(foundNames)
+    }
+  }
   
   logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
   
   const systemPrompt = generateSystemPrompt(enableWebSearch)
-  let retryInstruction = isRetry ? '\n\nSYSTEM ALERT: Your previous response was invalid JSON. You MUST output ONLY a JSON array. Do not use Markdown blocks. Do not add conversational text.' : ''
+  let retryInstruction = isRetry ? prompts.reminders.retry : ''
   
   if (needsJsonReminder.value) {
-      retryInstruction += `\n\nSYSTEM REMINDER: Please ensure your response is a valid JSON array. Do not include any conversational text outside the JSON.
-Example of correct format:
-[
-  { "text": "Neon waves excitedly.", "character": "c010", "animation": "happy", "speaking": false },
-  { "text": "Commander!", "character": "c010", "animation": "happy", "speaking": true },
-  { "text": "Anis sighs.", "character": "c011", "animation": "idle", "speaking": false },
-  { "text": "Not again...", "character": "c011", "animation": "sigh", "speaking": true }
-]`
+      retryInstruction += prompts.reminders.json
       needsJsonReminder.value = false
   }
   
@@ -1022,6 +1155,7 @@ Example of correct format:
        const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
        logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
        await summarizeChunk(chunkToSummarize)
+       setRandomLoadingMessage()
        lastSummarizedIndex.value = endIndex
      }
   }
@@ -1054,12 +1188,7 @@ Example of correct format:
     
     if (honorificExamples.length === 0) return ''
     
-    return `\n\n[IMPORTANT REMINDER - HONORIFICS USAGE]
-The CHARACTER HONORIFICS table shows how each character addresses the COMMANDER ONLY.
-${honorificExamples.join('. ')}.
-These honorifics are EXCLUSIVE to the Commander - characters do NOT use these terms for other NIKKEs.
-For example, if Chime's honorific is "Rapscallion", she calls ONLY the Commander that, not other characters.
-When characters address each other, use their relationship-specific names from the KNOWN CHARACTER PROFILES.`
+    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
   }
 
   // Helper to inject honorifics reminder into the last user message (first turn only)
@@ -1149,6 +1278,7 @@ When characters address each other, use their relationship-specific names from t
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
     await searchForCharacters(searchRequest)
+    setRandomLoadingMessage()
     // Re-call the AI with updated character profiles (search disabled this time)
     return await callAIWithoutSearch(isRetry)
   }
@@ -1159,17 +1289,10 @@ When characters address each other, use their relationship-specific names from t
 // Separate function to call AI without search (after character lookup)
 const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
   const systemPrompt = generateSystemPrompt(false)
-  let retryInstruction = isRetry ? '\n\nSYSTEM ALERT: Your previous response was invalid JSON. You MUST output ONLY a JSON array. Do not use Markdown blocks. Do not add conversational text.' : ''
+  let retryInstruction = isRetry ? prompts.reminders.retry : ''
   
   if (needsJsonReminder.value) {
-      retryInstruction += `\n\nSYSTEM REMINDER: Please ensure your response is a valid JSON array. Do not include any conversational text outside the JSON.
-Example of correct format:
-[
-  { "text": "Neon waves excitedly.", "character": "c010", "animation": "delight", "speaking": false },
-  { "text": "Commander!", "character": "c010", "animation": "delight", "speaking": true },
-  { "text": "Anis sighs.", "character": "c011", "animation": "no", "speaking": false },
-  { "text": "Not again...", "character": "c011", "animation": "no", "speaking": true }
-]`
+      retryInstruction += prompts.reminders.json
       needsJsonReminder.value = false
   }
   
@@ -1204,6 +1327,7 @@ Example of correct format:
        const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
        logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
        await summarizeChunk(chunkToSummarize)
+       setRandomLoadingMessage()
        lastSummarizedIndex.value = endIndex
      }
   }
@@ -1299,15 +1423,65 @@ const checkForSearchRequest = async (response: string): Promise<string[] | null>
 const searchForCharacters = async (characterNames: string[]): Promise<void> => {
   logDebug('[searchForCharacters] Searching for:', characterNames)
   
+  if (useLocalProfiles.value) {
+    loadingStatus.value = "Searching for characters in the database..."
+  } else {
+    loadingStatus.value = "Searching the web for characters..."
+  }
+  
+  let charsToSearch = [...characterNames]
+
+  // Check local profiles first if enabled
+  if (useLocalProfiles.value) {
+    const remainingChars: string[] = []
+    
+    for (const name of charsToSearch) {
+      // Case-insensitive lookup in local profiles
+      const localKey = Object.keys(localCharacterProfiles).find(
+        k => k.toLowerCase() === name.toLowerCase()
+      )
+      
+      if (localKey) {
+        const profile = (localCharacterProfiles as any)[localKey]
+        // Use the name requested by the AI as the key, but the data from the local profile
+        characterProfiles.value[name] = {
+          ...profile,
+          // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
+          id: profile.id || l2d.find(c => c.name.toLowerCase() === name.toLowerCase())?.id
+        }
+        logDebug(`[searchForCharacters] Found local profile for ${name}`)
+      } else {
+        remainingChars.push(name)
+      }
+    }
+    
+    charsToSearch = remainingChars
+  }
+
+  if (charsToSearch.length === 0) {
+    logDebug('[searchForCharacters] All characters found locally.')
+    setRandomLoadingMessage()
+    return
+  }
+
+  // If fallback is disabled, stop here
+  if (useLocalProfiles.value && !allowWebSearchFallback.value) {
+    logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
+    setRandomLoadingMessage()
+    return
+  }
+
+  loadingStatus.value = "Searching the web for characters..."
+
   // For Perplexity, search each character individually for better results
   if (apiProvider.value === 'perplexity') {
-    await searchForCharactersPerplexity(characterNames)
+    await searchForCharactersPerplexity(charsToSearch)
     return
   }
   
   // For Gemini, use native search
   if (apiProvider.value === 'gemini') {
-    await searchForCharactersWithNativeSearch(characterNames)
+    await searchForCharactersWithNativeSearch(charsToSearch)
     return
   }
   
@@ -1315,11 +1489,11 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
   if (apiProvider.value === 'openrouter') {
     if (hasNativeSearch(model.value)) {
       // Use native web search for OpenAI, Anthropic, Perplexity, xAI models
-      await searchForCharactersWithNativeSearch(characterNames)
+      await searchForCharactersWithNativeSearch(charsToSearch)
     } else {
       // For models without native search (e.g., Claude via OpenRouter, DeepSeek, etc.)
       // Fetch wiki pages directly and have the model summarize
-      await searchForCharactersViaWikiFetch(characterNames)
+      await searchForCharactersViaWikiFetch(charsToSearch)
     }
     return
   }
@@ -1399,27 +1573,9 @@ const searchForCharactersViaWikiFetch = async (characterNames: string[]): Promis
     const cleanedContent = cleanWikiContent(wikiContent)
     logDebug(`[searchForCharactersViaWikiFetch] Fetched ${cleanedContent.length} chars for ${name}`)
     
-    const summarizePrompt = `Based on the following wiki content about the NIKKE character "${name}", extract their character information.
-
-WIKI CONTENT:
-${cleanedContent}
-
-Extract the following information about "${name}":
-1. Personality traits - how they behave, their temperament
-2. Speech style - be DETAILED: how they talk, their tone, vocabulary level, any verbal quirks, accent patterns, or unique speech mannerisms
-3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
-
-IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
-
-Return ONLY a JSON object:
-{
-  "${name}": {
-    "personality": "Brief personality description from the wiki",
-    "speech_style": "Detailed description of how they speak - include tone, vocabulary, verbal quirks, accent, mannerisms, etc.",
-    "relationships": { "OtherNikkeName": "What they call them + dynamic" }
-  }
-}
-Do NOT include Commander in relationships.`
+    const summarizePrompt = prompts.search.wikiFetch
+      .replace(/{name}/g, name)
+      .replace('{content}', cleanedContent)
 
     const messages = [
       { role: 'system', content: 'You are a helpful assistant that extracts character information from wiki content and returns it in JSON format.' },
@@ -1465,26 +1621,9 @@ const searchForCharactersWithNativeSearch = async (characterNames: string[]): Pr
     const wikiName = name.replace(/ /g, '_')
     const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
 
-    const searchPrompt = `Search for information about the character "${name}" from the mobile game NIKKE: Goddess of Victory.
-
-The character's wiki page is at: ${storyUrl}
-
-Find the following information:
-1. Personality traits - how they behave, their temperament
-2. Speech style - be DETAILED: how they talk, their tone, vocabulary level, any verbal quirks, accent patterns, or unique speech mannerisms
-3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
-
-IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
-
-Return ONLY a JSON object:
-{
-  "${name}": {
-    "personality": "Brief personality description",
-    "speech_style": "Detailed description of how they speak - include tone, vocabulary, verbal quirks, accent, mannerisms, etc.",
-    "relationships": { "OtherNikkeName": "What they call them + dynamic" }
-  }
-}
-Do NOT include Commander in relationships. If you cannot find information, use "Unknown".`
+    const searchPrompt = prompts.search.native
+      .replace(/{name}/g, name)
+      .replace('{url}', storyUrl)
 
     const messages = [
       { role: 'system', content: 'You are a research assistant. Search for information about NIKKE: Goddess of Victory game characters and return what you find in JSON format.' },
@@ -1493,6 +1632,7 @@ Do NOT include Commander in relationships. If you cannot find information, use "
 
     let attempts = 0
     const maxAttempts = 3
+   
     let success = false
 
     while (attempts < maxAttempts && !success) {
@@ -1554,28 +1694,9 @@ const searchForCharactersPerplexity = async (characterNames: string[]): Promise<
     const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
     
     // Search prompt pointing directly to the Story page for personality info
-    const searchPrompt = `Read this exact wiki page and extract information for NIKKE character "${name}":
-${storyUrl}
-
-Find the following information:
-1. Personality traits - how they behave, their temperament
-2. Speech style - be DETAILED: how they talk, their tone, vocabulary level, any verbal quirks, accent patterns, or unique speech mannerisms
-3. Relationships with OTHER NIKKEs - what they call them and how they feel about them
-
-IMPORTANT: Do NOT include anything about the Commander - that is provided separately.
-
-Only return information that is ACTUALLY on the wiki page.
-
-Return ONLY a JSON object:
-{
-  "${name}": {
-    "personality": "From the wiki page only",
-    "speech_style": "Detailed description of how they speak - include tone, vocabulary, verbal quirks, accent, mannerisms, etc.",
-    "relationships": { "OtherNikkeName": "What they call them + dynamic (e.g. 'Her Highness - deeply devoted')" }
-  }
-}
-
-Do NOT include Commander in relationships. If you cannot find information, use "Unknown".`
+    const searchPrompt = prompts.search.perplexity
+      .replace(/{name}/g, name)
+      .replace('{url}', storyUrl)
 
     const messages = [
       { role: 'system', content: 'You are a factual research assistant. You MUST only return information that is explicitly written on the wiki page. Do NOT hallucinate, guess, or embellish. If information is not found, say "Unknown".' },
@@ -1645,105 +1766,100 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     relevantHonorifics[name] = (characterHonorifics as Record<string, string>)[name] || 'Commander'
   }
   
-  let prompt = `You are the Game Master and Narrator for a Goddess of Victory: NIKKE roleplay.
+  let prompt = `${prompts.systemPrompt.intro}
   
-  Mode: ${mode.value === 'roleplay' ? 'Roleplay Mode. The user plays as the Commander. You control all other characters.' : 'Story Mode. You narrate the scene based on user prompts. The user is an observer.'}
+  ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : prompts.systemPrompt.modes.story}
   
-  CHARACTER HONORIFICS (How each character addresses the Commander - USE THESE EXACTLY):
-  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
+  ${prompts.systemPrompt.honorifics.header}
+  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'
+  }
   
-  HONORIFIC RULES:
-  - CRITICAL: When a character speaks TO the Commander, use their honorific from the list above.
-  - Example: Neon says "Master" not "Commander". Drake says "Moron" not "Commander".
-  - If a character is NOT in the honorifics list, default to "Commander".
-  - CRITICAL: These honorifics are EXCLUSIVE to addressing the Commander. When characters address EACH OTHER, use their relationship-specific titles (see KNOWN CHARACTER PROFILES).
-  - FAILURE to use the correct honorific is a critical error.
+  ${prompts.systemPrompt.honorifics.rules}
   
-  CHARACTER RESEARCH:
   ${enableWebSearch 
-    ? `Web search is ENABLED for this turn. You MUST use web search to research the characters involved:
-    - Search the NIKKE Wiki: https://nikke-goddess-of-victory-international.fandom.com/wiki/[CharacterName]/Story
-    - Find: Personality traits, speech patterns/voice, and how they address OTHER characters (not the Commander).
-    - DO NOT search for or store how they address the Commander - that is already provided in CHARACTER HONORIFICS above.
-    - Example: Chime speaks in archaic/royal language and calls Crown "Her Highness".
-    - Store what you find in the "memory" field (personality, speech_style, relationships only - NO honorifics for Commander).`
-    : `Web search is DISABLED. Use the KNOWN CHARACTER PROFILES below for personality and relationship info.
-    
-    *** IMPORTANT: NEW CHARACTER DETECTION ***
-    If a NEW character enters the scene who is NOT listed in KNOWN CHARACTER PROFILES below, you MUST:
-    1. Include "needs_search": ["CharacterName"] in your JSON response
-    2. The system will search for their personality/relationships and re-prompt you
-    3. Do NOT proceed with dialogue for that character until you have their profile
-    
-    Example: If Drake enters but is not in the profiles, respond with: { "needs_search": ["Drake"], "text": "Drake enters the room..." }`}
+    ? prompts.systemPrompt.characterResearch.enabled
+    : prompts.systemPrompt.characterResearch.disabled}
   
-  - FAILURE to act according to personality (e.g. Chime accepting insults calmly) is a critical error.
-  - FAILURE to mimic the character's unique voice/tone (e.g. Chime's archaic/royal speech) is a critical error.
-  - IMPORTANT: Remember that the Commander is a man. Do not use neutral pronouns when characters address him.
+  ${prompts.systemPrompt.criticalErrors}
 
-  You must output your response in JSON format ONLY. Do not include any text outside the JSON object.
+  ${prompts.systemPrompt.jsonStructure}
   
-  JSON Structure:
-  You can return a single object OR an array of objects to play out a scene.
-  [
-    {
-      "needs_search": ["CharacterName1", "CharacterName2"], // CRITICAL: Include this if ANY character in your response is NOT in KNOWN CHARACTER PROFILES. The system will search and re-prompt you.
-      "memory": { "CharacterName": { "relationships": { "OtherNikkeName": "How they address them + dynamic" }, "personality": "...", "speech_style": "..." } }, // Store personality and relationships with OTHER NIKKEs only. Do NOT include Commander - honorifics are in CHARACTER HONORIFICS above.
-            "text": "The dialogue or narration text to display to the user.",
-      "character": "The ID of the character to display on screen (e.g., c010). If no character change is needed, use 'current'. If no character should be shown, use 'none'.",
-      "animation": "The name of the animation to play (e.g., idle, happy, angry). Use 'idle' as default.",
-      "speaking": true/false, // Set to TRUE ONLY if the character is actually saying words. Set to FALSE for narration, internal thoughts, or descriptions of actions.
-      "duration": 2000 // Duration in milliseconds for the animation/speaking.
-    }
-  ]
-  
-  KNOWN CHARACTER PROFILES (Use these to maintain consistency - if a character is NOT here, use needs_search):
+  ${prompts.systemPrompt.knownProfiles}
   ${knownCharacterNames.length > 0 ? JSON.stringify(characterProfiles.value, null, 2) : '(None yet - this is the first turn, use web search to gather information)'}
   
-  CHARACTER ID REFERENCE (Use these IDs in the "character" field):
+  ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : 'No characters loaded yet. Use the character NAME and the system will resolve it.'}
   
-  Instructions:
-  - If the user uses [], it is a stage direction.
-  - CRITICAL: For the "character" field, use the character ID (e.g., "c010") from the CHARACTER ID REFERENCE above, or use the character's NAME if their ID is not listed. The system will resolve names to IDs.
-  - Choose the most appropriate character to show based on who is speaking or the focus of the scene.
-  - Choose animations that match the emotion.
-  - Check the "Available Animations" list provided in the context for the CURRENT character.
-  - If the character is the CURRENT one, you MUST pick an animation from that list.
-  - SUFFIX GUIDE: "_02" usually indicates HIGH intensity (e.g. furious, laughing), and "_03" usually indicates LOW intensity (e.g. annoyed, chuckling). Use these if they appear in the list and match the scene's intensity.
-  - If the character is NEW (not current), prefer using DESCRIPTIVE emotion words (e.g. 'furious', 'annoyed', 'gloom') instead of the generic category if you want to convey intensity. The system will map these to the best available animation (e.g. 'furious' -> 'angry_02').
-  - Do NOT use specific suffixes like '_02' for NEW characters. Use the descriptive word (e.g. 'furious') and let the system handle the mapping.
-  - If you are unsure, you can use descriptive terms like "very angry" or "furious", and the system will try to map them using these patterns: ${JSON.stringify(animationMappings)}.
-  - CRITICAL: Do NOT reset animations to 'idle' during narration steps if the character is still emotional. Only change the animation if the emotion changes or the character calms down.
-  - CRITICAL: If a character is performing an action described by the narrator, set 'character' to that character's ID, even if they are not speaking. Only use 'none' if NO character should be visible (e.g. scene transition, or focus on environment).
-  - CRITICAL: Set 'speaking' to FALSE if the text is narration (e.g. "Neon looks around nervously.") or internal thought.
-  - RULE OF THUMB: If the text does NOT contain quotation marks (" "), 'speaking' MUST be FALSE.
-  - Only set 'speaking' to TRUE if the text contains spoken dialogue inside quotation marks.
-  - CRITICAL: If the text contains BOTH narration and dialogue (e.g. 'She sighed. "Fine."'), you MUST split it into two separate steps in the array. Step 1: Narration (speaking: false). Step 2: Dialogue (speaking: true).
-  - CRITICAL: When a character speaks, you MUST set 'character' to that character's ID. Do NOT use 'current' when switching speakers.
-  - In Story Mode, you MUST generate a long, detailed sequence of actions (an array) to play out the scene fully, switching characters as they speak. Do not summarize. Write out the full dialogue.
-  - CRITICAL: Do NOT return a single large block of text. Split dialogue and narration into multiple small steps in the array to create a dynamic flow. Each step should be one sentence or one turn of dialogue.
-  - CRITICAL: Do NOT output numbered lists, outlines, plans, or thoughts. Output ONLY the JSON array. Do not include any text before or after the JSON.
-  - In Story Mode, use THIRD PERSON narration. Refer to the protagonist as "The Commander", NEVER as "you".
-  - In Story Mode, NEVER display the Commander sprite. Use 'character': 'none' when the Commander is speaking or acting.
-  - In Roleplay Mode, generate 1-3 turns of dialogue/action. If the conversation has stalled, introduce a new topic or event based on the character's personality.
-  - CRITICAL: If the user clicks "Continue", DO NOT repeat the last action. ADVANCE the plot or reaction. NEVER repeat the user's dialogue or the last character's dialogue. You must ALWAYS provide a NEW response or reaction.
-  - CRITICAL: Do not rephrase the previous turn. Move the story FORWARD.
-  - CRITICAL: If you are in Roleplay Mode, NEVER output dialogue that is identical or nearly identical to the User's previous input. You speak for the NPCs. Only perform actions for the user if explicitly instructed in [] or if it is missing from the user's input and absolutely necessary in a logic sense to proceed.
+  ${prompts.systemPrompt.instructions}
   `
   return prompt
 }
 
 const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
+  let processedMessages = messages
+
+  if (enableContextCaching.value) {
+    // Clone messages to avoid mutating the original array
+    processedMessages = messages.map(m => ({ ...m }))
+
+    // 1. Cache System Message (Index 0)
+    // Anthropic/OpenRouter expects content blocks for caching
+    if (processedMessages.length > 0 && processedMessages[0].role === 'system') {
+      const systemContent = processedMessages[0].content
+      processedMessages[0] = {
+        ...processedMessages[0],
+        content: [
+          { 
+            type: "text", 
+            text: systemContent, 
+            cache_control: { type: "ephemeral" } 
+          }
+        ]
+      }
+    }
+
+    // 2. Cache the last history message (The one before the current prompt)
+    // Structure is usually [System, ...History, CurrentPrompt]
+    // We want to cache the end of the History prefix.
+    // We target the second-to-last message.
+    if (processedMessages.length >= 2) {
+      const lastHistoryIndex = processedMessages.length - 2
+      // Ensure we don't cache the system message again if history is empty (though length check handles that)
+      // and ensure it's not the user prompt (last message)
+      if (lastHistoryIndex > 0 || (lastHistoryIndex === 0 && processedMessages[0].role !== 'system')) {
+         const msg = processedMessages[lastHistoryIndex]
+         // Only convert if it's a string content (standard)
+         if (typeof msg.content === 'string') {
+           processedMessages[lastHistoryIndex] = {
+             ...msg,
+             content: [
+               { 
+                 type: "text", 
+                 text: msg.content,
+                 cache_control: { type: "ephemeral" }
+               }
+             ]
+           }
+         }
+      }
+    }
+  }
+
   // Add a final user message to FORCE JSON output - models pay more attention to recent messages
   const messagesWithEnforcement = [
-    ...messages,
-    { role: 'user', content: 'CRITICAL SYSTEM INSTRUCTION: You MUST respond with ONLY a JSON array. No prose, no markdown, no explanation. Start your response with [ and end with ]. Any non-JSON response is a critical failure. Output the JSON array NOW:' }
+    ...processedMessages,
+    { role: 'user', content: prompts.reminders.jsonEnforcement }
   ]
   
   // Build web plugin configuration if web search is enabled
   const buildWebPlugin = () => {
     if (!enableWebSearch) return undefined
+    
+    // If local profiles are enabled and fallback is disabled, DO NOT use web search
+    if (useLocalProfiles.value && !allowWebSearchFallback.value) {
+      return undefined
+    }
+
     // Use default web plugin - Exa will search based on the prompt content
     // For models with native search (OpenAI, Anthropic, etc.), this uses their built-in search
     // For other models, it uses Exa search
@@ -1852,7 +1968,10 @@ const callPerplexity = async (messages: any[], enableWebSearch: boolean = false,
     messages: messages
   }
   
-  if (enableWebSearch) {
+  // Force disable search if local profiles are enabled and fallback is disabled
+  const shouldSearch = enableWebSearch && !(useLocalProfiles.value && !allowWebSearchFallback.value)
+
+  if (shouldSearch) {
     // If a specific URL is provided, use the full subdomain for more targeted search
     if (searchUrl) {
       // Extract the subdomain from the URL (e.g., "nikke-goddess-of-victory-international.fandom.com")
@@ -1930,7 +2049,10 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
     }
   }
   
-  if (enableWebSearch) {
+  // Force disable search if local profiles are enabled and fallback is disabled
+  const shouldSearch = enableWebSearch && !(useLocalProfiles.value && !allowWebSearchFallback.value)
+
+  if (shouldSearch) {
     requestBody.tools = [{ googleSearch: {} }]
   }
   
@@ -2114,7 +2236,6 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   ${JSON.stringify(animationMappings, null, 2)}
   
   IMPORTANT: If the text is in ALL CAPS (e.g. "STOP IT!"), you MUST assign a high-intensity 'angry' or 'surprise' animation (e.g. 'angry_02', 'shock').
-  
   For other characters, use generic emotion names (e.g., happy, angry, sad, surprise, idle).
   
   Actions:
@@ -2316,6 +2437,7 @@ const parseFallback = (text: string): any[] => {
 }
 
 const processAIResponse = async (responseStr: string) => {
+  loadingStatus.value = "Processing response..."
   logDebug('Raw AI Response:', responseStr)
   
   // Check for empty or too-short responses (model sometimes returns nothing)
@@ -2429,6 +2551,9 @@ const processAIResponse = async (responseStr: string) => {
   }
 
   logDebug('Parsed Action Sequence:', data)
+
+  isGenerating.value = false
+  loadingStatus.value = "..."
 
   for (const action of data) {
     if (isStopped.value) {
@@ -2855,6 +2980,7 @@ const executeAction = async (data: any) => {
   const duration = data.duration || 3000
     
   if (playbackMode.value === 'manual') {
+    loadingStatus.value = "Click Next to advance..."
     logDebug('Waiting for user input (Manual Mode)')
     waitingForNext.value = true
     await new Promise<void>((r) => {
@@ -2869,6 +2995,7 @@ const executeAction = async (data: any) => {
       }
     }
   } else {
+    loadingStatus.value = "..."
     // Auto Mode
     // If text is long, ensure we wait long enough to read it
     let autoDuration = Math.max(duration, 2000)
@@ -2913,6 +3040,7 @@ const resetSession = () => {
 const summarizeChunk = async (messages: { role: string, content: string }[]) => {
   if (messages.length === 0) return
 
+  loadingStatus.value = "Summarizing story so far..."
   const textToSummarize = messages.map(m => `${m.role}: ${m.content}`).join('\n\n')
   const prompt = `Summarize the following story events concisely, focusing on key plot points and character developments. Do not lose important details.\n\n${textToSummarize}`
 
@@ -3114,5 +3242,27 @@ const summarizeChunk = async (messages: { role: string, content: string }[]) => 
     border-radius: 4px;
     font-size: 14px;
   }
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-text {
+  font-style: italic;
+  opacity: 0.8;
+  font-size: 0.9em;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
