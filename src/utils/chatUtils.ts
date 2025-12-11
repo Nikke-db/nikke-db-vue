@@ -4,6 +4,15 @@ import l2d from '@/utils/json/l2d.json'
 // Helper to identify speaker labels
 const isSpeakerLabel = (s: string) => /^\s*(?:\*\*)?[^*]+?(?:\*\*)?\s*:\s*$/.test(s)
 
+// Helper to check if a word appears as a whole word in text (case-insensitive)
+export const isWholeWordPresent = (text: string, word: string): boolean => {
+  if (!text || !word) return false
+  // Escape special regex chars in word
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`\\b${escaped}\\b`, 'i')
+  return regex.test(text)
+}
+
 // Clean up wikitext for the model
 export const cleanWikiContent = (wikitext: string): string => {
   let text = wikitext
@@ -27,6 +36,153 @@ export const cleanWikiContent = (wikitext: string): string => {
   return text
 }
 
+// Parse AI response string into actions array
+export const parseAIResponse = (responseStr: string): any[] => {
+  let jsonStr = responseStr
+  
+  // FIRST: Try to extract JSON from markdown code blocks (highest priority)
+  const jsonBlockMatch = responseStr.match(/```(?:json)?\s*([\s\S]*?)```/)
+  if (jsonBlockMatch) {
+    jsonStr = jsonBlockMatch[1].trim()
+  } else {
+    // Remove any stray markdown markers
+    jsonStr = responseStr.replace(/```json\n?|\n?```/g, '').trim()
+  }
+  
+  // Attempt to extract JSON structure (array or object) if mixed with text
+  const firstOpenBrace = jsonStr.indexOf('{')
+  const firstOpenBracket = jsonStr.indexOf('[')
+  
+  let start = -1
+  let end = -1
+  
+  // Determine if we should look for an array or an object based on which appears first
+  if (firstOpenBracket !== -1 && (firstOpenBrace === -1 || firstOpenBracket < firstOpenBrace)) {
+    start = firstOpenBracket
+    end = jsonStr.lastIndexOf(']')
+  } else if (firstOpenBrace !== -1) {
+    start = firstOpenBrace
+    end = jsonStr.lastIndexOf('}')
+  }
+
+  if (start !== -1 && end !== -1) {
+    jsonStr = jsonStr.substring(start, end + 1)
+  }
+
+  // Try to repair common JSON errors
+  const tryParseJSON = (str: string): any => {
+    // First attempt: parse as-is
+    try {
+      return JSON.parse(str)
+    } catch (e) {
+      // Repair attempt: fix unbalanced braces/brackets
+      let repaired = str
+      
+      // Count braces and brackets
+      const openBraces = (repaired.match(/{/g) || []).length
+      const closeBraces = (repaired.match(/}/g) || []).length
+      const openBrackets = (repaired.match(/\[/g) || []).length
+      const closeBrackets = (repaired.match(/]/g) || []).length
+      
+      // Add missing closing braces
+      if (openBraces > closeBraces) {
+        repaired += '}'.repeat(openBraces - closeBraces)
+      }
+      // Add missing closing brackets
+      if (openBrackets > closeBrackets) {
+        repaired += ']'.repeat(openBrackets - closeBrackets)
+      }
+      
+      // Try again with repaired string
+      try {
+        return JSON.parse(repaired)
+      } catch (e2) {
+        // If still failing, try removing the memory object entirely (it's optional)
+        let cleaned = str.replace(/"memory"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
+        try {
+          return JSON.parse(cleaned)
+        } catch (e3) {
+          // If still failing, try removing the characterProgression object entirely (it's optional)
+          cleaned = cleaned.replace(/"characterProgression"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
+          try {
+            return JSON.parse(cleaned)
+          } catch (e4) {
+            throw e // Throw original error
+          }
+        }
+      }
+    }
+  }
+
+  let data: any = null
+  
+  try {
+    data = tryParseJSON(jsonStr)
+  } catch (e) {
+    // Main parse failed. Try "Salvage Strategy": Extract individual action objects
+    // This helps when one part of the JSON (like memory/progression) is broken but actions are fine
+    const actionMatches = jsonStr.match(/\{\s*"text"\s*:\s*(?:".*?"|'.*?')\s*,\s*"character"\s*:\s*(?:".*?"|'.*?')\s*(?:,\s*"[^"]+"\s*:\s*(?:".*?"|'.*?'|true|false|\d+|\[.*?\]|\{.*?\}))*\s*\}/gs)
+    
+    if (actionMatches && actionMatches.length > 0) {
+      const salvagedActions = []
+      for (const match of actionMatches) {
+        try {
+          const action = JSON.parse(match)
+          if (action.text && action.character) {
+            salvagedActions.push(action)
+          }
+        } catch (err) {
+          // Ignore malformed individual actions
+        }
+      }
+      
+      if (salvagedActions.length > 0) {
+        data = salvagedActions
+      }
+    }
+  }
+
+  // If we still don't have data, check for DeepSeek nested JSON
+  if (!data) {
+     // Try parsing as is one last time to trigger the catch block in the caller if needed
+     // or just let it fall through to the array check which will fail
+     try {
+        data = JSON.parse(jsonStr)
+     } catch (e) {
+        // Ignore
+     }
+  }
+
+  // DeepSeek Fix: Check if the model returned the JSON array INSIDE the 'text' field of a wrapper object
+  // Example: { "text": "[{...}]", ... }
+  const potentialObject = data as any
+  if (!Array.isArray(data) && typeof potentialObject === 'object' && potentialObject !== null && potentialObject.text && typeof potentialObject.text === 'string') {
+    const textContent = potentialObject.text.trim()
+    // Check if it looks like a JSON array or object
+    if ((textContent.startsWith('[') || textContent.startsWith('{'))) {
+      try {
+        const nestedData = tryParseJSON(textContent)
+        // If successful, use the nested data
+        if (nestedData) {
+          data = nestedData
+        }
+      } catch (e) {
+        // Failed to parse nested JSON, use original object
+      }
+    }
+  }
+  
+  if (!Array.isArray(data)) {
+    if (data) {
+        data = [data]
+    } else {
+        throw new Error('Failed to parse JSON')
+    }
+  }
+
+  return data
+}
+
 // Sanitize actions to ensure narration/dialogue separation
 export const sanitizeActions = (actions: any[]): any[] => {
   const newActions: any[] = []
@@ -37,100 +193,77 @@ export const sanitizeActions = (actions: any[]): any[] => {
       continue
     }
 
-    // Check if text contains quotes
-    // We look for standard quotes " and smart quotes " "
-    const hasQuotes = /["""]/.test(action.text)
-
-    if (!hasQuotes) {
-      // Case 1: No quotes at all.
-
-      // Filter out standalone speaker labels
-      if (isSpeakerLabel(action.text)) {
-        continue
-      }
-
-      // If it was marked as speaking, only force to false if it looks like a stage direction
-      if (action.speaking) {
-        // Check for stage directions starting with *, (, or [
-        if (/^[\s]*[\[\(*]/.test(action.text)) {
-          action.speaking = false
-        }
-        // Otherwise, trust the AI's speaking flag even without quotes
-        // This handles cases where the AI forgets quotes around dialogue
-      }
+    // Check if the text contains dialogue
+    const text = action.text
+    const quotes = '[""“”]'
+    const dialogueRegex = new RegExp('(' + quotes + ')([^' + quotes + ']*)\\1', 'g')
+    
+    if (!dialogueRegex.test(text)) {
+      // No dialogue detected, keep original action
       newActions.push(action)
       continue
     }
 
-    // Case 2: Has quotes. We need to split.
-    // Regex to match quoted sections including the quotes
-    const splitRegex = /([""][^""]*[""])/g
-
-    const parts = action.text.split(splitRegex).filter((p: string) => p.trim().length > 0)
-
-    if (parts.length === 0) {
-      newActions.push(action)
-      continue
+    // Split on dialogue quotes only, being very precise
+    const parts: { text: string, isDialogue: boolean }[] = []
+    let lastIndex = 0
+    
+    // Reset regex for splitting
+    dialogueRegex.lastIndex = 0
+    let match
+    
+    while ((match = dialogueRegex.exec(text)) !== null) {
+      // Add any narration before this dialogue
+      const narrationBefore = text.substring(lastIndex, match.index).trim()
+      if (narrationBefore) {
+        parts.push({ text: narrationBefore, isDialogue: false })
+      }
+      
+      // Add the dialogue (with quotes)
+      const dialogue = match[0] // Full match including quotes
+      parts.push({ text: dialogue, isDialogue: true })
+      
+      lastIndex = match.index + match[0].length
     }
-
-    // Helper to determine if a part is a quote
-    // Use [\s\S] to match any character including newlines
-    const isQuote = (s: string) => /^[""][\s\S]*[""]$/.test(s.trim())
-
-    // Merge trailing punctuation into previous part to avoid tiny separate messages
-    const mergedParts: { text: string, isQuoted: boolean, characterId: string }[] = []
-    let effectiveCharacterId = action.character
-
+    
+    // Add any remaining narration
+    const remaining = text.substring(lastIndex).trim()
+    if (remaining) {
+      parts.push({ text: remaining, isDialogue: false })
+    }
+    
+    // Convert parts to actions
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
-      const quoted = isQuote(part)
-
-      // Filter out standalone speaker labels (e.g. "**Anis:**")
-      // These are often artifacts from splitting "Name: Quote"
-
-      if (isSpeakerLabel(part) && !quoted) {
-        continue
-      }
-
-      // If this part is just punctuation/space and we have a previous part, merge it
-      // This handles cases like: "Hello". -> "Hello" + .
-      if (mergedParts.length > 0 && !quoted && /^[.,;!?\s]+$/.test(part)) {
-        mergedParts[mergedParts.length - 1].text += part
+      if (!part.text.trim()) continue
+      
+      if (part.isDialogue) {
+        newActions.push({
+          text: part.text.trim(),
+          character: action.character,
+          animation: action.animation,
+          speaking: true
+        })
       } else {
-        mergedParts.push({ text: part, isQuoted: quoted, characterId: effectiveCharacterId })
+        newActions.push({
+          text: part.text.trim(),
+          character: 'narrator',
+          animation: 'idle',
+          speaking: false
+        })
       }
-    }
-
-    for (const partObj of mergedParts) {
-      // Create new action
-      const newAction = { ...action, text: partObj.text, character: partObj.characterId }
-
-      if (partObj.isQuoted) {
-        newAction.speaking = true
-      } else {
-        newAction.speaking = false
-      }
-
-      // Remove fixed duration so it gets recalculated based on text length
-      if (newAction.duration) {
-        delete newAction.duration
-      }
-
-      newActions.push(newAction)
     }
   }
 
-  // Post-process: If a narration action (speaking=false) is followed by a dialogue action (speaking=true)
-  // for the same character, copy the animation from the narration to the dialogue.
+  // Post-process: If a narration action (speaking=false) is followed by a dialogue action (speaking=true),
+  // copy the animation from the narration to the dialogue.
   // This ensures the emotion set during narration persists into the dialogue.
   for (let i = 1; i < newActions.length; i++) {
     const prev = newActions[i - 1]
     const curr = newActions[i]
 
-    // Check if same character, previous is narration, current is dialogue
-    if (prev.character && curr.character &&
-        prev.character === curr.character &&
-        prev.speaking === false &&
+    // Check if previous is narration, current is dialogue
+    if (prev.speaking === false &&
         curr.speaking === true &&
         prev.animation && prev.animation !== 'idle') {
       // Copy the narration animation to the dialogue
@@ -144,59 +277,93 @@ export const sanitizeActions = (actions: any[]): any[] => {
 // Split narration into actions
 export const splitNarration = (text: string): any[] => {
   const actions: any[] = []
-  // Split into sentences, handling common punctuation. 
-  const sentences = text.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g)
+  // First, split into paragraphs on double newlines
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
 
-  if (!sentences) {
-      return [{ text, character: 'none', animation: 'idle', speaking: false }]
-  }
+  for (const paragraph of paragraphs) {
+    // Split each paragraph into sentences, handling common punctuation.
+    const sentences = paragraph.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g)
 
-  let currentAction: any = null
+    if (!sentences) {
+      // If no sentences, treat the whole paragraph as one
+      const trimmed = paragraph.trim()
+      if (!trimmed) continue
+      let foundCharId = null
+      for (const char of l2d) {
+        const name = char.name
+        if (trimmed.toLowerCase().startsWith(name.toLowerCase())) {
+          const nextChar = trimmed.charAt(name.length)
+          if (!nextChar || /[\s'’.,!?]/.test(nextChar)) {
+            foundCharId = char.id
+            break
+          }
+        }
+      }
+      if (foundCharId) {
+        actions.push({
+          text: trimmed,
+          character: foundCharId,
+          animation: 'idle',
+          speaking: false
+        })
+      } else {
+        actions.push({
+          text: trimmed,
+          character: 'none',
+          animation: 'idle',
+          speaking: false
+        })
+      }
+      continue
+    }
 
-  for (const rawSentence of sentences) {
-    const sentence = rawSentence.trim()
-    if (!sentence) continue
+    let currentAction: any = null
 
-    let foundCharId = null
+    for (const rawSentence of sentences) {
+      const sentence = rawSentence.trim()
+      if (!sentence) continue
 
-    for (const char of l2d) {
+      let foundCharId = null
+
+      for (const char of l2d) {
         const name = char.name
         // Check for "Name " or "Name's" or "Name." or just "Name" at start
         if (sentence.toLowerCase().startsWith(name.toLowerCase())) {
-            const nextChar = sentence.charAt(name.length)
-            if (!nextChar || /[\s'’.,!?]/.test(nextChar)) {
-                foundCharId = char.id
-                break
-            }
+          const nextChar = sentence.charAt(name.length)
+          if (!nextChar || /[\s'’.,!?]/.test(nextChar)) {
+            foundCharId = char.id
+            break
+          }
         }
-    }
+      }
 
-    if (foundCharId) {
+      if (foundCharId) {
         if (currentAction) {
-            actions.push(currentAction)
+          actions.push(currentAction)
         }
         currentAction = {
+          text: sentence,
+          character: foundCharId,
+          animation: 'idle',
+          speaking: false
+        }
+      } else {
+        if (currentAction) {
+          currentAction.text += ' ' + sentence
+        } else {
+          currentAction = {
             text: sentence,
-            character: foundCharId,
+            character: 'none',
             animation: 'idle',
             speaking: false
+          }
         }
-    } else {
-        if (currentAction) {
-            currentAction.text += ' ' + sentence
-        } else {
-            currentAction = {
-                text: sentence,
-                character: 'none',
-                animation: 'idle',
-                speaking: false
-            }
-        }
+      }
     }
-  }
 
-  if (currentAction) {
+    if (currentAction) {
       actions.push(currentAction)
+    }
   }
 
   return actions
@@ -205,12 +372,35 @@ export const splitNarration = (text: string): any[] => {
 // Fallback parsing for AI response
 export const parseFallback = (text: string): any[] => {
   const actions: any[] = []
-  // Remove bold markers to simplify regex matching
-  const cleanText = text.replace(/\*\*/g, '')
+  const cleanText = text.replace(/\*\*/g, '').trim()
 
-  // Regex to find "Name: "Dialogue"" pattern
+  // CRITICAL: If the text looks like JSON (starts with [ or {), DO NOT parse it as narration.
+  // This prevents raw JSON strings from being displayed to the user when JSON parsing fails.
+  if (cleanText.startsWith('[') || cleanText.startsWith('{')) {
+      // Try one last desperate regex extraction for objects with "text" and "character"
+      // This handles cases where the JSON is so broken that tryParseJSON failed, but we can still see objects
+      const objectRegex = /\{\s*"text"\s*:\s*"([^"]+)"\s*,\s*"character"\s*:\s*"([^"]+)"/g
+      let match
+      let found = false
+      while ((match = objectRegex.exec(cleanText)) !== null) {
+          found = true
+          actions.push({
+              text: match[1],
+              character: match[2],
+              animation: 'idle',
+              speaking: true // Assume speaking if it has this structure
+          })
+      }
+      
+      if (found) return actions
+      
+      // If no objects found, return empty to signal failure rather than showing raw JSON
+      return []
+  }
+
+  // Regex to find "Name: "Dialogue"" pattern  
   // Matches: Name (alphanumeric+spaces+dashes+parentheses) followed by colon and quoted text
-  const regex = /([A-Za-z0-9\s\-\(\)]+):\s*([""][\s\S]*?[""])/g
+  const regex = /([A-Za-z0-9\s\-\(\)]+):\s*([“”"][\s\S]*?[“”"])/g
 
   let lastIndex = 0
   let match

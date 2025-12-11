@@ -192,7 +192,7 @@
             <n-select v-model:value="tokenUsage" :options="tokenUsageOptions" />
           </n-form-item>
 
-          <n-form-item>
+          <n-form-item v-if="isDev">
             <template #label>
               Context Caching <span style="font-size: smaller;">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -377,7 +377,7 @@ import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
-import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback } from '@/utils/chatUtils'
+import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
 
 // Helper to get honorific with fallback to "Commander"
 const getHonorific = (characterName: string): string => {
@@ -403,7 +403,7 @@ const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
 const mode = ref('roleplay')
 const tokenUsage = ref('medium')
-const enableContextCaching = ref(false)
+const enableContextCaching = ref(true)
 const playbackMode = ref('auto')
 const ttsEnabled = ref(false)
 const ttsEndpoint = ref('http://localhost:7851')
@@ -431,6 +431,7 @@ const openRouterModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
+const isDev = import.meta.env.DEV
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -1118,10 +1119,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // If using local profiles, pre-load profiles for any characters mentioned in the first prompt
   if (isFirstTurn && useLocalProfiles.value && chatHistory.value.length > 0) {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
-    // Simple heuristic: check if any known local character name appears in the prompt
+    // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
     const localNames = Object.keys(localCharacterProfiles)
     const foundNames = localNames.filter(name => 
-      firstPrompt.toLowerCase().includes(name.toLowerCase())
+      isWholeWordPresent(firstPrompt, name)
     )
     
     if (foundNames.length > 0) {
@@ -1290,7 +1291,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   // Check if the model needs to search for new characters
-  const searchRequest = await checkForSearchRequest(response)
+  const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
   if (searchRequest && searchRequest.length > 0) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
@@ -1402,7 +1403,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 }
 
 // Check if the AI response contains a search request for unknown characters
-const checkForSearchRequest = async (response: string): Promise<string[] | null> => {
+const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
   try {
     let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
     const start = jsonStr.indexOf('[')
@@ -1421,12 +1422,24 @@ const checkForSearchRequest = async (response: string): Promise<string[] | null>
     // Look for needs_search field in any action
     for (const action of data) {
       if (action.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
-        // Filter out characters we already have profiles for
-        const unknownChars = action.needs_search.filter(
-          (name: string) => !characterProfiles.value[name]
+        // Validate characters using whole-word matching against user prompt and AI text
+        const allGeneratedText = data.map((a: any) => a.text || '').join(' ')
+        
+        const validatedChars = action.needs_search.filter(
+          (name: string) => {
+            // Skip if already known or is "Commander"
+            if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+
+            // Character must appear as whole word in either user prompt or AI response
+            const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
+            const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
+
+            return inUserPrompt || inGeneratedText
+          }
         )
-        if (unknownChars.length > 0) {
-          return unknownChars
+        
+        if (validatedChars.length > 0) {
+          return validatedChars
         }
       }
     }
@@ -2198,85 +2211,7 @@ const processAIResponse = async (responseStr: string) => {
   let data: any[] = []
   
   try {
-    let jsonStr = responseStr
-    
-    // FIRST: Try to extract JSON from markdown code blocks (highest priority)
-    const jsonBlockMatch = responseStr.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (jsonBlockMatch) {
-      jsonStr = jsonBlockMatch[1].trim()
-    } else {
-      // Remove any stray markdown markers
-      jsonStr = responseStr.replace(/```json\n?|\n?```/g, '').trim()
-    }
-    
-    // Attempt to extract JSON structure (array or object) if mixed with text
-    const firstOpenBrace = jsonStr.indexOf('{')
-    const firstOpenBracket = jsonStr.indexOf('[')
-    
-    let start = -1
-    let end = -1
-    
-    // Determine if we should look for an array or an object based on which appears first
-    if (firstOpenBracket !== -1 && (firstOpenBrace === -1 || firstOpenBracket < firstOpenBrace)) {
-      start = firstOpenBracket
-      end = jsonStr.lastIndexOf(']')
-    } else if (firstOpenBrace !== -1) {
-      start = firstOpenBrace
-      end = jsonStr.lastIndexOf('}')
-    }
-
-    if (start !== -1 && end !== -1) {
-      jsonStr = jsonStr.substring(start, end + 1)
-    }
-
-    // Try to repair common JSON errors
-    const tryParseJSON = (str: string): any => {
-      // First attempt: parse as-is
-      try {
-        return JSON.parse(str)
-      } catch (e) {
-        // Repair attempt: fix unbalanced braces/brackets
-        let repaired = str
-        
-        // Count braces and brackets
-        const openBraces = (repaired.match(/{/g) || []).length
-        const closeBraces = (repaired.match(/}/g) || []).length
-        const openBrackets = (repaired.match(/\[/g) || []).length
-        const closeBrackets = (repaired.match(/]/g) || []).length
-        
-        // Add missing closing braces
-        if (openBraces > closeBraces) {
-          repaired += '}'.repeat(openBraces - closeBraces)
-        }
-        // Add missing closing brackets
-        if (openBrackets > closeBrackets) {
-          repaired += ']'.repeat(openBrackets - closeBrackets)
-        }
-        
-        // Try again with repaired string
-        try {
-          return JSON.parse(repaired)
-        } catch (e2) {
-          // If still failing, try removing the memory object entirely (it's optional)
-          const withoutMemory = str.replace(/"memory"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
-          try {
-            return JSON.parse(withoutMemory)
-          } catch (e3) {
-            throw e // Throw original error
-          }
-        }
-      }
-    }
-
-    data = tryParseJSON(jsonStr)
-    
-    if (!Array.isArray(data)) {
-      data = [data]
-    }
-
-    // Sanitize and split actions to ensure narration/dialogue separation
-    data = sanitizeActions(data)
-    
+    data = parseAIResponse(responseStr)
   } catch (e) {
     console.warn('JSON parse failed, attempting text fallback parsing...', e)
     
@@ -2534,10 +2469,16 @@ const executeAction = async (data: any) => {
   }
 
   if (data.memory) {
-    logDebug('[AI Memory Update]:', data.memory)
-    // Filter out any honorific fields and Commander from relationships - we use the static honorifics.json for those
-    const filteredMemory: Record<string, any> = {}
+    logDebug('[AI Memory Update - New Characters Only]:', data.memory)
+    const newProfiles: Record<string, any> = {}
+    
     for (const [charName, profile] of Object.entries(data.memory)) {
+      // Skip if character already exists in profiles
+      if (characterProfiles.value[charName]) {
+        logDebug(`[AI Memory] Skipping existing character '${charName}' in memory block. Use characterProgression to update.`)
+        continue
+      }
+
       if (typeof profile === 'object' && profile !== null) {
         const { honorific_for_commander, honorific_to_commander, honorific, relationships, ...rest } = profile as any
         
@@ -2548,15 +2489,62 @@ const executeAction = async (data: any) => {
           filteredRelationships = Object.keys(otherRelationships).length > 0 ? otherRelationships : undefined
         }
         
-        filteredMemory[charName] = {
+        newProfiles[charName] = {
           ...rest,
           ...(filteredRelationships && { relationships: filteredRelationships })
         }
       } else {
-        filteredMemory[charName] = profile
+        newProfiles[charName] = profile
       }
     }
-    characterProfiles.value = { ...characterProfiles.value, ...filteredMemory }
+    
+    if (Object.keys(newProfiles).length > 0) {
+      characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
+    }
+  }
+
+  // Handle 'characterProgression' - For EXISTING characters (Personality/Relationships ONLY)
+  if (data.characterProgression) {
+    logDebug('[AI Character Progression]:', data.characterProgression)
+    const updatedProfiles = { ...characterProfiles.value }
+    let hasUpdates = false
+
+    for (const [charName, progression] of Object.entries(data.characterProgression)) {
+      if (updatedProfiles[charName] && typeof progression === 'object' && progression !== null) {
+        const currentProfile = updatedProfiles[charName]
+        const updates = progression as any
+        
+        // 1. Update Personality if provided
+        if (updates.personality) {
+          currentProfile.personality = updates.personality
+          hasUpdates = true
+        }
+
+        // 2. Update Relationships if provided
+        if (updates.relationships && typeof updates.relationships === 'object') {
+          // Filter Commander out
+          const { Commander, commander, ...otherRelationships } = updates.relationships
+          const validRelationships = Object.keys(otherRelationships).length > 0 ? otherRelationships : {}
+          
+          currentProfile.relationships = {
+            ...(currentProfile.relationships || {}),
+            ...validRelationships
+          }
+          hasUpdates = true
+        }
+
+        // CRITICAL: Explicitly IGNORE speech_style updates
+        if (updates.speech_style) {
+          logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${charName}'`)
+        }
+        
+        updatedProfiles[charName] = currentProfile
+      }
+    }
+
+    if (hasUpdates) {
+      characterProfiles.value = updatedProfiles
+    }
   }
 
   // Resolve Character ID EARLY to ensure TTS gets the right name
