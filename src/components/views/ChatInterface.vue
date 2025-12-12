@@ -79,7 +79,28 @@
         <template #icon><n-icon><Reset /></n-icon></template>
         Reset
       </n-button>
-      </div>
+      <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
+        <template #trigger>
+          <n-button 
+            type="info" 
+            size="small" 
+            :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
+          >
+            <template #icon>
+              <n-icon><Notification /></n-icon>
+            </template>
+            AI Reminders
+          </n-button>
+        </template>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px; min-width: 150px;">
+          <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px;">
+            Active Reminders
+          </div>
+          <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+          <n-checkbox v-model:checked="honorificsToggle">Honorifics Reminder</n-checkbox>
+        </div>
+      </n-popover>
+    </div>
     </div>
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
@@ -371,8 +392,8 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -434,8 +455,14 @@ const openRouterModels = ref<any[]>([])
 const pollinationsModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
-const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
+// Track models that don't support json_object, persisting to localStorage
+const modelsWithoutJsonSupport = new Set<string>(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]'))
 const isDev = import.meta.env.DEV
+
+// AI Reminders state
+const showRemindersDropdown = ref(false)
+const invalidJsonToggle = ref(false)
+const honorificsToggle = ref(false)
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -444,7 +471,7 @@ const setRandomLoadingMessage = () => {
 
 // Models/providers that have native web search in OpenRouter
 const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
-const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some(prefix => modelId.startsWith(prefix))
+const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some((prefix) => modelId.startsWith(prefix))
 
 // Options
 const providerOptions = [
@@ -629,7 +656,7 @@ const fetchPollinationsModels = async () => {
     
     // Handle both old format (array of strings) and new format (array of objects)
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
-      models = data.map(name => ({ name, pricing: { input_token_price: 0 } }))
+      models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
     }
     
     pollinationsModels.value = models.map((m: any) => {
@@ -947,10 +974,10 @@ const handleFileUpload = (event: Event) => {
           const safeBuffer = 10
           // If the current summarized index leaves less than safeBuffer messages, pull it back
           if (chatHistory.value.length - lastSummarizedIndex.value < safeBuffer) {
-             lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
-             // We can't use logDebug here easily as it might not be in scope or I'd have to check imports, 
-             // but console.log is safe.
-             console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
+            lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
+            // We can't use logDebug here easily as it might not be in scope or I'd have to check imports, 
+            // but console.log is safe.
+            console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
           }
         }
         
@@ -999,7 +1026,7 @@ const scrollToBottom = () => {
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
-  const text = userInput.value
+  let text = userInput.value
   userInput.value = ''
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
@@ -1042,6 +1069,11 @@ const sendMessage = async () => {
       chatHistory.value.push({ role: 'system', content: errorMessage })
       break
     }
+  }
+
+  if (success) {
+    invalidJsonToggle.value = false
+    honorificsToggle.value = false
   }
 
   isLoading.value = false
@@ -1093,6 +1125,11 @@ const retryLastMessage = async () => {
       chatHistory.value.push({ role: 'system', content: errorMessage })
       break
     }
+  }
+
+  if (success) {
+    invalidJsonToggle.value = false
+    honorificsToggle.value = false
   }
 
   isLoading.value = false
@@ -1187,6 +1224,29 @@ const continueStory = async () => {
   scrollToBottom()
 }
 
+// Helper to inject user-toggled reminders into the last user message
+const injectUserReminders = (messages: any[]): any[] => {
+  let reminders = ''
+  if (invalidJsonToggle.value) {
+    reminders += '\n\n' + prompts.reminders.invalidJsonReminder
+  }
+  if (honorificsToggle.value) {
+    reminders += '\n\n' + prompts.reminders.honorificsReminder
+  }
+  
+  if (!reminders) return messages
+
+  const result = [...messages]
+  // Find the last user message
+  for (let i = result.length - 1; i >= 0; i--) {
+    if (result[i].role === 'user') {
+      result[i] = { ...result[i], content: result[i].content + reminders }
+      break
+    }
+  }
+  return result
+}
+
 const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
@@ -1200,7 +1260,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
     // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
     const localNames = Object.keys(localCharacterProfiles)
-    const foundNames = localNames.filter(name => 
+    const foundNames = localNames.filter((name) => 
       isWholeWordPresent(firstPrompt, name)
     )
     
@@ -1216,8 +1276,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
   
   if (needsJsonReminder.value) {
-      retryInstruction += prompts.reminders.json
-      needsJsonReminder.value = false
+    retryInstruction += prompts.reminders.json
+    needsJsonReminder.value = false
   }
   
   // Add current context
@@ -1239,22 +1299,22 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
 
   if (tokenUsage.value !== 'goddess') {
-     let userMsgCount = 0
-     // Count user messages in the unsummarized portion, excluding the current pending prompt
-     for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
-       if (chatHistory.value[i].role === 'user') {
-         userMsgCount++
-       }
-     }
+    let userMsgCount = 0
+    // Count user messages in the unsummarized portion, excluding the current pending prompt
+    for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
+      if (chatHistory.value[i].role === 'user') {
+        userMsgCount++
+      }
+    }
 
-     if (userMsgCount >= historyLimit) {
-       const endIndex = chatHistory.value.length - 1
-       const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
-       logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
-       await summarizeChunk(chunkToSummarize)
-       setRandomLoadingMessage()
-       lastSummarizedIndex.value = endIndex
-     }
+    if (userMsgCount >= historyLimit) {
+      const endIndex = chatHistory.value.length - 1
+      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
+      logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+      await summarizeChunk(chunkToSummarize)
+      setRandomLoadingMessage()
+      lastSummarizedIndex.value = endIndex
+    }
   }
 
   if (storySummary.value && tokenUsage.value !== 'goddess') {
@@ -1337,6 +1397,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     ]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to Perplexity:', messages)
     response = await callPerplexity(messages, enableWebSearch)
   } else if (apiProvider.value === 'gemini') {
@@ -1351,6 +1415,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     })
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
@@ -1363,6 +1431,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     ]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, enableWebSearch)
   } else if (apiProvider.value === 'pollinations') {
@@ -1375,6 +1447,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     ]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to Pollinations:', messages)
     response = await callPollinations(messages, enableWebSearch)
   } else {
@@ -1401,8 +1477,8 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
   
   if (needsJsonReminder.value) {
-      retryInstruction += prompts.reminders.json
-      needsJsonReminder.value = false
+    retryInstruction += prompts.reminders.json
+    needsJsonReminder.value = false
   }
   
   const filteredAnimations = market.live2d.animations.filter((a) => 
@@ -1417,28 +1493,29 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   // Tumbling window: Summarize every X turns
   
   let historyLimit = 30
+
   if (tokenUsage.value === 'low') historyLimit = 10
   else if (tokenUsage.value === 'medium') historyLimit = 30
   else if (tokenUsage.value === 'high') historyLimit = 60
   else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
 
   if (tokenUsage.value !== 'goddess') {
-     let userMsgCount = 0
-     // Count user messages in the unsummarized portion, excluding the current pending prompt
-     for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
-       if (chatHistory.value[i].role === 'user') {
-         userMsgCount++
-       }
-     }
+    let userMsgCount = 0
+    // Count user messages in the unsummarized portion, excluding the current pending prompt
+    for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
+      if (chatHistory.value[i].role === 'user') {
+        userMsgCount++
+      }
+    }
 
-     if (userMsgCount >= historyLimit) {
-       const endIndex = chatHistory.value.length - 1
-       const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
-       logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
-       await summarizeChunk(chunkToSummarize)
-       setRandomLoadingMessage()
-       lastSummarizedIndex.value = endIndex
-     }
+    if (userMsgCount >= historyLimit) {
+      const endIndex = chatHistory.value.length - 1
+      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
+      logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+      await summarizeChunk(chunkToSummarize)
+      setRandomLoadingMessage()
+      lastSummarizedIndex.value = endIndex
+    }
   }
 
   if (storySummary.value && tokenUsage.value !== 'goddess') {
@@ -1446,6 +1523,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   }
 
   let historyToSend = chatHistory.value
+
   if (tokenUsage.value !== 'goddess') {
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
@@ -1473,21 +1551,26 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
       { role: 'system', content: fullSystemPrompt },
       ...sanitizedHistory
     ]
-    return await callPerplexity(messages, false)
+
+    const messagesWithReminders = injectUserReminders(messages)
+
+    return await callPerplexity(messagesWithReminders, false)
   } else if (apiProvider.value === 'gemini') {
     const messages = [
       { role: 'system', content: systemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     messages.push({ role: 'system', content: contextMsg + retryInstruction })
-    return await callGemini(messages, false)
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callGemini(messagesWithReminders, false)
   } else if (apiProvider.value === 'openrouter') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     const messages = [
       { role: 'system', content: fullSystemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
-    return await callOpenRouter(messages, false)
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callOpenRouter(messagesWithReminders, false)
   }
   
   throw new Error('Unknown API provider')
@@ -1551,9 +1634,9 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
   logDebug('[searchForCharacters] Searching for:', characterNames)
   
   if (useLocalProfiles.value) {
-    loadingStatus.value = "Searching for characters in the database..."
+    loadingStatus.value = 'Searching for characters in the database...'
   } else {
-    loadingStatus.value = "Searching the web for characters..."
+    loadingStatus.value = 'Searching the web for characters...'
   }
   
   let charsToSearch = [...characterNames]
@@ -1565,7 +1648,7 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
     for (const name of charsToSearch) {
       // Case-insensitive lookup in local profiles
       const localKey = Object.keys(localCharacterProfiles).find(
-        k => k.toLowerCase() === name.toLowerCase()
+        (k) => k.toLowerCase() === name.toLowerCase()
       )
       
       if (localKey) {
@@ -1574,7 +1657,7 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
         characterProfiles.value[name] = {
           ...profile,
           // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
-          id: profile.id || l2d.find(c => c.name.toLowerCase() === name.toLowerCase())?.id
+          id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
         }
         logDebug(`[searchForCharacters] Found local profile for ${name}`)
       } else {
@@ -1598,7 +1681,7 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
     return
   }
 
-  loadingStatus.value = "Searching the web for characters..."
+  loadingStatus.value = 'Searching the web for characters...'
 
   // For Perplexity, search each character individually for better results
   if (apiProvider.value === 'perplexity') {
@@ -1784,7 +1867,7 @@ const searchForCharactersWithNativeSearch = async (characterNames: string[]): Pr
       } catch (e) {
         console.error(`[searchForCharactersWithNativeSearch] Attempt ${attempts} failed for ${name}:`, e)
         if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000))
         } else {
           console.error(`[searchForCharactersWithNativeSearch] All attempts failed for ${name}.`)
         }
@@ -1889,7 +1972,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   
   ${prompts.systemPrompt.honorifics.header}
   ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'
-  }
+}
   
   ${prompts.systemPrompt.honorifics.rules}
   
@@ -1917,7 +2000,7 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
 
   if (enableContextCaching.value) {
     // Clone messages to avoid mutating the original array
-    processedMessages = messages.map(m => ({ ...m }))
+    processedMessages = messages.map((m) => ({ ...m }))
 
     // 1. Cache System Message (Index 0)
     // Anthropic/OpenRouter expects content blocks for caching
@@ -1927,9 +2010,9 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
         ...processedMessages[0],
         content: [
           { 
-            type: "text", 
+            type: 'text', 
             text: systemContent, 
-            cache_control: { type: "ephemeral" } 
+            cache_control: { type: 'ephemeral' } 
           }
         ]
       }
@@ -1944,20 +2027,20 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
       // Ensure we don't cache the system message again if history is empty (though length check handles that)
       // and ensure it's not the user prompt (last message)
       if (lastHistoryIndex > 0 || (lastHistoryIndex === 0 && processedMessages[0].role !== 'system')) {
-         const msg = processedMessages[lastHistoryIndex]
-         // Only convert if it's a string content (standard)
-         if (typeof msg.content === 'string') {
-           processedMessages[lastHistoryIndex] = {
-             ...msg,
-             content: [
-               { 
-                 type: "text", 
-                 text: msg.content,
-                 cache_control: { type: "ephemeral" }
-               }
-             ]
-           }
-         }
+        const msg = processedMessages[lastHistoryIndex]
+        // Only convert if it's a string content (standard)
+        if (typeof msg.content === 'string') {
+          processedMessages[lastHistoryIndex] = {
+            ...msg,
+            content: [
+              { 
+                type: 'text', 
+                text: msg.content,
+                cache_control: { type: 'ephemeral' }
+              }
+            ]
+          }
+        }
       }
     }
   }
@@ -2022,27 +2105,66 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     const data = await response.json()
     return data.choices[0].message.content
   }
-  
-  // If this model is known to not support json_object, skip directly to fallback
+
+  // Check if we already know this model doesn't support json_object
   if (modelsWithoutJsonSupport.has(model.value)) {
+    console.log(`Model ${model.value} known to not support json_object, skipping to fallback...`)
     return callWithoutJsonFormat()
+  }
+  
+  // Define Schema for Response Healing (following documentation example)
+  const responseSchema = {
+    type: 'json_schema',
+    json_schema: {
+      name: 'StoryResponse',
+      schema: {
+        type: 'object',
+        properties: {
+          actions: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                needs_search: { type: 'array', items: { type: 'string' } },
+                memory: { type: 'object' },
+                characterProgression: { type: 'object' },
+                text: { type: 'string' },
+                character: { type: 'string' },
+                animation: { type: 'string' },
+                speaking: { type: 'boolean' },
+                duration: { type: 'number' }
+              },
+              required: ['text', 'character', 'speaking', 'animation']
+            }
+          }
+        },
+        required: ['actions']
+      }
+    }
   }
   
   const requestBody: any = {
     model: model.value,
-    messages: messagesWithEnforcement,
+    messages: processedMessages, // Use processedMessages directly to avoid conflicting with schema
     max_tokens: 8192,
-    // Force JSON output format
-    response_format: { type: 'json_object' },
+    // Force JSON Schema output format for Response Healing
+    response_format: responseSchema,
     // Require providers that actually support response_format
     provider: {
       require_parameters: true
     }
   }
   
+  let plugins: any[] = []
   const webPlugin = buildWebPlugin()
   if (webPlugin) {
-    requestBody.plugins = webPlugin
+    plugins = [...webPlugin]
+  }
+  // Add Response Healing plugin
+  plugins.push({ id: 'response-healing' })
+  
+  if (plugins.length > 0) {
+    requestBody.plugins = plugins
   }
   
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -2070,6 +2192,7 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
       console.warn(`Model ${model.value} does not support json_object response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.add(model.value)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
       return callWithoutJsonFormat()
     }
     
@@ -2279,40 +2402,40 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   const messages = [{ role: 'user', content: prompt }]
   
   try {
-      let response: string
-      if (apiProvider.value === 'perplexity') {
-        response = await callPerplexity(messages, false)
-      } else if (apiProvider.value === 'gemini') {
-        response = await callGemini(messages, false)
-      } else if (apiProvider.value === 'openrouter') {
-        response = await callOpenRouter(messages, false)
-      } else if (apiProvider.value === 'pollinations') {
-        response = await callPollinations(messages, false)
-      } else {
-        return actions
-      }
+    let response: string
+    if (apiProvider.value === 'perplexity') {
+      response = await callPerplexity(messages, false)
+    } else if (apiProvider.value === 'gemini') {
+      response = await callGemini(messages, false)
+    } else if (apiProvider.value === 'openrouter') {
+      response = await callOpenRouter(messages, false)
+    } else if (apiProvider.value === 'pollinations') {
+      response = await callPollinations(messages, false)
+    } else {
+      return actions
+    }
       
-      let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
-      const start = jsonStr.indexOf('[')
-      const end = jsonStr.lastIndexOf(']')
-      if (start !== -1 && end !== -1) {
-        jsonStr = jsonStr.substring(start, end + 1)
-        const animations = JSON.parse(jsonStr)
+    let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
+    const start = jsonStr.indexOf('[')
+    const end = jsonStr.lastIndexOf(']')
+    if (start !== -1 && end !== -1) {
+      jsonStr = jsonStr.substring(start, end + 1)
+      const animations = JSON.parse(jsonStr)
         
-        if (Array.isArray(animations) && animations.length === actions.length) {
-            return actions.map((action, index) => ({
-                ...action,
-                animation: animations[index]
-            }))
-        }
+      if (Array.isArray(animations) && animations.length === actions.length) {
+        return actions.map((action, index) => ({
+          ...action,
+          animation: animations[index]
+        }))
       }
+    }
   } catch (e) {
-      console.error('Failed to enrich animations via API, using local fallback', e)
+    console.error('Failed to enrich animations via API, using local fallback', e)
   }
   
   // Local fallback: use animationMappings to match keywords to animations
   const availableAnimations = market.live2d.animations || []
-  return actions.map(action => {
+  return actions.map((action) => {
     const text = (action.text || '').toLowerCase()
     let animation = 'idle'
     
@@ -2326,7 +2449,7 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
     } else {
       // Use animationMappings to find matching animation
       for (const [animationType, keywords] of Object.entries(animationMappings)) {
-        const hasKeyword = keywords.some(keyword => text.includes(keyword.toLowerCase()))
+        const hasKeyword = keywords.some((keyword) => text.includes(keyword.toLowerCase()))
         if (hasKeyword) {
           // Find the best available animation matching this type
           const matchedAnim = availableAnimations.find((a: string) => a.includes(animationType))
@@ -2345,7 +2468,7 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
 }
 
 const processAIResponse = async (responseStr: string) => {
-  loadingStatus.value = "Processing response..."
+  loadingStatus.value = 'Processing response...'
   logDebug('Raw AI Response:', responseStr)
   
   // Check for empty or too-short responses (model sometimes returns nothing)
@@ -2364,7 +2487,7 @@ const processAIResponse = async (responseStr: string) => {
     try {
       data = parseFallback(responseStr)
       if (data.length === 0) {
-         throw new Error('Fallback parsing yielded no actions')
+        throw new Error('Fallback parsing yielded no actions')
       }
       logDebug('Fallback parsing successful:', data)
       
@@ -2387,7 +2510,7 @@ const processAIResponse = async (responseStr: string) => {
   logDebug('Sanitized Action Sequence:', data)
 
   isGenerating.value = false
-  loadingStatus.value = "..."
+  loadingStatus.value = '...'
 
   for (const action of data) {
     if (isStopped.value) {
@@ -2507,7 +2630,7 @@ const playTTSGptSovits = async (text: string, characterName: string) => {
       URL.revokeObjectURL(audioUrl)
     }
 
-    audio.play().catch(e => {
+    audio.play().catch((e) => {
       console.warn('[TTS-GPTSoVits] Playback failed:', e)
       market.live2d.isYapping = false
       URL.revokeObjectURL(audioUrl)
@@ -2542,7 +2665,7 @@ const playTTS = async (text: string, characterName: string) => {
     // Handle CORS in dev mode by using Vite proxy
     // This requires the proxy to be configured in vite.config.ts
     if (import.meta.env.DEV && (baseUrl.includes('localhost:7851') || baseUrl.includes('127.0.0.1:7851'))) {
-        baseUrl = '/alltalk'
+      baseUrl = '/alltalk'
     }
 
     // Use Standard API via proxy (better support for custom filenames)
@@ -2571,35 +2694,35 @@ const playTTS = async (text: string, characterName: string) => {
     })
 
     if (!response.ok) {
-       const errText = await response.text()
-       console.error(`[TTS] API Error: ${response.status} - ${errText}`)
-       return
+      const errText = await response.text()
+      console.error(`[TTS] API Error: ${response.status} - ${errText}`)
+      return
     }
 
     const data = await response.json()
     
     if (data.status === 'generate-success' && data.output_file_url) {
-        // Construct audio URL using the same base (proxy or direct)
-        // data.output_file_url usually starts with /audio/
-        const audioUrl = `${baseUrl}${data.output_file_url}`
-        const audio = new Audio(audioUrl)
-        audio.volume = 1.0
+      // Construct audio URL using the same base (proxy or direct)
+      // data.output_file_url usually starts with /audio/
+      const audioUrl = `${baseUrl}${data.output_file_url}`
+      const audio = new Audio(audioUrl)
+      audio.volume = 1.0
         
-        // Sync yapping with audio
-        audio.onplay = () => {
-            market.live2d.isYapping = true
-        }
-        audio.onended = () => {
-            market.live2d.isYapping = false
-        }
-        audio.onerror = () => {
-            market.live2d.isYapping = false
-        }
+      // Sync yapping with audio
+      audio.onplay = () => {
+        market.live2d.isYapping = true
+      }
+      audio.onended = () => {
+        market.live2d.isYapping = false
+      }
+      audio.onerror = () => {
+        market.live2d.isYapping = false
+      }
         
-        audio.play().catch(e => {
-            console.error('[TTS] Playback failed:', e)
-            market.live2d.isYapping = false
-        })
+      audio.play().catch((e) => {
+        console.error('[TTS] Playback failed:', e)
+        market.live2d.isYapping = false
+      })
     }
   } catch (e) {
     console.error('[TTS] Error:', e)
@@ -2702,22 +2825,22 @@ const executeAction = async (data: any) => {
   
   // Handle 'current' character resolution and speaker detection
   if (effectiveCharId === 'current') {
-      // Check for speaker override in text
-      const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
-      if (speakerMatch) {
-        const speakerName = speakerMatch[1].trim()
-        const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
-        if (charObj && charObj.id !== market.live2d.current_id) {
-             logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
-             effectiveCharId = charObj.id
-             // Update data.character so subsequent logic uses the new ID
-             data.character = effectiveCharId
-        } else {
-             effectiveCharId = market.live2d.current_id
-        }
+    // Check for speaker override in text
+    const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
+    if (speakerMatch) {
+      const speakerName = speakerMatch[1].trim()
+      const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
+      if (charObj && charObj.id !== market.live2d.current_id) {
+        logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
+        effectiveCharId = charObj.id
+        // Update data.character so subsequent logic uses the new ID
+        data.character = effectiveCharId
       } else {
-         effectiveCharId = market.live2d.current_id
+        effectiveCharId = market.live2d.current_id
       }
+    } else {
+      effectiveCharId = market.live2d.current_id
+    }
   }
 
   // Add text to chat
@@ -2867,7 +2990,7 @@ const executeAction = async (data: any) => {
   const duration = data.duration || 3000
     
   if (playbackMode.value === 'manual') {
-    loadingStatus.value = "Click Next to advance..."
+    loadingStatus.value = 'Click Next to advance...'
     logDebug('Waiting for user input (Manual Mode)')
     waitingForNext.value = true
     await new Promise<void>((r) => {
@@ -2882,7 +3005,7 @@ const executeAction = async (data: any) => {
       }
     }
   } else {
-    loadingStatus.value = "..."
+    loadingStatus.value = '...'
     // Auto Mode
     // If text is long, ensure we wait long enough to read it
     let autoDuration = Math.max(duration, 2000)
@@ -2927,8 +3050,8 @@ const resetSession = () => {
 const summarizeChunk = async (messages: { role: string, content: string }[]) => {
   if (messages.length === 0) return
 
-  loadingStatus.value = "Summarizing story so far..."
-  const textToSummarize = messages.map(m => `${m.role}: ${m.content}`).join('\n\n')
+  loadingStatus.value = 'Summarizing story so far...'
+  const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
   const prompt = `Summarize the following story events concisely, focusing on key plot points and character developments. Do not lose important details.\n\n${textToSummarize}`
 
   const systemMsg = { role: 'system', content: 'You are a helpful assistant that summarizes story events.' }
