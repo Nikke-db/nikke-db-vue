@@ -187,20 +187,76 @@ export const parseAIResponse = (responseStr: string): any[] => {
 export const sanitizeActions = (actions: any[]): any[] => {
   const newActions: any[] = []
 
+  // Metadata fields that should not be duplicated if we split an action into multiple ones.
+  // These can trigger side-effects (search, profile updates, debug panels).
+  const nonDuplicatedFields = new Set([
+    'needs_search',
+    'memory',
+    'characterProgression',
+    'debug_info'
+  ])
+
+  const looksLikeNarrationWithoutQuotes = (rawText: string): boolean => {
+    const t = (rawText || '').trim()
+    if (!t) return false
+
+    const lower = t.toLowerCase()
+
+    for (const char of l2d) {
+      const name = (char as any).name as string
+      if (!name) continue
+
+      const nameLower = name.toLowerCase()
+      if (!lower.startsWith(nameLower)) continue
+
+      const after = t.slice(name.length)
+      const nextChar = after.charAt(0)
+
+      // Speaker label ("Name:")
+      if (nextChar === ':') return false
+
+      // Direct address ("Name,")
+      if (nextChar === ',') return false
+
+      // Possessive narration: "Name's ..." / "Name’s ..."
+      if (nextChar === '\'' || nextChar === '’') {
+        const poss = after.slice(0, 2)
+        if (poss === "'s" || poss === '’s') return true
+      }
+
+      // Strong narration clue: "Name ..., her/his/ ..." early in the sentence.
+      if (nextChar && /\s/.test(nextChar)) {
+        const rest = after.trimStart().slice(0, 80).toLowerCase()
+        if (rest.includes(', her ') || rest.includes(', his ')) {
+          return true
+        }
+      }
+
+      return false
+    }
+
+    return false
+  }
+
   for (const action of actions) {
     if (!action.text || typeof action.text !== 'string') {
       newActions.push(action)
       continue
     }
 
-    // Check if the text contains dialogue
+    // Check if the text contains dialogue.
+    // Supports straight quotes ("...") and curly quotes (open “ ... close ”).
+    // Curly quotes are asymmetric, so we match them as a pair explicitly.
     const text = action.text
-    const quotes = '[""“”]'
-    const dialogueRegex = new RegExp('(' + quotes + ')([^' + quotes + ']*)\\1', 'g')
-    
+    const dialogueRegex = /("[\s\S]*?"|“[\s\S]*?”)/g
+
     if (!dialogueRegex.test(text)) {
-      // No dialogue detected, keep original action
-      newActions.push(action)
+      // No quotes. If the model marked it as speaking, keep it UNLESS it looks like third-person narration.
+      if (action.speaking === true && looksLikeNarrationWithoutQuotes(text)) {
+        newActions.push({ ...action, speaking: false })
+      } else {
+        newActions.push(action)
+      }
       continue
     }
 
@@ -236,19 +292,30 @@ export const sanitizeActions = (actions: any[]): any[] => {
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]
       if (!part.text.trim()) continue
+
+      // Preserve all original fields by default, but avoid duplicating side-effect fields.
+      const base: any = { ...action }
+      if (i > 0) {
+        for (const key of Object.keys(base)) {
+          if (nonDuplicatedFields.has(key)) {
+            if (key === 'needs_search') base[key] = []
+            else delete base[key]
+          }
+        }
+      }
       
       if (part.isDialogue) {
         newActions.push({
+          ...base,
           text: part.text.trim(),
-          character: action.character,
-          animation: action.animation,
           speaking: true
         })
       } else {
+        // Keep the original character for narration (the narration is *about* that character).
+        // This prevents narration like from being treated/displayed as spoken dialogue.
         newActions.push({
+          ...base,
           text: part.text.trim(),
-          character: 'narrator',
-          animation: 'idle',
           speaking: false
         })
       }
@@ -265,8 +332,11 @@ export const sanitizeActions = (actions: any[]): any[] => {
     // Check if previous is narration, current is dialogue
     if (prev.speaking === false &&
         curr.speaking === true &&
-        prev.animation && prev.animation !== 'idle') {
-      // Copy the narration animation to the dialogue
+        prev.animation && prev.animation !== 'idle' &&
+        prev.character && curr.character &&
+        prev.character === curr.character &&
+        (!curr.animation || curr.animation === 'idle')) {
+      // Only carry over animation for the SAME character, and only when the dialogue didn't specify one.
       curr.animation = prev.animation
     }
   }
