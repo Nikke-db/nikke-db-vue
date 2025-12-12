@@ -1589,31 +1589,43 @@ const searchForCharactersViaWikiFetch = async (characterNames: string[]): Promis
       { role: 'user', content: summarizePrompt }
     ]
     
-    try {
-      // Call OpenRouter WITHOUT web search - we already have the content
-      const result = await callOpenRouter(messages, false)
-      
-      let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-      const start = jsonStr.indexOf('{')
-      const end = jsonStr.lastIndexOf('}')
-      if (start !== -1 && end !== -1) {
-        jsonStr = jsonStr.substring(start, end + 1)
-      }
-      
-      const profiles = JSON.parse(jsonStr)
-      
-      // Add character IDs
-      for (const charName of Object.keys(profiles)) {
-        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-        if (char) {
-          profiles[charName].id = char.id
+    let attempts = 0
+    const maxAttempts = 3
+    let success = false
+    
+    while (attempts < maxAttempts && !success) {
+      try {
+        // Call OpenRouter WITHOUT web search - we already have the content
+        const result = await callOpenRouter(messages, false)
+        
+        let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
+        const start = jsonStr.indexOf('{')
+        const end = jsonStr.lastIndexOf('}')
+        if (start !== -1 && end !== -1) {
+          jsonStr = jsonStr.substring(start, end + 1)
+        }
+        
+        const profiles = JSON.parse(jsonStr)
+        
+        // Add character IDs
+        for (const charName of Object.keys(profiles)) {
+          const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+          if (char) {
+            profiles[charName].id = char.id
+          }
+        }
+        
+        characterProfiles.value = { ...characterProfiles.value, ...profiles }
+        logDebug(`[searchForCharactersViaWikiFetch] Added profile for ${name}:`, profiles)
+        success = true
+      } catch (e) {
+        attempts++
+        if (attempts >= maxAttempts) {
+          console.error(`[searchForCharactersViaWikiFetch] Failed to process ${name} after ${maxAttempts} attempts:`, e)
+        } else {
+          console.warn(`[searchForCharactersViaWikiFetch] Attempt ${attempts} failed for ${name}, retrying...`)
         }
       }
-      
-      characterProfiles.value = { ...characterProfiles.value, ...profiles }
-      logDebug(`[searchForCharactersViaWikiFetch] Added profile for ${name}:`, profiles)
-    } catch (e) {
-      console.error(`[searchForCharactersViaWikiFetch] Failed to process ${name}:`, e)
     }
   }
 }
@@ -2235,6 +2247,10 @@ const processAIResponse = async (responseStr: string) => {
   }
 
   logDebug('Parsed Action Sequence:', data)
+
+  // Ensure narration/dialogue separation even when the model returns a single mixed text step.
+  data = sanitizeActions(data)
+  logDebug('Sanitized Action Sequence:', data)
 
   isGenerating.value = false
   loadingStatus.value = "..."
