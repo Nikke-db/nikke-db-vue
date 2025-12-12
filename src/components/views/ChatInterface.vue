@@ -41,12 +41,12 @@
       <n-input
       v-model:value="userInput"
       type="textarea"
-      :placeholder="apiKey ? 'Type your message...' : 'Please enter API Key in settings'"
-      :disabled="!apiKey"
+      :placeholder="(apiKey || apiProvider === 'pollinations') ? 'Type your message...' : 'Please enter API Key in settings'"
+      :disabled="!apiKey && apiProvider !== 'pollinations'"
       :autosize="{ minRows: 1, maxRows: 4 }"
       @keydown.enter.prevent="handleEnter"
       />
-      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || !apiKey">Send</n-button>
+      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations')">Send</n-button>
       <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
       <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
       <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
@@ -97,6 +97,9 @@
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Users are responsible for any possible cost using this functionality.
+          </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title="">
+            For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to unlock unlimited requests and premium models.
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
@@ -151,7 +154,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="allowWebSearchFallback" />
+            <n-switch v-model:value="allowWebSearchFallback" :disabled="!isWebSearchAllowed" />
           </n-form-item>
 
           <n-form-item>
@@ -428,6 +431,7 @@ const characterProfiles = ref<Record<string, any>>({})
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
+const pollinationsModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
@@ -446,7 +450,8 @@ const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some(prefix 
 const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
   { label: 'Gemini', value: 'gemini' },
-  { label: 'OpenRouter', value: 'openrouter' }
+  { label: 'OpenRouter', value: 'openrouter' },
+  { label: 'Pollinations', value: 'pollinations' }
 ]
 
 const ttsProviderOptions = [
@@ -467,6 +472,8 @@ const modelOptions = computed(() => {
     ]
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
+  } else if (apiProvider.value === 'pollinations') {
+    return pollinationsModels.value
   }
   return []
 })
@@ -488,6 +495,11 @@ const tokenUsageOptions = [
   { label: 'Goddess', value: 'goddess' }
 ]
 
+// Computed
+const isWebSearchAllowed = computed(() => {
+  return apiProvider.value !== 'pollinations' || model.value.includes('search')
+})
+
 // Watchers
 watch(apiKey, (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
@@ -499,6 +511,12 @@ watch(useLocalProfiles, (newVal) => {
 
 watch(allowWebSearchFallback, (newVal) => {
   localStorage.setItem('nikke_allow_web_search_fallback', String(newVal))
+})
+
+watch(isWebSearchAllowed, (newVal) => {
+  if (!newVal) {
+    allowWebSearchFallback.value = false
+  }
 })
 
 watch(mode, (newVal) => {
@@ -561,6 +579,12 @@ watch(apiProvider, async (newVal) => {
     if (openRouterModels.value.length > 0) {
       model.value = openRouterModels.value[0].value
     }
+  } else if (apiProvider.value === 'pollinations') {
+    model.value = ''
+    await fetchPollinationsModels()
+    if (pollinationsModels.value.length > 0) {
+      model.value = pollinationsModels.value[0].value
+    }
   }
 })
 
@@ -588,6 +612,57 @@ const fetchOpenRouterModels = async () => {
     
   } catch (error) {
     console.error('Failed to fetch OpenRouter models:', error)
+  }
+}
+
+const fetchPollinationsModels = async () => {
+  let models: any[] = []
+  try {
+    const headers: Record<string, string> = {}
+    if (apiKey.value) {
+      headers['Authorization'] = `Bearer ${apiKey.value}`
+    }
+    const url = apiKey.value ? 'https://gen.pollinations.ai/text/models' : 'https://text.pollinations.ai/models'
+    const response = await fetch(url, { headers })
+    const data = await response.json()
+    models = data
+    
+    // Handle both old format (array of strings) and new format (array of objects)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
+      models = data.map(name => ({ name, pricing: { input_token_price: 0 } }))
+    }
+    
+    pollinationsModels.value = models.map((m: any) => {
+      const isFree = m.pricing && m.pricing.input_token_price === 0
+
+      return {
+        label: (isFree ? '[FREE] ' : '') + m.name,
+        value: m.name,
+        isFree: isFree,
+        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+      }
+    }).sort((a: any, b: any) => {
+      if (a.isFree && !b.isFree) return -1
+      if (!a.isFree && b.isFree) return 1
+
+      return a.label.localeCompare(b.label)
+    })
+    
+  } catch (error) {
+    console.error('Failed to fetch Pollinations models:', error)
+    // Fallback to hardcoded models
+    models = [
+      { name: 'openai', pricing: { input_token_price: 0 } },
+      { name: 'mistral', pricing: { input_token_price: 0 } },
+      { name: 'searchgpt', pricing: { input_token_price: 0 } }
+    ]
+    
+    pollinationsModels.value = models.map((m: any) => ({
+      label: '[FREE] ' + m.name,
+      value: m.name,
+      isFree: true,
+      style: { color: '#18a058', fontWeight: 'bold' }
+    }))
   }
 }
 
@@ -646,6 +721,8 @@ const initializeSettings = async () => {
     
     if (savedProvider === 'openrouter') {
       await fetchOpenRouterModels()
+    } else if (savedProvider === 'pollinations') {
+      await fetchPollinationsModels()
     }
     
     // Validate and set model
@@ -657,6 +734,8 @@ const initializeSettings = async () => {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
     } else if (savedProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
+    } else if (savedProvider === 'pollinations') {
+      validModels = pollinationsModels.value.map((m) => m.value)
     }
     
     if (savedModel && validModels.includes(savedModel)) {
@@ -1286,6 +1365,18 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     messages = injectHonorificsReminder(messages)
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, enableWebSearch)
+  } else if (apiProvider.value === 'pollinations') {
+    // Pollinations: Use standard OpenAI format with context in system prompt
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    
+    let messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    // Inject honorifics reminder for first turn (not saved to history)
+    messages = injectHonorificsReminder(messages)
+    logDebug('Sending to Pollinations:', messages)
+    response = await callPollinations(messages, enableWebSearch)
   } else {
     throw new Error('Unknown API provider')
   }
@@ -1446,6 +1537,12 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
   } catch (e) {
     // If parsing fails, no search request
   }
+  
+  // For Pollinations, only allow search if model contains 'search'
+  if (apiProvider.value === 'pollinations' && !model.value.includes('search')) {
+    return null
+  }
+  
   return null
 }
 
@@ -2116,6 +2213,41 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
   return textPart.text
 }
 
+const callPollinations = async (messages: any[], enableWebSearch: boolean = false) => {
+  const requestBody: any = {
+    model: model.value,
+    messages: messages,
+    temperature: 0.7,
+    max_tokens: 1000
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (apiKey.value) {
+    headers['Authorization'] = `Bearer ${apiKey.value}`
+  }
+
+  const url = apiKey.value ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Pollinations API Error Details:', errorData)
+    if (response.status === 429) {
+      throw new Error('RATE_LIMITED')
+    }
+    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+  const data = await response.json()
+  return data.choices[0].message.content
+}
+
 const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   logDebug('Enriching actions with animations...')
   
@@ -2154,6 +2286,8 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
         response = await callGemini(messages, false)
       } else if (apiProvider.value === 'openrouter') {
         response = await callOpenRouter(messages, false)
+      } else if (apiProvider.value === 'pollinations') {
+        response = await callPollinations(messages, false)
       } else {
         return actions
       }
@@ -2809,6 +2943,8 @@ const summarizeChunk = async (messages: { role: string, content: string }[]) => 
       summary = await callGemini(msgs, false)
     } else if (apiProvider.value === 'openrouter') {
       summary = await callOpenRouter(msgs, false)
+    } else if (apiProvider.value === 'pollinations') {
+      summary = await callPollinations(msgs, false)
     }
     
     if (summary) {
