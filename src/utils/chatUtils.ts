@@ -102,12 +102,16 @@ export const parseAIResponse = (responseStr: string): any[] => {
         try {
           return JSON.parse(cleaned)
         } catch (e3) {
-          // If still failing, try removing the characterProgression object entirely (it's optional)
-          cleaned = cleaned.replace(/"characterProgression"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
+          // If still failing, try removing legacy/hallucinated characterProfile blocks (often huge / malformed)
+          cleaned = cleaned
+            .replace(/"characterProfile"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
+            .replace(/"characterProfiles"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
           try {
             return JSON.parse(cleaned)
           } catch (e4) {
-            throw e // Throw original error
+            // Last resort: remove characterProgression (it's optional)
+            cleaned = cleaned.replace(/"characterProgression"\s*:\s*\{[^}]*(\{[^}]*\}[^}]*)*\}\s*,?/g, '')
+            return JSON.parse(cleaned)
           }
         }
       }
@@ -193,6 +197,8 @@ export const sanitizeActions = (actions: any[]): any[] => {
     'needs_search',
     'memory',
     'characterProgression',
+    'characterProfile',
+    'characterProfiles',
     'debug_info'
   ])
 
