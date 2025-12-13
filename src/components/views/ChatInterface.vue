@@ -402,6 +402,7 @@ import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
 import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
+import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 
 // Helper to get honorific with fallback to "Commander"
 const getHonorific = (characterName: string): string => {
@@ -445,10 +446,46 @@ const showRetry = ref(false)
 const lastPrompt = ref('')
 const storySummary = ref('')
 const lastSummarizedIndex = ref(0)
+const summarizationRetryPending = ref(false)
+const summarizationAttemptCount = ref(0)
+const summarizationLastError = ref<string | null>(null)
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
+const characterProgression = ref<Record<string, any>>({})
+
+// Effective profiles = base profiles + progression overlays (personality + relationships only)
+const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
+  const base = characterProfiles.value || {}
+  const progression = characterProgression.value || {}
+  const merged: Record<string, any> = {}
+
+  const progressionKeys = Object.keys(progression)
+
+  for (const [name, profile] of Object.entries(base)) {
+    const outProfile = profile && typeof profile === 'object' && !Array.isArray(profile) ? { ...(profile as any) } : profile
+    const progKey = progressionKeys.find((k) => k.toLowerCase() === name.toLowerCase())
+    const update = progKey ? (progression as any)[progKey] : undefined
+
+    if (outProfile && typeof outProfile === 'object' && !Array.isArray(outProfile) && update && typeof update === 'object') {
+      if ((update as any).personality) {
+        ;(outProfile as any).personality = (update as any).personality
+      }
+
+      if ((update as any).relationships && typeof (update as any).relationships === 'object') {
+        ;(outProfile as any).relationships = {
+          ...((outProfile as any).relationships || {}),
+          ...((update as any).relationships || {})
+        }
+      }
+    }
+
+    merged[name] = outProfile
+  }
+
+  return merged
+})
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
@@ -819,6 +856,7 @@ const saveSession = () => {
   const sessionData = {
     chatHistory: chatHistory.value,
     characterProfiles: characterProfiles.value,
+    characterProgression: characterProgression.value,
     storySummary: storySummary.value,
     lastSummarizedIndex: lastSummarizedIndex.value,
     mode: mode.value,
@@ -874,6 +912,9 @@ const handleFileUpload = (event: Event) => {
         }
         if (data.characterProfiles) {
           characterProfiles.value = data.characterProfiles
+        }
+        if (data.characterProgression) {
+          characterProgression.value = data.characterProgression
         }
         if (data.storySummary) {
           storySummary.value = data.storySummary
@@ -1299,21 +1340,34 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
 
   if (tokenUsage.value !== 'goddess') {
+    const endIndex = chatHistory.value.length - 1
+
     let userMsgCount = 0
     // Count user messages in the unsummarized portion, excluding the current pending prompt
-    for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
+    for (let i = lastSummarizedIndex.value; i < endIndex; i++) {
       if (chatHistory.value[i].role === 'user') {
         userMsgCount++
       }
     }
 
-    if (userMsgCount >= historyLimit) {
-      const endIndex = chatHistory.value.length - 1
+    const shouldRetryFailedSummarization = summarizationRetryPending.value && endIndex > lastSummarizedIndex.value
+    const shouldSummarizeByLimit = userMsgCount >= historyLimit
+
+    // If summarization previously failed, retry on next user prompt/retry.
+    if (shouldRetryFailedSummarization || shouldSummarizeByLimit) {
       const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
       logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
-      await summarizeChunk(chunkToSummarize)
+      const ok = await summarizeChunk(chunkToSummarize)
       setRandomLoadingMessage()
-      lastSummarizedIndex.value = endIndex
+
+      if (ok) {
+        lastSummarizedIndex.value = endIndex
+        summarizationRetryPending.value = false
+        summarizationAttemptCount.value = 0
+      } else {
+        summarizationRetryPending.value = true
+        summarizationAttemptCount.value++
+      }
     }
   }
 
@@ -1500,21 +1554,34 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
 
   if (tokenUsage.value !== 'goddess') {
+    const endIndex = chatHistory.value.length - 1
+
     let userMsgCount = 0
     // Count user messages in the unsummarized portion, excluding the current pending prompt
-    for (let i = lastSummarizedIndex.value; i < chatHistory.value.length - 1; i++) {
+    for (let i = lastSummarizedIndex.value; i < endIndex; i++) {
       if (chatHistory.value[i].role === 'user') {
         userMsgCount++
       }
     }
 
-    if (userMsgCount >= historyLimit) {
-      const endIndex = chatHistory.value.length - 1
+    const shouldRetryFailedSummarization = summarizationRetryPending.value && endIndex > lastSummarizedIndex.value
+    const shouldSummarizeByLimit = userMsgCount >= historyLimit
+
+    // If summarization previously failed, retry on next user prompt/retry.
+    if (shouldRetryFailedSummarization || shouldSummarizeByLimit) {
       const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
       logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
-      await summarizeChunk(chunkToSummarize)
+      const ok = await summarizeChunk(chunkToSummarize)
       setRandomLoadingMessage()
-      lastSummarizedIndex.value = endIndex
+
+      if (ok) {
+        lastSummarizedIndex.value = endIndex
+        summarizationRetryPending.value = false
+        summarizationAttemptCount.value = 0
+      } else {
+        summarizationRetryPending.value = true
+        summarizationAttemptCount.value++
+      }
     }
   }
 
@@ -1935,7 +2002,7 @@ const searchForCharactersPerplexity = async (characterNames: string[]): Promise<
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
-  const knownCharacterNames = Object.keys(characterProfiles.value)
+  const knownCharacterNames = Object.keys(effectiveCharacterProfiles.value)
   
   // Build a minimal character ID lookup for characters mentioned in profiles or current character
   // This prevents massive token usage from including all 200+ characters
@@ -1985,7 +2052,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   ${prompts.systemPrompt.jsonStructure}
   
   ${prompts.systemPrompt.knownProfiles}
-  ${knownCharacterNames.length > 0 ? JSON.stringify(characterProfiles.value, null, 2) : '(None yet - this is the first turn, use web search to gather information)'}
+  ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : '(None yet - this is the first turn, use web search to gather information)'}
   
   ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : 'No characters loaded yet. Use the character NAME and the system will resolve it.'}
@@ -2741,15 +2808,50 @@ const executeAction = async (data: any) => {
     logDebug('[AI Debug Info]:', data.debug_info)
   }
 
+  // Compatibility Fix: Map legacy/hallucinated 'characterProfile' or 'characterProfiles' to 'memory'
+  // This ensures they are treated as NEW character definitions and IGNORED if the character already exists.
+  if (data.characterProfile || data.characterProfiles) {
+    const legacyData = data.characterProfile || data.characterProfiles
+    logDebug('[AI Compatibility] Remapping characterProfile/s to memory (Read-Only for existing):', legacyData)
+    
+    if (!data.memory) {
+      data.memory = legacyData
+    } else {
+      data.memory = { ...data.memory, ...legacyData }
+    }
+  }
+
+  // Normalize legacy/misused profile updates (e.g., DeepSeek using characterProfile/memory) so they
+  // cannot overwrite existing profiles and instead become characterProgression updates.
+  data = normalizeAiActionCharacterData(data, characterProfiles.value)
+
   if (data.memory) {
     logDebug('[AI Memory Update - New Characters Only]:', data.memory)
     const newProfiles: Record<string, any> = {}
     
     for (const [charName, profile] of Object.entries(data.memory)) {
-      // Skip if character already exists in profiles
-      if (characterProfiles.value[charName]) {
-        logDebug(`[AI Memory] Skipping existing character '${charName}' in memory block. Use characterProgression to update.`)
+      // 1. Check if already in active profiles (Case-Insensitive)
+      const existingKey = Object.keys(characterProfiles.value).find(k => k.toLowerCase() === charName.toLowerCase())
+      
+      if (existingKey) {
+        logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
         continue
+      }
+
+      // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
+      if (useLocalProfiles.value) {
+         const localKey = Object.keys(localCharacterProfiles).find(k => k.toLowerCase() === charName.toLowerCase())
+         if (localKey) {
+             logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${localKey}'). IGNORING AI memory and loading local profile instead.`)
+             
+             const localProfile = (localCharacterProfiles as any)[localKey]
+             // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
+             newProfiles[charName] = {
+                 ...localProfile,
+                 id: localProfile.id || l2d.find(c => c.name.toLowerCase() === charName.toLowerCase())?.id
+             }
+             continue
+         }
       }
 
       if (typeof profile === 'object' && profile !== null) {
@@ -2779,44 +2881,45 @@ const executeAction = async (data: any) => {
   // Handle 'characterProgression' - For EXISTING characters (Personality/Relationships ONLY)
   if (data.characterProgression) {
     logDebug('[AI Character Progression]:', data.characterProgression)
-    const updatedProfiles = { ...characterProfiles.value }
+    const updatedProgression = { ...characterProgression.value }
     let hasUpdates = false
 
     for (const [charName, progression] of Object.entries(data.characterProgression)) {
-      if (updatedProfiles[charName] && typeof progression === 'object' && progression !== null) {
-        const currentProfile = updatedProfiles[charName]
+      // Find target profile (Case-Insensitive) in BASE profiles.
+      const targetKey = Object.keys(characterProfiles.value).find(k => k.toLowerCase() === charName.toLowerCase())
+      const resolvedKey = targetKey || charName
+
+      if (typeof progression === 'object' && progression !== null) {
         const updates = progression as any
-        
-        // 1. Update Personality if provided
+        const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object'
+          ? (updatedProgression as any)[resolvedKey]
+          : {}
+
         if (updates.personality) {
-          currentProfile.personality = updates.personality
+          current.personality = updates.personality
           hasUpdates = true
         }
 
-        // 2. Update Relationships if provided
         if (updates.relationships && typeof updates.relationships === 'object') {
-          // Filter Commander out
-          const { Commander, commander, ...otherRelationships } = updates.relationships
-          const validRelationships = Object.keys(otherRelationships).length > 0 ? otherRelationships : {}
-          
-          currentProfile.relationships = {
-            ...(currentProfile.relationships || {}),
-            ...validRelationships
+          // NOTE: We allow "Commander" here as a dynamic relationship/attitude field.
+          current.relationships = {
+            ...(current.relationships || {}),
+            ...(updates.relationships || {})
           }
           hasUpdates = true
         }
 
         // CRITICAL: Explicitly IGNORE speech_style updates
         if (updates.speech_style) {
-          logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${charName}'`)
+          logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${resolvedKey}'`)
         }
-        
-        updatedProfiles[charName] = currentProfile
+
+        ;(updatedProgression as any)[resolvedKey] = current
       }
     }
 
     if (hasUpdates) {
-      characterProfiles.value = updatedProfiles
+      characterProgression.value = updatedProgression
     }
   }
 
@@ -3040,15 +3143,19 @@ const resetSession = () => {
   if (confirmed) {
     chatHistory.value = []
     characterProfiles.value = {}
+    characterProgression.value = {}
     storySummary.value = ''
     lastSummarizedIndex.value = 0
+    summarizationRetryPending.value = false
+    summarizationAttemptCount.value = 0
+    summarizationLastError.value = null
     lastPrompt.value = ''
     market.live2d.isVisible = false
   }
 }
 
-const summarizeChunk = async (messages: { role: string, content: string }[]) => {
-  if (messages.length === 0) return
+const summarizeChunk = async (messages: { role: string, content: string }[]): Promise<boolean> => {
+  if (messages.length === 0) return true
 
   loadingStatus.value = 'Summarizing story so far...'
   const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
@@ -3070,15 +3177,21 @@ const summarizeChunk = async (messages: { role: string, content: string }[]) => 
       summary = await callPollinations(msgs, false)
     }
     
-    if (summary) {
+    if (summary && summary.trim().length > 0) {
       if (storySummary.value) {
         storySummary.value += '\n\n' + summary
       } else {
         storySummary.value = summary
       }
+      summarizationLastError.value = null
+      return true
     }
+    summarizationLastError.value = 'Summarization returned empty output.'
+    return false
   } catch (e) {
     console.error('Failed to summarize chunk:', e)
+    summarizationLastError.value = e instanceof Error ? e.message : String(e)
+    return false
   }
 }
 </script>

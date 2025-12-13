@@ -122,7 +122,7 @@
     }
   },
   "Chime": {
-    "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Her absolute priority is Crown, whom she views as a treasure worth dying for.",
+    "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Irascible, especially when teased for her small height or when Crown is disrespected. Her absolute priority is Crown, whom she views as a treasure worth dying for.",
     "speech_style": "Chime's speech has undergone a significant change. Initially, she spoke in a regal but modern manner. Her speech pattern was later altered to an archaic, Old English style, similar to characters like Scarlet and Crown. This includes the use of words like 'thou', 'dost', 'thee', 'art', 'hath', 'verily', and 'nay'. Her tone can shift from calm and thoughtful to angry and huffy, particularly when feeling protective of Crown.",
     "relationships": {
       "Crown": "Chime is Crown's fiercely loyal royal aide. She refers to her as 'her highness' or 'the King'. She is completely devoted to Crown, considering her the most precious treasure and her number one priority. The entire kingdom was established because Chime wished for a king.",
