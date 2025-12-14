@@ -1,8 +1,12 @@
 // src/utils/chatUtils.ts
 import l2d from '@/utils/json/l2d.json'
 
-// Helper to identify speaker labels
-const isSpeakerLabel = (s: string) => /^\s*(?:\*\*)?[^*]+?(?:\*\*)?\s*:\s*$/.test(s)
+// Helper to identify speaker labels.
+// Supports plain "Name:" and bolded "**Name:**" (colon inside the bold).
+const isSpeakerLabel = (s: string) => {
+  const normalized = (s || '').replace(/\u00A0/g, ' ').trim()
+  return /^\s*(?:\*\*)?\s*[^*:\n]+?\s*:\s*(?:\*\*)?\s*$/.test(normalized)
+}
 
 // Helper to check if a word appears as a whole word in text (case-insensitive)
 export const isWholeWordPresent = (text: string, word: string): boolean => {
@@ -277,13 +281,18 @@ export const sanitizeActions = (actions: any[]): any[] => {
     while ((match = dialogueRegex.exec(text)) !== null) {
       // Add any narration before this dialogue
       const narrationBefore = text.substring(lastIndex, match.index).trim()
-      if (narrationBefore) {
+      // If this chunk is ONLY a speaker label (e.g. "**Chime:**"), merge it into the dialogue.
+      // This prevents creating a separate narration action for the label.
+      const isLabelOnly = !!narrationBefore && isSpeakerLabel(narrationBefore)
+
+      if (narrationBefore && !isLabelOnly) {
         parts.push({ text: narrationBefore, isDialogue: false })
       }
-      
+
       // Add the dialogue (with quotes)
       const dialogue = match[0] // Full match including quotes
-      parts.push({ text: dialogue, isDialogue: true })
+      const mergedDialogue = isLabelOnly ? `${narrationBefore} ${dialogue}`.trim() : dialogue
+      parts.push({ text: mergedDialogue, isDialogue: true })
       
       lastIndex = match.index + match[0].length
     }
