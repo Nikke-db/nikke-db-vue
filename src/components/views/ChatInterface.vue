@@ -97,7 +97,9 @@
             Active Reminders
           </div>
           <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
-          <n-checkbox v-model:checked="honorificsToggle">Honorifics Reminder</n-checkbox>
+          <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
+          <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
+          <n-checkbox v-if="mode === 'roleplay'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
         </div>
       </n-popover>
     </div>
@@ -106,6 +108,8 @@
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
       <n-form>
+          <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
+          <n-divider />
           <n-form-item label="API Provider">
             <n-select v-model:value="apiProvider" :options="providerOptions" />
           </n-form-item>
@@ -116,11 +120,11 @@
           <n-alert type="info" style="margin-bottom: 12px" title="">
             Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB.
           </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title="">
+            For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to increase rates and available models.
+          </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Users are responsible for any possible cost using this functionality.
-          </n-alert>
-          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title="">
-            For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to unlock unlimited requests and premium models.
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
@@ -141,60 +145,10 @@
           <n-form-item label="Model">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
+          <n-divider />
 
-          <n-form-item>
-            <template #label>
-              Use Nikke-DB Knowledge <span style="font-size: smaller;">(Recommended)</span>
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br><br>
-                  Faster and saves API costs.
-                </div>
-              </n-popover>
-            </template>
-            <n-switch v-model:value="useLocalProfiles" />
-          </n-form-item>
-
-          <n-form-item v-if="useLocalProfiles">
-            <template #label>
-              Allow Web Search Fallback <span style="font-size: smaller;">(Recommended)</span>
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  If a character is not found in the local profiles, allow the model to search the web. Note that this may incur extra costs, depending on your API provider and model.<br><br>
-                  If disabled, the model will rely on its internal knowledge for unknown characters and may degrade the experience.
-                </div>
-              </n-popover>
-            </template>
-            <n-switch v-model:value="allowWebSearchFallback" :disabled="!isWebSearchAllowed" />
-          </n-form-item>
-
-          <n-form-item>
-            <template #label>
-              Mode
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br><br>
-                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.
-                </div>
-              </n-popover>
-            </template>
-            <n-select v-model:value="mode" :options="modeOptions" />
-          </n-form-item>
+          <h4 class="settings-section-header accent-green">AI Settings</h4>
+          <n-divider />
           <n-form-item>
             <template #label>
               Tokens Usage
@@ -234,7 +188,85 @@
             </template>
             <n-switch v-model:value="enableContextCaching" />
           </n-form-item>
+          <n-divider />
 
+          <h4 class="settings-section-header accent-light-blue">Knowledge & Search</h4>
+          <n-divider />
+          <n-form-item>
+            <template #label>
+              Use Nikke-DB Knowledge <span style="font-size: smaller;">(Recommended)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br><br>
+                  Faster and saves API costs.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="useLocalProfiles" />
+          </n-form-item>
+
+          <n-form-item v-if="useLocalProfiles">
+            <template #label>
+              Allow Web Search Fallback <span style="font-size: smaller;">(Recommended)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div v-html="webSearchFallbackHelpText"></div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="allowWebSearchFallback" :disabled="usesWikiFetch || usesPollinationsAutoFallback" />
+          </n-form-item>
+          <n-divider />
+
+          <h4 class="settings-section-header accent-orange">Story Mode & Features</h4>
+          <n-divider />
+          <n-form-item>
+            <template #label>
+              Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br><br>
+                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="mode" :options="modeOptions" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
+              God Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Prevents any action in the story from causing the Commander's death.<br><br>
+                  Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="godModeEnabled" />
+          </n-form-item>
+          <n-divider />
+
+          <h4 class="settings-section-header accent-red">Interface & Audio</h4>
+          <n-divider />
           <n-form-item>
             <template #label>
               Playback
@@ -318,6 +350,7 @@
             </template>
             <n-input v-model:value="gptSovitsBasePath" placeholder="C:/GPT-SoVITS" />
           </n-form-item>
+          <n-divider />
         </n-form>
       </n-drawer-content>
     </n-drawer>
@@ -436,6 +469,7 @@ const ttsProvider = ref<'alltalk' | 'gptsovits'>('alltalk')
 const gptSovitsEndpoint = ref('http://localhost:9880')
 const gptSovitsBasePath = ref('C:/GPT-SoVITS')
 const gptSovitsPromptTextCache = new Map<string, string>()
+const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
 const userInput = ref('')
 const isLoading = ref(false)
 const isGenerating = ref(false)
@@ -500,6 +534,8 @@ const isDev = import.meta.env.DEV
 const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
 const honorificsToggle = ref(false)
+const aiControllingUserToggle = ref(false)
+const narrationAndDialogueNotSplitToggle = ref(false)
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -509,6 +545,9 @@ const setRandomLoadingMessage = () => {
 // Models/providers that have native web search in OpenRouter
 const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
 const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some((prefix) => modelId.startsWith(prefix))
+
+// Pollinations models that have native search (should not use auto fallback)
+const POLLINATIONS_NATIVE_SEARCH_MODELS = ['gemini-search', 'perplexity-fast', 'perplexity-reasoning']
 
 // Options
 const providerOptions = [
@@ -539,6 +578,7 @@ const modelOptions = computed(() => {
   } else if (apiProvider.value === 'pollinations') {
     return pollinationsModels.value
   }
+
   return []
 })
 
@@ -560,8 +600,22 @@ const tokenUsageOptions = [
 ]
 
 // Computed
-const isWebSearchAllowed = computed(() => {
-  return apiProvider.value !== 'pollinations' || model.value.includes('search')
+const isWebSearchAllowed = computed(() => true)
+
+const usesWikiFetch = computed(() => apiProvider.value === 'openrouter' && !hasNativeSearch(model.value))
+
+const usesPollinationsAutoFallback = computed(() => {
+  if (apiProvider.value !== 'pollinations') return false
+  // These models should NOT have auto-enabled fallback
+  return !POLLINATIONS_NATIVE_SEARCH_MODELS.includes(model.value)
+})
+
+const webSearchFallbackHelpText = computed(() => {
+  if (usesWikiFetch.value || usesPollinationsAutoFallback.value) {
+    return 'If a character is not found in the local profiles, allow the model to search the web.<br><br>Web search fallback is free for models without native search thanks to Cloudflare Workers, and is therefore always enabled with your current selection.'
+  } else {
+    return 'If a character is not found in the local profiles, allow the model to search the web. Note that this may incur extra costs, depending on your API provider and model.<br><br>If disabled, the model will rely on its internal knowledge for unknown characters and may degrade the experience.'
+  }
 })
 
 // Watchers
@@ -577,9 +631,15 @@ watch(allowWebSearchFallback, (newVal) => {
   localStorage.setItem('nikke_allow_web_search_fallback', String(newVal))
 })
 
-watch(isWebSearchAllowed, (newVal) => {
-  if (!newVal) {
-    allowWebSearchFallback.value = false
+watch(usesWikiFetch, (newVal) => {
+  if (newVal) {
+    allowWebSearchFallback.value = true
+  }
+})
+
+watch(usesPollinationsAutoFallback, (newVal) => {
+  if (newVal) {
+    allowWebSearchFallback.value = true
   }
 })
 
@@ -617,6 +677,10 @@ watch(gptSovitsEndpoint, (newVal) => {
 
 watch(gptSovitsBasePath, (newVal) => {
   localStorage.setItem('nikke_gptsovits_basepath', newVal)
+})
+
+watch(godModeEnabled, (newVal) => {
+  localStorage.setItem('nikke_god_mode_enabled', String(newVal))
 })
 
 watch(model, (newVal) => {
@@ -696,21 +760,30 @@ const fetchPollinationsModels = async () => {
       models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
     }
     
-    pollinationsModels.value = models.map((m: any) => {
-      const isFree = m.pricing && m.pricing.input_token_price === 0
+    pollinationsModels.value = models
+      .filter((m: any) => {
+        // Hide certain models when using API key
+        if (apiKey.value) {
+          const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
+          return !hiddenModels.includes(m.name)
+        }
+        return true
+      })
+      .map((m: any) => {
+        const isFree = m.pricing && m.pricing.input_token_price === 0
 
-      return {
-        label: (isFree ? '[FREE] ' : '') + m.name,
-        value: m.name,
-        isFree: isFree,
-        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-      }
-    }).sort((a: any, b: any) => {
-      if (a.isFree && !b.isFree) return -1
-      if (!a.isFree && b.isFree) return 1
+        return {
+          label: (isFree ? '[FREE] ' : '') + m.name,
+          value: m.name,
+          isFree: isFree,
+          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+        }
+      }).sort((a: any, b: any) => {
+        if (a.isFree && !b.isFree) return -1
+        if (!a.isFree && b.isFree) return 1
 
-      return a.label.localeCompare(b.label)
-    })
+        return a.label.localeCompare(b.label)
+      })
     
   } catch (error) {
     console.error('Failed to fetch Pollinations models:', error)
@@ -1115,6 +1188,8 @@ const sendMessage = async () => {
   if (success) {
     invalidJsonToggle.value = false
     honorificsToggle.value = false
+    narrationAndDialogueNotSplitToggle.value = false
+    aiControllingUserToggle.value = false
   }
 
   isLoading.value = false
@@ -1171,6 +1246,8 @@ const retryLastMessage = async () => {
   if (success) {
     invalidJsonToggle.value = false
     honorificsToggle.value = false
+    narrationAndDialogueNotSplitToggle.value = false
+    aiControllingUserToggle.value = false
   }
 
   isLoading.value = false
@@ -1261,6 +1338,13 @@ const continueStory = async () => {
     }
   }
 
+  if (success) {
+    invalidJsonToggle.value = false
+    honorificsToggle.value = false
+    narrationAndDialogueNotSplitToggle.value = false
+    aiControllingUserToggle.value = false
+  }
+
   isLoading.value = false
   scrollToBottom()
 }
@@ -1274,6 +1358,12 @@ const injectUserReminders = (messages: any[]): any[] => {
   if (honorificsToggle.value) {
     reminders += '\n\n' + prompts.reminders.honorificsReminder
   }
+  if (narrationAndDialogueNotSplitToggle.value) {
+    reminders += '\n\n' + prompts.reminders.narrationAndDialogueNotSplit
+  }
+  if (aiControllingUserToggle.value) {
+    reminders += '\n\n' + prompts.reminders.aiControllingUserReminder
+  }
   
   if (!reminders) return messages
 
@@ -1285,6 +1375,7 @@ const injectUserReminders = (messages: any[]): any[] => {
       break
     }
   }
+
   return result
 }
 
@@ -1415,6 +1506,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
         break
       }
     }
+
     return result
   }
 
@@ -1638,6 +1730,14 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     ]
     const messagesWithReminders = injectUserReminders(messages)
     return await callOpenRouter(messagesWithReminders, false)
+  } else if (apiProvider.value === 'pollinations') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callPollinations(messagesWithReminders, false)
   }
   
   throw new Error('Unknown API provider')
@@ -1669,7 +1769,9 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
         const validatedChars = action.needs_search.filter(
           (name: string) => {
             // Skip if already known or is "Commander"
-            if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+            if (characterProfiles.value[name] || name.toLowerCase() === 'commander') {
+              return false
+            }
 
             // Character must appear as whole word in either user prompt or AI response
             const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
@@ -1688,11 +1790,11 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
     // If parsing fails, no search request
   }
   
-  // For Pollinations, only allow search if model contains 'search'
-  if (apiProvider.value === 'pollinations' && !model.value.includes('search')) {
+  // For Pollinations, only allow search if web search fallback is enabled
+  if (apiProvider.value === 'pollinations' && !allowWebSearchFallback.value) {
     return null
   }
-  
+
   return null
 }
 
@@ -1774,6 +1876,18 @@ const searchForCharacters = async (characterNames: string[]): Promise<void> => {
     }
     return
   }
+  
+  // For Pollinations, check if model has native search
+  if (apiProvider.value === 'pollinations') {
+    if (POLLINATIONS_NATIVE_SEARCH_MODELS.includes(model.value)) {
+      // Use native web search for these models
+      await searchForCharactersWithNativeSearch(charsToSearch)
+    } else {
+      // For models without native search, fetch wiki pages directly
+      await searchForCharactersViaWikiFetch(charsToSearch)
+    }
+    return
+  }
 }
 
 // Fetch wiki page content directly and have the model summarize it
@@ -1842,8 +1956,18 @@ const searchForCharactersViaWikiFetch = async (characterNames: string[]): Promis
     
     while (attempts < maxAttempts && !success) {
       try {
-        // Call OpenRouter WITHOUT web search - we already have the content
-        const result = await callOpenRouter(messages, false)
+        let result: string
+        
+        if (apiProvider.value === 'gemini') {
+          result = await callGemini(messages, false)
+        } else if (apiProvider.value === 'openrouter') {
+          result = await callOpenRouter(messages, false)
+        } else if (apiProvider.value === 'pollinations') {
+          result = await callPollinations(messages, false)
+        } else {
+          // Fallback to OpenRouter for other providers
+          result = await callOpenRouter(messages, false)
+        }
         
         let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
         const start = jsonStr.indexOf('{')
@@ -1908,8 +2032,12 @@ const searchForCharactersWithNativeSearch = async (characterNames: string[]): Pr
         
         if (apiProvider.value === 'gemini') {
           result = await callGemini(messages, true)
-        } else {
+        } else if (apiProvider.value === 'openrouter') {
           result = await callOpenRouter(messages, true)
+        } else if (apiProvider.value === 'pollinations') {
+          result = await callPollinations(messages, true)
+        } else {
+          throw new Error(`Unsupported provider for native search: ${apiProvider.value}`)
         }
         
         let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
@@ -2052,13 +2180,15 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   ${prompts.systemPrompt.jsonStructure}
   
   ${prompts.systemPrompt.knownProfiles}
-  ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : '(None yet - this is the first turn, use web search to gather information)'}
+  ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : prompts.systemPrompt.noProfilesMessage}
   
   ${prompts.systemPrompt.idReference}
-  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : 'No characters loaded yet. Use the character NAME and the system will resolve it.'}
+  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
   
   ${prompts.systemPrompt.instructions}
+  ${godModeEnabled.value ? prompts.systemPrompt.godMode : ''}
   `
+
   return prompt
 }
 
@@ -2266,6 +2396,7 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
+
   return data.choices[0].message.content
 }
 
@@ -2311,6 +2442,7 @@ const callPerplexity = async (messages: any[], enableWebSearch: boolean = false,
     throw new Error(`Perplexity API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
+
   return data.choices[0].message.content
 }
 
@@ -2435,6 +2567,7 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
+
   return data.choices[0].message.content
 }
 
@@ -2448,23 +2581,11 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
     a !== 'action'
   )
   
-  const prompt = `
-  I have a sequence of story actions. I need you to assign the most appropriate animation/emotion to each action based on the text.
-  
-  Available Animations for Current Character (${market.live2d.current_id}): ${JSON.stringify(filteredAnimations)}
-  
-  Use this mapping guide to choose the correct intensity (e.g. 'angry_02' vs 'angry_03'):
-  ${JSON.stringify(animationMappings, null, 2)}
-  
-  IMPORTANT: If the text is in ALL CAPS (e.g. "STOP IT!"), you MUST assign a high-intensity 'angry' or 'surprise' animation (e.g. 'angry_02', 'shock').
-  For other characters, use generic emotion names (e.g., happy, angry, sad, surprise, idle).
-  
-  Actions:
-  ${JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character })), null, 2)}
-  
-  Return ONLY a JSON array of strings representing the animation name for each action in order.
-  Example: ["idle", "angry_02", "happy"]
-  `
+  const prompt = prompts.animationEnrichment
+    .replace('{currentCharacterId}', market.live2d.current_id)
+    .replace('{filteredAnimations}', JSON.stringify(filteredAnimations))
+    .replace('{animationMappings}', JSON.stringify(animationMappings, null, 2))
+    .replace('{actions}', JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character, speaking: Boolean(a.speaking) })), null, 2))
   
   const messages = [{ role: 'user', content: prompt }]
   
@@ -3402,4 +3523,28 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 .fade-leave-to {
   opacity: 0;
 }
+
+/* Settings section headers */
+.settings-section-header {
+  margin: 16px 0 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent, #1565c0);
+  border-left: 4px solid var(--accent, #1565c0);
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
+}
+
+.accent-blue { --accent: #1565c0; }
+.accent-green { --accent: #2e7d32; }
+.accent-purple { --accent: #6a1b9a; }
+.accent-light-blue { --accent: #00eeff; }
+.accent-orange { --accent: #ef6c00; }
+.accent-red { --accent: #c62828; }
 </style>
