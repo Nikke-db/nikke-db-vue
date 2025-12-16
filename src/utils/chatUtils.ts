@@ -75,12 +75,28 @@ export const parseAIResponse = (responseStr: string): any[] => {
 
   // Try to repair common JSON errors
   const tryParseJSON = (str: string): any => {
+    const trimmed = (str || '').trim()
+
+    // Heuristic: If we got a truncated JSON array, try to salvage by cutting at the last complete object.
+    // This specifically helps when the model output is cut mid-string near the end of the response.
+    if (trimmed.startsWith('[') && trimmed.lastIndexOf(']') === -1) {
+      const lastObjEnd = trimmed.lastIndexOf('}')
+      if (lastObjEnd !== -1) {
+        const candidate = (trimmed.slice(0, lastObjEnd + 1).replace(/,\s*$/, '') + ']').trim()
+        try {
+          return JSON.parse(candidate)
+        } catch {
+          // Fall through to the normal repair logic
+        }
+      }
+    }
+
     // First attempt: parse as-is
     try {
-      return JSON.parse(str)
+      return JSON.parse(trimmed)
     } catch (e) {
       // Repair attempt: fix unbalanced braces/brackets
-      let repaired = str
+      let repaired = trimmed
       
       // Count braces and brackets
       const openBraces = (repaired.match(/{/g) || []).length

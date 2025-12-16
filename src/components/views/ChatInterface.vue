@@ -219,10 +219,10 @@
                     <Help />
                   </n-icon>
                 </template>
-                <div v-html="webSearchFallbackHelpText"></div>
+                <div v-html="computedWebSearchFallbackHelpText"></div>
               </n-popover>
             </template>
-            <n-switch v-model:value="allowWebSearchFallback" :disabled="usesWikiFetch || usesPollinationsAutoFallback" />
+            <n-switch v-model:value="allowWebSearchFallback" :disabled="computedUsesWikiFetch || computedUsesPollinationsAutoFallback" />
           </n-form-item>
           <n-divider />
 
@@ -436,6 +436,9 @@ import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
 import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
+import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
+import { allowWebSearchFallback, NATIVE_SEARCH_PREFIXES, POLLINATIONS_NATIVE_SEARCH_MODELS, hasNativeSearch, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
+import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization } from '@/utils/llmUtils'
 
 // Helper to get honorific with fallback to "Commander"
 const getHonorific = (characterName: string): string => {
@@ -443,6 +446,37 @@ const getHonorific = (characterName: string): string => {
 }
 
 const market = useMarket()
+
+// Helper to get the response schema for structured output
+const getResponseSchema = () => ({
+  type: 'json_schema',
+  json_schema: {
+    name: 'StoryResponse',
+    schema: {
+      type: 'object',
+      properties: {
+        actions: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              needs_search: { type: 'array', items: { type: 'string' } },
+              memory: { type: 'object' },
+              characterProgression: { type: 'object' },
+              text: { type: 'string' },
+              character: { type: 'string' },
+              animation: { type: 'string' },
+              speaking: { type: 'boolean' },
+              duration: { type: 'number' }
+            },
+            required: ['text', 'character', 'speaking', 'animation']
+          }
+        }
+      },
+      required: ['actions']
+    }
+  }
+})
 
 // Helper for debug logging
 const logDebug = (...args: any[]) => {
@@ -455,7 +489,6 @@ const logDebug = (...args: any[]) => {
 const showSettings = ref(false)
 const showGuide = ref(false)
 const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') === 'true')
-const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') === 'true')
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
@@ -463,12 +496,6 @@ const mode = ref('roleplay')
 const tokenUsage = ref('medium')
 const enableContextCaching = ref(true)
 const playbackMode = ref('auto')
-const ttsEnabled = ref(false)
-const ttsEndpoint = ref('http://localhost:7851')
-const ttsProvider = ref<'alltalk' | 'gptsovits'>('alltalk')
-const gptSovitsEndpoint = ref('http://localhost:9880')
-const gptSovitsBasePath = ref('C:/GPT-SoVITS')
-const gptSovitsPromptTextCache = new Map<string, string>()
 const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
 const userInput = ref('')
 const isLoading = ref(false)
@@ -543,11 +570,6 @@ const setRandomLoadingMessage = () => {
 }
 
 // Models/providers that have native web search in OpenRouter
-const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
-const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some((prefix) => modelId.startsWith(prefix))
-
-// Pollinations models that have native search (should not use auto fallback)
-const POLLINATIONS_NATIVE_SEARCH_MODELS = ['gemini-search', 'perplexity-fast', 'perplexity-reasoning']
 
 // Options
 const providerOptions = [
@@ -555,11 +577,6 @@ const providerOptions = [
   { label: 'Gemini', value: 'gemini' },
   { label: 'OpenRouter', value: 'openrouter' },
   { label: 'Pollinations', value: 'pollinations' }
-]
-
-const ttsProviderOptions = [
-  { label: 'AllTalk (XTTSv2)', value: 'alltalk' },
-  { label: 'GPT-SoVits', value: 'gptsovits' }
 ]
 
 const modelOptions = computed(() => {
@@ -602,21 +619,11 @@ const tokenUsageOptions = [
 // Computed
 const isWebSearchAllowed = computed(() => true)
 
-const usesWikiFetch = computed(() => apiProvider.value === 'openrouter' && !hasNativeSearch(model.value))
+const computedUsesWikiFetch = computed(() => usesWikiFetch(apiProvider.value, model.value))
 
-const usesPollinationsAutoFallback = computed(() => {
-  if (apiProvider.value !== 'pollinations') return false
-  // These models should NOT have auto-enabled fallback
-  return !POLLINATIONS_NATIVE_SEARCH_MODELS.includes(model.value)
-})
+const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAutoFallback(apiProvider.value, model.value))
 
-const webSearchFallbackHelpText = computed(() => {
-  if (usesWikiFetch.value || usesPollinationsAutoFallback.value) {
-    return 'If a character is not found in the local profiles, allow the model to search the web.<br><br>Web search fallback is free for models without native search thanks to Cloudflare Workers, and is therefore always enabled with your current selection.'
-  } else {
-    return 'If a character is not found in the local profiles, allow the model to search the web. Note that this may incur extra costs, depending on your API provider and model.<br><br>If disabled, the model will rely on its internal knowledge for unknown characters and may degrade the experience.'
-  }
-})
+const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
 
 // Watchers
 watch(apiKey, (newVal) => {
@@ -631,13 +638,13 @@ watch(allowWebSearchFallback, (newVal) => {
   localStorage.setItem('nikke_allow_web_search_fallback', String(newVal))
 })
 
-watch(usesWikiFetch, (newVal) => {
+watch(computedUsesWikiFetch, (newVal) => {
   if (newVal) {
     allowWebSearchFallback.value = true
   }
 })
 
-watch(usesPollinationsAutoFallback, (newVal) => {
+watch(computedUsesPollinationsAutoFallback, (newVal) => {
   if (newVal) {
     allowWebSearchFallback.value = true
   }
@@ -704,12 +711,14 @@ watch(apiProvider, async (newVal) => {
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
     await fetchOpenRouterModels()
+
     if (openRouterModels.value.length > 0) {
       model.value = openRouterModels.value[0].value
     }
   } else if (apiProvider.value === 'pollinations') {
     model.value = ''
     await fetchPollinationsModels()
+
     if (pollinationsModels.value.length > 0) {
       model.value = pollinationsModels.value[0].value
     }
@@ -745,8 +754,10 @@ const fetchOpenRouterModels = async () => {
 
 const fetchPollinationsModels = async () => {
   let models: any[] = []
+
   try {
     const headers: Record<string, string> = {}
+
     if (apiKey.value) {
       headers['Authorization'] = `Bearer ${apiKey.value}`
     }
@@ -805,6 +816,7 @@ const fetchPollinationsModels = async () => {
 
 const checkGuide = () => {
   const seen = localStorage.getItem('chat-guide-seen')
+
   if (!seen) {
     showGuide.value = true
   }
@@ -970,9 +982,11 @@ const triggerRestore = () => {
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
+
   if (target.files && target.files.length > 0) {
     const file = target.files[0]
     const reader = new FileReader()
+
     reader.onload = async (e) => {
       try {
         const content = e.target?.result as string
@@ -1059,6 +1073,7 @@ const handleFileUpload = (event: Event) => {
             
             // Validate and set model
             let validModels: string[] = []
+
             if (savedProvider === 'perplexity') {
               validModels = ['sonar', 'sonar-pro']
             } else if (savedProvider === 'gemini') {
@@ -1141,6 +1156,7 @@ const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
   let text = userInput.value
+
   userInput.value = ''
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
@@ -1159,6 +1175,7 @@ const sendMessage = async () => {
     attempts++
     try {
       const response = await callAI(attempts > 1)
+
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -1166,6 +1183,7 @@ const sendMessage = async () => {
     } catch (error: any) {
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+
         continue
       }
 
@@ -1181,6 +1199,7 @@ const sendMessage = async () => {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
+
       break
     }
   }
@@ -1217,6 +1236,7 @@ const retryLastMessage = async () => {
     attempts++
     try {
       const response = await callAI(attempts > 1)
+
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -1224,6 +1244,7 @@ const retryLastMessage = async () => {
     } catch (error: any) {
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+
         continue
       }
 
@@ -1239,6 +1260,7 @@ const retryLastMessage = async () => {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
+
       break
     }
   }
@@ -1321,6 +1343,7 @@ const continueStory = async () => {
     } catch (error: any) {
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+
         continue
       }
 
@@ -1334,6 +1357,7 @@ const continueStory = async () => {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
+
       break
     }
   }
@@ -1352,6 +1376,7 @@ const continueStory = async () => {
 // Helper to inject user-toggled reminders into the last user message
 const injectUserReminders = (messages: any[]): any[] => {
   let reminders = ''
+
   if (invalidJsonToggle.value) {
     reminders += '\n\n' + prompts.reminders.invalidJsonReminder
   }
@@ -1372,6 +1397,7 @@ const injectUserReminders = (messages: any[]): any[] => {
   for (let i = result.length - 1; i >= 0; i--) {
     if (result[i].role === 'user') {
       result[i] = { ...result[i], content: result[i].content + reminders }
+
       break
     }
   }
@@ -1398,7 +1424,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     
     if (foundNames.length > 0) {
       logDebug('[callAI] Pre-loading local profiles for:', foundNames)
-      await searchForCharacters(foundNames)
+      await wrappedSearchForCharacters(foundNames)
     }
   }
   
@@ -1425,6 +1451,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Tumbling window: Summarize every X turns
   
   let historyLimit = 30
+
   if (tokenUsage.value === 'low') historyLimit = 10
   else if (tokenUsage.value === 'medium') historyLimit = 30
   else if (tokenUsage.value === 'high') historyLimit = 60
@@ -1467,6 +1494,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   let historyToSend = chatHistory.value
+
   if (tokenUsage.value !== 'goddess') {
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
@@ -1478,11 +1506,13 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     
     // Get relevant honorifics from the characterHonorifics JSON
     const knownNames = Object.keys(characterProfiles.value)
+
     if (knownNames.length === 0) return ''
     
     const honorificExamples: string[] = []
     for (const name of knownNames) {
       const honorific = (characterHonorifics as Record<string, string>)[name]
+
       if (honorific && honorific !== 'Commander') {
         honorificExamples.push(`${name} calls the Commander "${honorific}"`)
       }
@@ -1496,6 +1526,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Helper to inject honorifics reminder into the last user message (first turn only)
   const injectHonorificsReminder = (messages: any[]): any[] => {
     const reminder = buildHonorificsReminder()
+
     if (!reminder) return messages
     
     // Find the last user message and append the reminder
@@ -1503,6 +1534,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     for (let i = result.length - 1; i >= 0; i--) {
       if (result[i].role === 'user') {
         result[i] = { ...result[i], content: result[i].content + reminder }
+
         break
       }
     }
@@ -1605,11 +1637,13 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   // Check if the model needs to search for new characters
   const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
+
   if (searchRequest && searchRequest.length > 0) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
-    await searchForCharacters(searchRequest)
+    await wrappedSearchForCharacters(searchRequest)
     setRandomLoadingMessage()
+
     // Re-call the AI with updated character profiles (search disabled this time)
     return await callAIWithoutSearch(isRetry)
   }
@@ -1745,49 +1779,41 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
 // Check if the AI response contains a search request for unknown characters
 const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
+  const validateNames = (names: string[], textForValidation: string): string[] => {
+    const unique = Array.from(new Set(names.map((n) => (typeof n === 'string' ? n.trim() : '')).filter(Boolean)))
+    return unique.filter((name) => {
+      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
+      const inGeneratedText = textForValidation && isWholeWordPresent(textForValidation, name)
+      return !!(inUserPrompt || inGeneratedText)
+    })
+  }
+
+  // Preferred path: shared robust parser
   try {
-    let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
-    const start = jsonStr.indexOf('[')
-    const end = jsonStr.lastIndexOf(']')
-    
-    // Try array format first
-    if (start !== -1 && end !== -1) {
-      jsonStr = jsonStr.substring(start, end + 1)
-    }
-    
-    let data = JSON.parse(jsonStr)
-    if (!Array.isArray(data)) {
-      data = [data]
-    }
-    
-    // Look for needs_search field in any action
-    for (const action of data) {
-      if (action.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
-        // Validate characters using whole-word matching against user prompt and AI text
-        const allGeneratedText = data.map((a: any) => a.text || '').join(' ')
-        
-        const validatedChars = action.needs_search.filter(
-          (name: string) => {
-            // Skip if already known or is "Commander"
-            if (characterProfiles.value[name] || name.toLowerCase() === 'commander') {
-              return false
-            }
+    const actions = parseAIResponse(response)
+    const allGeneratedText = actions.map((a: any) => a?.text || '').join(' ')
 
-            // Character must appear as whole word in either user prompt or AI response
-            const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
-            const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
-
-            return inUserPrompt || inGeneratedText
-          }
-        )
-        
-        if (validatedChars.length > 0) {
-          return validatedChars
-        }
+    for (const action of actions) {
+      if (action?.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
+        const validated = validateNames(action.needs_search, allGeneratedText)
+        if (validated.length > 0) return validated
       }
     }
-  } catch (e) {
-    // If parsing fails, no search request
+  } catch {
+    // Fall back to regex extraction
+  }
+
+  // Fallback: extract needs_search even when JSON is truncated/malformed
+  try {
+    const m = response.match(/"needs_search"\s*:\s*\[([\s\S]*?)\]/)
+    if (m && m[1]) {
+      const names = Array.from(m[1].matchAll(/"([^\"]+)"/g)).map((x) => x[1])
+      const validated = validateNames(names, response)
+      if (validated.length > 0) return validated
+    }
+  } catch {
+    // Ignore
   }
   
   // For Pollinations, only allow search if web search fallback is enabled
@@ -1798,335 +1824,38 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
   return null
 }
 
-// Search for character information using web search
-const searchForCharacters = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharacters] Searching for:', characterNames)
-  
-  if (useLocalProfiles.value) {
-    loadingStatus.value = 'Searching for characters in the database...'
-  } else {
-    loadingStatus.value = 'Searching the web for characters...'
-  }
-  
-  let charsToSearch = [...characterNames]
-
-  // Check local profiles first if enabled
-  if (useLocalProfiles.value) {
-    const remainingChars: string[] = []
-    
-    for (const name of charsToSearch) {
-      // Case-insensitive lookup in local profiles
-      const localKey = Object.keys(localCharacterProfiles).find(
-        (k) => k.toLowerCase() === name.toLowerCase()
-      )
-      
-      if (localKey) {
-        const profile = (localCharacterProfiles as any)[localKey]
-        // Use the name requested by the AI as the key, but the data from the local profile
-        characterProfiles.value[name] = {
-          ...profile,
-          // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
-          id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
-        }
-        logDebug(`[searchForCharacters] Found local profile for ${name}`)
-      } else {
-        remainingChars.push(name)
-      }
-    }
-    
-    charsToSearch = remainingChars
-  }
-
-  if (charsToSearch.length === 0) {
-    logDebug('[searchForCharacters] All characters found locally.')
-    setRandomLoadingMessage()
-    return
-  }
-
-  // If fallback is disabled, stop here
-  if (useLocalProfiles.value && !allowWebSearchFallback.value) {
-    logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
-    setRandomLoadingMessage()
-    return
-  }
-
-  loadingStatus.value = 'Searching the web for characters...'
-
-  // For Perplexity, search each character individually for better results
-  if (apiProvider.value === 'perplexity') {
-    await searchForCharactersPerplexity(charsToSearch)
-    return
-  }
-  
-  // For Gemini, use native search
-  if (apiProvider.value === 'gemini') {
-    await searchForCharactersWithNativeSearch(charsToSearch)
-    return
-  }
-  
-  // For OpenRouter, check if model has native search
-  if (apiProvider.value === 'openrouter') {
-    if (hasNativeSearch(model.value)) {
-      // Use native web search for OpenAI, Anthropic, Perplexity, xAI models
-      await searchForCharactersWithNativeSearch(charsToSearch)
-    } else {
-      // For models without native search (e.g., Claude via OpenRouter, DeepSeek, etc.)
-      // Fetch wiki pages directly and have the model summarize
-      await searchForCharactersViaWikiFetch(charsToSearch)
-    }
-    return
-  }
-  
-  // For Pollinations, check if model has native search
-  if (apiProvider.value === 'pollinations') {
-    if (POLLINATIONS_NATIVE_SEARCH_MODELS.includes(model.value)) {
-      // Use native web search for these models
-      await searchForCharactersWithNativeSearch(charsToSearch)
-    } else {
-      // For models without native search, fetch wiki pages directly
-      await searchForCharactersViaWikiFetch(charsToSearch)
-    }
-    return
-  }
-}
-
 // Fetch wiki page content directly and have the model summarize it
 // Used for OpenRouter models that don't have native web search.
 // We are using a Cloudflare Worker proxy to avoid CORS issues.
-// Its code is open-sourced and available in the 
-const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
+// Its code is open-sourced and available in the
 
-const fetchWikiContent = async (characterName: string): Promise<string | null> => {
-  const wikiName = characterName.replace(/ /g, '_')
-  
-  try {
-    // Fetch the Story page via our Cloudflare Worker proxy
-    // The worker fetches only Description, Personality, and Backstory sections
-    const response = await fetch(`${WIKI_PROXY_URL}?page=${encodeURIComponent(wikiName + '/Story')}`)
-    const data = await response.json()
-    
-    // Check for errors
-    if (data.error) {
-      console.warn(`[fetchWikiContent] Wiki page not found for ${characterName}:`, data.error)
-      return null
-    }
-    
-    // Extract wikitext from parse response
-    const wikitext = data.parse?.wikitext?.['*']
-    if (!wikitext) {
-      console.warn(`[fetchWikiContent] No content found for ${characterName}`)
-      return null
-    }
-    
-    return wikitext
-  } catch (e) {
-    console.error(`[fetchWikiContent] Error fetching wiki for ${characterName}:`, e)
-    return null
-  }
+// Wrapper functions for web search
+const wrappedSearchForCharactersPerplexity = async (characterNames: string[]) => {
+  return searchForCharactersPerplexity(characterNames, characterProfiles.value, callPerplexity)
 }
 
-// Search for characters by fetching wiki pages directly (for models without native search)
-const searchForCharactersViaWikiFetch = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharactersViaWikiFetch] Fetching wiki pages for:', characterNames)
-  
-  for (const name of characterNames) {
-    if (characterProfiles.value[name]) continue
-    
-    const wikiContent = await fetchWikiContent(name)
-    if (!wikiContent) {
-      console.warn(`[searchForCharactersViaWikiFetch] No wiki content found for ${name}`)
-      continue
-    }
-    
-    const cleanedContent = cleanWikiContent(wikiContent)
-    logDebug(`[searchForCharactersViaWikiFetch] Fetched ${cleanedContent.length} chars for ${name}`)
-    
-    const summarizePrompt = prompts.search.wikiFetch
-      .replace(/{name}/g, name)
-      .replace('{content}', cleanedContent)
-
-    const messages = [
-      { role: 'system', content: 'You are a helpful assistant that extracts character information from wiki content and returns it in JSON format.' },
-      { role: 'user', content: summarizePrompt }
-    ]
-    
-    let attempts = 0
-    const maxAttempts = 3
-    let success = false
-    
-    while (attempts < maxAttempts && !success) {
-      try {
-        let result: string
-        
-        if (apiProvider.value === 'gemini') {
-          result = await callGemini(messages, false)
-        } else if (apiProvider.value === 'openrouter') {
-          result = await callOpenRouter(messages, false)
-        } else if (apiProvider.value === 'pollinations') {
-          result = await callPollinations(messages, false)
-        } else {
-          // Fallback to OpenRouter for other providers
-          result = await callOpenRouter(messages, false)
-        }
-        
-        let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-        const start = jsonStr.indexOf('{')
-        const end = jsonStr.lastIndexOf('}')
-        if (start !== -1 && end !== -1) {
-          jsonStr = jsonStr.substring(start, end + 1)
-        }
-        
-        const profiles = JSON.parse(jsonStr)
-        
-        // Add character IDs
-        for (const charName of Object.keys(profiles)) {
-          const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-          if (char) {
-            profiles[charName].id = char.id
-          }
-        }
-        
-        characterProfiles.value = { ...characterProfiles.value, ...profiles }
-        logDebug(`[searchForCharactersViaWikiFetch] Added profile for ${name}:`, profiles)
-        success = true
-      } catch (e) {
-        attempts++
-        if (attempts >= maxAttempts) {
-          console.error(`[searchForCharactersViaWikiFetch] Failed to process ${name} after ${maxAttempts} attempts:`, e)
-        } else {
-          console.warn(`[searchForCharactersViaWikiFetch] Attempt ${attempts} failed for ${name}, retrying...`)
-        }
-      }
-    }
-  }
+const wrappedSearchForCharactersWithNativeSearch = async (characterNames: string[]) => {
+  return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
 }
 
-// Search for characters using native web search (Gemini, OpenRouter with native search)
-const searchForCharactersWithNativeSearch = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharactersWithNativeSearch] Searching for:', characterNames)
-  
-  for (const name of characterNames) {
-    if (characterProfiles.value[name]) continue
-
-    const wikiName = name.replace(/ /g, '_')
-    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
-
-    const searchPrompt = prompts.search.native
-      .replace(/{name}/g, name)
-      .replace('{url}', storyUrl)
-
-    const messages = [
-      { role: 'system', content: 'You are a research assistant. Search for information about NIKKE: Goddess of Victory game characters and return what you find in JSON format.' },
-      { role: 'user', content: searchPrompt }
-    ]
-
-    let attempts = 0
-    const maxAttempts = 3
-   
-    let success = false
-
-    while (attempts < maxAttempts && !success) {
-      attempts++
-      try {
-        let result: string
-        
-        if (apiProvider.value === 'gemini') {
-          result = await callGemini(messages, true)
-        } else if (apiProvider.value === 'openrouter') {
-          result = await callOpenRouter(messages, true)
-        } else if (apiProvider.value === 'pollinations') {
-          result = await callPollinations(messages, true)
-        } else {
-          throw new Error(`Unsupported provider for native search: ${apiProvider.value}`)
-        }
-        
-        let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-        const start = jsonStr.indexOf('{')
-        const end = jsonStr.lastIndexOf('}')
-        if (start !== -1 && end !== -1) {
-          jsonStr = jsonStr.substring(start, end + 1)
-        }
-        
-        const profiles = JSON.parse(jsonStr)
-        
-        for (const charName of Object.keys(profiles)) {
-          const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-          if (char) {
-            profiles[charName].id = char.id
-          }
-        }
-        
-        characterProfiles.value = { ...characterProfiles.value, ...profiles }
-        logDebug(`[searchForCharactersWithNativeSearch] Added profile for ${name}:`, profiles)
-        success = true
-      } catch (e) {
-        console.error(`[searchForCharactersWithNativeSearch] Attempt ${attempts} failed for ${name}:`, e)
-        if (attempts < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-        } else {
-          console.error(`[searchForCharactersWithNativeSearch] All attempts failed for ${name}.`)
-        }
-      }
-    }
-  }
+const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) => {
+  return searchForCharactersViaWikiFetch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
 }
 
-// Perplexity-specific search: search each character individually for better results
-const searchForCharactersPerplexity = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharactersPerplexity] Searching individually for:', characterNames)
-  
-  for (const name of characterNames) {
-    // Skip if we already have this character's profile
-    if (characterProfiles.value[name]) {
-      logDebug(`[searchForCharactersPerplexity] Skipping ${name} - already have profile`)
-      continue
-    }
-    
-    // Build the direct wiki URL for this character's Story page
-    // Replace spaces with underscores for wiki URL format
-    const wikiName = name.replace(/ /g, '_')
-    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
-    
-    // Search prompt pointing directly to the Story page for personality info
-    const searchPrompt = prompts.search.perplexity
-      .replace(/{name}/g, name)
-      .replace('{url}', storyUrl)
-
-    const messages = [
-      { role: 'system', content: 'You are a factual research assistant. You MUST only return information that is explicitly written on the wiki page. Do NOT hallucinate, guess, or embellish. If information is not found, say "Unknown".' },
-      { role: 'user', content: searchPrompt }
-    ]
-
-    try {
-      const result = await callPerplexity(messages, true, storyUrl)
-      
-      let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-      const start = jsonStr.indexOf('{')
-      const end = jsonStr.lastIndexOf('}')
-      if (start !== -1 && end !== -1) {
-        jsonStr = jsonStr.substring(start, end + 1)
-      }
-      
-      const profile = JSON.parse(jsonStr)
-      
-      // Add character ID
-      for (const charName of Object.keys(profile)) {
-        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-        if (char) {
-          profile[charName].id = char.id
-        }
-      }
-      
-      characterProfiles.value = { ...characterProfiles.value, ...profile }
-
-      logDebug(`[searchForCharactersPerplexity] Added profile for ${name}:`, profile)
-    } catch (e) {
-      console.error(`[searchForCharactersPerplexity] Failed to search for ${name}:`, e)
-      // Continue with other characters
-    }
-  }
-  
-  logDebug('[searchForCharactersPerplexity] Final profiles:', characterProfiles.value)
+const wrappedSearchForCharacters = async (characterNames: string[]) => {
+  return searchForCharacters(
+    characterNames,
+    characterProfiles.value,
+    useLocalProfiles.value,
+    allowWebSearchFallback.value,
+    apiProvider.value,
+    model.value,
+    loadingStatus,
+    setRandomLoadingMessage,
+    wrappedSearchForCharactersPerplexity,
+    wrappedSearchForCharactersWithNativeSearch,
+    wrappedSearchForCharactersViaWikiFetch
+  )
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
@@ -2310,35 +2039,7 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
   }
   
   // Define Schema for Response Healing (following documentation example)
-  const responseSchema = {
-    type: 'json_schema',
-    json_schema: {
-      name: 'StoryResponse',
-      schema: {
-        type: 'object',
-        properties: {
-          actions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                needs_search: { type: 'array', items: { type: 'string' } },
-                memory: { type: 'object' },
-                characterProgression: { type: 'object' },
-                text: { type: 'string' },
-                character: { type: 'string' },
-                animation: { type: 'string' },
-                speaking: { type: 'boolean' },
-                duration: { type: 'number' }
-              },
-              required: ['text', 'character', 'speaking', 'animation']
-            }
-          }
-        },
-        required: ['actions']
-      }
-    }
-  }
+  const responseSchema = getResponseSchema()
   
   const requestBody: any = {
     model: model.value,
@@ -2516,19 +2217,24 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
   // Handle various response formats from Gemini
   if (!data.candidates || data.candidates.length === 0) {
     console.error('Gemini returned no candidates:', data)
+
     throw new Error('Gemini API Error: No candidates in response')
   }
   
   const candidate = data.candidates[0]
+
   if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
     console.error('Gemini returned empty content:', candidate)
+
     throw new Error('Gemini API Error: Empty content in response')
   }
   
   // Find the text part (there might be other parts like function calls when using tools)
   const textPart = candidate.content.parts.find((p: any) => p.text !== undefined)
+
   if (!textPart) {
     console.error('Gemini returned no text part:', candidate.content.parts)
+
     throw new Error('Gemini API Error: No text in response')
   }
   
@@ -2536,11 +2242,62 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
 }
 
 const callPollinations = async (messages: any[], enableWebSearch: boolean = false) => {
+  // Check if we already know this model doesn't support json_schema
+  if (modelsWithoutJsonSupport.has(model.value)) {
+    console.log(`Model ${model.value} known to not support json_schema, using text fallback...`)
+    return callPollinationsWithoutJson(messages, enableWebSearch)
+  }
+
   const requestBody: any = {
     model: model.value,
     messages: messages,
-    temperature: 0.7,
-    max_tokens: 1000
+    max_tokens: 8192,
+    response_format: getResponseSchema()
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (apiKey.value) {
+    headers['Authorization'] = `Bearer ${apiKey.value}`
+  }
+
+  const url = apiKey.value ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Pollinations API Error Details:', errorData)
+    
+    if (response.status === 429) {
+      throw new Error('RATE_LIMITED')
+    }
+    
+    // If error indicates json_schema not supported, remember and retry without
+    if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema'))) {
+      console.warn(`Model ${model.value} does not support json_schema response format, remembering and retrying without it...`)
+      modelsWithoutJsonSupport.add(model.value)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      return callPollinationsWithoutJson(messages, enableWebSearch)
+    }
+    
+    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+  const data = await response.json()
+
+  return data.choices[0].message.content
+}
+
+const callPollinationsWithoutJson = async (messages: any[], enableWebSearch: boolean = false) => {
+  const requestBody: any = {
+    model: model.value,
+    messages: messages,
+    max_tokens: 8192
   }
 
   const headers: Record<string, string> = {
@@ -2591,6 +2348,7 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   
   try {
     let response: string
+
     if (apiProvider.value === 'perplexity') {
       response = await callPerplexity(messages, false)
     } else if (apiProvider.value === 'gemini') {
@@ -2606,6 +2364,7 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
     let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
     const start = jsonStr.indexOf('[')
     const end = jsonStr.lastIndexOf(']')
+
     if (start !== -1 && end !== -1) {
       jsonStr = jsonStr.substring(start, end + 1)
       const animations = JSON.parse(jsonStr)
@@ -2638,6 +2397,7 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
       // Use animationMappings to find matching animation
       for (const [animationType, keywords] of Object.entries(animationMappings)) {
         const hasKeyword = keywords.some((keyword) => text.includes(keyword.toLowerCase()))
+
         if (hasKeyword) {
           // Find the best available animation matching this type
           const matchedAnim = availableAnimations.find((a: string) => a.includes(animationType))
@@ -2655,7 +2415,7 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   })
 }
 
-const processAIResponse = async (responseStr: string) => {
+const processAIResponse = async (responseStr: string, depth: number = 0) => {
   loadingStatus.value = 'Processing response...'
   logDebug('Raw AI Response:', responseStr)
   
@@ -2674,6 +2434,7 @@ const processAIResponse = async (responseStr: string) => {
     
     try {
       data = parseFallback(responseStr)
+
       if (data.length === 0) {
         throw new Error('Fallback parsing yielded no actions')
       }
@@ -2687,11 +2448,51 @@ const processAIResponse = async (responseStr: string) => {
       
     } catch (fallbackError) {
       console.error('Failed to parse JSON response and Fallback failed', e, fallbackError)
+
       throw new Error('JSON_PARSE_ERROR')
     }
   }
 
   logDebug('Parsed Action Sequence:', data)
+
+  // Fallback: handle needs_search directives here (in case the earlier callAI() detection
+  // missed them due to truncated/malformed JSON).
+  const collectValidatedNeedsSearch = (actions: any[], userPrompt: string = ''): string[] => {
+    const allGeneratedText = actions.map((a: any) => a?.text || '').join(' ')
+    const requested: string[] = []
+
+    for (const action of actions) {
+      if (!action?.needs_search || !Array.isArray(action.needs_search)) continue
+      for (const name of action.needs_search) {
+        if (typeof name !== 'string') continue
+        const trimmed = name.trim()
+        if (trimmed) requested.push(trimmed)
+      }
+    }
+
+    const unique = Array.from(new Set(requested))
+
+    return unique.filter((name) => {
+      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
+      const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
+      return !!(inUserPrompt || inGeneratedText)
+    })
+  }
+
+  const needsSearch = collectValidatedNeedsSearch(data, lastPrompt.value)
+  if (needsSearch.length > 0) {
+    if (depth >= 2) {
+      logDebug('[processAIResponse] needs_search detected but recursion limit reached:', needsSearch)
+    } else {
+      logDebug('[processAIResponse] Detected needs_search directive(s):', needsSearch)
+      await wrappedSearchForCharacters(needsSearch)
+      setRandomLoadingMessage()
+      const followUp = await callAIWithoutSearch(false)
+      await processAIResponse(followUp, depth + 1)
+      return
+    }
+  }
 
   // Ensure narration/dialogue separation even when the model returns a single mixed text step.
   data = sanitizeActions(data)
@@ -2716,205 +2517,6 @@ const getCharacterName = (id: string): string | null => {
   const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
 
   return char ? char.name : id
-}
-
-const playTTSGptSovits = async (text: string, characterName: string) => {
-  // Clean up character name to match folder/filename
-  // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer"
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
-  
-  logDebug(`[TTS-GPTSoVits] Requesting TTS for ${characterName} (${cleanName})`)
-
-  try {
-    let baseUrl = gptSovitsEndpoint.value
-    baseUrl = baseUrl.replace(/\/$/, '')
-    
-    // Handle CORS in dev mode by using Vite proxy
-    if (import.meta.env.DEV && (baseUrl.includes('localhost:9880') || baseUrl.includes('127.0.0.1:9880'))) {
-      baseUrl = '/gptsovits'
-    }
-
-    // Construct paths for reference audio and prompt text
-    // User must place files at: {basePath}/GPT_SoVITS/voices/{character}/{character}.wav
-    // And prompt text at: {basePath}/GPT_SoVITS/voices/{character}/{character}.txt
-    // Clean up the base path: remove trailing slashes/backslashes, normalize to forward slashes
-    const basePath = gptSovitsBasePath.value
-      .replace(/[\\/]+$/, '')  // Remove trailing slashes (both / and \)
-      .replace(/\\/g, '/')     // Convert backslashes to forward slashes
-    const refAudioPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.wav`
-    const promptTextPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.txt`
-
-    // Fetch prompt text from cache or API
-    let promptText = gptSovitsPromptTextCache.get(cleanName)
-    if (!promptText) {
-      try {
-        const promptResponse = await fetch(`${baseUrl}/read_prompt_text?path=${encodeURIComponent(promptTextPath)}`)
-        if (promptResponse.ok) {
-          const promptData = await promptResponse.json()
-          promptText = promptData.text || ''
-          if (promptText) {
-            gptSovitsPromptTextCache.set(cleanName, promptText)
-            logDebug(`[TTS-GPTSoVits] Loaded prompt text for ${cleanName}: "${promptText}"`)
-          }
-        } else {
-          console.warn(`[TTS-GPTSoVits] Could not fetch prompt text for ${cleanName}`)
-          promptText = ''
-        }
-      } catch (e) {
-        console.warn(`[TTS-GPTSoVits] Error fetching prompt text for ${cleanName}:`, e)
-        promptText = ''
-      }
-    }
-
-    // Call the TTS endpoint
-    const payload = {
-      text: text,
-      text_lang: 'en',
-      text_split_method: 'cut0',
-      ref_audio_path: refAudioPath,
-      prompt_text: promptText,
-      prompt_lang: 'en',
-      media_type: 'wav',
-      streaming_mode: false,
-      // Quality parameters
-      top_k: 10,
-      top_p: 0.8,
-      temperature: 0.8,
-      speed_factor: 1.0
-    }
-
-    logDebug(`[TTS-GPTSoVits] Calling ${baseUrl}/tts with payload:`, payload)
-
-    const response = await fetch(`${baseUrl}/tts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      console.warn(`[TTS-GPTSoVits] API Error: ${response.status} - ${errText}`)
-      return
-    }
-
-    // Response is audio blob
-    const audioBlob = await response.blob()
-    const audioUrl = URL.createObjectURL(audioBlob)
-    const audio = new Audio(audioUrl)
-    audio.volume = 1.0
-
-    // Sync yapping with audio
-    audio.onplay = () => {
-      market.live2d.isYapping = true
-    }
-    audio.onended = () => {
-      market.live2d.isYapping = false
-      URL.revokeObjectURL(audioUrl) // Clean up
-    }
-    audio.onerror = () => {
-      market.live2d.isYapping = false
-      URL.revokeObjectURL(audioUrl)
-    }
-
-    audio.play().catch((e) => {
-      console.warn('[TTS-GPTSoVits] Playback failed:', e)
-      market.live2d.isYapping = false
-      URL.revokeObjectURL(audioUrl)
-    })
-  } catch (e) {
-    console.warn('[TTS-GPTSoVits] Error:', e)
-  }
-}
-
-const playTTS = async (text: string, characterName: string) => {
-  if (!ttsEnabled.value || !characterName) return
-
-  // Dispatch to appropriate TTS provider
-  if (ttsProvider.value === 'gptsovits') {
-    return playTTSGptSovits(text, characterName)
-  }
-
-  // AllTalk implementation (default)
-  // Clean up character name to match filename
-  // Remove special chars, replace spaces with underscores
-  // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer.wav"
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
-  const voiceFile = `${cleanName}.wav`
-  
-  logDebug(`[TTS] Requesting TTS for ${characterName} (${voiceFile})`)
-
-  try {
-    let baseUrl = ttsEndpoint.value
-    // Clean up the base URL to ensure we have the root (remove /v1, /api, trailing slashes)
-    baseUrl = baseUrl.replace(/\/$/, '').replace(/\/v1$/, '').replace(/\/api$/, '')
-    
-    // Handle CORS in dev mode by using Vite proxy
-    // This requires the proxy to be configured in vite.config.ts
-    if (import.meta.env.DEV && (baseUrl.includes('localhost:7851') || baseUrl.includes('127.0.0.1:7851'))) {
-      baseUrl = '/alltalk'
-    }
-
-    // Use Standard API via proxy (better support for custom filenames)
-    const url = `${baseUrl}/api/tts-generate`
-    
-    logDebug(`[TTS] Calling URL: ${url}`)
-
-    const params = new URLSearchParams()
-    params.append('text_input', text)
-    params.append('character_voice_gen', voiceFile)
-    params.append('narrator_enabled', 'false')
-    params.append('text_not_inside', 'character')
-    params.append('language', 'en')
-    params.append('output_file_name', 'nikke_tts_gen')
-    params.append('output_file_timestamp', 'true')
-    params.append('autoplay', 'false')
-    params.append('autoplay_volume', '0.8')
-    params.append('text_filtering', 'standard')
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error(`[TTS] API Error: ${response.status} - ${errText}`)
-      return
-    }
-
-    const data = await response.json()
-    
-    if (data.status === 'generate-success' && data.output_file_url) {
-      // Construct audio URL using the same base (proxy or direct)
-      // data.output_file_url usually starts with /audio/
-      const audioUrl = `${baseUrl}${data.output_file_url}`
-      const audio = new Audio(audioUrl)
-      audio.volume = 1.0
-        
-      // Sync yapping with audio
-      audio.onplay = () => {
-        market.live2d.isYapping = true
-      }
-      audio.onended = () => {
-        market.live2d.isYapping = false
-      }
-      audio.onerror = () => {
-        market.live2d.isYapping = false
-      }
-        
-      audio.play().catch((e) => {
-        console.error('[TTS] Playback failed:', e)
-        market.live2d.isYapping = false
-      })
-    }
-  } catch (e) {
-    console.error('[TTS] Error:', e)
-  }
 }
 
 const executeAction = async (data: any) => {
@@ -3087,7 +2689,7 @@ const executeAction = async (data: any) => {
       if (name) {
         // Trigger TTS
         if (ttsEnabled.value) {
-          playTTS(data.text, name)
+          playTTS(data.text, name, market)
         }
 
         // Check if the text already starts with the name to avoid duplication
@@ -3178,6 +2780,7 @@ const executeAction = async (data: any) => {
     
   // Speaking
   let calculatedYapDuration = 0
+
   if (data.speaking && !ttsEnabled.value) {
     logDebug('Starting yap')
       
@@ -3192,6 +2795,7 @@ const executeAction = async (data: any) => {
     // Calculate yap duration based on text length
     // Approx 60ms per character + 300ms base (Slightly faster than reading speed for natural feel)
     let yapDuration = 3000
+
     if (data.text) {
       yapDuration = Math.max(1000, data.text.length * 60 + 300)
     } else if (data.duration) {
@@ -3233,6 +2837,7 @@ const executeAction = async (data: any) => {
     // Auto Mode
     // If text is long, ensure we wait long enough to read it
     let autoDuration = Math.max(duration, 2000)
+
     if (data.text) {
       // Reading speed approx 50ms per char + base
       const readDuration = data.text.length * 50 + 1500
@@ -3261,6 +2866,7 @@ const resetSession = () => {
   if (chatHistory.value.length === 0) return
   
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
+
   if (confirmed) {
     chatHistory.value = []
     characterProfiles.value = {}
@@ -3288,14 +2894,15 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 
   try {
     let summary = ''
+
     if (apiProvider.value === 'perplexity') {
       summary = await callPerplexity(msgs, false)
     } else if (apiProvider.value === 'gemini') {
-      summary = await callGemini(msgs, false)
+      summary = await callGeminiSummarization(msgs, apiKey.value, model.value)
     } else if (apiProvider.value === 'openrouter') {
-      summary = await callOpenRouter(msgs, false)
+      summary = await callOpenRouterSummarization(msgs, apiKey.value, model.value)
     } else if (apiProvider.value === 'pollinations') {
-      summary = await callPollinations(msgs, false)
+      summary = await callPollinationsSummarization(msgs, apiKey.value, model.value)
     }
     
     if (summary && summary.trim().length > 0) {
@@ -3305,13 +2912,16 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
         storySummary.value = summary
       }
       summarizationLastError.value = null
+
       return true
     }
     summarizationLastError.value = 'Summarization returned empty output.'
+
     return false
   } catch (e) {
     console.error('Failed to summarize chunk:', e)
     summarizationLastError.value = e instanceof Error ? e.message : String(e)
+
     return false
   }
 }
