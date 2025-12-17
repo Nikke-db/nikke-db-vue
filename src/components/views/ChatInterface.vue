@@ -410,10 +410,13 @@
         
         <h3>🔑 Getting Started</h3>
         <ul>
-          <li><strong>API Key Required:</strong> You need an API key to use this feature. Currently supported providers: <strong>Perplexity</strong>, <strong>Google Gemini</strong>, and <strong>OpenRouter</strong>.</li>
+          <li><strong>API Key:</strong> You need an API key to use this feature, except when using Pollinations. Currently supported providers: <strong>Perplexity</strong>, <strong>Google Gemini</strong>, <strong>OpenRouter</strong>, and <strong>Pollinations</strong>.</li>
+          <ul>
+          <li>When using Pollinations without an API key, only a small subset of models is shown. You will also likely be rate-limited. Adding or removing a Pollinations API key will immediately refresh the available model list.</li>
+          </ul>
           <li><strong>Setup:</strong> Click the <strong>Settings (Gear Icon)</strong> to enter your API key and select a model.</li>
           <li><strong>Privacy:</strong> Your API key is stored locally and sent only to the selected API provider. Stories and keys are never shared with Nikke-DB; check your provider's policy, as some may use data for training.</li>
-          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search (enabled by default for character accuracy) may incur additional costs. You can disable it in Settings by enabling "Use Nikke-DB Knowledge".</li>
+          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search for certain models/providers may incur additional costs. You can disable it in Settings.</li>
         </ul>
 
         <h3>🎭 Modes</h3>
@@ -441,14 +444,14 @@
               <li><strong>Manual:</strong> The story waits for you to click 'Next' or 'Continue'.</li>
             </ul>
           </li>
-          <li>If you don't like the last message, you can delete it by clicking the trash can icon on the left side of the message bubble. You can then write something different, or press <strong>Continue</strong>.</li>
+          <li>If you don't like the last message, you can delete it by clicking the trash can icon on the left side of the message bubble. You can then write something different, or press <strong>Continue</strong>. Alternatively, you can click on the <strong>Retry</strong> button in the upper right corner of the message.</li>
           <li>If you do not want to perform any action, simply press <strong>Continue</strong>.</li>
           <li>You can <strong>Save</strong> and <strong>Load</strong> your session at any time.</li>
         </ul>
 
         <h3>💡 Tips</h3>
         <ul>
-          <li>If you receive an error message, use the <strong>Retry</strong> button.</li>
+          <li>If the model is misbehaving, try using one of the options in the <strong>Problems?</strong> button.</li>
           <li>The quality of the session highly depends on the model that you have selected.</li>
           <li>Be patient. Some providers/models may take a while to respond to the first prompt in particular.</li>
           <li>Check your API usage regularly on your provider's dashboard, and set limits to prevent from overspending or being charged while using a free model.</li>
