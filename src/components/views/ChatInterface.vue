@@ -87,18 +87,19 @@
             :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
           >
             <template #icon>
-              <n-icon><Notification /></n-icon>
+              <n-icon><Help /></n-icon>
             </template>
-            AI Reminders
+            Problems?
           </n-button>
         </template>
         <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px; min-width: 150px;">
           <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px;">
-            Active Reminders
+            Inject one or more reminders to the model for the next turn:
           </div>
           <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
           <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
           <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
+          <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
           <n-checkbox v-if="mode === 'roleplay'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
         </div>
       </n-popover>
@@ -269,6 +270,23 @@
           <n-divider />
           <n-form-item>
             <template #label>
+              Asset Quality
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  <strong>High:</strong> Best visual quality, but uses more GPU resources and VRAM.<br><br>
+                  <strong>Low:</strong> Slightly worse quality and detail, but much better performance on low-end systems.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="assetQuality" :options="assetQualityOptions" />
+          </n-form-item>
+          <n-form-item>
+            <template #label>
               Playback
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
@@ -349,6 +367,29 @@
               </n-popover>
             </template>
             <n-input v-model:value="gptSovitsBasePath" placeholder="C:/GPT-SoVITS" />
+          </n-form-item>
+
+          <n-form-item label="Chatterbox Endpoint" v-if="ttsEnabled && ttsProvider === 'chatterbox'">
+            <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:7860" />
+          </n-form-item>
+
+          <n-form-item v-if="ttsEnabled && ttsProvider === 'chatterbox'">
+            <template #label>
+              Chatterbox Voices Path
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Path to your Chatterbox voices folder.<br>
+                  Voice files should be placed at: <code>{voicesPath}/{character}.wav</code><br>
+                  Example: <code>anis.wav</code>, <code>neon.wav</code>, etc.
+                </div>
+              </n-popover>
+            </template>
+            <n-input v-model:value="chatterboxVoicesPath" placeholder="C:/chatterbox-tts-api/voices" />
           </n-form-item>
           <n-divider />
         </n-form>
@@ -436,7 +477,7 @@ import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
 import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
-import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
+import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, NATIVE_SEARCH_PREFIXES, POLLINATIONS_NATIVE_SEARCH_MODELS, hasNativeSearch, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
 import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization } from '@/utils/llmUtils'
 
@@ -563,6 +604,7 @@ const invalidJsonToggle = ref(false)
 const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
+const wrongSpeechStylesToggle = ref(false)
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -609,6 +651,11 @@ const playbackOptions = [
   { label: 'Manual', value: 'manual' }
 ]
 
+const assetQualityOptions = [
+  { label: 'High', value: 'high' },
+  { label: 'Low', value: 'low' }
+]
+
 const tokenUsageOptions = [
   { label: 'Low (10 turns)', value: 'low' },
   { label: 'Medium (30 turns)', value: 'medium' },
@@ -625,9 +672,22 @@ const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAuto
 
 const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
 
+const assetQuality = computed({
+  get: () => market.live2d.HQassets ? 'high' : 'low',
+  set: (val: string) => {
+    market.live2d.HQassets = val === 'high'
+  }
+})
+
 // Watchers
-watch(apiKey, (newVal) => {
+watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
+  if (apiProvider.value === 'pollinations') {
+    await fetchPollinationsModels()
+    if (pollinationsModels.value.length > 0) {
+      model.value = pollinationsModels.value[0].value
+    }
+  }
 })
 
 watch(useLocalProfiles, (newVal) => {
@@ -686,6 +746,14 @@ watch(gptSovitsBasePath, (newVal) => {
   localStorage.setItem('nikke_gptsovits_basepath', newVal)
 })
 
+watch(chatterboxEndpoint, (newVal) => {
+  localStorage.setItem('nikke_chatterbox_endpoint', newVal)
+})
+
+watch(chatterboxVoicesPath, (newVal) => {
+  localStorage.setItem('nikke_chatterbox_voices_path', newVal)
+})
+
 watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
 })
@@ -696,6 +764,11 @@ watch(model, (newVal) => {
 
 watch(() => market.live2d.yapEnabled, (newVal) => {
   localStorage.setItem('nikke_yap_enabled', String(newVal))
+})
+
+watch(() => market.live2d.HQassets, (newVal) => {
+  localStorage.setItem('nikke_hq_assets', String(newVal))
+  market.live2d.triggerResetPlacement()
 })
 
 watch(apiProvider, async (newVal) => {
@@ -773,12 +846,13 @@ const fetchPollinationsModels = async () => {
     
     pollinationsModels.value = models
       .filter((m: any) => {
-        // Hide certain models when using API key
-        if (apiKey.value) {
+        if (!apiKey.value) {
+          const allowedModels = ['gemini', 'gemini-search', 'mistral']
+          return allowedModels.includes(m.name)
+        } else {
           const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
           return !hiddenModels.includes(m.name)
         }
-        return true
       })
       .map((m: any) => {
         const isFree = m.pricing && m.pricing.input_token_price === 0
@@ -800,9 +874,9 @@ const fetchPollinationsModels = async () => {
     console.error('Failed to fetch Pollinations models:', error)
     // Fallback to hardcoded models
     models = [
-      { name: 'openai', pricing: { input_token_price: 0 } },
-      { name: 'mistral', pricing: { input_token_price: 0 } },
-      { name: 'searchgpt', pricing: { input_token_price: 0 } }
+      { name: 'gemini', pricing: { input_token_price: 0 } },
+      { name: 'gemini-search', pricing: { input_token_price: 0 } },
+      { name: 'mistral', pricing: { input_token_price: 0 } }
     ]
     
     pollinationsModels.value = models.map((m: any) => ({
@@ -840,6 +914,9 @@ const initializeSettings = async () => {
   const savedYap = localStorage.getItem('nikke_yap_enabled')
   if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
 
+  const savedHQAssets = localStorage.getItem('nikke_hq_assets')
+  if (savedHQAssets !== null) market.live2d.HQassets = (savedHQAssets === 'true')
+
   const savedTts = localStorage.getItem('nikke_tts_enabled')
   if (savedTts !== null) ttsEnabled.value = (savedTts === 'true')
 
@@ -847,13 +924,19 @@ const initializeSettings = async () => {
   if (savedTtsEndpoint) ttsEndpoint.value = savedTtsEndpoint
 
   const savedTtsProvider = localStorage.getItem('nikke_tts_provider')
-  if (savedTtsProvider === 'alltalk' || savedTtsProvider === 'gptsovits') ttsProvider.value = savedTtsProvider
+  if (savedTtsProvider === 'alltalk' || savedTtsProvider === 'gptsovits' || savedTtsProvider === 'chatterbox') ttsProvider.value = savedTtsProvider
 
   const savedGptSovitsEndpoint = localStorage.getItem('nikke_gptsovits_endpoint')
   if (savedGptSovitsEndpoint) gptSovitsEndpoint.value = savedGptSovitsEndpoint
 
   const savedGptSovitsBasePath = localStorage.getItem('nikke_gptsovits_basepath')
   if (savedGptSovitsBasePath) gptSovitsBasePath.value = savedGptSovitsBasePath
+
+  const savedChatterboxEndpoint = localStorage.getItem('nikke_chatterbox_endpoint')
+  if (savedChatterboxEndpoint) chatterboxEndpoint.value = savedChatterboxEndpoint
+
+  const savedChatterboxVoicesPath = localStorage.getItem('nikke_chatterbox_voices_path')
+  if (savedChatterboxVoicesPath) chatterboxVoicesPath.value = savedChatterboxVoicesPath
 
   const savedTokenUsage = localStorage.getItem('nikke_token_usage')
   if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
@@ -1209,6 +1292,7 @@ const sendMessage = async () => {
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
+    wrongSpeechStylesToggle.value = false
   }
 
   isLoading.value = false
@@ -1270,6 +1354,7 @@ const retryLastMessage = async () => {
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
+    wrongSpeechStylesToggle.value = false
   }
 
   isLoading.value = false
@@ -1367,6 +1452,7 @@ const continueStory = async () => {
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
+    wrongSpeechStylesToggle.value = false
   }
 
   isLoading.value = false
@@ -1388,6 +1474,9 @@ const injectUserReminders = (messages: any[]): any[] => {
   }
   if (aiControllingUserToggle.value) {
     reminders += '\n\n' + prompts.reminders.aiControllingUserReminder
+  }
+  if (wrongSpeechStylesToggle.value) {
+    reminders += '\n\n' + prompts.reminders.wrongSpeechStylesReminder
   }
   
   if (!reminders) return messages

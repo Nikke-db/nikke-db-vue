@@ -41,7 +41,8 @@
     "honorificsReminder": "[CRITICAL INSTRUCTIONS: You have used honorifics wrong in your last message. Remember that honorifics should only be used towards the Commander ONLY. Pay attention to the table to understand who should use which honorific.]",
     "speechStyleReminder": "[CRITICAL INSTRUCTIONS: Your last message did not reflect the characters speech styles correctly. Please ensure that each character's dialogue matches their unique speech patterns, tone, and vocabulary as specified in their speech_style section of their profile.]",
     "aiControllingUserReminder": "[CRITICAL INSTRUCTIONS: In the last messages, you were controlling the Commander's actions or speaking in his place. In Roleplay Mode, the AI should NOT control what the Commander (the user) is doing in the story or speak in his place, unless it is something critical for the advancement of the plot (e.g. The Commander's squad is entering a building and the user does not react with any action to that).]",
-    "narrationAndDialogueNotSplit": "[CRITICAL INSTRUCTIONS: Your last message did not properly separate dialogue from narration. Remember to use separate actions in the JSON array.]"
+    "narrationAndDialogueNotSplit": "[CRITICAL INSTRUCTIONS: Your last message did not properly separate dialogue from narration. Remember to use separate actions in the JSON array.]",
+    "wrongSpeechStylesReminder": "[CRITICAL INSTRUCTIONS: You are confusing the characters' speech styles. Please ensure that each character is using its own, correct speech style according to each characterProfiles key.]"
   },
   "continue": {
     "story": "Continue the story with multiple dialogue exchanges and/or actions. Do not repeat previous events, dialogue or actions.",
