@@ -41,12 +41,12 @@
       <n-input
       v-model:value="userInput"
       type="textarea"
-      :placeholder="apiKey ? 'Type your message...' : 'Please enter API Key in settings'"
-      :disabled="!apiKey"
+      :placeholder="(apiKey || apiProvider === 'pollinations') ? 'Type your message...' : 'Please enter API Key in settings'"
+      :disabled="!apiKey && apiProvider !== 'pollinations'"
       :autosize="{ minRows: 1, maxRows: 4 }"
       @keydown.enter.prevent="handleEnter"
       />
-      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || !apiKey">Send</n-button>
+      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations')">Send</n-button>
       <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
       <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
       <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
@@ -79,12 +79,38 @@
         <template #icon><n-icon><Reset /></n-icon></template>
         Reset
       </n-button>
-      </div>
+      <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
+        <template #trigger>
+          <n-button 
+            type="info" 
+            size="small" 
+            :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
+          >
+            <template #icon>
+              <n-icon><Help /></n-icon>
+            </template>
+            Problems?
+          </n-button>
+        </template>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px; min-width: 150px;">
+          <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px;">
+            Inject one or more reminders to the model for the next turn:
+          </div>
+          <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+          <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
+          <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
+          <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
+          <n-checkbox v-if="mode === 'roleplay'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
+        </div>
+      </n-popover>
+    </div>
     </div>
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
       <n-form>
+          <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
+          <n-divider />
           <n-form-item label="API Provider">
             <n-select v-model:value="apiProvider" :options="providerOptions" />
           </n-form-item>
@@ -94,6 +120,9 @@
           </n-form-item>
           <n-alert type="info" style="margin-bottom: 12px" title="">
             Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB.
+          </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title="">
+            For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to increase rates and available models.
           </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Users are responsible for any possible cost using this functionality.
@@ -117,60 +146,10 @@
           <n-form-item label="Model">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
+          <n-divider />
 
-          <n-form-item>
-            <template #label>
-              Use Nikke-DB Knowledge <span style="font-size: smaller;">(Recommended)</span>
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br><br>
-                  Faster and saves API costs.
-                </div>
-              </n-popover>
-            </template>
-            <n-switch v-model:value="useLocalProfiles" />
-          </n-form-item>
-
-          <n-form-item v-if="useLocalProfiles">
-            <template #label>
-              Allow Web Search Fallback <span style="font-size: smaller;">(Recommended)</span>
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  If a character is not found in the local profiles, allow the model to search the web. Note that this may incur extra costs, depending on your API provider and model.<br><br>
-                  If disabled, the model will rely on its internal knowledge for unknown characters and may degrade the experience.
-                </div>
-              </n-popover>
-            </template>
-            <n-switch v-model:value="allowWebSearchFallback" />
-          </n-form-item>
-
-          <n-form-item>
-            <template #label>
-              Mode
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br><br>
-                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.
-                </div>
-              </n-popover>
-            </template>
-            <n-select v-model:value="mode" :options="modeOptions" />
-          </n-form-item>
+          <h4 class="settings-section-header accent-green">AI Settings</h4>
+          <n-divider />
           <n-form-item>
             <template #label>
               Tokens Usage
@@ -210,7 +189,102 @@
             </template>
             <n-switch v-model:value="enableContextCaching" />
           </n-form-item>
+          <n-divider />
 
+          <h4 class="settings-section-header accent-light-blue">Knowledge & Search</h4>
+          <n-divider />
+          <n-form-item>
+            <template #label>
+              Use Nikke-DB Knowledge <span style="font-size: smaller;">(Recommended)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br><br>
+                  Faster and saves API costs.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="useLocalProfiles" />
+          </n-form-item>
+
+          <n-form-item v-if="useLocalProfiles">
+            <template #label>
+              Allow Web Search Fallback <span style="font-size: smaller;">(Recommended)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div v-html="computedWebSearchFallbackHelpText"></div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="allowWebSearchFallback" :disabled="computedUsesWikiFetch || computedUsesPollinationsAutoFallback" />
+          </n-form-item>
+          <n-divider />
+
+          <h4 class="settings-section-header accent-orange">Story Mode & Features</h4>
+          <n-divider />
+          <n-form-item>
+            <template #label>
+              Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br><br>
+                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="mode" :options="modeOptions" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
+              God Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Prevents any action in the story from causing the Commander's death.<br><br>
+                  Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="godModeEnabled" />
+          </n-form-item>
+          <n-divider />
+
+          <h4 class="settings-section-header accent-red">Interface & Audio</h4>
+          <n-divider />
+          <n-form-item>
+            <template #label>
+              Asset Quality
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  <strong>High:</strong> Best visual quality, but uses more GPU resources and VRAM.<br><br>
+                  <strong>Low:</strong> Slightly worse quality and detail, but much better performance on low-end systems.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="assetQuality" :options="assetQualityOptions" />
+          </n-form-item>
           <n-form-item>
             <template #label>
               Playback
@@ -294,6 +368,30 @@
             </template>
             <n-input v-model:value="gptSovitsBasePath" placeholder="C:/GPT-SoVITS" />
           </n-form-item>
+
+          <n-form-item label="Chatterbox Endpoint" v-if="ttsEnabled && ttsProvider === 'chatterbox'">
+            <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:7860" />
+          </n-form-item>
+
+          <n-form-item v-if="ttsEnabled && ttsProvider === 'chatterbox'">
+            <template #label>
+              Chatterbox Voices Path
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Path to your Chatterbox voices folder.<br>
+                  Voice files should be placed at: <code>{voicesPath}/{character}.wav</code><br>
+                  Example: <code>anis.wav</code>, <code>neon.wav</code>, etc.
+                </div>
+              </n-popover>
+            </template>
+            <n-input v-model:value="chatterboxVoicesPath" placeholder="C:/chatterbox-tts-api/voices" />
+          </n-form-item>
+          <n-divider />
         </n-form>
       </n-drawer-content>
     </n-drawer>
@@ -368,8 +466,8 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -379,6 +477,9 @@ import { marked } from 'marked'
 import { animationMappings } from '@/utils/animationMappings'
 import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
+import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
+import { allowWebSearchFallback, NATIVE_SEARCH_PREFIXES, POLLINATIONS_NATIVE_SEARCH_MODELS, hasNativeSearch, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
+import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization } from '@/utils/llmUtils'
 
 // Helper to get honorific with fallback to "Commander"
 const getHonorific = (characterName: string): string => {
@@ -386,6 +487,37 @@ const getHonorific = (characterName: string): string => {
 }
 
 const market = useMarket()
+
+// Helper to get the response schema for structured output
+const getResponseSchema = () => ({
+  type: 'json_schema',
+  json_schema: {
+    name: 'StoryResponse',
+    schema: {
+      type: 'object',
+      properties: {
+        actions: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              needs_search: { type: 'array', items: { type: 'string' } },
+              memory: { type: 'object' },
+              characterProgression: { type: 'object' },
+              text: { type: 'string' },
+              character: { type: 'string' },
+              animation: { type: 'string' },
+              speaking: { type: 'boolean' },
+              duration: { type: 'number' }
+            },
+            required: ['text', 'character', 'speaking', 'animation']
+          }
+        }
+      },
+      required: ['actions']
+    }
+  }
+})
 
 // Helper for debug logging
 const logDebug = (...args: any[]) => {
@@ -398,7 +530,6 @@ const logDebug = (...args: any[]) => {
 const showSettings = ref(false)
 const showGuide = ref(false)
 const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') === 'true')
-const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') === 'true')
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
@@ -406,12 +537,7 @@ const mode = ref('roleplay')
 const tokenUsage = ref('medium')
 const enableContextCaching = ref(true)
 const playbackMode = ref('auto')
-const ttsEnabled = ref(false)
-const ttsEndpoint = ref('http://localhost:7851')
-const ttsProvider = ref<'alltalk' | 'gptsovits'>('alltalk')
-const gptSovitsEndpoint = ref('http://localhost:9880')
-const gptSovitsBasePath = ref('C:/GPT-SoVITS')
-const gptSovitsPromptTextCache = new Map<string, string>()
+const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
 const userInput = ref('')
 const isLoading = ref(false)
 const isGenerating = ref(false)
@@ -465,10 +591,20 @@ const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
+const pollinationsModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
-const modelsWithoutJsonSupport = new Set<string>() // Track models that don't support json_object
+// Track models that don't support json_object, persisting to localStorage
+const modelsWithoutJsonSupport = new Set<string>(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]'))
 const isDev = import.meta.env.DEV
+
+// AI Reminders state
+const showRemindersDropdown = ref(false)
+const invalidJsonToggle = ref(false)
+const honorificsToggle = ref(false)
+const aiControllingUserToggle = ref(false)
+const narrationAndDialogueNotSplitToggle = ref(false)
+const wrongSpeechStylesToggle = ref(false)
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -476,19 +612,13 @@ const setRandomLoadingMessage = () => {
 }
 
 // Models/providers that have native web search in OpenRouter
-const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
-const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some(prefix => modelId.startsWith(prefix))
 
 // Options
 const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
   { label: 'Gemini', value: 'gemini' },
-  { label: 'OpenRouter', value: 'openrouter' }
-]
-
-const ttsProviderOptions = [
-  { label: 'AllTalk (XTTSv2)', value: 'alltalk' },
-  { label: 'GPT-SoVits', value: 'gptsovits' }
+  { label: 'OpenRouter', value: 'openrouter' },
+  { label: 'Pollinations', value: 'pollinations' }
 ]
 
 const modelOptions = computed(() => {
@@ -504,7 +634,10 @@ const modelOptions = computed(() => {
     ]
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
+  } else if (apiProvider.value === 'pollinations') {
+    return pollinationsModels.value
   }
+
   return []
 })
 
@@ -518,6 +651,11 @@ const playbackOptions = [
   { label: 'Manual', value: 'manual' }
 ]
 
+const assetQualityOptions = [
+  { label: 'High', value: 'high' },
+  { label: 'Low', value: 'low' }
+]
+
 const tokenUsageOptions = [
   { label: 'Low (10 turns)', value: 'low' },
   { label: 'Medium (30 turns)', value: 'medium' },
@@ -525,9 +663,31 @@ const tokenUsageOptions = [
   { label: 'Goddess', value: 'goddess' }
 ]
 
+// Computed
+const isWebSearchAllowed = computed(() => true)
+
+const computedUsesWikiFetch = computed(() => usesWikiFetch(apiProvider.value, model.value))
+
+const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAutoFallback(apiProvider.value, model.value))
+
+const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
+
+const assetQuality = computed({
+  get: () => market.live2d.HQassets ? 'high' : 'low',
+  set: (val: string) => {
+    market.live2d.HQassets = val === 'high'
+  }
+})
+
 // Watchers
-watch(apiKey, (newVal) => {
+watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
+  if (apiProvider.value === 'pollinations') {
+    await fetchPollinationsModels()
+    if (pollinationsModels.value.length > 0) {
+      model.value = pollinationsModels.value[0].value
+    }
+  }
 })
 
 watch(useLocalProfiles, (newVal) => {
@@ -536,6 +696,18 @@ watch(useLocalProfiles, (newVal) => {
 
 watch(allowWebSearchFallback, (newVal) => {
   localStorage.setItem('nikke_allow_web_search_fallback', String(newVal))
+})
+
+watch(computedUsesWikiFetch, (newVal) => {
+  if (newVal) {
+    allowWebSearchFallback.value = true
+  }
+})
+
+watch(computedUsesPollinationsAutoFallback, (newVal) => {
+  if (newVal) {
+    allowWebSearchFallback.value = true
+  }
 })
 
 watch(mode, (newVal) => {
@@ -574,12 +746,29 @@ watch(gptSovitsBasePath, (newVal) => {
   localStorage.setItem('nikke_gptsovits_basepath', newVal)
 })
 
+watch(chatterboxEndpoint, (newVal) => {
+  localStorage.setItem('nikke_chatterbox_endpoint', newVal)
+})
+
+watch(chatterboxVoicesPath, (newVal) => {
+  localStorage.setItem('nikke_chatterbox_voices_path', newVal)
+})
+
+watch(godModeEnabled, (newVal) => {
+  localStorage.setItem('nikke_god_mode_enabled', String(newVal))
+})
+
 watch(model, (newVal) => {
   if (newVal) localStorage.setItem('nikke_model', newVal)
 })
 
 watch(() => market.live2d.yapEnabled, (newVal) => {
   localStorage.setItem('nikke_yap_enabled', String(newVal))
+})
+
+watch(() => market.live2d.HQassets, (newVal) => {
+  localStorage.setItem('nikke_hq_assets', String(newVal))
+  market.live2d.triggerResetPlacement()
 })
 
 watch(apiProvider, async (newVal) => {
@@ -595,8 +784,16 @@ watch(apiProvider, async (newVal) => {
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
     await fetchOpenRouterModels()
+
     if (openRouterModels.value.length > 0) {
       model.value = openRouterModels.value[0].value
+    }
+  } else if (apiProvider.value === 'pollinations') {
+    model.value = ''
+    await fetchPollinationsModels()
+
+    if (pollinationsModels.value.length > 0) {
+      model.value = pollinationsModels.value[0].value
     }
   }
 })
@@ -628,8 +825,72 @@ const fetchOpenRouterModels = async () => {
   }
 }
 
+const fetchPollinationsModels = async () => {
+  let models: any[] = []
+
+  try {
+    const headers: Record<string, string> = {}
+
+    if (apiKey.value) {
+      headers['Authorization'] = `Bearer ${apiKey.value}`
+    }
+    const url = apiKey.value ? 'https://gen.pollinations.ai/text/models' : 'https://text.pollinations.ai/models'
+    const response = await fetch(url, { headers })
+    const data = await response.json()
+    models = data
+    
+    // Handle both old format (array of strings) and new format (array of objects)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
+      models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
+    }
+    
+    pollinationsModels.value = models
+      .filter((m: any) => {
+        if (!apiKey.value) {
+          const allowedModels = ['gemini', 'gemini-search', 'mistral']
+          return allowedModels.includes(m.name)
+        } else {
+          const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
+          return !hiddenModels.includes(m.name)
+        }
+      })
+      .map((m: any) => {
+        const isFree = m.pricing && m.pricing.input_token_price === 0
+
+        return {
+          label: (isFree ? '[FREE] ' : '') + m.name,
+          value: m.name,
+          isFree: isFree,
+          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+        }
+      }).sort((a: any, b: any) => {
+        if (a.isFree && !b.isFree) return -1
+        if (!a.isFree && b.isFree) return 1
+
+        return a.label.localeCompare(b.label)
+      })
+    
+  } catch (error) {
+    console.error('Failed to fetch Pollinations models:', error)
+    // Fallback to hardcoded models
+    models = [
+      { name: 'gemini', pricing: { input_token_price: 0 } },
+      { name: 'gemini-search', pricing: { input_token_price: 0 } },
+      { name: 'mistral', pricing: { input_token_price: 0 } }
+    ]
+    
+    pollinationsModels.value = models.map((m: any) => ({
+      label: '[FREE] ' + m.name,
+      value: m.name,
+      isFree: true,
+      style: { color: '#18a058', fontWeight: 'bold' }
+    }))
+  }
+}
+
 const checkGuide = () => {
   const seen = localStorage.getItem('chat-guide-seen')
+
   if (!seen) {
     showGuide.value = true
   }
@@ -653,6 +914,9 @@ const initializeSettings = async () => {
   const savedYap = localStorage.getItem('nikke_yap_enabled')
   if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
 
+  const savedHQAssets = localStorage.getItem('nikke_hq_assets')
+  if (savedHQAssets !== null) market.live2d.HQassets = (savedHQAssets === 'true')
+
   const savedTts = localStorage.getItem('nikke_tts_enabled')
   if (savedTts !== null) ttsEnabled.value = (savedTts === 'true')
 
@@ -660,13 +924,19 @@ const initializeSettings = async () => {
   if (savedTtsEndpoint) ttsEndpoint.value = savedTtsEndpoint
 
   const savedTtsProvider = localStorage.getItem('nikke_tts_provider')
-  if (savedTtsProvider === 'alltalk' || savedTtsProvider === 'gptsovits') ttsProvider.value = savedTtsProvider
+  if (savedTtsProvider === 'alltalk' || savedTtsProvider === 'gptsovits' || savedTtsProvider === 'chatterbox') ttsProvider.value = savedTtsProvider
 
   const savedGptSovitsEndpoint = localStorage.getItem('nikke_gptsovits_endpoint')
   if (savedGptSovitsEndpoint) gptSovitsEndpoint.value = savedGptSovitsEndpoint
 
   const savedGptSovitsBasePath = localStorage.getItem('nikke_gptsovits_basepath')
   if (savedGptSovitsBasePath) gptSovitsBasePath.value = savedGptSovitsBasePath
+
+  const savedChatterboxEndpoint = localStorage.getItem('nikke_chatterbox_endpoint')
+  if (savedChatterboxEndpoint) chatterboxEndpoint.value = savedChatterboxEndpoint
+
+  const savedChatterboxVoicesPath = localStorage.getItem('nikke_chatterbox_voices_path')
+  if (savedChatterboxVoicesPath) chatterboxVoicesPath.value = savedChatterboxVoicesPath
 
   const savedTokenUsage = localStorage.getItem('nikke_token_usage')
   if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
@@ -683,6 +953,8 @@ const initializeSettings = async () => {
     
     if (savedProvider === 'openrouter') {
       await fetchOpenRouterModels()
+    } else if (savedProvider === 'pollinations') {
+      await fetchPollinationsModels()
     }
     
     // Validate and set model
@@ -694,6 +966,8 @@ const initializeSettings = async () => {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
     } else if (savedProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
+    } else if (savedProvider === 'pollinations') {
+      validModels = pollinationsModels.value.map((m) => m.value)
     }
     
     if (savedModel && validModels.includes(savedModel)) {
@@ -791,9 +1065,11 @@ const triggerRestore = () => {
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
+
   if (target.files && target.files.length > 0) {
     const file = target.files[0]
     const reader = new FileReader()
+
     reader.onload = async (e) => {
       try {
         const content = e.target?.result as string
@@ -880,6 +1156,7 @@ const handleFileUpload = (event: Event) => {
             
             // Validate and set model
             let validModels: string[] = []
+
             if (savedProvider === 'perplexity') {
               validModels = ['sonar', 'sonar-pro']
             } else if (savedProvider === 'gemini') {
@@ -909,10 +1186,10 @@ const handleFileUpload = (event: Event) => {
           const safeBuffer = 10
           // If the current summarized index leaves less than safeBuffer messages, pull it back
           if (chatHistory.value.length - lastSummarizedIndex.value < safeBuffer) {
-             lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
-             // We can't use logDebug here easily as it might not be in scope or I'd have to check imports, 
-             // but console.log is safe.
-             console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
+            lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
+            // We can't use logDebug here easily as it might not be in scope or I'd have to check imports, 
+            // but console.log is safe.
+            console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
           }
         }
         
@@ -961,7 +1238,8 @@ const scrollToBottom = () => {
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
-  const text = userInput.value
+  let text = userInput.value
+
   userInput.value = ''
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
@@ -980,6 +1258,7 @@ const sendMessage = async () => {
     attempts++
     try {
       const response = await callAI(attempts > 1)
+
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -987,6 +1266,7 @@ const sendMessage = async () => {
     } catch (error: any) {
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+
         continue
       }
 
@@ -1002,8 +1282,17 @@ const sendMessage = async () => {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
+
       break
     }
+  }
+
+  if (success) {
+    invalidJsonToggle.value = false
+    honorificsToggle.value = false
+    narrationAndDialogueNotSplitToggle.value = false
+    aiControllingUserToggle.value = false
+    wrongSpeechStylesToggle.value = false
   }
 
   isLoading.value = false
@@ -1031,6 +1320,7 @@ const retryLastMessage = async () => {
     attempts++
     try {
       const response = await callAI(attempts > 1)
+
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -1038,6 +1328,7 @@ const retryLastMessage = async () => {
     } catch (error: any) {
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+
         continue
       }
 
@@ -1053,8 +1344,17 @@ const retryLastMessage = async () => {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
+
       break
     }
+  }
+
+  if (success) {
+    invalidJsonToggle.value = false
+    honorificsToggle.value = false
+    narrationAndDialogueNotSplitToggle.value = false
+    aiControllingUserToggle.value = false
+    wrongSpeechStylesToggle.value = false
   }
 
   isLoading.value = false
@@ -1128,6 +1428,7 @@ const continueStory = async () => {
     } catch (error: any) {
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
+
         continue
       }
 
@@ -1141,12 +1442,56 @@ const continueStory = async () => {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
+
       break
     }
   }
 
+  if (success) {
+    invalidJsonToggle.value = false
+    honorificsToggle.value = false
+    narrationAndDialogueNotSplitToggle.value = false
+    aiControllingUserToggle.value = false
+    wrongSpeechStylesToggle.value = false
+  }
+
   isLoading.value = false
   scrollToBottom()
+}
+
+// Helper to inject user-toggled reminders into the last user message
+const injectUserReminders = (messages: any[]): any[] => {
+  let reminders = ''
+
+  if (invalidJsonToggle.value) {
+    reminders += '\n\n' + prompts.reminders.invalidJsonReminder
+  }
+  if (honorificsToggle.value) {
+    reminders += '\n\n' + prompts.reminders.honorificsReminder
+  }
+  if (narrationAndDialogueNotSplitToggle.value) {
+    reminders += '\n\n' + prompts.reminders.narrationAndDialogueNotSplit
+  }
+  if (aiControllingUserToggle.value) {
+    reminders += '\n\n' + prompts.reminders.aiControllingUserReminder
+  }
+  if (wrongSpeechStylesToggle.value) {
+    reminders += '\n\n' + prompts.reminders.wrongSpeechStylesReminder
+  }
+  
+  if (!reminders) return messages
+
+  const result = [...messages]
+  // Find the last user message
+  for (let i = result.length - 1; i >= 0; i--) {
+    if (result[i].role === 'user') {
+      result[i] = { ...result[i], content: result[i].content + reminders }
+
+      break
+    }
+  }
+
+  return result
 }
 
 const callAI = async (isRetry: boolean = false): Promise<string> => {
@@ -1162,13 +1507,13 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
     // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
     const localNames = Object.keys(localCharacterProfiles)
-    const foundNames = localNames.filter(name => 
+    const foundNames = localNames.filter((name) => 
       isWholeWordPresent(firstPrompt, name)
     )
     
     if (foundNames.length > 0) {
       logDebug('[callAI] Pre-loading local profiles for:', foundNames)
-      await searchForCharacters(foundNames)
+      await wrappedSearchForCharacters(foundNames)
     }
   }
   
@@ -1178,8 +1523,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
   
   if (needsJsonReminder.value) {
-      retryInstruction += prompts.reminders.json
-      needsJsonReminder.value = false
+    retryInstruction += prompts.reminders.json
+    needsJsonReminder.value = false
   }
   
   // Add current context
@@ -1195,6 +1540,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Tumbling window: Summarize every X turns
   
   let historyLimit = 30
+
   if (tokenUsage.value === 'low') historyLimit = 10
   else if (tokenUsage.value === 'medium') historyLimit = 30
   else if (tokenUsage.value === 'high') historyLimit = 60
@@ -1237,6 +1583,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   let historyToSend = chatHistory.value
+
   if (tokenUsage.value !== 'goddess') {
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
@@ -1248,11 +1595,13 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     
     // Get relevant honorifics from the characterHonorifics JSON
     const knownNames = Object.keys(characterProfiles.value)
+
     if (knownNames.length === 0) return ''
     
     const honorificExamples: string[] = []
     for (const name of knownNames) {
       const honorific = (characterHonorifics as Record<string, string>)[name]
+
       if (honorific && honorific !== 'Commander') {
         honorificExamples.push(`${name} calls the Commander "${honorific}"`)
       }
@@ -1266,6 +1615,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Helper to inject honorifics reminder into the last user message (first turn only)
   const injectHonorificsReminder = (messages: any[]): any[] => {
     const reminder = buildHonorificsReminder()
+
     if (!reminder) return messages
     
     // Find the last user message and append the reminder
@@ -1273,9 +1623,11 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     for (let i = result.length - 1; i >= 0; i--) {
       if (result[i].role === 'user') {
         result[i] = { ...result[i], content: result[i].content + reminder }
+
         break
       }
     }
+
     return result
   }
 
@@ -1312,6 +1664,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     ]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to Perplexity:', messages)
     response = await callPerplexity(messages, enableWebSearch)
   } else if (apiProvider.value === 'gemini') {
@@ -1326,6 +1682,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     })
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
@@ -1338,19 +1698,41 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     ]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, enableWebSearch)
+  } else if (apiProvider.value === 'pollinations') {
+    // Pollinations: Use standard OpenAI format with context in system prompt
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    
+    let messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    // Inject honorifics reminder for first turn (not saved to history)
+    messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
+    logDebug('Sending to Pollinations:', messages)
+    response = await callPollinations(messages, enableWebSearch)
   } else {
     throw new Error('Unknown API provider')
   }
 
   // Check if the model needs to search for new characters
   const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
+
   if (searchRequest && searchRequest.length > 0) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
-    await searchForCharacters(searchRequest)
+    await wrappedSearchForCharacters(searchRequest)
     setRandomLoadingMessage()
+
     // Re-call the AI with updated character profiles (search disabled this time)
     return await callAIWithoutSearch(isRetry)
   }
@@ -1364,8 +1746,8 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
   
   if (needsJsonReminder.value) {
-      retryInstruction += prompts.reminders.json
-      needsJsonReminder.value = false
+    retryInstruction += prompts.reminders.json
+    needsJsonReminder.value = false
   }
   
   const filteredAnimations = market.live2d.animations.filter((a) => 
@@ -1380,6 +1762,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   // Tumbling window: Summarize every X turns
   
   let historyLimit = 30
+
   if (tokenUsage.value === 'low') historyLimit = 10
   else if (tokenUsage.value === 'medium') historyLimit = 30
   else if (tokenUsage.value === 'high') historyLimit = 60
@@ -1422,6 +1805,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   }
 
   let historyToSend = chatHistory.value
+
   if (tokenUsage.value !== 'goddess') {
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
@@ -1449,21 +1833,34 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
       { role: 'system', content: fullSystemPrompt },
       ...sanitizedHistory
     ]
-    return await callPerplexity(messages, false)
+
+    const messagesWithReminders = injectUserReminders(messages)
+
+    return await callPerplexity(messagesWithReminders, false)
   } else if (apiProvider.value === 'gemini') {
     const messages = [
       { role: 'system', content: systemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     messages.push({ role: 'system', content: contextMsg + retryInstruction })
-    return await callGemini(messages, false)
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callGemini(messagesWithReminders, false)
   } else if (apiProvider.value === 'openrouter') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     const messages = [
       { role: 'system', content: fullSystemPrompt },
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
-    return await callOpenRouter(messages, false)
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callOpenRouter(messagesWithReminders, false)
+  } else if (apiProvider.value === 'pollinations') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callPollinations(messagesWithReminders, false)
   }
   
   throw new Error('Unknown API provider')
@@ -1471,354 +1868,83 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
 // Check if the AI response contains a search request for unknown characters
 const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
+  const validateNames = (names: string[], textForValidation: string): string[] => {
+    const unique = Array.from(new Set(names.map((n) => (typeof n === 'string' ? n.trim() : '')).filter(Boolean)))
+    return unique.filter((name) => {
+      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
+      const inGeneratedText = textForValidation && isWholeWordPresent(textForValidation, name)
+      return !!(inUserPrompt || inGeneratedText)
+    })
+  }
+
+  // Preferred path: shared robust parser
   try {
-    let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
-    const start = jsonStr.indexOf('[')
-    const end = jsonStr.lastIndexOf(']')
-    
-    // Try array format first
-    if (start !== -1 && end !== -1) {
-      jsonStr = jsonStr.substring(start, end + 1)
-    }
-    
-    let data = JSON.parse(jsonStr)
-    if (!Array.isArray(data)) {
-      data = [data]
-    }
-    
-    // Look for needs_search field in any action
-    for (const action of data) {
-      if (action.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
-        // Validate characters using whole-word matching against user prompt and AI text
-        const allGeneratedText = data.map((a: any) => a.text || '').join(' ')
-        
-        const validatedChars = action.needs_search.filter(
-          (name: string) => {
-            // Skip if already known or is "Commander"
-            if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+    const actions = parseAIResponse(response)
+    const allGeneratedText = actions.map((a: any) => a?.text || '').join(' ')
 
-            // Character must appear as whole word in either user prompt or AI response
-            const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
-            const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
-
-            return inUserPrompt || inGeneratedText
-          }
-        )
-        
-        if (validatedChars.length > 0) {
-          return validatedChars
-        }
+    for (const action of actions) {
+      if (action?.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
+        const validated = validateNames(action.needs_search, allGeneratedText)
+        if (validated.length > 0) return validated
       }
     }
-  } catch (e) {
-    // If parsing fails, no search request
+  } catch {
+    // Fall back to regex extraction
   }
+
+  // Fallback: extract needs_search even when JSON is truncated/malformed
+  try {
+    const m = response.match(/"needs_search"\s*:\s*\[([\s\S]*?)\]/)
+    if (m && m[1]) {
+      const names = Array.from(m[1].matchAll(/"([^\"]+)"/g)).map((x) => x[1])
+      const validated = validateNames(names, response)
+      if (validated.length > 0) return validated
+    }
+  } catch {
+    // Ignore
+  }
+  
+  // For Pollinations, only allow search if web search fallback is enabled
+  if (apiProvider.value === 'pollinations' && !allowWebSearchFallback.value) {
+    return null
+  }
+
   return null
-}
-
-// Search for character information using web search
-const searchForCharacters = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharacters] Searching for:', characterNames)
-  
-  if (useLocalProfiles.value) {
-    loadingStatus.value = "Searching for characters in the database..."
-  } else {
-    loadingStatus.value = "Searching the web for characters..."
-  }
-  
-  let charsToSearch = [...characterNames]
-
-  // Check local profiles first if enabled
-  if (useLocalProfiles.value) {
-    const remainingChars: string[] = []
-    
-    for (const name of charsToSearch) {
-      // Case-insensitive lookup in local profiles
-      const localKey = Object.keys(localCharacterProfiles).find(
-        k => k.toLowerCase() === name.toLowerCase()
-      )
-      
-      if (localKey) {
-        const profile = (localCharacterProfiles as any)[localKey]
-        // Use the name requested by the AI as the key, but the data from the local profile
-        characterProfiles.value[name] = {
-          ...profile,
-          // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
-          id: profile.id || l2d.find(c => c.name.toLowerCase() === name.toLowerCase())?.id
-        }
-        logDebug(`[searchForCharacters] Found local profile for ${name}`)
-      } else {
-        remainingChars.push(name)
-      }
-    }
-    
-    charsToSearch = remainingChars
-  }
-
-  if (charsToSearch.length === 0) {
-    logDebug('[searchForCharacters] All characters found locally.')
-    setRandomLoadingMessage()
-    return
-  }
-
-  // If fallback is disabled, stop here
-  if (useLocalProfiles.value && !allowWebSearchFallback.value) {
-    logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
-    setRandomLoadingMessage()
-    return
-  }
-
-  loadingStatus.value = "Searching the web for characters..."
-
-  // For Perplexity, search each character individually for better results
-  if (apiProvider.value === 'perplexity') {
-    await searchForCharactersPerplexity(charsToSearch)
-    return
-  }
-  
-  // For Gemini, use native search
-  if (apiProvider.value === 'gemini') {
-    await searchForCharactersWithNativeSearch(charsToSearch)
-    return
-  }
-  
-  // For OpenRouter, check if model has native search
-  if (apiProvider.value === 'openrouter') {
-    if (hasNativeSearch(model.value)) {
-      // Use native web search for OpenAI, Anthropic, Perplexity, xAI models
-      await searchForCharactersWithNativeSearch(charsToSearch)
-    } else {
-      // For models without native search (e.g., Claude via OpenRouter, DeepSeek, etc.)
-      // Fetch wiki pages directly and have the model summarize
-      await searchForCharactersViaWikiFetch(charsToSearch)
-    }
-    return
-  }
 }
 
 // Fetch wiki page content directly and have the model summarize it
 // Used for OpenRouter models that don't have native web search.
 // We are using a Cloudflare Worker proxy to avoid CORS issues.
-// Its code is open-sourced and available in the 
-const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
+// Its code is open-sourced and available in the
 
-const fetchWikiContent = async (characterName: string): Promise<string | null> => {
-  const wikiName = characterName.replace(/ /g, '_')
-  
-  try {
-    // Fetch the Story page via our Cloudflare Worker proxy
-    // The worker fetches only Description, Personality, and Backstory sections
-    const response = await fetch(`${WIKI_PROXY_URL}?page=${encodeURIComponent(wikiName + '/Story')}`)
-    const data = await response.json()
-    
-    // Check for errors
-    if (data.error) {
-      console.warn(`[fetchWikiContent] Wiki page not found for ${characterName}:`, data.error)
-      return null
-    }
-    
-    // Extract wikitext from parse response
-    const wikitext = data.parse?.wikitext?.['*']
-    if (!wikitext) {
-      console.warn(`[fetchWikiContent] No content found for ${characterName}`)
-      return null
-    }
-    
-    return wikitext
-  } catch (e) {
-    console.error(`[fetchWikiContent] Error fetching wiki for ${characterName}:`, e)
-    return null
-  }
+// Wrapper functions for web search
+const wrappedSearchForCharactersPerplexity = async (characterNames: string[]) => {
+  return searchForCharactersPerplexity(characterNames, characterProfiles.value, callPerplexity)
 }
 
-// Search for characters by fetching wiki pages directly (for models without native search)
-const searchForCharactersViaWikiFetch = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharactersViaWikiFetch] Fetching wiki pages for:', characterNames)
-  
-  for (const name of characterNames) {
-    if (characterProfiles.value[name]) continue
-    
-    const wikiContent = await fetchWikiContent(name)
-    if (!wikiContent) {
-      console.warn(`[searchForCharactersViaWikiFetch] No wiki content found for ${name}`)
-      continue
-    }
-    
-    const cleanedContent = cleanWikiContent(wikiContent)
-    logDebug(`[searchForCharactersViaWikiFetch] Fetched ${cleanedContent.length} chars for ${name}`)
-    
-    const summarizePrompt = prompts.search.wikiFetch
-      .replace(/{name}/g, name)
-      .replace('{content}', cleanedContent)
-
-    const messages = [
-      { role: 'system', content: 'You are a helpful assistant that extracts character information from wiki content and returns it in JSON format.' },
-      { role: 'user', content: summarizePrompt }
-    ]
-    
-    let attempts = 0
-    const maxAttempts = 3
-    let success = false
-    
-    while (attempts < maxAttempts && !success) {
-      try {
-        // Call OpenRouter WITHOUT web search - we already have the content
-        const result = await callOpenRouter(messages, false)
-        
-        let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-        const start = jsonStr.indexOf('{')
-        const end = jsonStr.lastIndexOf('}')
-        if (start !== -1 && end !== -1) {
-          jsonStr = jsonStr.substring(start, end + 1)
-        }
-        
-        const profiles = JSON.parse(jsonStr)
-        
-        // Add character IDs
-        for (const charName of Object.keys(profiles)) {
-          const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-          if (char) {
-            profiles[charName].id = char.id
-          }
-        }
-        
-        characterProfiles.value = { ...characterProfiles.value, ...profiles }
-        logDebug(`[searchForCharactersViaWikiFetch] Added profile for ${name}:`, profiles)
-        success = true
-      } catch (e) {
-        attempts++
-        if (attempts >= maxAttempts) {
-          console.error(`[searchForCharactersViaWikiFetch] Failed to process ${name} after ${maxAttempts} attempts:`, e)
-        } else {
-          console.warn(`[searchForCharactersViaWikiFetch] Attempt ${attempts} failed for ${name}, retrying...`)
-        }
-      }
-    }
-  }
+const wrappedSearchForCharactersWithNativeSearch = async (characterNames: string[]) => {
+  return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
 }
 
-// Search for characters using native web search (Gemini, OpenRouter with native search)
-const searchForCharactersWithNativeSearch = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharactersWithNativeSearch] Searching for:', characterNames)
-  
-  for (const name of characterNames) {
-    if (characterProfiles.value[name]) continue
-
-    const wikiName = name.replace(/ /g, '_')
-    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
-
-    const searchPrompt = prompts.search.native
-      .replace(/{name}/g, name)
-      .replace('{url}', storyUrl)
-
-    const messages = [
-      { role: 'system', content: 'You are a research assistant. Search for information about NIKKE: Goddess of Victory game characters and return what you find in JSON format.' },
-      { role: 'user', content: searchPrompt }
-    ]
-
-    let attempts = 0
-    const maxAttempts = 3
-   
-    let success = false
-
-    while (attempts < maxAttempts && !success) {
-      attempts++
-      try {
-        let result: string
-        
-        if (apiProvider.value === 'gemini') {
-          result = await callGemini(messages, true)
-        } else {
-          result = await callOpenRouter(messages, true)
-        }
-        
-        let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-        const start = jsonStr.indexOf('{')
-        const end = jsonStr.lastIndexOf('}')
-        if (start !== -1 && end !== -1) {
-          jsonStr = jsonStr.substring(start, end + 1)
-        }
-        
-        const profiles = JSON.parse(jsonStr)
-        
-        for (const charName of Object.keys(profiles)) {
-          const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-          if (char) {
-            profiles[charName].id = char.id
-          }
-        }
-        
-        characterProfiles.value = { ...characterProfiles.value, ...profiles }
-        logDebug(`[searchForCharactersWithNativeSearch] Added profile for ${name}:`, profiles)
-        success = true
-      } catch (e) {
-        console.error(`[searchForCharactersWithNativeSearch] Attempt ${attempts} failed for ${name}:`, e)
-        if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
-        } else {
-          console.error(`[searchForCharactersWithNativeSearch] All attempts failed for ${name}.`)
-        }
-      }
-    }
-  }
+const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) => {
+  return searchForCharactersViaWikiFetch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
 }
 
-// Perplexity-specific search: search each character individually for better results
-const searchForCharactersPerplexity = async (characterNames: string[]): Promise<void> => {
-  logDebug('[searchForCharactersPerplexity] Searching individually for:', characterNames)
-  
-  for (const name of characterNames) {
-    // Skip if we already have this character's profile
-    if (characterProfiles.value[name]) {
-      logDebug(`[searchForCharactersPerplexity] Skipping ${name} - already have profile`)
-      continue
-    }
-    
-    // Build the direct wiki URL for this character's Story page
-    // Replace spaces with underscores for wiki URL format
-    const wikiName = name.replace(/ /g, '_')
-    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
-    
-    // Search prompt pointing directly to the Story page for personality info
-    const searchPrompt = prompts.search.perplexity
-      .replace(/{name}/g, name)
-      .replace('{url}', storyUrl)
-
-    const messages = [
-      { role: 'system', content: 'You are a factual research assistant. You MUST only return information that is explicitly written on the wiki page. Do NOT hallucinate, guess, or embellish. If information is not found, say "Unknown".' },
-      { role: 'user', content: searchPrompt }
-    ]
-
-    try {
-      const result = await callPerplexity(messages, true, storyUrl)
-      
-      let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-      const start = jsonStr.indexOf('{')
-      const end = jsonStr.lastIndexOf('}')
-      if (start !== -1 && end !== -1) {
-        jsonStr = jsonStr.substring(start, end + 1)
-      }
-      
-      const profile = JSON.parse(jsonStr)
-      
-      // Add character ID
-      for (const charName of Object.keys(profile)) {
-        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-        if (char) {
-          profile[charName].id = char.id
-        }
-      }
-      
-      characterProfiles.value = { ...characterProfiles.value, ...profile }
-
-      logDebug(`[searchForCharactersPerplexity] Added profile for ${name}:`, profile)
-    } catch (e) {
-      console.error(`[searchForCharactersPerplexity] Failed to search for ${name}:`, e)
-      // Continue with other characters
-    }
-  }
-  
-  logDebug('[searchForCharactersPerplexity] Final profiles:', characterProfiles.value)
+const wrappedSearchForCharacters = async (characterNames: string[]) => {
+  return searchForCharacters(
+    characterNames,
+    characterProfiles.value,
+    useLocalProfiles.value,
+    allowWebSearchFallback.value,
+    apiProvider.value,
+    model.value,
+    loadingStatus,
+    setRandomLoadingMessage,
+    wrappedSearchForCharactersPerplexity,
+    wrappedSearchForCharactersWithNativeSearch,
+    wrappedSearchForCharactersViaWikiFetch
+  )
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
@@ -1859,7 +1985,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   
   ${prompts.systemPrompt.honorifics.header}
   ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'
-  }
+}
   
   ${prompts.systemPrompt.honorifics.rules}
   
@@ -1872,13 +1998,15 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   ${prompts.systemPrompt.jsonStructure}
   
   ${prompts.systemPrompt.knownProfiles}
-  ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : '(None yet - this is the first turn, use web search to gather information)'}
+  ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : prompts.systemPrompt.noProfilesMessage}
   
   ${prompts.systemPrompt.idReference}
-  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : 'No characters loaded yet. Use the character NAME and the system will resolve it.'}
+  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
   
   ${prompts.systemPrompt.instructions}
+  ${godModeEnabled.value ? prompts.systemPrompt.godMode : ''}
   `
+
   return prompt
 }
 
@@ -1887,7 +2015,7 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
 
   if (enableContextCaching.value) {
     // Clone messages to avoid mutating the original array
-    processedMessages = messages.map(m => ({ ...m }))
+    processedMessages = messages.map((m) => ({ ...m }))
 
     // 1. Cache System Message (Index 0)
     // Anthropic/OpenRouter expects content blocks for caching
@@ -1897,9 +2025,9 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
         ...processedMessages[0],
         content: [
           { 
-            type: "text", 
+            type: 'text', 
             text: systemContent, 
-            cache_control: { type: "ephemeral" } 
+            cache_control: { type: 'ephemeral' } 
           }
         ]
       }
@@ -1914,20 +2042,20 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
       // Ensure we don't cache the system message again if history is empty (though length check handles that)
       // and ensure it's not the user prompt (last message)
       if (lastHistoryIndex > 0 || (lastHistoryIndex === 0 && processedMessages[0].role !== 'system')) {
-         const msg = processedMessages[lastHistoryIndex]
-         // Only convert if it's a string content (standard)
-         if (typeof msg.content === 'string') {
-           processedMessages[lastHistoryIndex] = {
-             ...msg,
-             content: [
-               { 
-                 type: "text", 
-                 text: msg.content,
-                 cache_control: { type: "ephemeral" }
-               }
-             ]
-           }
-         }
+        const msg = processedMessages[lastHistoryIndex]
+        // Only convert if it's a string content (standard)
+        if (typeof msg.content === 'string') {
+          processedMessages[lastHistoryIndex] = {
+            ...msg,
+            content: [
+              { 
+                type: 'text', 
+                text: msg.content,
+                cache_control: { type: 'ephemeral' }
+              }
+            ]
+          }
+        }
       }
     }
   }
@@ -1992,27 +2120,38 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     const data = await response.json()
     return data.choices[0].message.content
   }
-  
-  // If this model is known to not support json_object, skip directly to fallback
+
+  // Check if we already know this model doesn't support json_object
   if (modelsWithoutJsonSupport.has(model.value)) {
+    console.log(`Model ${model.value} known to not support json_object, skipping to fallback...`)
     return callWithoutJsonFormat()
   }
   
+  // Define Schema for Response Healing (following documentation example)
+  const responseSchema = getResponseSchema()
+  
   const requestBody: any = {
     model: model.value,
-    messages: messagesWithEnforcement,
+    messages: processedMessages, // Use processedMessages directly to avoid conflicting with schema
     max_tokens: 8192,
-    // Force JSON output format
-    response_format: { type: 'json_object' },
+    // Force JSON Schema output format for Response Healing
+    response_format: responseSchema,
     // Require providers that actually support response_format
     provider: {
       require_parameters: true
     }
   }
   
+  let plugins: any[] = []
   const webPlugin = buildWebPlugin()
   if (webPlugin) {
-    requestBody.plugins = webPlugin
+    plugins = [...webPlugin]
+  }
+  // Add Response Healing plugin
+  plugins.push({ id: 'response-healing' })
+  
+  if (plugins.length > 0) {
+    requestBody.plugins = plugins
   }
   
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -2040,12 +2179,14 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
       console.warn(`Model ${model.value} does not support json_object response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.add(model.value)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
       return callWithoutJsonFormat()
     }
     
     throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
+
   return data.choices[0].message.content
 }
 
@@ -2091,6 +2232,7 @@ const callPerplexity = async (messages: any[], enableWebSearch: boolean = false,
     throw new Error(`Perplexity API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
+
   return data.choices[0].message.content
 }
 
@@ -2164,23 +2306,115 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
   // Handle various response formats from Gemini
   if (!data.candidates || data.candidates.length === 0) {
     console.error('Gemini returned no candidates:', data)
+
     throw new Error('Gemini API Error: No candidates in response')
   }
   
   const candidate = data.candidates[0]
+
   if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
     console.error('Gemini returned empty content:', candidate)
+
     throw new Error('Gemini API Error: Empty content in response')
   }
   
   // Find the text part (there might be other parts like function calls when using tools)
   const textPart = candidate.content.parts.find((p: any) => p.text !== undefined)
+
   if (!textPart) {
     console.error('Gemini returned no text part:', candidate.content.parts)
+
     throw new Error('Gemini API Error: No text in response')
   }
   
   return textPart.text
+}
+
+const callPollinations = async (messages: any[], enableWebSearch: boolean = false) => {
+  // Check if we already know this model doesn't support json_schema
+  if (modelsWithoutJsonSupport.has(model.value)) {
+    console.log(`Model ${model.value} known to not support json_schema, using text fallback...`)
+    return callPollinationsWithoutJson(messages, enableWebSearch)
+  }
+
+  const requestBody: any = {
+    model: model.value,
+    messages: messages,
+    max_tokens: 8192,
+    response_format: getResponseSchema()
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (apiKey.value) {
+    headers['Authorization'] = `Bearer ${apiKey.value}`
+  }
+
+  const url = apiKey.value ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Pollinations API Error Details:', errorData)
+    
+    if (response.status === 429) {
+      throw new Error('RATE_LIMITED')
+    }
+    
+    // If error indicates json_schema not supported, remember and retry without
+    if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema'))) {
+      console.warn(`Model ${model.value} does not support json_schema response format, remembering and retrying without it...`)
+      modelsWithoutJsonSupport.add(model.value)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      return callPollinationsWithoutJson(messages, enableWebSearch)
+    }
+    
+    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+  const data = await response.json()
+
+  return data.choices[0].message.content
+}
+
+const callPollinationsWithoutJson = async (messages: any[], enableWebSearch: boolean = false) => {
+  const requestBody: any = {
+    model: model.value,
+    messages: messages,
+    max_tokens: 8192
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (apiKey.value) {
+    headers['Authorization'] = `Bearer ${apiKey.value}`
+  }
+
+  const url = apiKey.value ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Pollinations API Error Details:', errorData)
+    if (response.status === 429) {
+      throw new Error('RATE_LIMITED')
+    }
+    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+  const data = await response.json()
+
+  return data.choices[0].message.content
 }
 
 const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
@@ -2193,59 +2427,51 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
     a !== 'action'
   )
   
-  const prompt = `
-  I have a sequence of story actions. I need you to assign the most appropriate animation/emotion to each action based on the text.
-  
-  Available Animations for Current Character (${market.live2d.current_id}): ${JSON.stringify(filteredAnimations)}
-  
-  Use this mapping guide to choose the correct intensity (e.g. 'angry_02' vs 'angry_03'):
-  ${JSON.stringify(animationMappings, null, 2)}
-  
-  IMPORTANT: If the text is in ALL CAPS (e.g. "STOP IT!"), you MUST assign a high-intensity 'angry' or 'surprise' animation (e.g. 'angry_02', 'shock').
-  For other characters, use generic emotion names (e.g., happy, angry, sad, surprise, idle).
-  
-  Actions:
-  ${JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character })), null, 2)}
-  
-  Return ONLY a JSON array of strings representing the animation name for each action in order.
-  Example: ["idle", "angry_02", "happy"]
-  `
+  const prompt = prompts.animationEnrichment
+    .replace('{currentCharacterId}', market.live2d.current_id)
+    .replace('{filteredAnimations}', JSON.stringify(filteredAnimations))
+    .replace('{animationMappings}', JSON.stringify(animationMappings, null, 2))
+    .replace('{actions}', JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character, speaking: Boolean(a.speaking) })), null, 2))
   
   const messages = [{ role: 'user', content: prompt }]
   
   try {
-      let response: string
-      if (apiProvider.value === 'perplexity') {
-        response = await callPerplexity(messages, false)
-      } else if (apiProvider.value === 'gemini') {
-        response = await callGemini(messages, false)
-      } else if (apiProvider.value === 'openrouter') {
-        response = await callOpenRouter(messages, false)
-      } else {
-        return actions
-      }
+    let response: string
+
+    if (apiProvider.value === 'perplexity') {
+      response = await callPerplexity(messages, false)
+    } else if (apiProvider.value === 'gemini') {
+      response = await callGemini(messages, false)
+    } else if (apiProvider.value === 'openrouter') {
+      response = await callOpenRouter(messages, false)
+    } else if (apiProvider.value === 'pollinations') {
+      response = await callPollinations(messages, false)
+    } else {
+      return actions
+    }
       
-      let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
-      const start = jsonStr.indexOf('[')
-      const end = jsonStr.lastIndexOf(']')
-      if (start !== -1 && end !== -1) {
-        jsonStr = jsonStr.substring(start, end + 1)
-        const animations = JSON.parse(jsonStr)
+    let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
+    const start = jsonStr.indexOf('[')
+    const end = jsonStr.lastIndexOf(']')
+
+    if (start !== -1 && end !== -1) {
+      jsonStr = jsonStr.substring(start, end + 1)
+      const animations = JSON.parse(jsonStr)
         
-        if (Array.isArray(animations) && animations.length === actions.length) {
-            return actions.map((action, index) => ({
-                ...action,
-                animation: animations[index]
-            }))
-        }
+      if (Array.isArray(animations) && animations.length === actions.length) {
+        return actions.map((action, index) => ({
+          ...action,
+          animation: animations[index]
+        }))
       }
+    }
   } catch (e) {
-      console.error('Failed to enrich animations via API, using local fallback', e)
+    console.error('Failed to enrich animations via API, using local fallback', e)
   }
   
   // Local fallback: use animationMappings to match keywords to animations
   const availableAnimations = market.live2d.animations || []
-  return actions.map(action => {
+  return actions.map((action) => {
     const text = (action.text || '').toLowerCase()
     let animation = 'idle'
     
@@ -2259,7 +2485,8 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
     } else {
       // Use animationMappings to find matching animation
       for (const [animationType, keywords] of Object.entries(animationMappings)) {
-        const hasKeyword = keywords.some(keyword => text.includes(keyword.toLowerCase()))
+        const hasKeyword = keywords.some((keyword) => text.includes(keyword.toLowerCase()))
+
         if (hasKeyword) {
           // Find the best available animation matching this type
           const matchedAnim = availableAnimations.find((a: string) => a.includes(animationType))
@@ -2277,8 +2504,8 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   })
 }
 
-const processAIResponse = async (responseStr: string) => {
-  loadingStatus.value = "Processing response..."
+const processAIResponse = async (responseStr: string, depth: number = 0) => {
+  loadingStatus.value = 'Processing response...'
   logDebug('Raw AI Response:', responseStr)
   
   // Check for empty or too-short responses (model sometimes returns nothing)
@@ -2296,8 +2523,9 @@ const processAIResponse = async (responseStr: string) => {
     
     try {
       data = parseFallback(responseStr)
+
       if (data.length === 0) {
-         throw new Error('Fallback parsing yielded no actions')
+        throw new Error('Fallback parsing yielded no actions')
       }
       logDebug('Fallback parsing successful:', data)
       
@@ -2309,18 +2537,58 @@ const processAIResponse = async (responseStr: string) => {
       
     } catch (fallbackError) {
       console.error('Failed to parse JSON response and Fallback failed', e, fallbackError)
+
       throw new Error('JSON_PARSE_ERROR')
     }
   }
 
   logDebug('Parsed Action Sequence:', data)
 
+  // Fallback: handle needs_search directives here (in case the earlier callAI() detection
+  // missed them due to truncated/malformed JSON).
+  const collectValidatedNeedsSearch = (actions: any[], userPrompt: string = ''): string[] => {
+    const allGeneratedText = actions.map((a: any) => a?.text || '').join(' ')
+    const requested: string[] = []
+
+    for (const action of actions) {
+      if (!action?.needs_search || !Array.isArray(action.needs_search)) continue
+      for (const name of action.needs_search) {
+        if (typeof name !== 'string') continue
+        const trimmed = name.trim()
+        if (trimmed) requested.push(trimmed)
+      }
+    }
+
+    const unique = Array.from(new Set(requested))
+
+    return unique.filter((name) => {
+      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
+      const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
+      return !!(inUserPrompt || inGeneratedText)
+    })
+  }
+
+  const needsSearch = collectValidatedNeedsSearch(data, lastPrompt.value)
+  if (needsSearch.length > 0) {
+    if (depth >= 2) {
+      logDebug('[processAIResponse] needs_search detected but recursion limit reached:', needsSearch)
+    } else {
+      logDebug('[processAIResponse] Detected needs_search directive(s):', needsSearch)
+      await wrappedSearchForCharacters(needsSearch)
+      setRandomLoadingMessage()
+      const followUp = await callAIWithoutSearch(false)
+      await processAIResponse(followUp, depth + 1)
+      return
+    }
+  }
+
   // Ensure narration/dialogue separation even when the model returns a single mixed text step.
   data = sanitizeActions(data)
   logDebug('Sanitized Action Sequence:', data)
 
   isGenerating.value = false
-  loadingStatus.value = "..."
+  loadingStatus.value = '...'
 
   for (const action of data) {
     if (isStopped.value) {
@@ -2338,205 +2606,6 @@ const getCharacterName = (id: string): string | null => {
   const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
 
   return char ? char.name : id
-}
-
-const playTTSGptSovits = async (text: string, characterName: string) => {
-  // Clean up character name to match folder/filename
-  // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer"
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
-  
-  logDebug(`[TTS-GPTSoVits] Requesting TTS for ${characterName} (${cleanName})`)
-
-  try {
-    let baseUrl = gptSovitsEndpoint.value
-    baseUrl = baseUrl.replace(/\/$/, '')
-    
-    // Handle CORS in dev mode by using Vite proxy
-    if (import.meta.env.DEV && (baseUrl.includes('localhost:9880') || baseUrl.includes('127.0.0.1:9880'))) {
-      baseUrl = '/gptsovits'
-    }
-
-    // Construct paths for reference audio and prompt text
-    // User must place files at: {basePath}/GPT_SoVITS/voices/{character}/{character}.wav
-    // And prompt text at: {basePath}/GPT_SoVITS/voices/{character}/{character}.txt
-    // Clean up the base path: remove trailing slashes/backslashes, normalize to forward slashes
-    const basePath = gptSovitsBasePath.value
-      .replace(/[\\/]+$/, '')  // Remove trailing slashes (both / and \)
-      .replace(/\\/g, '/')     // Convert backslashes to forward slashes
-    const refAudioPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.wav`
-    const promptTextPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.txt`
-
-    // Fetch prompt text from cache or API
-    let promptText = gptSovitsPromptTextCache.get(cleanName)
-    if (!promptText) {
-      try {
-        const promptResponse = await fetch(`${baseUrl}/read_prompt_text?path=${encodeURIComponent(promptTextPath)}`)
-        if (promptResponse.ok) {
-          const promptData = await promptResponse.json()
-          promptText = promptData.text || ''
-          if (promptText) {
-            gptSovitsPromptTextCache.set(cleanName, promptText)
-            logDebug(`[TTS-GPTSoVits] Loaded prompt text for ${cleanName}: "${promptText}"`)
-          }
-        } else {
-          console.warn(`[TTS-GPTSoVits] Could not fetch prompt text for ${cleanName}`)
-          promptText = ''
-        }
-      } catch (e) {
-        console.warn(`[TTS-GPTSoVits] Error fetching prompt text for ${cleanName}:`, e)
-        promptText = ''
-      }
-    }
-
-    // Call the TTS endpoint
-    const payload = {
-      text: text,
-      text_lang: 'en',
-      text_split_method: 'cut0',
-      ref_audio_path: refAudioPath,
-      prompt_text: promptText,
-      prompt_lang: 'en',
-      media_type: 'wav',
-      streaming_mode: false,
-      // Quality parameters
-      top_k: 10,
-      top_p: 0.8,
-      temperature: 0.8,
-      speed_factor: 1.0
-    }
-
-    logDebug(`[TTS-GPTSoVits] Calling ${baseUrl}/tts with payload:`, payload)
-
-    const response = await fetch(`${baseUrl}/tts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      console.warn(`[TTS-GPTSoVits] API Error: ${response.status} - ${errText}`)
-      return
-    }
-
-    // Response is audio blob
-    const audioBlob = await response.blob()
-    const audioUrl = URL.createObjectURL(audioBlob)
-    const audio = new Audio(audioUrl)
-    audio.volume = 1.0
-
-    // Sync yapping with audio
-    audio.onplay = () => {
-      market.live2d.isYapping = true
-    }
-    audio.onended = () => {
-      market.live2d.isYapping = false
-      URL.revokeObjectURL(audioUrl) // Clean up
-    }
-    audio.onerror = () => {
-      market.live2d.isYapping = false
-      URL.revokeObjectURL(audioUrl)
-    }
-
-    audio.play().catch(e => {
-      console.warn('[TTS-GPTSoVits] Playback failed:', e)
-      market.live2d.isYapping = false
-      URL.revokeObjectURL(audioUrl)
-    })
-  } catch (e) {
-    console.warn('[TTS-GPTSoVits] Error:', e)
-  }
-}
-
-const playTTS = async (text: string, characterName: string) => {
-  if (!ttsEnabled.value || !characterName) return
-
-  // Dispatch to appropriate TTS provider
-  if (ttsProvider.value === 'gptsovits') {
-    return playTTSGptSovits(text, characterName)
-  }
-
-  // AllTalk implementation (default)
-  // Clean up character name to match filename
-  // Remove special chars, replace spaces with underscores
-  // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer.wav"
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
-  const voiceFile = `${cleanName}.wav`
-  
-  logDebug(`[TTS] Requesting TTS for ${characterName} (${voiceFile})`)
-
-  try {
-    let baseUrl = ttsEndpoint.value
-    // Clean up the base URL to ensure we have the root (remove /v1, /api, trailing slashes)
-    baseUrl = baseUrl.replace(/\/$/, '').replace(/\/v1$/, '').replace(/\/api$/, '')
-    
-    // Handle CORS in dev mode by using Vite proxy
-    // This requires the proxy to be configured in vite.config.ts
-    if (import.meta.env.DEV && (baseUrl.includes('localhost:7851') || baseUrl.includes('127.0.0.1:7851'))) {
-        baseUrl = '/alltalk'
-    }
-
-    // Use Standard API via proxy (better support for custom filenames)
-    const url = `${baseUrl}/api/tts-generate`
-    
-    logDebug(`[TTS] Calling URL: ${url}`)
-
-    const params = new URLSearchParams()
-    params.append('text_input', text)
-    params.append('character_voice_gen', voiceFile)
-    params.append('narrator_enabled', 'false')
-    params.append('text_not_inside', 'character')
-    params.append('language', 'en')
-    params.append('output_file_name', 'nikke_tts_gen')
-    params.append('output_file_timestamp', 'true')
-    params.append('autoplay', 'false')
-    params.append('autoplay_volume', '0.8')
-    params.append('text_filtering', 'standard')
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params
-    })
-
-    if (!response.ok) {
-       const errText = await response.text()
-       console.error(`[TTS] API Error: ${response.status} - ${errText}`)
-       return
-    }
-
-    const data = await response.json()
-    
-    if (data.status === 'generate-success' && data.output_file_url) {
-        // Construct audio URL using the same base (proxy or direct)
-        // data.output_file_url usually starts with /audio/
-        const audioUrl = `${baseUrl}${data.output_file_url}`
-        const audio = new Audio(audioUrl)
-        audio.volume = 1.0
-        
-        // Sync yapping with audio
-        audio.onplay = () => {
-            market.live2d.isYapping = true
-        }
-        audio.onended = () => {
-            market.live2d.isYapping = false
-        }
-        audio.onerror = () => {
-            market.live2d.isYapping = false
-        }
-        
-        audio.play().catch(e => {
-            console.error('[TTS] Playback failed:', e)
-            market.live2d.isYapping = false
-        })
-    }
-  } catch (e) {
-    console.error('[TTS] Error:', e)
-  }
 }
 
 const executeAction = async (data: any) => {
@@ -2671,22 +2740,22 @@ const executeAction = async (data: any) => {
   
   // Handle 'current' character resolution and speaker detection
   if (effectiveCharId === 'current') {
-      // Check for speaker override in text
-      const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
-      if (speakerMatch) {
-        const speakerName = speakerMatch[1].trim()
-        const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
-        if (charObj && charObj.id !== market.live2d.current_id) {
-             logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
-             effectiveCharId = charObj.id
-             // Update data.character so subsequent logic uses the new ID
-             data.character = effectiveCharId
-        } else {
-             effectiveCharId = market.live2d.current_id
-        }
+    // Check for speaker override in text
+    const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
+    if (speakerMatch) {
+      const speakerName = speakerMatch[1].trim()
+      const charObj = l2d.find((c) => c.name.toLowerCase() === speakerName.toLowerCase())
+      if (charObj && charObj.id !== market.live2d.current_id) {
+        logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
+        effectiveCharId = charObj.id
+        // Update data.character so subsequent logic uses the new ID
+        data.character = effectiveCharId
       } else {
-         effectiveCharId = market.live2d.current_id
+        effectiveCharId = market.live2d.current_id
       }
+    } else {
+      effectiveCharId = market.live2d.current_id
+    }
   }
 
   // Add text to chat
@@ -2709,7 +2778,7 @@ const executeAction = async (data: any) => {
       if (name) {
         // Trigger TTS
         if (ttsEnabled.value) {
-          playTTS(data.text, name)
+          playTTS(data.text, name, market)
         }
 
         // Check if the text already starts with the name to avoid duplication
@@ -2800,6 +2869,7 @@ const executeAction = async (data: any) => {
     
   // Speaking
   let calculatedYapDuration = 0
+
   if (data.speaking && !ttsEnabled.value) {
     logDebug('Starting yap')
       
@@ -2814,6 +2884,7 @@ const executeAction = async (data: any) => {
     // Calculate yap duration based on text length
     // Approx 60ms per character + 300ms base (Slightly faster than reading speed for natural feel)
     let yapDuration = 3000
+
     if (data.text) {
       yapDuration = Math.max(1000, data.text.length * 60 + 300)
     } else if (data.duration) {
@@ -2836,7 +2907,7 @@ const executeAction = async (data: any) => {
   const duration = data.duration || 3000
     
   if (playbackMode.value === 'manual') {
-    loadingStatus.value = "Click Next to advance..."
+    loadingStatus.value = 'Click Next to advance...'
     logDebug('Waiting for user input (Manual Mode)')
     waitingForNext.value = true
     await new Promise<void>((r) => {
@@ -2851,10 +2922,11 @@ const executeAction = async (data: any) => {
       }
     }
   } else {
-    loadingStatus.value = "..."
+    loadingStatus.value = '...'
     // Auto Mode
     // If text is long, ensure we wait long enough to read it
     let autoDuration = Math.max(duration, 2000)
+
     if (data.text) {
       // Reading speed approx 50ms per char + base
       const readDuration = data.text.length * 50 + 1500
@@ -2883,6 +2955,7 @@ const resetSession = () => {
   if (chatHistory.value.length === 0) return
   
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
+
   if (confirmed) {
     chatHistory.value = []
     characterProfiles.value = {}
@@ -2900,8 +2973,8 @@ const resetSession = () => {
 const summarizeChunk = async (messages: { role: string, content: string }[]): Promise<boolean> => {
   if (messages.length === 0) return true
 
-  loadingStatus.value = "Summarizing story so far..."
-  const textToSummarize = messages.map(m => `${m.role}: ${m.content}`).join('\n\n')
+  loadingStatus.value = 'Summarizing story so far...'
+  const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
   const prompt = `Summarize the following story events concisely, focusing on key plot points and character developments. Do not lose important details.\n\n${textToSummarize}`
 
   const systemMsg = { role: 'system', content: 'You are a helpful assistant that summarizes story events.' }
@@ -2910,12 +2983,15 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 
   try {
     let summary = ''
+
     if (apiProvider.value === 'perplexity') {
       summary = await callPerplexity(msgs, false)
     } else if (apiProvider.value === 'gemini') {
-      summary = await callGemini(msgs, false)
+      summary = await callGeminiSummarization(msgs, apiKey.value, model.value)
     } else if (apiProvider.value === 'openrouter') {
-      summary = await callOpenRouter(msgs, false)
+      summary = await callOpenRouterSummarization(msgs, apiKey.value, model.value)
+    } else if (apiProvider.value === 'pollinations') {
+      summary = await callPollinationsSummarization(msgs, apiKey.value, model.value)
     }
     
     if (summary && summary.trim().length > 0) {
@@ -2925,13 +3001,16 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
         storySummary.value = summary
       }
       summarizationLastError.value = null
+
       return true
     }
     summarizationLastError.value = 'Summarization returned empty output.'
+
     return false
   } catch (e) {
     console.error('Failed to summarize chunk:', e)
     summarizationLastError.value = e instanceof Error ? e.message : String(e)
+
     return false
   }
 }
@@ -3143,4 +3222,28 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 .fade-leave-to {
   opacity: 0;
 }
+
+/* Settings section headers */
+.settings-section-header {
+  margin: 16px 0 8px 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent, #1565c0);
+  border-left: 4px solid var(--accent, #1565c0);
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
+}
+
+.accent-blue { --accent: #1565c0; }
+.accent-green { --accent: #2e7d32; }
+.accent-purple { --accent: #6a1b9a; }
+.accent-light-blue { --accent: #00eeff; }
+.accent-orange { --accent: #ef6c00; }
+.accent-red { --accent: #c62828; }
 </style>

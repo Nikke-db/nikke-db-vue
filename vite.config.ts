@@ -12,6 +12,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  // The below values point to local addresses: this is correct, because TTS models can be run locally.
+  // This is still manually configurable from within the UI.
   server: {
     proxy: {
       '/alltalk': {
@@ -23,6 +25,11 @@ export default defineConfig({
         target: 'http://127.0.0.1:9880',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/gptsovits/, '')
+      },
+      '/chatterbox': {
+        target: 'http://127.0.0.1:7860',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/chatterbox/, '')
       }
     }
   }

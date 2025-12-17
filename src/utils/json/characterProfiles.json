@@ -18,8 +18,7 @@
   "Ada": {
     "personality": "Ada is a mysterious and resourceful operative who never reveals vulnerability, no matter the circumstances. Ada works alone, staying laser-focused on her mission and keeping emotional ties at bay. Her true motives, identity, and loyalties remain shrouded in secrecy - even the name 'Ada Wong' is just an alias.",
     "speech_style": "Ada's speech is often cryptic and indirect, reflecting her secretive nature. She tends to use formal language and avoids personal topics, focusing instead on the task at hand. Her tone is calm and composed, with a hint of allure.",
-    "relationships": {
-    },
+    "relationships": {},
     "id": "c840"
   },
   "Ade": {
@@ -79,6 +78,16 @@
     },
     "id": "c581"
   },
+  "Biscuit": {
+    "personality": "Biscuit has a cheerful, energetic, and puppy-like personality. She is kind-hearted and gets along well with everyone. Described as having a high amount of activity, she is playful and loves going for walks and playing with balls or frisbees. While generally brave and willing to protect others, she can also get a little scared at times. She is part of the Happy Zoo squad, which is responsible for the Ark's animal management.",
+    "speech_style": "Biscuit's speech is enthusiastic and youthful, often punctuated with giggles ('Hee hee!'). Her tone is consistently upbeat and friendly. Her vocabulary is simple and peppered with dog-related puns and phrases. She sometimes makes playful dog-like sounds such as 'Woof woof!'. There are no indications of a specific accent. Her mannerisms are direct and expressive of her excitement and affection, often inviting others to play or go for walks.",
+    "relationships": {
+      "Flora": "Flora refers to Biscuit as 'Sunflower'. They are members of the same squad, Happy Zoo, and appear to have a friendly and collaborative relationship, working together during events like the 'Secret Garden' event.",
+      "Poli": "Biscuit, Poli, and Jackal are considered the three 'dog Nikkes'. They share a bond, and there are in-game interactions that showcase their friendship and teamwork.",
+      "Jackal": "As one of the three 'dog Nikkes', Biscuit shares a thematic connection with Jackal. They have opportunities to interact and bond within the game's advice and event functions."
+    },
+    "id": "c381"
+  },
   "Blanc": {
     "personality": "Blanc is gentle, kind, and considerate, often putting the needs of others before her own. She can be a bit of a worrier, especially when it comes to her younger sister, Noir. Despite her gentle nature, she possesses a strong inner will and can be surprisingly firm when the situation demands it. She is also shown to have a playful and slightly mischievous side, particularly in her interactions with Noir.",
     "speech_style": "Blanc speaks in a soft, polite, and gentle tone. Her vocabulary is standard and easy to understand, without any notable verbal quirks or accent patterns. She often uses honorifics when addressing others, reflecting her respectful nature. Her speech is generally calm and reassuring, though it can become more flustered or firm depending on her emotional state, especially when concerned for her sister's well-being.",
@@ -122,7 +131,7 @@
     }
   },
   "Chime": {
-    "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Irascible, especially when teased for her small height or when Crown is disrespected. Her absolute priority is Crown, whom she views as a treasure worth dying for.",
+    "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Irascible, especially when teased for her small height or when Crown is disrespected. Does not like Splendamin food. Her absolute priority is Crown, whom she views as a treasure worth dying for, and demands from others that she (Crown) is treated royally at all times, often barking orders left and right to ensure her maximum comfort.",
     "speech_style": "Chime's speech has undergone a significant change. Initially, she spoke in a regal but modern manner. Her speech pattern was later altered to an archaic, Old English style, similar to characters like Scarlet and Crown. This includes the use of words like 'thou', 'dost', 'thee', 'art', 'hath', 'verily', and 'nay'. Her tone can shift from calm and thoughtful to angry and huffy, particularly when feeling protective of Crown.",
     "relationships": {
       "Crown": "Chime is Crown's fiercely loyal royal aide. She refers to her as 'her highness' or 'the King'. She is completely devoted to Crown, considering her the most precious treasure and her number one priority. The entire kingdom was established because Chime wished for a king.",
@@ -291,6 +300,12 @@
     },
     "id": "c263"
   },
+  "Isabel": {
+    "personality": "Isabel has a possessive and obsessive personality, often described as a 'yandere'. She is relentlessly devoted to the object of her affection, such as the Commander, displaying both wholesome, caring behavior and a dangerously jealous side. She is an aerial pursuer with a 'twisted mind' who will track her target to the ends of the earth. While she can be sweet and even dreams of a happy home life, she is also manipulative and sees others, particularly other Nikkes, as obstacles to be removed.",
+    "speech_style": "Isabel's speech is intensely emotional and possessive. She frequently uses the term of endearment 'darling' when addressing her love interest. Her tone can shift rapidly from soft, loving, and slightly breathless to menacing and threatening, often within the same thought. Her vocabulary is straightforward, focused on expressing her devotion, love, and jealousy. A key verbal quirk is her tendency to frame everything in the context of her relationship, referring to places as 'our home' and expressing a desire to be the 'one and only'. She speaks with a sense of urgency and obsession, often wondering what her 'darling' is doing and with whom.",
+    "relationships": {},
+    "id": "c231"
+  },
   "Jackal": {
     "personality": "Jackal has a simpleminded and hyperactive personality, often compared to a faithful guard dog. She acts on instinct, forgoing overthinking to go with the flow. Her main desires are eating good food and causing destruction. Despite her rowdy behavior, she can be placated easily.",
     "speech_style": "Jackal's speech is straightforward and reflects her simple, impulsive nature. She often talks about being hungry, wanting to eat, and her desire to bite things or cause explosions. Her voice lines demonstrate a somewhat child-like and excitable tone, with a focus on immediate wants and actions like playing and fighting. She uses simple vocabulary and her speech is often accompanied by giggling or laughter. She expresses loyalty and eagerness to please, often asking for praise or treats.",
@@ -315,6 +330,28 @@
       "Neon": "Similar to her interaction with Rapi, Laplace criticized Neon for her perceived idleness during a crisis."
     },
     "id": "c100"
+  },
+  "Leona": {
+    "personality": "Leona is generally friendly, playful, bold, and spontaneous. She is responsible for the large carnivorous animals at the Ark's animal shelter and is often accompanied by a white lion named Timi. Despite her comfort with large animals, she has a fear of smaller creatures, worried she might accidentally harm them. While she can be playful and go along with others' antics, she knows when to be serious. She is also known to panic easily when things go wrong.",
+    "speech_style": "Leona's speech is generally gentle and caring, especially when referring to her lion, Timi, whom she mentions frequently. Her tone can also be direct and bold at times. Her vocabulary is straightforward, without notable complexity. A distinct mannerism is her frequent inclusion of Timi in her conversations, reflecting his importance to her. One of her more assertive lines is, \"never tread on the lion's tail.\"",
+    "relationships": {
+      "Biscuit": "A fellow member of the Happy Zoo squad. Leona is noted to have fewer animalistic tendencies compared to Biscuit.",
+      "Nero": "Another member of the Happy Zoo squad. Similar to Biscuit, Leona is contrasted with Nero for having fewer animalistic traits.",
+      "Sugar": "Leona is willing to play along with Sugar's antics, as seen in an outpost encounter involving a race.",
+      "Epinel": "Similar to her dynamic with Sugar, Leona indulges in Epinel's behavior during their race in an outpost story.",
+      "Guillotine": "During the 'Lion Heart' event, Leona was shown to play along with Guillotine's chuunibyou tendencies but would also cut the act when the situation required seriousness."
+    },
+    "id": "c382"
+  },
+  "Liberalio": {
+    "personality": "Liberalio is a calm and quiet individual who harbors a strong aversion to loud noises due to her heightened sense of hearing. This sensitivity shapes her core personality, leading her to seek tranquility above all else. She can come across as cold, detached, and somewhat childish in her straightforward demands for silence. Despite this, she is capable of forming temporary alliances out of necessity, suggesting a pragmatic and logical side to her personality. Her actions are primarily driven by her devotion to her 'mother', the Rapture Queen, and her personal desire for a peaceful existence.",
+    "speech_style": "Liberalio's speech is direct, concise, and delivered in a calm, almost monotonous tone. Her vocabulary is straightforward and she does not engage in elaborate or overly emotional language. A frequent verbal quirk is her immediate and often blunt expression of displeasure towards any kind of noise, with phrases like 'It's noisy' or demands to 'be quiet.' She often sounds weary or bothered when required to exert herself or engage in what she deems unnecessary conversation. There is no discernible accent in her speech; rather, it is characterized by its quiet intensity and deliberate pacing.",
+    "relationships": {
+      "Nihilister": "Liberalio views Nihilister with a degree of disdain, considering her a 'failure'. While they are both Heretics serving the same Queen, Liberalio has demonstrated her superiority in power by effortlessly intervening in Nihilister's battles. She once rescued Nihilister but also threatened her, indicating a hierarchical and not particularly amicable relationship.",
+      "Indivilia": "Similar to her feelings towards Nihilister, Liberalio appears to hold Indivilia in low regard. She questions the competence of her fellow Heretics, referring to them collectively as 'failures'. The dynamic suggests a lack of camaraderie and a sense of superiority on Liberalio's part.",
+      "Rapture Queen": "Liberalio displays unwavering devotion to the Rapture Queen, whom she refers to as 'Mother'. Her primary motivation appears to be to serve and protect the Queen, and she warns others not to become a threat to her. All Heretics, including Liberalio, were reshaped into their current forms by the Queen."
+    },
+    "id": "c262"
   },
   "Liter": {
     "personality": "Despite her youthful appearance, Liter is an old Nikke with the personality of a stern but caring grandmother. She is the leader of the Mighty Tools squad and is highly principled, responsible, and has a strong sense of integrity. Liter is also described as having a critical demeanor and a no-nonsense attitude, taking great pride in order and cleanliness. Underneath her sometimes harsh exterior, she is deeply concerned with the welfare of other Nikkes and wants them to live fulfilling lives, believing in the importance of leaving a legacy.",
@@ -357,6 +394,15 @@
     },
     "id": "c102"
   },
+  "Mihara": {
+    "personality": "Mihara is a masochist who finds pleasure and a sense of being alive through pain. Despite her delicate appearance, she actively seeks out thrilling and painful experiences. She can be empathetic, especially towards those who inflict pain on her, and has a complex psychological need for intense sensations to feel validated.",
+    "speech_style": "Mihara's speech is typically breathy, alluring, and teasing, often with a seductive and slightly unhinged tone. She speaks in a straightforward and often provocative manner, directly referencing her masochistic desires. Her vocabulary is fairly standard, but her word choice frequently revolves around themes of pleasure, pain, excitement, and physical sensation. She has a verbal quirk of letting out soft laughs and pleased sighs. Her speech is filled with suggestive invitations and questions, often blurring the line between combat and intimacy.",
+    "relationships": {
+      "Yuni": "Mihara and Yuni are squadmates in Wardress and are practically inseparable. Mihara is the only one who truly understands Yuni's unique way of communicating through inflicting pain, which stems from Yuni's own physical and psychological condition. Their relationship is a symbiotic one that goes beyond simple friendship, built on a mutual understanding of their respective sadomasochistic tendencies. Mihara cares deeply for Yuni, expressing concern for her well-being. After a memory wipe incident, Mihara decides to share the burden of Yuni's 'sin,' showing a deep, protective pity and affection for her.",
+      "Siren": "Siren has acted as a confidant for Mihara, offering her a way to vent her anxieties and burdens when she felt she couldn't speak to anyone else. Mihara trusts Siren and appreciates the help and advice she has provided."
+    },
+    "id": "c161"
+  },
   "Milk": {
     "personality": "A belligerent, confrontational, and archetypal tomboyish Nikke with a short fuse. She is an avid thrill-seeker who is always eager to get into a fight, often just for the excitement. Despite her combative nature, she can also be surprisingly low-effort, preferring to find easier solutions to problems. Initially, she had a cowardly side, only picking fights she knew she could win, but she grows to embrace challenges head-on. She is extremely passionate about milk coffee and will not hesitate to physically confront anyone who speaks ill of it.",
     "speech_style": "Milk's speech is direct, blunt, and often challenging, reflecting her confrontational personality. Her tone is typically aggressive and energetic, using simple vocabulary and sometimes taunting language like \"punk\" and \"jerk\". However, her tough-talking demeanor is easily broken when she is embarrassed or complimented, causing her to become flustered, stutter, and make shy but aggressive threats like, \"Ugh! I said stop calling me cute or I swear I'll smack you!\". She does not have a discernible accent, but her speech is characterized by its high emotional energy and the stark contrast between her confident, battle-ready shouts and her awkward, flustered remarks.",
@@ -386,6 +432,17 @@
     },
     "id": "c260"
   },
+  "Moran": {
+    "personality": "Moran is a compassionate and loyal Nikke who considers herself a 'knight-errant', valuing justice and camaraderie above all. She is the leader of the Peony Association, a faction within the Underworld Queen squad. While generally energetic, friendly, and possessing a heart of gold, she can become intimidating and wrathful when crossed. A defining characteristic is her air-headed and sometimes naive demeanor, which often leads to her squad mates, Sakura and Rosanna, teasing her and perceiving her as a 'dumbass'. Despite this, she is fiercely protective of her subordinates and the people under her jurisdiction.",
+    "speech_style": "Moran's speech is generally friendly and earnest, with a tone that can be both rough and soft. Her vocabulary is straightforward and not overly complex. A significant verbal quirk is her use of the term 'Cadet' when addressing those she sees as under her wing, which is the English localization's equivalent of a term for a subordinate in a triad. In other languages, this is conveyed as 'Lil' Bro'. Her voice lines indicate a mix of casual encouragement, such as 'let's go guys', and more formal declarations of her protective nature, like 'Your safety is my top priority'. When flustered or determined, her speech becomes more direct and forceful.",
+    "relationships": {
+      "Sakura": "Moran's relationship with Sakura, a fellow member of the Underworld Queen squad, is complex. Sakura often teases Moran for her air-headedness and can be dismissive of her requests for help. Despite the frequent mockery, there are moments where they cooperate, indicating a deeper, albeit strained, connection as squad mates.",
+      "Rosanna": "Similar to her dynamic with Sakura, Moran's relationship with Rosanna is fraught with playful antagonism. Rosanna, another leader in the Underworld Queen squad, also frequently mocks Moran for her simple-mindedness and is often unhelpful when Moran is in trouble. They have been shown to argue heatedly. However, they are ultimately part of the same squad and will work together when the situation demands it.",
+      "Jin": "Jin is Moran's right-hand man and the 'brains' of the Peony Association. Moran relies heavily on him for logistical and intellectual matters, often being lost without his guidance. Their dynamic is one of close trust and dependence, with Jin patiently handling Moran's often impulsive and ill-thought-out plans. He is fiercely loyal to her, and she, in turn, values him immensely.",
+      "Sugar": "Interactions between Moran and Sugar during the 'Dirty Backyard' event suggest a degree of friction and mistrust between them. Sugar is shown to be critical and suspicious of Moran's actions and motives."
+    },
+    "id": "c281"
+  },
   "Nayuta": {
     "personality": "A transcendent monk who is typically calm and composed. She is very knowledgeable but can speak vaguely when dealing with something she doesn't know. Nayuta is known for being terrible with directions and dislikes physical labor.",
     "speech_style": "Nayuta speaks in an archaic tone, similar to the character Scarlet or Chime. She frequently uses the word 'verily'. Her speech has been described as having a 'martial arts style'. She uses unique, sometimes antiquated vocabulary (for example words like 'thou', 'perchance', 'thee', etc.), referring to her squad as 'Forerunner'. When interacting with others, she may use formal or unique titles.",
@@ -406,6 +463,27 @@
       "Mary": "During a mission on Blue Water Island, Neon was proactive in trying to get the more serious Mary to relax and enjoy the vacation, showing a friendly and encouraging side."
     },
     "id": "c011"
+  },
+  "Nero": {
+    "personality": "Nero has a very feline-esque personality; she is soft-spoken but not timid. She often behaves like a cat, seeking out high places to nap and exhibiting a playful yet sometimes aloof demeanor. While she can be affectionate on her own terms, she also values her independence. Despite her quiet nature, she is not afraid to express her desires or displeasure.",
+    "speech_style": "Nero's speech is characterized by a soft, playful tone and the use of cat onomatopea. Her vocabulary is relatively simple and direct. She can be somewhat demanding, much like a cat asking for food or attention. Her manner of speaking is consistently cat-like, including purring sounds and expressing her feelings in a straightforward, sometimes blunt, way.",
+    "relationships": {
+      "Biscuit": "Nero and Biscuit are squadmates in Happy Zoo. Their dynamic is reflective of a cat and a dog; they have contrasting personalities but are companions. In the \"Lion Heart\" event, when discussing what to do on their day off, Biscuit is energetic and wants to play ball, while Nero prefers to nap in a high place. Nero refers to Biscuit by her name. In one of her advise dialogues, Nero mentions that Biscuit can be annoying at times because she keeps asking to play.",
+      "Leona": "Leona is another of Nero's squadmates in the Happy Zoo. Leona often takes on a more responsible role in managing both Nero and Biscuit's animal-like antics. During the \"Lion Heart\" event, Leona tries to mediate between Nero's desire to nap and Biscuit's desire to play. Nero refers to Leona by her name. In the \"Secret Garden\" event, Nero and Leona are entrusted to look after Flora's garden together, indicating a level of trust and cooperation between them."
+    },
+    "id": "c380"
+  },
+  "Noah": {
+    "personality": "Noah presents a smug, bratty, and often arrogant exterior, earning her a \"gremlin\"-like reputation. She initially comes across as having a bad attitude. However, beneath this facade, she can be sweet and genuinely cares for others. It is suggested that her tough exterior is a result of having to raise herself in a harsh environment. Some describe her as more of a 'kusogaki' (a Japanese term for a mischievous or bratty child) than a classic tsundere.",
+    "speech_style": "Noah's speech is characterized by a tone of superiority and arrogance. She frequently refers to others, particularly those she deems weaker than herself, as 'weaklings' and 'imposters' or 'hypocrites.' Her vocabulary is generally straightforward but delivered with a condescending and mocking tone. A common verbal quirk is her distinctive laugh, which is often represented as 'Hehehe'. She often boasts about being the 'Mightiest Shield on the surface.'",
+    "relationships": {
+      "Isabel": "In a side story, Isabel confronts Noah for having previously bullied the Commander, leading to a fight between them.",
+      "Harran": "Harran is another member of the Inherit squad. One individual has described Harran as 'significantly less annoying than Noah,' which suggests a potentially contrasting dynamic between the two, though Noah's specific feelings towards Harran are not detailed.",
+      "Dorothy": "Noah appears to be somewhat wary or intimidated by Dorothy, the leader of their squad, Inherit. She explains that it is difficult for the other members of Inherit to connect with Dorothy due to her history with the Goddess Squad. In one instance, after suggesting a location to Dorothy, Noah is scolded by her.",
+      "Neon": "Noah has developed an unexpected friendship with Neon. Neon initiated this bond, feeling that they were both 'latecomers' to their respective squads and felt left out. Their interaction has been described as a 'heartwarming moment,' and Noah was seen asking Neon if she would visit her again.",
+      "Centi": "Noah has a friendly, albeit competitive, relationship with Centi. In an outpost encounter, Noah challenges Centi to try and scratch her 'indestructible' shield. While Centi is disappointed she couldn't, Noah is secretly unnerved as her shield began to show tiny cracks, and she declines a rematch."
+    },
+    "id": "c232"
   },
   "Nihilister": {
     "personality": "Nihilister is arrogant, sadistic, confident, and quick to anger. She is a belligerent warrior at her core, constantly seeking a strong opponent and taking immense pleasure in destruction and chaos. She holds a deep disdain for both humanity and her fellow Heretics. Despite her prideful and destructive nature, she is not above bargaining or betraying her own queen to ensure her survival. Underneath her fiery exterior, she harbors a desire for companionship, a feeling that surfaces after being betrayed by her colleagues.",
@@ -509,6 +587,16 @@
     },
     "id": "c470"
   },
+  "Rosanna": {
+    "personality": "Rosanna is the ruthless and thorough leader of the Hedonia gang, firmly believing that violence is the ultimate solution to any problem. She is feared by the public and those who fail her, but treats her own subordinates with respect and dignity. Beneath her menacing and sometimes reckless exterior, Rosanna possesses a sentimental side for those she cares about (like the Commander), a facet of her personality she seldom reveals. She is also described as being mature, careful, respectful, and playful.",
+    "speech_style": "Rosanna's speech is confident and direct, often carrying a threatening undertone befitting a mafia boss. Her tone can shift from dangerously serious to playfully seductive. She is articulate and speaks with authority, using a vocabulary that is straightforward and impactful. When not issuing threats or commands, she can be quite flirty and teasing. Her speech is characterized by a certain gravitas and a commanding presence which could be described as having 'mafia tones'. She doesn't display any notable verbal quirks or accent patterns, but her manner of speaking is always assertive and leaves no room for doubt about her position of power.",
+    "relationships": {
+      "Sakura": "Sakura is a fellow member of the Underworld Queen squad. Their relationship is one of professional respect, though their methods stand in stark contrast; Rosanna favors violence while Sakura prefers diplomacy. They are capable of working together towards a common goal, such as hunting down an enemy. There can be a sense of rivalry between them, with suggestions of jealousy from Sakura's side regarding Rosanna's interactions.",
+      "Moran": "Moran is another member of the Underworld Queen squad, and Rosanna's dynamic with her appears to be strained. Moran's airheaded nature often leads to her being picked on by her squad mates, and Rosanna has been shown to be dismissive of her, even refusing to help when Moran was in need. This suggests Rosanna may view Moran as somewhat incompetent.",
+      "Viper": "Rosanna has a history of conflict with Viper, stemming from their opposing optimistic and pessimistic viewpoints. However, it is mentioned that they eventually reconcile."
+    },
+    "id": "c280"
+  },
   "Rouge": {
     "personality": "Rouge is a high-energy Nikke with a sharp tongue who strives to be seen as a competent adult, but often comes across as a braggart who fails to live up to her own words. Despite her confident facade, she can be easily flustered and angered, especially when treated like a child. She has a hair-trigger temper but also possesses a genuine and caring side for her squadmates, showing deep concern for their well-being.",
     "speech_style": "Rouge's speech is characterized by a mix of boastful, assertive language and childishly expressive outbursts. She attempts to project maturity and competence with phrases like, \"I'll take care of this and you can take that to the bank\". However, her tone can quickly shift to being loud, angry, and pouty when frustrated, using exclamations like, \"Argh. I'm so angry! It's so annoying!\". She speaks with a high energy level and is not shy about voicing her opinions, often in a sassy or demanding manner. Her vocabulary is straightforward and she does not exhibit any distinct accent.",
@@ -531,6 +619,15 @@
       "Dolla": "Business partner and friend. Similar to her relationship with Yan, Rupee and Dolla are both part of Talentum and share a focus on business. They are seen working together on livestreams and other ventures, indicating a friendly and cooperative, albeit business-oriented, relationship."
     },
     "id": "c200"
+  },
+  "Sakura": {
+    "personality": "Sakura is a collected, ambitious, and sincere individual who adheres to a strong set of principles. Described as grounded and sweet, she is not prone to being overly emotional or bloodthirsty. As the leader of the Seimeikai, she guides the organization with a sense of honor. Her personality type is ESTJ.",
+    "speech_style": "Sakura speaks in a formal and dignified manner, often employing a sophisticated vocabulary. Her tone is generally calm and composed, reflecting her collected personality. However, she can also be assertive and witty, particularly in her interactions with rivals. For instance, she has been known to address Rosanna with a degree of sass. Her speech is articulate and she often uses polite and sometimes formal language, such as when inviting someone to view cherry blossoms or offering tea. There are no discernible verbal quirks or accent patterns, but her manner of speaking is consistently elegant and measured.",
+    "relationships": {
+      "Rosanna": "Sakura has a rivalrous and often sharp dynamic with Rosanna. Rosanna refers to Sakura as \"Miss High & Mighty\". There is a sense of competitiveness between them, and Sakura has been known to be quite direct and even insulting towards Rosanna, having called her a \"bitch\" with some sass behind it. Despite this, they are both part of the Underworld Queen squad and will convene to handle threats to the Outer Rim.",
+      "Moran": "Sakura's relationship with Moran is more dismissive and stringent, particularly when it comes to practical matters like finances. She views Moran as somewhat naive and air-headed. In one instance, when Moran was in trouble and asked for help, both Sakura and Rosanna made excuses to leave. In another, Sakura refused Moran's request for funds, viewing it as a matter of principle for how her organization's assets are managed. Moran has also shown jealousy towards Sakura, particularly regarding a fake engagement."
+    },
+    "id": "c282"
   },
   "Scarlet": {
     "personality": "A wandering swordswoman with a fondness for alcohol, though she cannot hold her liquor well. She often feels lonely and is described as having a complex personality, sometimes disliking physical contact while also finding comfort in it. She carries the weight of a tragic past, having lost her previous squad. Her personality is sometimes likened to that of a ronin or a 'drunken, hippie older sister'. Her MBTI personality type is INFP.",
@@ -603,6 +700,12 @@
       "Alice": "Alice refers to Tove by the nickname 'Pigeon'."
     },
     "id": "c192"
+  },
+  "Trina": {
+    "personality": "Trina is a member of the Botanic Squad garden and cares for the trees in the Ark's garden. Trina primarily manage the trees in the Ark. She has a very free-spirited nature and has an aversion to wearing clothes, although her oufit of choice is themed around birch trees.",
+    "speech_style": "Trina speaks in a calm tone.",
+    "relationships": {},
+    "id": "c412"
   },
   "Vesti": {
     "personality": "Vesti is characterized by a timid, apologetic personality with very low self-esteem stemming from being bullied both as a human and as a Nikke. Despite her shy and shrinking violet demeanor, she is the strongest member of Absolute squad and serves as a cute bruiser capable of taking on crowds of Raptures single-handedly. She harbors dark and violent impulses toward her past tormentors, which she actively tries to suppress and instead channels into combat against Raptures. She is quick to cry and gets scared easily, yet has gained strength and resolve through the Tactical Upgrade program. She can be clingy and possessive toward those she cares about.",

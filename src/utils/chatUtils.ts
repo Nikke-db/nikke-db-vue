@@ -75,12 +75,28 @@ export const parseAIResponse = (responseStr: string): any[] => {
 
   // Try to repair common JSON errors
   const tryParseJSON = (str: string): any => {
+    const trimmed = (str || '').trim()
+
+    // Heuristic: If we got a truncated JSON array, try to salvage by cutting at the last complete object.
+    // This specifically helps when the model output is cut mid-string near the end of the response.
+    if (trimmed.startsWith('[') && trimmed.lastIndexOf(']') === -1) {
+      const lastObjEnd = trimmed.lastIndexOf('}')
+      if (lastObjEnd !== -1) {
+        const candidate = (trimmed.slice(0, lastObjEnd + 1).replace(/,\s*$/, '') + ']').trim()
+        try {
+          return JSON.parse(candidate)
+        } catch {
+          // Fall through to the normal repair logic
+        }
+      }
+    }
+
     // First attempt: parse as-is
     try {
-      return JSON.parse(str)
+      return JSON.parse(trimmed)
     } catch (e) {
       // Repair attempt: fix unbalanced braces/brackets
-      let repaired = str
+      let repaired = trimmed
       
       // Count braces and brackets
       const openBraces = (repaired.match(/{/g) || []).length
@@ -152,13 +168,13 @@ export const parseAIResponse = (responseStr: string): any[] => {
 
   // If we still don't have data, check for DeepSeek nested JSON
   if (!data) {
-     // Try parsing as is one last time to trigger the catch block in the caller if needed
-     // or just let it fall through to the array check which will fail
-     try {
-        data = JSON.parse(jsonStr)
-     } catch (e) {
-        // Ignore
-     }
+    // Try parsing as is one last time to trigger the catch block in the caller if needed
+    // or just let it fall through to the array check which will fail
+    try {
+      data = JSON.parse(jsonStr)
+    } catch (e) {
+      // Ignore
+    }
   }
 
   // DeepSeek Fix: Check if the model returned the JSON array INSIDE the 'text' field of a wrapper object
@@ -180,11 +196,16 @@ export const parseAIResponse = (responseStr: string): any[] => {
     }
   }
   
+  // Response Healing Schema support: Check if the object has an 'actions' array
+  if (!Array.isArray(data) && data && typeof data === 'object' && Array.isArray(data.actions)) {
+    data = data.actions
+  }
+
   if (!Array.isArray(data)) {
     if (data) {
-        data = [data]
+      data = [data]
     } else {
-        throw new Error('Failed to parse JSON')
+      throw new Error('Failed to parse JSON')
     }
   }
 
@@ -231,7 +252,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
       // Possessive narration: "Name's ..." / "Name’s ..."
       if (nextChar === '\'' || nextChar === '’') {
         const poss = after.slice(0, 2)
-        if (poss === "'s" || poss === '’s') return true
+        if (poss === '\'s' || poss === '’s') return true
       }
 
       // Strong narration clue: "Name ..., her/his/ ..." early in the sentence.
@@ -363,7 +384,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
 export const splitNarration = (text: string): any[] => {
   const actions: any[] = []
   // First, split into paragraphs on double newlines
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
+  const paragraphs = text.split(/\n\n+/).filter((p) => p.trim())
 
   for (const paragraph of paragraphs) {
     // Split each paragraph into sentences, handling common punctuation.
@@ -462,25 +483,25 @@ export const parseFallback = (text: string): any[] => {
   // CRITICAL: If the text looks like JSON (starts with [ or {), DO NOT parse it as narration.
   // This prevents raw JSON strings from being displayed to the user when JSON parsing fails.
   if (cleanText.startsWith('[') || cleanText.startsWith('{')) {
-      // Try one last desperate regex extraction for objects with "text" and "character"
-      // This handles cases where the JSON is so broken that tryParseJSON failed, but we can still see objects
-      const objectRegex = /\{\s*"text"\s*:\s*"([^"]+)"\s*,\s*"character"\s*:\s*"([^"]+)"/g
-      let match
-      let found = false
-      while ((match = objectRegex.exec(cleanText)) !== null) {
-          found = true
-          actions.push({
-              text: match[1],
-              character: match[2],
-              animation: 'idle',
-              speaking: true // Assume speaking if it has this structure
-          })
-      }
+    // Try one last desperate regex extraction for objects with "text" and "character"
+    // This handles cases where the JSON is so broken that tryParseJSON failed, but we can still see objects
+    const objectRegex = /\{\s*"text"\s*:\s*"([^"]+)"\s*,\s*"character"\s*:\s*"([^"]+)"/g
+    let match
+    let found = false
+    while ((match = objectRegex.exec(cleanText)) !== null) {
+      found = true
+      actions.push({
+        text: match[1],
+        character: match[2],
+        animation: 'idle',
+        speaking: true // Assume speaking if it has this structure
+      })
+    }
       
-      if (found) return actions
+    if (found) return actions
       
-      // If no objects found, return empty to signal failure rather than showing raw JSON
-      return []
+    // If no objects found, return empty to signal failure rather than showing raw JSON
+    return []
   }
 
   // Regex to find "Name: "Dialogue"" pattern  
@@ -502,10 +523,10 @@ export const parseFallback = (text: string): any[] => {
     // Resolve Character ID
     let charId = 'current'
     // Try exact match first
-    let charObj = l2d.find(c => c.name.toLowerCase() === name.toLowerCase())
+    let charObj = l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
     // If not found, try partial match for names with spaces
     if (!charObj) {
-       charObj = l2d.find(c => name.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(name.toLowerCase()))
+      charObj = l2d.find((c) => name.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(name.toLowerCase()))
     }
     if (charObj) charId = charObj.id
 
@@ -514,10 +535,10 @@ export const parseFallback = (text: string): any[] => {
 
       // If the last narration action has 'none' character, it might belong to the upcoming speaker
       if (narrationActions.length > 0) {
-          const lastAction = narrationActions[narrationActions.length - 1]
-          if (lastAction.character === 'none') {
-              lastAction.character = charId
-          }
+        const lastAction = narrationActions[narrationActions.length - 1]
+        if (lastAction.character === 'none') {
+          lastAction.character = charId
+        }
       }
 
       actions.push(...narrationActions)
@@ -537,7 +558,7 @@ export const parseFallback = (text: string): any[] => {
   // Trailing text
   const trailing = cleanText.substring(lastIndex).trim()
   if (trailing) {
-     actions.push(...splitNarration(trailing))
+    actions.push(...splitNarration(trailing))
   }
 
   return actions
