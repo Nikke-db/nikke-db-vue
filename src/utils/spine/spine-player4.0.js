@@ -13955,8 +13955,8 @@ var spine40 = (() => {
       }
     }
     dispose() {
-      this.logo.dispose()
-      this.spinner.dispose()
+      if (this.logo) this.logo.dispose()
+      if (this.spinner) this.spinner.dispose()
     }
     draw(complete = false) {
       if (loaded < 2 || (complete && this.fadeOut > FADE_OUT)) return
@@ -14147,6 +14147,7 @@ var spine40 = (() => {
       requestAnimationFrame(() => this.drawFrame())
     }
     dispose() {
+      this.disposed = true
       this.sceneRenderer.dispose()
       if (this.loadingScreen) this.loadingScreen.dispose()
       this.assetManager.dispose()
