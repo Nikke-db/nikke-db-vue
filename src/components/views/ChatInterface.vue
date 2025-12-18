@@ -634,6 +634,8 @@ const modelOptions = computed(() => {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
+      { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
+      { label: 'Gemini 3 Pro', value: 'gemini-3-pro-preview' }
     ]
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
@@ -2473,7 +2475,12 @@ const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
   }
   
   // Local fallback: use animationMappings to match keywords to animations
-  const availableAnimations = market.live2d.animations || []
+  const availableAnimations = (market.live2d.animations || []).filter((a) => 
+    a !== 'talk_start' && 
+    a !== 'talk_end' && 
+    a !== 'expression_0' && 
+    a !== 'action'
+  )
   return actions.map((action) => {
     const text = (action.text || '').toLowerCase()
     let animation = 'idle'
