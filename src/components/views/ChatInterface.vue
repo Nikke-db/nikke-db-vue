@@ -12,7 +12,31 @@
       </template>
     </n-button>
 
-    <div class="chat-container">
+    <div 
+      class="chat-container"
+      v-show="chatMode === 'classic' || (chatMode === 'nikke' && !nikkeOverlayVisible)"
+      :style="{ 
+        top: chatPosition.y + 'px', 
+        left: chatPosition.x + 'px', 
+        width: chatSize.width + 'px', 
+        height: chatSize.height + 'px',
+        bottom: 'auto',
+        maxHeight: 'none'
+      }"
+    >
+      <!-- Drag Handle -->
+      <div class="chat-drag-handle" @mousedown="startDrag" @touchstart="startDrag">
+        <div class="drag-indicator">
+          <n-icon size="16"><Draggable /></n-icon>
+          <span class="drag-title">Chat</span>
+        </div>
+        <div class="window-controls">
+          <n-button size="tiny" circle quaternary @click="initChatLayout" title="Reset Position">
+            <template #icon><n-icon><Reset /></n-icon></template>
+          </n-button>
+        </div>
+      </div>
+
       <div class="chat-history" ref="chatHistoryRef">
       <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role]">
         <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
@@ -104,7 +128,43 @@
         </div>
       </n-popover>
     </div>
+    
+    <!-- Resize Handles -->
+    <div class="resize-handle nw" @mousedown="startResize($event, 'nw')" @touchstart="startResize($event, 'nw')"></div>
+    <div class="resize-handle ne" @mousedown="startResize($event, 'ne')" @touchstart="startResize($event, 'ne')"></div>
+    <div class="resize-handle sw" @mousedown="startResize($event, 'sw')" @touchstart="startResize($event, 'sw')"></div>
+    <div class="resize-handle se" @mousedown="startResize($event, 'se')" @touchstart="startResize($event, 'se')">
+      <n-icon size="16"><Maximize /></n-icon>
     </div>
+    </div>
+
+    <!-- NIKKE Mode Overlay -->
+    <transition name="fade">
+      <div 
+        v-if="chatMode === 'nikke' && nikkeOverlayVisible" 
+        class="nikke-chat-overlay"
+        @mousedown="handleOverlayClick"
+      >
+        <div class="nikke-vignette"></div>
+
+        <!-- Stop Button for NIKKE Mode -->
+        <div class="nikke-overlay-controls">
+          <n-button type="error" circle @mousedown.stop="stopGeneration" title="Stop Generation">
+            <template #icon><n-icon><Close /></n-icon></template>
+          </n-button>
+        </div>
+
+        <div class="nikke-dialogue-container">
+          <div v-if="nikkeCurrentSpeaker" class="nikke-speaker-name">
+            <div class="nikke-speaker-indicator" :style="{ backgroundColor: nikkeSpeakerColor }"></div>
+            <span>{{ nikkeCurrentSpeaker }}</span>
+          </div>
+          <div class="nikke-dialogue-text">
+            {{ nikkeDisplayedText }}
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
@@ -244,7 +304,10 @@
                 </div>
               </n-popover>
             </template>
-            <n-select v-model:value="mode" :options="modeOptions" />
+            <n-radio-group v-model:value="mode" name="modegroup">
+              <n-radio-button value="roleplay">Roleplay</n-radio-button>
+              <n-radio-button value="story">Story</n-radio-button>
+            </n-radio-group>
           </n-form-item>
 
           <n-form-item>
@@ -283,8 +346,19 @@
                 </div>
               </n-popover>
             </template>
-            <n-select v-model:value="assetQuality" :options="assetQualityOptions" />
+            <n-radio-group v-model:value="assetQuality" name="assetqualitygroup">
+              <n-radio-button value="high">High</n-radio-button>
+              <n-radio-button value="low">Low</n-radio-button>
+            </n-radio-group>
           </n-form-item>
+
+          <n-form-item label="Chat Mode">
+            <n-radio-group v-model:value="chatMode" name="chatmodegroup">
+              <n-radio-button value="classic">Classic</n-radio-button>
+              <n-radio-button value="nikke">NIKKE</n-radio-button>
+            </n-radio-group>
+          </n-form-item>
+
           <n-form-item>
             <template #label>
               Playback
@@ -300,7 +374,10 @@
                 </div>
               </n-popover>
             </template>
-            <n-select v-model:value="playbackMode" :options="playbackOptions" />
+            <n-radio-group v-model:value="playbackMode" name="playbackgroup">
+              <n-radio-button value="auto">Auto</n-radio-button>
+              <n-radio-button value="manual">Manual</n-radio-button>
+            </n-radio-group>
           </n-form-item>
           <n-form-item>
             <template #label>
@@ -469,7 +546,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification, Draggable, Maximize, Close } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
@@ -532,7 +609,7 @@ const logDebug = (...args: any[]) => {
 // State
 const showSettings = ref(false)
 const showGuide = ref(false)
-const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') === 'true')
+const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const model = ref('sonar')
@@ -559,6 +636,60 @@ let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const characterProgression = ref<Record<string, any>>({})
+
+// NIKKE Mode State
+const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'classic')
+const nikkeOverlayVisible = ref(false)
+const nikkeCurrentSpeaker = ref('')
+const nikkeCurrentText = ref('')
+const nikkeDisplayedText = ref('')
+const isTyping = ref(false)
+const nikkeSpeakerColor = ref('#ffffff')
+let typewriterInterval: any = null
+
+const startTypewriter = (text: string) => {
+  if (typewriterInterval) clearInterval(typewriterInterval)
+  nikkeDisplayedText.value = ''
+  isTyping.value = true
+  let index = 0
+  
+  typewriterInterval = setInterval(() => {
+    if (index < text.length) {
+      nikkeDisplayedText.value += text[index]
+      index++
+    } else {
+      stopTypewriter()
+    }
+  }, 30)
+}
+
+const stopTypewriter = () => {
+  if (typewriterInterval) clearInterval(typewriterInterval)
+  nikkeDisplayedText.value = nikkeCurrentText.value
+  isTyping.value = false
+}
+
+const handleOverlayClick = (e: MouseEvent) => {
+  if (e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  
+  if (isTyping.value) {
+    stopTypewriter()
+  } else if (chatMode.value === 'nikke' && nikkeOverlayVisible.value) {
+    nextAction()
+  }
+}
+
+// Window Management State
+const chatPosition = ref({ x: 0, y: 0 })
+const chatSize = ref({ width: 400, height: 600 })
+const isDragging = ref(false)
+const isResizing = ref(false)
+const resizeDirection = ref('')
+const dragOffset = ref({ x: 0, y: 0 })
+const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY: 0 })
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
@@ -646,21 +777,6 @@ const modelOptions = computed(() => {
   return []
 })
 
-const modeOptions = [
-  { label: 'Roleplay Mode', value: 'roleplay' },
-  { label: 'Story Mode', value: 'story' }
-]
-
-const playbackOptions = [
-  { label: 'Auto', value: 'auto' },
-  { label: 'Manual', value: 'manual' }
-]
-
-const assetQualityOptions = [
-  { label: 'High', value: 'high' },
-  { label: 'Low', value: 'low' }
-]
-
 const tokenUsageOptions = [
   { label: 'Low (10 turns)', value: 'low' },
   { label: 'Medium (30 turns)', value: 'medium' },
@@ -685,6 +801,10 @@ const assetQuality = computed({
 })
 
 // Watchers
+watch(chatMode, (newVal) => {
+  localStorage.setItem('nikke_chat_mode', newVal)
+})
+
 watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
   if (apiProvider.value === 'pollinations') {
@@ -911,10 +1031,10 @@ const initializeSettings = async () => {
   
   // Load simple settings
   const savedMode = localStorage.getItem('nikke_mode')
-  if (savedMode && modeOptions.some((m) => m.value === savedMode)) mode.value = savedMode
+  if (savedMode && (savedMode === 'roleplay' || savedMode === 'story')) mode.value = savedMode
   
   const savedPlayback = localStorage.getItem('nikke_playback_mode')
-  if (savedPlayback && playbackOptions.some((p) => p.value === savedPlayback)) playbackMode.value = savedPlayback
+  if (savedPlayback && (savedPlayback === 'auto' || savedPlayback === 'manual')) playbackMode.value = savedPlayback
   
   const savedYap = localStorage.getItem('nikke_yap_enabled')
   if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
@@ -999,10 +1119,191 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
   }
 }
 
+const initChatLayout = () => {
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  
+  if (viewportWidth <= 768) {
+    // Mobile default: Bottom sheet style
+    const width = Math.min(viewportWidth - 20, 400)
+    const height = viewportHeight * 0.5
+    chatSize.value = { width, height }
+    chatPosition.value = { 
+      x: (viewportWidth - width) / 2, 
+      y: viewportHeight - height - 20 
+    }
+  } else {
+    // Desktop default
+    chatSize.value = { width: 400, height: 600 }
+    chatPosition.value = { x: 300, y: viewportHeight - 620 }
+  }
+}
+
+// Dragging Logic
+const startDrag = (e: MouseEvent | TouchEvent) => {
+  // Only allow dragging from the handle
+  if ((e.target as HTMLElement).closest('.window-controls') || (e.target as HTMLElement).closest('.n-button')) return
+  
+  // Prevent default to avoid text selection which can interfere with mouseup events
+  if (e instanceof MouseEvent) {
+    e.preventDefault()
+  }
+  
+  isDragging.value = true
+  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  
+  dragOffset.value = {
+    x: clientX - chatPosition.value.x,
+    y: clientY - chatPosition.value.y
+  }
+  
+  window.addEventListener('mousemove', onDrag)
+  window.addEventListener('touchmove', onDrag, { passive: false })
+  window.addEventListener('mouseup', stopDrag)
+  window.addEventListener('touchend', stopDrag)
+}
+
+const onDrag = (e: MouseEvent | TouchEvent) => {
+  if (!isDragging.value) return
+  
+  // Safety check: if mouse button is not pressed, stop dragging
+  if (e instanceof MouseEvent && e.buttons === 0) {
+    stopDrag()
+    return
+  }
+
+  e.preventDefault()
+  
+  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  
+  let newX = clientX - dragOffset.value.x
+  let newY = clientY - dragOffset.value.y
+  
+  // Boundaries
+  const maxX = window.innerWidth - 50 // Keep at least 50px visible
+  const maxY = window.innerHeight - 50
+  
+  newX = Math.max(-chatSize.value.width + 50, Math.min(newX, maxX))
+  newY = Math.max(0, Math.min(newY, maxY))
+  
+  chatPosition.value = { x: newX, y: newY }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  window.removeEventListener('mousemove', onDrag)
+  window.removeEventListener('touchmove', onDrag)
+  window.removeEventListener('mouseup', stopDrag)
+  window.removeEventListener('touchend', stopDrag)
+}
+
+// Resizing Logic
+const startResize = (e: MouseEvent | TouchEvent, direction: string) => {
+  e.stopPropagation()
+  e.preventDefault()
+  isResizing.value = true
+  resizeDirection.value = direction
+  
+  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  
+  resizeStart.value = {
+    x: clientX,
+    y: clientY,
+    width: chatSize.value.width,
+    height: chatSize.value.height,
+    initialX: chatPosition.value.x,
+    initialY: chatPosition.value.y
+  }
+  
+  window.addEventListener('mousemove', onResize)
+  window.addEventListener('touchmove', onResize, { passive: false })
+  window.addEventListener('mouseup', stopResize)
+  window.addEventListener('touchend', stopResize)
+}
+
+const onResize = (e: MouseEvent | TouchEvent) => {
+  if (!isResizing.value) return
+  
+  if (e instanceof MouseEvent && e.buttons === 0) {
+    stopResize()
+    return
+  }
+
+  e.preventDefault()
+  
+  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  
+  const deltaX = clientX - resizeStart.value.x
+  const deltaY = clientY - resizeStart.value.y
+  
+  let newWidth = resizeStart.value.width
+  let newHeight = resizeStart.value.height
+  let newX = resizeStart.value.initialX
+  let newY = resizeStart.value.initialY
+  
+  const dir = resizeDirection.value
+  
+  // Horizontal
+  if (dir.includes('e')) {
+    newWidth += deltaX
+  } else if (dir.includes('w')) {
+    newWidth -= deltaX
+    newX += deltaX
+  }
+  
+  // Vertical
+  if (dir.includes('s')) {
+    newHeight += deltaY
+  } else if (dir.includes('n')) {
+    newHeight -= deltaY
+    newY += deltaY
+  }
+  
+  // Min dimensions
+  const minWidth = 300
+  const minHeight = 200
+  
+  if (newWidth < minWidth) {
+    if (dir.includes('w')) newX = resizeStart.value.initialX + (resizeStart.value.width - minWidth)
+    newWidth = minWidth
+  }
+  
+  if (newHeight < minHeight) {
+    if (dir.includes('n')) newY = resizeStart.value.initialY + (resizeStart.value.height - minHeight)
+    newHeight = minHeight
+  }
+  
+  chatSize.value = { width: newWidth, height: newHeight }
+  chatPosition.value = { x: newX, y: newY }
+}
+
+const stopResize = () => {
+  isResizing.value = false
+  window.removeEventListener('mousemove', onResize)
+  window.removeEventListener('touchmove', onResize)
+  window.removeEventListener('mouseup', stopResize)
+  window.removeEventListener('touchend', stopResize)
+}
+
 onMounted(() => {
   checkGuide()
   initializeSettings()
+  initChatLayout()
   window.addEventListener('beforeunload', handleBeforeUnload)
+  window.addEventListener('resize', () => {
+    // Ensure window stays in bounds on resize
+    const { innerWidth, innerHeight } = window
+    if (chatPosition.value.x + chatSize.value.width > innerWidth) {
+      chatPosition.value.x = Math.max(0, innerWidth - chatSize.value.width)
+    }
+    if (chatPosition.value.y + chatSize.value.height > innerHeight) {
+      chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
+    }
+  })
 })
 
 onUnmounted(() => {
@@ -1104,7 +1405,7 @@ const handleFileUpload = (event: Event) => {
         // Restore Settings
         if (data.settings) {
           // Restore simple settings
-          if (data.settings.playbackMode && playbackOptions.some((p) => p.value === data.settings.playbackMode)) {
+          if (data.settings.playbackMode && (data.settings.playbackMode === 'auto' || data.settings.playbackMode === 'manual')) {
             playbackMode.value = data.settings.playbackMode
           }
           
@@ -1380,9 +1681,14 @@ const regenerateResponse = async () => {
 const stopGeneration = () => {
   isStopped.value = true
   isLoading.value = false
+  nikkeOverlayVisible.value = false
+  
+  if (isTyping.value) {
+    stopTypewriter()
+  }
 
   // If we are waiting for user input (Manual mode), cancel that wait so the loop can exit
-  if (waitingForNext.value && nextActionResolver) {
+  if (nextActionResolver) {
     nextActionResolver()
     nextActionResolver = null
     waitingForNext.value = false
@@ -2600,6 +2906,10 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
   isGenerating.value = false
   loadingStatus.value = '...'
 
+  if (chatMode.value === 'nikke') {
+    nikkeOverlayVisible.value = true
+  }
+
   for (const action of data) {
     if (isStopped.value) {
       logDebug('Execution stopped by user.')
@@ -2607,6 +2917,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
     }
     await executeAction(action)
   }
+  
+  nikkeOverlayVisible.value = false
 }
 
 const getCharacterName = (id: string): string | null => {
@@ -2662,18 +2974,18 @@ const executeAction = async (data: any) => {
 
       // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
       if (useLocalProfiles.value) {
-         const localKey = Object.keys(localCharacterProfiles).find(k => k.toLowerCase() === charName.toLowerCase())
-         if (localKey) {
-             logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${localKey}'). IGNORING AI memory and loading local profile instead.`)
+        const localKey = Object.keys(localCharacterProfiles).find(k => k.toLowerCase() === charName.toLowerCase())
+        if (localKey) {
+          logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${localKey}'). IGNORING AI memory and loading local profile instead.`)
              
-             const localProfile = (localCharacterProfiles as any)[localKey]
-             // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
-             newProfiles[charName] = {
-                 ...localProfile,
-                 id: localProfile.id || l2d.find(c => c.name.toLowerCase() === charName.toLowerCase())?.id
-             }
-             continue
-         }
+          const localProfile = (localCharacterProfiles as any)[localKey]
+          // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
+          newProfiles[charName] = {
+            ...localProfile,
+            id: localProfile.id || l2d.find(c => c.name.toLowerCase() === charName.toLowerCase())?.id
+          }
+          continue
+        }
       }
 
       if (typeof profile === 'object' && profile !== null) {
@@ -2768,115 +3080,75 @@ const executeAction = async (data: any) => {
     }
   }
 
-  // Add text to chat
-  if (data.text) {
-    let content = data.text
-      
-    // Add speaker name if speaking
-    if (data.speaking) {
-      let name = null
-        
-      if (effectiveCharId === 'none') {
-        // If character is explicitly none, it's likely the Commander in Story Mode
-        if (mode.value === 'story') {
-          name = 'Commander'
-        }
-      } else {
-        name = getCharacterName(effectiveCharId)
-      }
-
-      if (name) {
-        // Trigger TTS
-        if (ttsEnabled.value) {
-          playTTS(data.text, name, market)
-        }
-
-        // Check if the text already starts with the name to avoid duplication
-        // We check for "Name:", "**Name:**", "Name :", etc.
-        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
-        
-        // Also check for ANY bolded name at the start (e.g. "**Chime:**") to prevent double naming
-        // if the AI messed up the character ID but got the text right.
-        const anyNamePattern = /^\*\*[^*]+\*\*:/
-
-        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
-          content = `**${name}:** ${content}`
-        }
-      }
-    }
-
-    chatHistory.value.push({ role: 'assistant', content: content })
-    scrollToBottom()
-  }
-
-  // Update Character
-  if (data.character) {
-    // Handle 'none' character
-    if (data.character === 'none') {
-      logDebug('[Chat] Hiding character sprite')
-      market.live2d.isVisible = false
-    } 
-    // Handle specific character switch (including resolved 'current')
-    else {
-      // Force 'none' if in Story Mode and character is Commander
-      if (mode.value === 'story' && (data.character.toLowerCase().includes('commander') || data.character === 'c000')) {
-        logDebug('[Chat] Hiding Commander sprite in Story Mode')
+  // Prepare character update promise
+  const characterUpdatePromise = (async () => {
+    if (data.character) {
+      // Handle 'none' character
+      if (data.character === 'none') {
+        logDebug('[Chat] Hiding character sprite')
         market.live2d.isVisible = false
-      } else {
-        // Find character object
-        // Case-insensitive search for name or ID
-        const charObj = l2d.find((c) => 
-          c.id.toLowerCase() === data.character.toLowerCase() || 
-            c.name.toLowerCase() === data.character.toLowerCase()
-        )
-          
-        if (charObj) {
-          // Ensure visible
-          logDebug('[Chat] Setting visibility to true')
-          market.live2d.isVisible = true
-            
-          // Check if character is already active to avoid unnecessary reload
-          if (charObj.id === market.live2d.current_id) {
-            logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
-            // Force visibility update again just in case
-            market.live2d.isVisible = true
-          } else {
-            logDebug(`[Chat] Switching character to: ${data.character}`)
-            const previousLoadTime = market.live2d.finishedLoading
-            market.live2d.change_current_spine(charObj)
-              
-            // Wait for load to complete
-            logDebug('[Chat] Waiting for character load...')
-            await new Promise<void>((r) => {
-              const unwatch = watch(() => market.live2d.finishedLoading, (newVal) => {
-                if (newVal > previousLoadTime) {
-                  logDebug('[Chat] Character loaded.')
-                  unwatch()
-                  // Add a small delay to ensure the spine player is fully ready to accept new tracks
-                  setTimeout(r, 100)
-                }
-              })
-              // Safety timeout
-              setTimeout(() => {
-                unwatch()
-                r()
-              }, 10000)
-            })
-          }
+      } 
+      // Handle specific character switch (including resolved 'current')
+      else {
+        // Force 'none' if in Story Mode and character is Commander
+        if (mode.value === 'story' && (data.character.toLowerCase().includes('commander') || data.character === 'c000')) {
+          logDebug('[Chat] Hiding Commander sprite in Story Mode')
+          market.live2d.isVisible = false
         } else {
-          console.warn(`[Chat] Character not found: ${data.character}`)
+          // Find character object
+          // Case-insensitive search for name or ID
+          const charObj = l2d.find((c) => 
+            c.id.toLowerCase() === data.character.toLowerCase() || 
+              c.name.toLowerCase() === data.character.toLowerCase()
+          )
+            
+          if (charObj) {
+            // Ensure visible
+            logDebug('[Chat] Setting visibility to true')
+            market.live2d.isVisible = true
+              
+            // Check if character is already active to avoid unnecessary reload
+            if (charObj.id === market.live2d.current_id) {
+              logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
+              // Force visibility update again just in case
+              market.live2d.isVisible = true
+            } else {
+              logDebug(`[Chat] Switching character to: ${data.character}`)
+              const previousLoadTime = market.live2d.finishedLoading
+              market.live2d.change_current_spine(charObj)
+                
+              // Wait for load to complete
+              logDebug('[Chat] Waiting for character load...')
+              await new Promise<void>((r) => {
+                const unwatch = watch(() => market.live2d.finishedLoading, (newVal) => {
+                  if (newVal > previousLoadTime) {
+                    logDebug('[Chat] Character loaded.')
+                    unwatch()
+                    // Add a small delay to ensure the spine player is fully ready to accept new tracks
+                    setTimeout(r, 100)
+                  }
+                })
+                // Safety timeout
+                setTimeout(() => {
+                  unwatch()
+                  r()
+                }, 10000)
+              })
+            }
+          } else {
+            console.warn(`[Chat] Character not found: ${data.character}`)
+          }
         }
       }
     }
-  }
+  })()
     
   // Play Animation
   if (data.animation) {
     logDebug(`[Chat] Requesting animation: ${data.animation}`)
     market.live2d.current_animation = data.animation
   }
-    
+
   // Speaking
   let calculatedYapDuration = 0
 
@@ -2912,6 +3184,81 @@ const executeAction = async (data: any) => {
       }
       yapTimeoutId = null
     }, yapDuration)
+  }
+
+  // Add text to chat
+  if (data.text) {
+    let content = data.text
+      
+    if (chatMode.value === 'nikke') {
+      nikkeCurrentText.value = data.text
+      nikkeCurrentSpeaker.value = data.speaking ? (getCharacterName(effectiveCharId) || '') : ''
+      
+      // Get color from profile
+      const speakerName = nikkeCurrentSpeaker.value
+      const profile = effectiveCharacterProfiles.value[speakerName]
+      nikkeSpeakerColor.value = profile?.color || '#ffffff'
+      
+      startTypewriter(data.text)
+      
+      // Wait for BOTH typewriter AND character load
+      await Promise.all([
+        characterUpdatePromise,
+        new Promise<void>((resolve) => {
+          const check = setInterval(() => {
+            if (!isTyping.value) {
+              clearInterval(check)
+              resolve()
+            }
+          }, 100)
+        })
+      ])
+    } else {
+      // In classic mode, we still want to wait for character load before proceeding
+      await characterUpdatePromise
+    }
+
+    // Add speaker name if speaking
+    if (data.speaking) {
+      let name = null
+        
+      if (effectiveCharId === 'none') {
+        // If character is explicitly none, it's likely the Commander in Story Mode
+        if (mode.value === 'story') {
+          name = 'Commander'
+        }
+      } else {
+        name = getCharacterName(effectiveCharId)
+      }
+
+      if (name) {
+        // Trigger TTS
+        if (ttsEnabled.value) {
+          playTTS(data.text, name, market)
+        }
+
+        // Check if the text already starts with the name to avoid duplication
+        // We check for "Name:", "**Name:**", "Name :", etc.
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
+        
+        // Also check for ANY bolded name at the start (e.g. "**Chime:**") to prevent double naming
+        // if the AI messed up the character ID but got the text right.
+        const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
+
+        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
+          content = `**${name}:** ${content}`
+        }
+      }
+    }
+
+    chatHistory.value.push({ role: 'assistant', content: content })
+    scrollToBottom()
+  } else if (chatMode.value === 'nikke') {
+    // Clear text but keep overlay visible for animations/switches
+    nikkeCurrentText.value = ''
+    nikkeDisplayedText.value = ''
+    nikkeCurrentSpeaker.value = ''
   }
 
   const duration = data.duration || 3000
@@ -2985,10 +3332,9 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 
   loadingStatus.value = 'Summarizing story so far...'
   const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
-  const prompt = `Summarize the following story events concisely, focusing on key plot points and character developments. Do not lose important details.\n\n${textToSummarize}`
 
-  const systemMsg = { role: 'system', content: 'You are a helpful assistant that summarizes story events.' }
-  const userMsg = { role: 'user', content: prompt }
+  const systemMsg = { role: 'system', content: prompts.summarizeChunk.system }
+  const userMsg = { role: 'user', content: prompts.summarizeChunk.user.replace('${textToSummarize}', textToSummarize) }
   const msgs = [systemMsg, userMsg]
 
   try {
@@ -3065,37 +3411,91 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 
 .chat-container {
   position: absolute;
-  bottom: 20px;
-  left: 300px;
-  width: 400px;
-  max-height: 600px;
+  /* Initial values will be overridden by inline styles */
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
   border-radius: 10px;
-  padding: 10px;
+  padding: 0; /* Removed padding to handle drag bar */
   pointer-events: auto;
   transition: opacity 0.3s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  z-index: 1000;
+}
 
-  @media (max-width: 768px) {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    width: auto;
-    max-height: 50vh;
+.chat-drag-handle {
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+
+  .drag-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    
+    .drag-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  }
+}
+
+.resize-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &.se {
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+    color: rgba(255, 255, 255, 0.3);
+    &:hover { color: rgba(255, 255, 255, 0.8); }
+  }
+  
+  &.sw {
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
+  }
+  
+  &.ne {
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+    z-index: 20; /* Above drag handle */
+  }
+  
+  &.nw {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+    z-index: 20; /* Above drag handle */
   }
 }
 
 .chat-history {
   flex: 1;
   overflow-y: auto;
-  margin-bottom: 10px;
-  max-height: 400px;
+  padding: 10px;
+  margin-bottom: 0;
   
-  @media (max-width: 768px) {
-    max-height: none;
-  }
-
   .message {
     margin-bottom: 8px;
     padding: 8px;
@@ -3158,6 +3558,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   display: flex;
   gap: 10px;
   align-items: flex-end;
+  padding: 0 10px 10px 10px;
 
   @media (max-width: 768px) {
     flex-wrap: wrap;
@@ -3178,8 +3579,9 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 4px;
-  padding-top: 4px;
+  margin-top: 0;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.2);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -3221,6 +3623,82 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   font-style: italic;
   opacity: 0.8;
   font-size: 0.9em;
+}
+
+.nikke-chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.nikke-overlay-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10001;
+}
+
+.nikke-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+}
+
+.nikke-dialogue-container {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(to top, 
+    rgba(0, 0, 0, 0.9) 0%, 
+    rgba(0, 0, 0, 0.7) 50%, 
+    transparent 100%
+  );
+  padding: 60px 10% 80px 10%;
+  color: white;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.nikke-speaker-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.6em;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.nikke-speaker-indicator {
+  width: 6px;
+  height: 1.2em;
+  background-color: #ffeb3b;
+  box-shadow: 0 0 10px rgba(255, 235, 59, 0.4);
+}
+
+.nikke-dialogue-text {
+  font-size: 1.4em;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  max-width: 1400px;
+  font-weight: 400;
 }
 
 .fade-enter-active,
