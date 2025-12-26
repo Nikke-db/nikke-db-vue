@@ -163,6 +163,23 @@
             {{ nikkeDisplayedText }}
           </div>
         </div>
+
+        <!-- Game Mode Choices Overlay -->
+        <transition name="fade">
+          <div v-if="gameChoices.length > 0" class="game-choices-overlay">
+            <div class="choices-container">
+              <div 
+                v-for="(choice, index) in gameChoices" 
+                :key="index"
+                class="choice-btn"
+                @click="handleGameChoice(choice)"
+              >
+                <div class="choice-marker"></div>
+                <span class="choice-text">{{ (choice.text || (choice as any).label || '').replace(/^["']|["']$/g, '') }}</span>
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
     </transition>
 
@@ -300,13 +317,15 @@
                 </template>
                 <div>
                   <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br><br>
-                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.
+                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.<br><br>
+                  <strong>Game:</strong> Similar to Roleplay, but instead of typing in the chatbox, you are presented choices similarly to the videogame. You may still override the choices by typing your own after pressing the red X icon on the upper right corner.
                 </div>
               </n-popover>
             </template>
             <n-radio-group v-model:value="mode" name="modegroup">
               <n-radio-button value="roleplay">Roleplay</n-radio-button>
               <n-radio-button value="story">Story</n-radio-button>
+              <n-radio-button value="game">Game</n-radio-button>
             </n-radio-group>
           </n-form-item>
 
@@ -352,9 +371,23 @@
             </n-radio-group>
           </n-form-item>
 
-          <n-form-item label="Chat Mode">
+          <n-form-item>
+            <template #label>
+              Chat Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br>Not available in Game Mode.<br><br>
+                  <strong>NIKKE:</strong> Interface looks much more similar to the videogame, with overlay text and typewriter effects.
+                </div>
+              </n-popover>
+            </template>
             <n-radio-group v-model:value="chatMode" name="chatmodegroup">
-              <n-radio-button value="classic">Classic</n-radio-button>
+              <n-radio-button :disabled="mode === 'game'" value="classic">Classic</n-radio-button>
               <n-radio-button value="nikke">NIKKE</n-radio-button>
             </n-radio-group>
           </n-form-item>
@@ -510,6 +543,12 @@
               <li>Example: <code>Scene: The Command Center. Characters: Rapi, Anis, Neon. They are discussing the next mission.</code></li>
             </ul>
           </li>
+          <li><strong>Game Mode:</strong> Play a visual novel style game.
+            <ul>
+              <li>The AI narrates in first person as the Commander.</li>
+              <li>You will be presented with choices to influence the story.</li>
+            </ul>
+          </li>
         </ul>
 
         <h3>✨ Features</h3>
@@ -554,12 +593,11 @@ import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { animationMappings } from '@/utils/animationMappings'
-import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
+import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, NATIVE_SEARCH_PREFIXES, POLLINATIONS_NATIVE_SEARCH_MODELS, hasNativeSearch, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization } from '@/utils/llmUtils'
+import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations } from '@/utils/llmUtils'
 
 // Helper to get honorific with fallback to "Commander"
 const getHonorific = (characterName: string): string => {
@@ -568,42 +606,28 @@ const getHonorific = (characterName: string): string => {
 
 const market = useMarket()
 
-// Helper to get the response schema for structured output
-const getResponseSchema = () => ({
-  type: 'json_schema',
-  json_schema: {
-    name: 'StoryResponse',
-    schema: {
-      type: 'object',
-      properties: {
-        actions: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              needs_search: { type: 'array', items: { type: 'string' } },
-              memory: { type: 'object' },
-              characterProgression: { type: 'object' },
-              text: { type: 'string' },
-              character: { type: 'string' },
-              animation: { type: 'string' },
-              speaking: { type: 'boolean' },
-              duration: { type: 'number' }
-            },
-            required: ['text', 'character', 'speaking', 'animation']
-          }
-        }
-      },
-      required: ['actions']
-    }
-  }
-})
+// Structured output schema builder lives in utils
+const getResponseSchema = (isGameMode: boolean) => buildStoryResponseSchema(isGameMode)
+
+const pendingGameChoiceText = ref<string | null>(null)
+const abortCurrentPlaybackForChoice = ref(false)
 
 // Helper for debug logging
 const logDebug = (...args: any[]) => {
   if (import.meta.env.DEV) {
     console.log(...args)
   }
+}
+
+// Helper to get filtered animations (excludes internal talk tracks and unusable ones)
+const getFilteredAnimations = () => {
+  return (market.live2d.animations || []).filter((a) => 
+    a !== 'talk' &&
+    a !== 'talk_start' && 
+    a !== 'talk_end' && 
+    a !== 'expression_0' && 
+    a !== 'action'
+  )
 }
 
 // State
@@ -636,6 +660,9 @@ let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string, content: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const characterProgression = ref<Record<string, any>>({})
+const gameChoices = ref<{ text: string, type?: 'dialogue' | 'action', label?: string }[]>([])
+const pendingGameChoices = ref<{ text: string, type?: 'dialogue' | 'action', label?: string }[]>([])
+const choicesAwaitingReveal = ref(false)
 
 // NIKKE Mode State
 const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'classic')
@@ -673,6 +700,28 @@ const handleOverlayClick = (e: MouseEvent) => {
   if (e) {
     e.preventDefault()
     e.stopPropagation()
+  }
+
+  // If choices are visible, clicking anywhere else should do nothing.
+  if (gameChoices.value.length > 0) {
+    return
+  }
+
+  // If choices are pending, require an extra click AFTER typewriter finishes.
+  if (choicesAwaitingReveal.value) {
+    if (isTyping.value) {
+      stopTypewriter()
+      return
+    }
+
+    if (pendingGameChoices.value.length > 0) {
+      gameChoices.value = pendingGameChoices.value
+      pendingGameChoices.value = []
+      choicesAwaitingReveal.value = false
+      loadingStatus.value = 'Waiting for choice...'
+    }
+
+    return
   }
   
   if (isTyping.value) {
@@ -802,6 +851,12 @@ const assetQuality = computed({
 
 // Watchers
 watch(chatMode, (newVal) => {
+  // Prevent selecting Classic while in Game mode
+  if (newVal === 'classic' && mode.value === 'game') {
+    // If we're in game mode, force NIKKE mode instead
+    chatMode.value = 'nikke'
+    return
+  }
   localStorage.setItem('nikke_chat_mode', newVal)
 })
 
@@ -837,6 +892,10 @@ watch(computedUsesPollinationsAutoFallback, (newVal) => {
 
 watch(mode, (newVal) => {
   localStorage.setItem('nikke_mode', newVal)
+  // If switching to Game mode, ensure chatMode is not 'classic'
+  if (newVal === 'game' && chatMode.value === 'classic') {
+    chatMode.value = 'nikke'
+  }
 })
 
 watch(tokenUsage, (newVal) => {
@@ -1031,7 +1090,7 @@ const initializeSettings = async () => {
   
   // Load simple settings
   const savedMode = localStorage.getItem('nikke_mode')
-  if (savedMode && (savedMode === 'roleplay' || savedMode === 'story')) mode.value = savedMode
+  if (savedMode && (savedMode === 'roleplay' || savedMode === 'story' || savedMode === 'game')) mode.value = savedMode
   
   const savedPlayback = localStorage.getItem('nikke_playback_mode')
   if (savedPlayback && (savedPlayback === 'auto' || savedPlayback === 'manual')) playbackMode.value = savedPlayback
@@ -1541,6 +1600,32 @@ const scrollToBottom = () => {
   })
 }
 
+// If a Game Mode choice was selected during playback, queue and send it once the
+// current request finishes. This must be called from any function that drives
+// an AI turn (sendMessage/continueStory/retryLastMessage), otherwise the choice
+// can appear to do nothing.
+const flushPendingGameChoice = () => {
+  if (!pendingGameChoiceText.value) return
+
+  const attemptFlush = () => {
+    const next = pendingGameChoiceText.value
+    if (!next) return
+
+    if (isLoading.value) {
+      setTimeout(attemptFlush, 50)
+      return
+    }
+
+    abortCurrentPlaybackForChoice.value = false
+    userInput.value = next
+    pendingGameChoiceText.value = null
+
+    void sendMessage()
+  }
+
+  setTimeout(attemptFlush, 0)
+}
+
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
@@ -1603,6 +1688,8 @@ const sendMessage = async () => {
 
   isLoading.value = false
   scrollToBottom()
+
+  flushPendingGameChoice()
 }
 
 const retryLastMessage = async () => {
@@ -1665,6 +1752,8 @@ const retryLastMessage = async () => {
 
   isLoading.value = false
   scrollToBottom()
+
+  flushPendingGameChoice()
 }
 
 const regenerateResponse = async () => {
@@ -1696,6 +1785,10 @@ const stopGeneration = () => {
 }
 
 const nextAction = () => {
+  // Never allow advancing while game choices are pending/visible.
+  if (gameChoices.value.length > 0 || choicesAwaitingReveal.value) {
+    return
+  }
   if (nextActionResolver) {
     nextActionResolver()
     nextActionResolver = null
@@ -1712,14 +1805,14 @@ const continueStory = async () => {
   const text = mode.value === 'story' 
     ? prompts.continue.story 
     : prompts.continue.roleplay
-  // Don't add "Continue" to chat history to keep it clean, or add it as a system note?
-  // Let's add it as a user prompt but maybe hidden? Or just standard user prompt.
-  // For now, standard user prompt is fine to show intent.
   chatHistory.value.push({ role: 'user', content: text })
+
   scrollToBottom()
+
   isLoading.value = true
   isGenerating.value = true
   setRandomLoadingMessage()
+
   isStopped.value = false
   showRetry.value = false
   lastPrompt.value = text
@@ -1730,8 +1823,10 @@ const continueStory = async () => {
 
   while (attempts < maxAttempts && !success && !isStopped.value) {
     attempts++
+
     try {
       const response = await callAI(attempts > 1)
+
       if (!isStopped.value) {
         await processAIResponse(response)
         success = true
@@ -1768,6 +1863,8 @@ const continueStory = async () => {
 
   isLoading.value = false
   scrollToBottom()
+
+  flushPendingGameChoice()
 }
 
 // Helper to inject user-toggled reminders into the last user message
@@ -1839,12 +1936,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
   
   // Add current context
-  const filteredAnimations = market.live2d.animations.filter((a) => 
-    a !== 'talk_start' && 
-    a !== 'talk_end' && 
-    a !== 'expression_0' && 
-    a !== 'action'
-  )
+  const filteredAnimations = getFilteredAnimations()
   let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
 
   // Optimization: Limit history to prevent token overflow
@@ -2062,6 +2154,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   }
   
   const filteredAnimations = market.live2d.animations.filter((a) => 
+    a !== 'talk' &&
     a !== 'talk_start' && 
     a !== 'talk_end' && 
     a !== 'expression_0' && 
@@ -2290,9 +2383,18 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     relevantHonorifics[name] = (characterHonorifics as Record<string, string>)[name] || 'Commander'
   }
   
+  let modeInstructions = ''
+  if (mode.value === 'game') {
+    modeInstructions = prompts.systemPrompt.instructions.game
+  } else if (mode.value === 'story') {
+    modeInstructions = prompts.systemPrompt.instructions.story
+  } else {
+    modeInstructions = prompts.systemPrompt.instructions.roleplay
+  }
+  
   let prompt = `${prompts.systemPrompt.intro}
   
-  ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : prompts.systemPrompt.modes.story}
+  ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : (mode.value === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story)}
   
   ${prompts.systemPrompt.honorifics.header}
   ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'
@@ -2314,7 +2416,9 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
   
-  ${prompts.systemPrompt.instructions}
+  ${prompts.systemPrompt.instructions.base}
+  ${modeInstructions}
+  ${prompts.systemPrompt.instructions.closing}
   ${godModeEnabled.value ? prompts.systemPrompt.godMode : ''}
   `
 
@@ -2322,502 +2426,57 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
 }
 
 const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
-  let processedMessages = messages
-
-  if (enableContextCaching.value) {
-    // Clone messages to avoid mutating the original array
-    processedMessages = messages.map((m) => ({ ...m }))
-
-    // 1. Cache System Message (Index 0)
-    // Anthropic/OpenRouter expects content blocks for caching
-    if (processedMessages.length > 0 && processedMessages[0].role === 'system') {
-      const systemContent = processedMessages[0].content
-      processedMessages[0] = {
-        ...processedMessages[0],
-        content: [
-          { 
-            type: 'text', 
-            text: systemContent, 
-            cache_control: { type: 'ephemeral' } 
-          }
-        ]
-      }
-    }
-
-    // 2. Cache the last history message (The one before the current prompt)
-    // Structure is usually [System, ...History, CurrentPrompt]
-    // We want to cache the end of the History prefix.
-    // We target the second-to-last message.
-    if (processedMessages.length >= 2) {
-      const lastHistoryIndex = processedMessages.length - 2
-      // Ensure we don't cache the system message again if history is empty (though length check handles that)
-      // and ensure it's not the user prompt (last message)
-      if (lastHistoryIndex > 0 || (lastHistoryIndex === 0 && processedMessages[0].role !== 'system')) {
-        const msg = processedMessages[lastHistoryIndex]
-        // Only convert if it's a string content (standard)
-        if (typeof msg.content === 'string') {
-          processedMessages[lastHistoryIndex] = {
-            ...msg,
-            content: [
-              { 
-                type: 'text', 
-                text: msg.content,
-                cache_control: { type: 'ephemeral' }
-              }
-            ]
-          }
-        }
-      }
-    }
-  }
-
-  // Add a final user message to FORCE JSON output - models pay more attention to recent messages
-  const messagesWithEnforcement = [
-    ...processedMessages,
-    { role: 'user', content: prompts.reminders.jsonEnforcement }
-  ]
-  
-  // Build web plugin configuration if web search is enabled
-  const buildWebPlugin = () => {
-    if (!enableWebSearch) return undefined
-    
-    // If local profiles are enabled and fallback is disabled, DO NOT use web search
-    if (useLocalProfiles.value && !allowWebSearchFallback.value) {
-      return undefined
-    }
-
-    // Use default web plugin - Exa will search based on the prompt content
-    // For models with native search (OpenAI, Anthropic, etc.), this uses their built-in search
-    // For other models, it uses Exa search
-    return [{ id: 'web', max_results: 10 }]
-  }
-  
-  // Helper function to make the API call without json_object constraint
-  const callWithoutJsonFormat = async () => {
-    const requestBody: any = {
-      model: model.value,
-      messages: messagesWithEnforcement,
-      max_tokens: 8192
-    }
-    
-    const webPlugin = buildWebPlugin()
-    if (webPlugin) {
-      requestBody.plugins = webPlugin
-    }
-    
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey.value}`,
-        'HTTP-Referer': window.location.href,
-        'X-Title': 'Nikke DB Story Gen',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    })
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('OpenRouter API Error Details:', errorData)
-      
-      // Check for 429 rate limit error
-      if (response.status === 429 && errorData?.error?.message?.includes('is temporarily rate-limited upstream')) {
-        throw new Error('RATE_LIMITED')
-      }
-      
-      throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
-    }
-    
-    const data = await response.json()
-    return data.choices[0].message.content
-  }
-
-  // Check if we already know this model doesn't support json_object
-  if (modelsWithoutJsonSupport.has(model.value)) {
-    console.log(`Model ${model.value} known to not support json_object, skipping to fallback...`)
-    return callWithoutJsonFormat()
-  }
-  
-  // Define Schema for Response Healing (following documentation example)
-  const responseSchema = getResponseSchema()
-  
-  const requestBody: any = {
+  return await callOpenRouterImpl(messages, {
     model: model.value,
-    messages: processedMessages, // Use processedMessages directly to avoid conflicting with schema
-    max_tokens: 8192,
-    // Force JSON Schema output format for Response Healing
-    response_format: responseSchema,
-    // Require providers that actually support response_format
-    provider: {
-      require_parameters: true
-    }
-  }
-  
-  let plugins: any[] = []
-  const webPlugin = buildWebPlugin()
-  if (webPlugin) {
-    plugins = [...webPlugin]
-  }
-  // Add Response Healing plugin
-  plugins.push({ id: 'response-healing' })
-  
-  if (plugins.length > 0) {
-    requestBody.plugins = plugins
-  }
-  
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey.value}`,
-      'HTTP-Referer': window.location.href,
-      'X-Title': 'Nikke DB Story Gen',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
+    apiKey: apiKey.value,
+    enableContextCaching: enableContextCaching.value,
+    useLocalProfiles: useLocalProfiles.value,
+    allowWebSearchFallback: allowWebSearchFallback.value,
+    modeIsGame: mode.value === 'game',
+    enableWebSearch,
+    searchUrl,
+    prompts,
+    modelsWithoutJsonSupport
   })
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('OpenRouter API Error Details:', errorData)
-    
-    // Check for 429 rate limit error
-    if (response.status === 429 && errorData?.error?.message?.includes('is temporarily rate-limited upstream')) {
-      throw new Error('RATE_LIMITED')
-    }
-    
-    // If error is 404 with exact "No endpoints found" message - model doesn't support json_object response format
-    // Remember this model and retry without response_format constraint (e.g., Claude models don't support it)
-    if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
-      console.warn(`Model ${model.value} does not support json_object response format, remembering and retrying without it...`)
-      modelsWithoutJsonSupport.add(model.value)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
-      return callWithoutJsonFormat()
-    }
-    
-    throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
-  }
-  const data = await response.json()
-
-  return data.choices[0].message.content
 }
 
 const callPerplexity = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
-  const requestBody: any = {
+  return await callPerplexityImpl(messages, {
     model: model.value,
-    messages: messages
-  }
-  
-  // Force disable search if local profiles are enabled and fallback is disabled
-  const shouldSearch = enableWebSearch && !(useLocalProfiles.value && !allowWebSearchFallback.value)
-
-  if (shouldSearch) {
-    // If a specific URL is provided, use the full subdomain for more targeted search
-    if (searchUrl) {
-      // Extract the subdomain from the URL (e.g., "nikke-goddess-of-victory-international.fandom.com")
-      const urlMatch = searchUrl.match(/https?:\/\/([^\/]+)/)
-      if (urlMatch) {
-        requestBody.search_domain_filter = [urlMatch[1]]
-      }
-    }
-    // No domain filter if no specific URL provided - let Perplexity search freely
-    requestBody.web_search_options = {
-      search_context_size: 'medium'
-    }
-  } else {
-    // Disable search completely using Perplexity's disable_search parameter
-    requestBody.disable_search = true
-  }
-  
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey.value}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
+    apiKey: apiKey.value,
+    useLocalProfiles: useLocalProfiles.value,
+    allowWebSearchFallback: allowWebSearchFallback.value,
+    enableWebSearch: enableWebSearch,
+    searchUrl: searchUrl
   })
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Perplexity API Error Details:', errorData)
-    throw new Error(`Perplexity API Error: ${response.status} ${JSON.stringify(errorData)}`)
-  }
-  const data = await response.json()
-
-  return data.choices[0].message.content
 }
 
 const callGemini = async (messages: any[], enableWebSearch: boolean = false) => {
-  // Gemini API format is different, need to adapt
-  
-  // Check if we have a system message (first message with role 'system' or just need to treat first as system)
-  // If there's only one message, treat it as user content (no system instruction)
-  const hasSystemMessage = messages.length > 1 || messages[0]?.role === 'system'
-  
-  let contents: any[]
-  let systemMessage: any = null
-  
-  if (hasSystemMessage && messages.length > 1) {
-    // Extract system prompt (first message)
-    systemMessage = messages[0]
-    // Filter out system message and map the rest to Gemini format
-    contents = messages.slice(1).map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
-  } else {
-    // No system message, all messages are content
-    contents = messages.map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
-  }
-  
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model.value}:generateContent?key=${apiKey.value}`
-  
-  const requestBody: any = {
-    contents: contents,
-    generationConfig: {
-      // responseMimeType: "application/json" // Incompatible with tools
-    }
-  }
-  
-  // Only add systemInstruction if we have a system message
-  if (systemMessage) {
-    requestBody.systemInstruction = {
-      parts: [{ text: systemMessage.content }]
-    }
-  }
-  
-  // Force disable search if local profiles are enabled and fallback is disabled
-  const shouldSearch = enableWebSearch && !(useLocalProfiles.value && !allowWebSearchFallback.value)
-
-  if (shouldSearch) {
-    requestBody.tools = [{ googleSearch: {} }]
-  }
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
+  return await callGeminiImpl(messages, {
+    model: model.value,
+    apiKey: apiKey.value,
+    useLocalProfiles: useLocalProfiles.value,
+    allowWebSearchFallback: allowWebSearchFallback.value,
+    enableWebSearch
   })
-
-  if (!response.ok) {
-    const errorData = await response.json()
-    console.error('Gemini API Error Details:', errorData)
-    if (response.status === 503) {
-      throw new Error('Gemini API Error: 503 Service Unavailable')
-    }
-    throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`)
-  }
-  const data = await response.json()
-  
-  // Handle various response formats from Gemini
-  if (!data.candidates || data.candidates.length === 0) {
-    console.error('Gemini returned no candidates:', data)
-
-    throw new Error('Gemini API Error: No candidates in response')
-  }
-  
-  const candidate = data.candidates[0]
-
-  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-    console.error('Gemini returned empty content:', candidate)
-
-    throw new Error('Gemini API Error: Empty content in response')
-  }
-  
-  // Find the text part (there might be other parts like function calls when using tools)
-  const textPart = candidate.content.parts.find((p: any) => p.text !== undefined)
-
-  if (!textPart) {
-    console.error('Gemini returned no text part:', candidate.content.parts)
-
-    throw new Error('Gemini API Error: No text in response')
-  }
-  
-  return textPart.text
 }
 
+
+
 const callPollinations = async (messages: any[], enableWebSearch: boolean = false) => {
-  // Check if we already know this model doesn't support json_schema
-  if (modelsWithoutJsonSupport.has(model.value)) {
-    console.log(`Model ${model.value} known to not support json_schema, using text fallback...`)
-    return callPollinationsWithoutJson(messages, enableWebSearch)
-  }
-
-  const requestBody: any = {
+  return await callPollinationsImpl(messages, {
     model: model.value,
-    messages: messages,
-    max_tokens: 8192,
-    response_format: getResponseSchema()
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey.value) {
-    headers['Authorization'] = `Bearer ${apiKey.value}`
-  }
-
-  const url = apiKey.value ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(requestBody)
+    apiKey: apiKey.value,
+    useLocalProfiles: useLocalProfiles.value,
+    allowWebSearchFallback: allowWebSearchFallback.value,
+    modeIsGame: mode.value === 'game',
+    enableWebSearch,
+    modelsWithoutJsonSupport
   })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Pollinations API Error Details:', errorData)
-    
-    if (response.status === 429) {
-      throw new Error('RATE_LIMITED')
-    }
-    
-    // If error indicates json_schema not supported, remember and retry without
-    if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema'))) {
-      console.warn(`Model ${model.value} does not support json_schema response format, remembering and retrying without it...`)
-      modelsWithoutJsonSupport.add(model.value)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
-      return callPollinationsWithoutJson(messages, enableWebSearch)
-    }
-    
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
-  }
-  const data = await response.json()
-
-  return data.choices[0].message.content
 }
 
 const callPollinationsWithoutJson = async (messages: any[], enableWebSearch: boolean = false) => {
-  const requestBody: any = {
-    model: model.value,
-    messages: messages,
-    max_tokens: 8192
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey.value) {
-    headers['Authorization'] = `Bearer ${apiKey.value}`
-  }
-
-  const url = apiKey.value ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(requestBody)
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Pollinations API Error Details:', errorData)
-    if (response.status === 429) {
-      throw new Error('RATE_LIMITED')
-    }
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
-  }
-  const data = await response.json()
-
-  return data.choices[0].message.content
-}
-
-const enrichActionsWithAnimations = async (actions: any[]): Promise<any[]> => {
-  logDebug('Enriching actions with animations...')
-  
-  const filteredAnimations = market.live2d.animations.filter((a) => 
-    a !== 'talk_start' && 
-    a !== 'talk_end' && 
-    a !== 'expression_0' && 
-    a !== 'action'
-  )
-  
-  const prompt = prompts.animationEnrichment
-    .replace('{currentCharacterId}', market.live2d.current_id)
-    .replace('{filteredAnimations}', JSON.stringify(filteredAnimations))
-    .replace('{animationMappings}', JSON.stringify(animationMappings, null, 2))
-    .replace('{actions}', JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character, speaking: Boolean(a.speaking) })), null, 2))
-  
-  const messages = [{ role: 'user', content: prompt }]
-  
-  try {
-    let response: string
-
-    if (apiProvider.value === 'perplexity') {
-      response = await callPerplexity(messages, false)
-    } else if (apiProvider.value === 'gemini') {
-      response = await callGemini(messages, false)
-    } else if (apiProvider.value === 'openrouter') {
-      response = await callOpenRouter(messages, false)
-    } else if (apiProvider.value === 'pollinations') {
-      response = await callPollinations(messages, false)
-    } else {
-      return actions
-    }
-      
-    let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
-    const start = jsonStr.indexOf('[')
-    const end = jsonStr.lastIndexOf(']')
-
-    if (start !== -1 && end !== -1) {
-      jsonStr = jsonStr.substring(start, end + 1)
-      const animations = JSON.parse(jsonStr)
-        
-      if (Array.isArray(animations) && animations.length === actions.length) {
-        return actions.map((action, index) => ({
-          ...action,
-          animation: animations[index]
-        }))
-      }
-    }
-  } catch (e) {
-    console.error('Failed to enrich animations via API, using local fallback', e)
-  }
-  
-  // Local fallback: use animationMappings to match keywords to animations
-  const availableAnimations = (market.live2d.animations || []).filter((a) => 
-    a !== 'talk_start' && 
-    a !== 'talk_end' && 
-    a !== 'expression_0' && 
-    a !== 'action'
-  )
-  return actions.map((action) => {
-    const text = (action.text || '').toLowerCase()
-    let animation = 'idle'
-    
-    // Check for ALL CAPS (shouting/anger)
-    const originalText = action.text || ''
-    const capsWords = originalText.match(/\b[A-Z]{2,}\b/g)
-    const isShouting = capsWords && capsWords.length > 0
-    
-    if (isShouting) {
-      animation = availableAnimations.find((a: string) => a.includes('angry') || a.includes('shock')) || 'angry'
-    } else {
-      // Use animationMappings to find matching animation
-      for (const [animationType, keywords] of Object.entries(animationMappings)) {
-        const hasKeyword = keywords.some((keyword) => text.includes(keyword.toLowerCase()))
-
-        if (hasKeyword) {
-          // Find the best available animation matching this type
-          const matchedAnim = availableAnimations.find((a: string) => a.includes(animationType))
-          if (matchedAnim) {
-            animation = matchedAnim
-          } else {
-            animation = animationType
-          }
-          break
-        }
-      }
-    }
-    
-    return { ...action, animation }
-  })
+  return await callPollinationsWithoutJsonImpl(messages, { model: model.value, apiKey: apiKey.value })
 }
 
 const processAIResponse = async (responseStr: string, depth: number = 0) => {
@@ -2844,10 +2503,23 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
         throw new Error('Fallback parsing yielded no actions')
       }
       logDebug('Fallback parsing successful:', data)
-      
-      // Enrich with animations via AI
-      data = await enrichActionsWithAnimations(data)
-      
+
+      // Enrich fallback-parsed actions with animations (fallback parsing usually assigns idle).
+      // Keep any existing non-idle animations if present.
+      try {
+        data = await enrichActionsWithAnimations(data, {
+          apiProvider: apiProvider.value,
+          apiKey: apiKey.value,
+          model: model.value,
+          currentCharacterId: market.live2d.current_id,
+          filteredAnimations: getFilteredAnimations(),
+          animationEnrichmentPrompt: prompts.animationEnrichment,
+          preserveExistingAnimations: true
+        })
+      } catch (e) {
+        console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)
+      }
+
       // Fallback was successful, but we should remind the model to use JSON next time
       needsJsonReminder.value = true
       
@@ -2901,6 +2573,30 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
 
   // Ensure narration/dialogue separation even when the model returns a single mixed text step.
   data = sanitizeActions(data)
+
+  data = filterEchoedUserChoiceDialogueInGameMode(data, lastPrompt.value, mode.value === 'game')
+  data = stripChoicesWhenNotGameMode(data, mode.value === 'game')
+  
+  // Truncate extremely long sequences that look like hallucinations
+  if (data.length > 15 && mode.value !== 'story') {
+    logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
+    data = data.slice(0, 15)
+  }
+  else if (data.length > 50 && mode.value === 'story') {
+    logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
+    data = data.slice(0, 50)
+  }
+
+  // Fallback for Game Mode: If no choices were provided, add a default "Continue" choice
+  // to prevent the user from getting stuck.
+  if (mode.value === 'game') {
+    const before = data
+    data = ensureGameModeChoicesFallback(data, true)
+    if (before !== data) {
+      // no-op, helper mutated
+    }
+  }
+
   logDebug('Sanitized Action Sequence:', data)
 
   isGenerating.value = false
@@ -2915,7 +2611,15 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
       logDebug('Execution stopped by user.')
       break
     }
+    if (abortCurrentPlaybackForChoice.value) {
+      logDebug('[processAIResponse] Aborting playback due to game choice selection.')
+      break
+    }
     await executeAction(action)
+    if (abortCurrentPlaybackForChoice.value) {
+      logDebug('[processAIResponse] Playback aborted after executing action (game choice selected).')
+      break
+    }
   }
   
   nikkeOverlayVisible.value = false
@@ -2928,6 +2632,32 @@ const getCharacterName = (id: string): string | null => {
   const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
 
   return char ? char.name : id
+}
+
+const handleGameChoice = (choice: any) => {
+  // IMPORTANT: Do NOT call sendMessage() here.
+  // sendMessage() is already running (it plays actions while isLoading is true).
+  // Calling it again causes concurrent requests and breaks the existing loading spinner.
+  const choiceTextToSend = formatChoiceAsUserTurn(choice)
+
+  pendingGameChoiceText.value = choiceTextToSend
+  abortCurrentPlaybackForChoice.value = true
+
+  pendingGameChoices.value = []
+  choicesAwaitingReveal.value = false
+
+  // Hide overlay immediately so the existing chatbox loading UI can show.
+  nikkeOverlayVisible.value = false
+  
+  // Resume execution
+  if (nextActionResolver) {
+    nextActionResolver()
+    nextActionResolver = null
+    waitingForNext.value = false
+  }
+  
+  // Clear choices
+  gameChoices.value = []
 }
 
 const executeAction = async (data: any) => {
@@ -3145,8 +2875,13 @@ const executeAction = async (data: any) => {
     
   // Play Animation
   if (data.animation) {
-    logDebug(`[Chat] Requesting animation: ${data.animation}`)
-    market.live2d.current_animation = data.animation
+    const requested = String(data.animation).trim()
+    // Never let AI drive internal talk tracks; they are handled by yapping/TTS logic.
+    // Also prevents Loader fuzzy-matching 'talk' -> 'talk_end'.
+    const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
+    const normalized = isForbidden ? 'idle' : requested
+    logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
+    market.live2d.current_animation = normalized
   }
 
   // Speaking
@@ -3259,6 +2994,29 @@ const executeAction = async (data: any) => {
     nikkeCurrentText.value = ''
     nikkeDisplayedText.value = ''
     nikkeCurrentSpeaker.value = ''
+  }
+
+  // Handle Game Mode Choices
+  if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
+    logDebug('[Chat] Game Mode Choices detected:', data.choices)
+    pendingGameChoices.value = data.choices
+    choicesAwaitingReveal.value = true
+    loadingStatus.value = 'Click to show choices...'
+    waitingForNext.value = true // Pause auto-advance
+    
+    // Wait for user selection
+    await new Promise<void>((r) => {
+      nextActionResolver = r
+    })
+    
+    // Clear choices after selection (handled in handleGameChoice)
+    gameChoices.value = []
+    pendingGameChoices.value = []
+    choicesAwaitingReveal.value = false
+
+    // IMPORTANT: Do not continue into manual/auto playback waits after a choice.
+    // The selected choice will be queued and sent as the next user turn.
+    return
   }
 
   const duration = data.duration || 3000
@@ -3644,7 +3402,9 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 10001;
+  z-index: 10003;
+  display: flex;
+  align-items: center;
 }
 
 .nikke-vignette {
@@ -3734,4 +3494,54 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 .accent-light-blue { --accent: #00eeff; }
 .accent-orange { --accent: #ef6c00; }
 .accent-red { --accent: #c62828; }
+
+.game-choices-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  pointer-events: auto;
+}
+.choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+}
+.choice-btn {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.choice-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: #00eeff;
+  transform: scale(1.02);
+}
+.choice-marker {
+  width: 8px;
+  height: 8px;
+  background: #00eeff;
+  margin-right: 16px;
+  transform: rotate(45deg);
+}
+.choice-text {
+  color: white;
+  font-size: 1.2em;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
 </style>
