@@ -76,6 +76,8 @@ const resolveAnimation = (requested: string, available: string[]): string | null
     return requested
   }
 
+  if (market.route.name !== 'story-gen') return null
+
   const lowerRequested = requested.toLowerCase()
 
   // Special handling for multi-stage anger (e.g. Chime)
