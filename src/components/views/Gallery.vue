@@ -214,6 +214,8 @@ import rebornevil from '@/utils/json/Gallery/rebornevil.json'
 import goninjathief from '@/utils/json/Gallery/goninjathief.json'
 import goddessfall from '@/utils/json/Gallery/goddessfall.json'
 import blankticket from '@/utils/json/Gallery/blankticket.json'
+import terminusticket from '@/utils/json/Gallery/terminusticket.json'
+import azxservicetime from '@/utils/json/Gallery/azxservicetime.json'
 
 const market = useMarket()
 
@@ -289,7 +291,8 @@ const buttonListEvents = [
   { data: rebornevil },
   { data: goninjathief },
   { data: goddessfall },
-  { data: blankticket }
+  { data: blankticket },
+  { data: terminusticket }
 ] as buttonInterface[]
 
 const buttonListOther = [
@@ -299,7 +302,8 @@ const buttonListOther = [
   { data: voltroad },
   { data: dragondungeonrun },
   { data: bfgcleanup },
-  { data: madeinrush }
+  { data: madeinrush },
+  { data: azxservicetime }
 ] as buttonInterface[]
 
 const buttonListCommunity = [

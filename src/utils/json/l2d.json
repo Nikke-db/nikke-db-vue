@@ -232,6 +232,10 @@
     "id": "c093"
   },
   {
+    "name": "Emma: Tactical Upgrade Secret Therapy",
+    "id": "c093_01"
+  },
+  {
     "name": "Vesti: Tactical Upgrade",
     "id": "c094"
   },
@@ -458,6 +462,10 @@
   {
     "name": "Alice Sweet Home",
     "id": "c191_01"
+  },
+  {
+    "name": "Alice Märchen Dream",
+    "id": "c191_02"
   },
   {
     "name": "Tove",
@@ -980,6 +988,10 @@
     "id": "c403"
   },
   {
+    "name": "Quency Escape Queen Masquerade Swan",
+    "id": "c403_01"
+  },
+  {
     "name": "Flora",
     "id": "c411"
   },
@@ -1054,6 +1066,10 @@
   {
     "name": "Red Hood Retro Days",
     "id": "c470_02"
+  },
+  {
+    "name": "Snow White: Heavy Arms",
+    "id": "c471"
   },
   {
     "name": "Liveryn",
@@ -1836,6 +1852,18 @@
     "id": "c9009"
   },
   {
+    "name": "HIDDEN NPC: TBA",
+    "id": "c9014"
+  },
+  {
+    "name": "HIDDEN NPC: TBA",
+    "id": "c9015"
+  },
+  {
+    "name": "HIDDEN NPC: TBA",
+    "id": "c9016"
+  },
+  {
     "name": "Blue Water Island",
     "id": "bluewaterisland"
   },
@@ -2112,6 +2140,11 @@
     "id": "blankticket"
   },
   {
+    "name": "Terminus Ticket",
+    "id": "terminusticket",
+    "f": "EventScene_terminusticket_01"
+  },
+  {
     "name": "Smol Ade",
     "id": "smol_ade"
   },
@@ -2186,6 +2219,51 @@
   {
     "name": "Smol Emilia",
     "id": "smol_emilia"
+  },
+  {
+    "name": "AZX Service Time 1",
+    "id": "azxservicetime_1",
+    "f": "terminusticket_cutscene_01"
+  },
+  {
+    "name": "AZX Service Time 2",
+    "id": "azxservicetime_2",
+    "f": "terminusticket_cutscene_02"
+  },
+  {
+    "name": "AZX Service Time 3",
+    "id": "azxservicetime_3",
+    "f": "terminusticket_cutscene_03"
+  },
+  {
+    "name": "AZX Service Time 4",
+    "id": "azxservicetime_4",
+    "f": "terminusticket_cutscene_04"
+  },
+  {
+    "name": "AZX Service Time 5",
+    "id": "azxservicetime_5",
+    "f": "terminusticket_cutscene_05"
+  },
+  {
+    "name": "AZX Service Time 6",
+    "id": "azxservicetime_6",
+    "f": "terminusticket_cutscene_06"
+  },
+  {
+    "name": "AZX Service Time 7",
+    "id": "azxservicetime_7",
+    "f": "terminusticket_cutscene_07"
+  },
+  {
+    "name": "AZX Service Time 8",
+    "id": "azxservicetime_8",
+    "f": "terminusticket_cutscene_08"
+  },
+  {
+    "name": "AZX Service Time 9",
+    "id": "azxservicetime_9",
+    "f": "terminusticket_cutscene_09"
   },
   {
     "name": "Boss: Mother Whale",

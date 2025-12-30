@@ -13,13 +13,14 @@
         <n-list-item
           v-for="character in market.live2d.filtered_l2d_Array"
           v-show="
-            character.name.toLowerCase().includes(name_filter.toLowerCase())
+            character.name.toLowerCase().includes(name_filter.toLowerCase()) &&
+            !character.name.toUpperCase().startsWith('HIDDEN')
           "
           :key="character.id"
           @click="changeSpine(character)"
         >
           <template #prefix>
-            <img :src="getSiIcon(character.id)" class="si_img" loading="lazy"/>
+            <img :src="getSiIcon(character.id)" class="si_img" loading="lazy" :onerror="`this.onerror=null; this.src='${fallbackSiIcon()}'`"/>
           </template>
 
           <n-h5>{{ character.name }}</n-h5>
@@ -51,6 +52,10 @@ const getSiIcon = (id: string) => {
     id +
     globalParams.PATH_SPRITE_2
   )
+}
+
+const fallbackSiIcon = () => {
+  return getSiIcon('c9999')
 }
 
 const checkMobile = () => {

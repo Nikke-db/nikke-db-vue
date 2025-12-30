@@ -359,7 +359,8 @@ const getPathing = (extension: string) => {
     globalParams.PATH_L2D +
     market.live2d.current_id +
     '/'
-  let fileSuffix = '_00.'
+  let fileSuffix = '_00'
+
 
   // could be more automated if we set market.live2d.current_pose to '' if we select
   // "full body" but I'd rather keep fb for future/other functions
@@ -376,7 +377,8 @@ const getPathing = (extension: string) => {
       break
   }
 
-  route += market.live2d.current_id + fileSuffix + extension
+  const f = market.live2d.f !== '' ? market.live2d.f : market.live2d.current_id + fileSuffix
+  route += f + '.' + extension
 
   return route
 }
