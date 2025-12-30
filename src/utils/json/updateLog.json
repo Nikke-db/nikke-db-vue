@@ -590,5 +590,9 @@
   {
     "date": "December 30th 2025",
     "update": "Gallery: Added Terminus Ticket Album, added Terminus Ticket event gallery, added the AZX Service Time images"
+  },
+  {
+    "date": "December 30th 2025",
+    "update": "Fixed the new SW full body not displaying"
   }
 ]
