@@ -38,15 +38,20 @@
       </div>
 
       <div class="chat-history" ref="chatHistoryRef">
-      <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role]">
+      <div 
+        v-for="(msg, index) in chatHistory" 
+        :key="index" 
+        :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), 'selected': selectedMessageIndex === index }]"
+        @click="msg.role !== 'user' ? replayMessage(msg, index) : null"
+      >
         <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
         <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role === 'assistant'" class="message-top-actions" style="right: 0; left: auto;">
-          <n-button size="tiny" circle type="warning" @click="regenerateResponse" title="Retry this message">
+          <n-button size="tiny" circle type="warning" @click.stop="regenerateResponse" title="Retry this message">
             <template #icon><n-icon><Renew /></n-icon></template>
           </n-button>
         </div>
         <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role !== 'system'" class="message-actions">
-          <n-button size="tiny" circle type="error" @click="deleteLastMessage" title="Delete last message">
+          <n-button size="tiny" circle type="error" @click.stop="deleteLastMessage" title="Delete last message">
             <template #icon><n-icon><TrashCan /></n-icon></template>
           </n-button>
         </div>
@@ -65,12 +70,12 @@
       <n-input
       v-model:value="userInput"
       type="textarea"
-      :placeholder="(apiKey || apiProvider === 'pollinations') ? 'Type your message...' : 'Please enter API Key in settings'"
-      :disabled="!apiKey && apiProvider !== 'pollinations'"
+      :placeholder="(apiKey || apiProvider === 'pollinations' || apiProvider === 'local') ? 'Type your message...' : 'Please enter API Key in settings'"
+      :disabled="!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local'"
       :autosize="{ minRows: 1, maxRows: 4 }"
       @keydown.enter.prevent="handleEnter"
       />
-      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations')">Send</n-button>
+      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local')">Send</n-button>
       <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
       <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
       <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
@@ -120,7 +125,10 @@
           <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px;">
             Inject one or more reminders to the model for the next turn:
           </div>
-          <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+            <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
+          </div>
           <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
           <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
           <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
@@ -192,7 +200,15 @@
             <n-select v-model:value="apiProvider" :options="providerOptions" />
           </n-form-item>
 
-          <n-form-item label="API Key">
+          <n-form-item label="Local Endpoint URL" v-if="apiProvider === 'local'">
+            <n-input v-model:value="localUrl" placeholder="http://localhost:5001/v1" />
+          </n-form-item>
+
+          <n-form-item label="Model Name" v-if="apiProvider === 'local'">
+            <n-input v-model:value="localModel" placeholder="e.g. llama3, mistral" />
+          </n-form-item>
+
+          <n-form-item label="API Key" v-if="apiProvider !== 'local'">
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
           <n-alert type="info" style="margin-bottom: 12px" title="">
@@ -220,7 +236,7 @@
               </div>
             </n-popover>
           </n-alert>
-          <n-form-item label="Model">
+          <n-form-item label="Model" v-if="apiProvider !== 'local'">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
           <n-divider />
@@ -431,6 +447,24 @@
 
           <n-form-item>
             <template #label>
+              Enable Animation Replay
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Allows you to click on a message to replay the animation and character associated with it.<br>
+                  <span style="color: #ff4d4f;">Warning: Enabling this will increase the size of the save file.</span>
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="enableAnimationReplay" />
+          </n-form-item>
+
+          <n-form-item>
+            <template #label>
               Text to Speech <span style="font-size: smaller;">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
@@ -543,7 +577,7 @@
               <li>Example: <code>Scene: The Command Center. Characters: Rapi, Anis, Neon. They are discussing the next mission.</code></li>
             </ul>
           </li>
-          <li><strong>Game Mode:</strong> Play a visual novel style game.
+          <li><strong>Game Mode:</strong> Play a story in a similar way to the videogame.
             <ul>
               <li>The AI narrates in first person as the Commander.</li>
               <li>You will be presented with choices to influence the story.</li>
@@ -593,11 +627,11 @@ import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback } from '@/utils/chatUtils'
+import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, NATIVE_SEARCH_PREFIXES, POLLINATIONS_NATIVE_SEARCH_MODELS, hasNativeSearch, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations } from '@/utils/llmUtils'
+import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, callLocalSummarization } from '@/utils/llmUtils'
 
 // Helper to get honorific with fallback to "Commander"
 const getHonorific = (characterName: string): string => {
@@ -636,11 +670,13 @@ const showGuide = ref(false)
 const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
+const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
+const localModel = ref(localStorage.getItem('nikke_local_model') || 'llama3')
 const model = ref('sonar')
 const mode = ref('roleplay')
 const tokenUsage = ref('medium')
 const enableContextCaching = ref(true)
-const playbackMode = ref('auto')
+const playbackMode = ref('manual')
 const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
 const userInput = ref('')
 const isLoading = ref(false)
@@ -657,15 +693,20 @@ const summarizationAttemptCount = ref(0)
 const summarizationLastError = ref<string | null>(null)
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
-const chatHistory = ref<{ role: string, content: string }[]>([])
+const chatHistory = ref<{ role: string, content: string, animation?: string, character?: string, speaking?: boolean, text?: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const characterProgression = ref<Record<string, any>>({})
 const gameChoices = ref<{ text: string, type?: 'dialogue' | 'action', label?: string }[]>([])
 const pendingGameChoices = ref<{ text: string, type?: 'dialogue' | 'action', label?: string }[]>([])
 const choicesAwaitingReveal = ref(false)
 
+// Settings
+const enableAnimationReplay = ref(false)
+const selectedMessageIndex = ref<number | null>(null)
+const originalHQAssets = ref(true)
+
 // NIKKE Mode State
-const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'classic')
+const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'nikke')
 const nikkeOverlayVisible = ref(false)
 const nikkeCurrentSpeaker = ref('')
 const nikkeCurrentText = ref('')
@@ -700,6 +741,17 @@ const handleOverlayClick = (e: MouseEvent) => {
   if (e) {
     e.preventDefault()
     e.stopPropagation()
+  }
+
+  // If in replay mode, close overlay and deselect
+  if (selectedMessageIndex.value !== null) {
+    if (isTyping.value) {
+      stopTypewriter()
+      return
+    }
+    nikkeOverlayVisible.value = false
+    selectedMessageIndex.value = null
+    return
   }
 
   // If choices are visible, clicking anywhere else should do nothing.
@@ -784,10 +836,23 @@ const isDev = import.meta.env.DEV
 // AI Reminders state
 const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
+const invalidJsonPersist = ref(false)
 const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
 const wrongSpeechStylesToggle = ref(false)
+
+watch(invalidJsonPersist, (val) => {
+  if (val) {
+    invalidJsonToggle.value = true
+  }
+})
+
+watch(invalidJsonToggle, (val) => {
+  if (!val) {
+    invalidJsonPersist.value = false
+  }
+})
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -801,7 +866,8 @@ const providerOptions = [
   { label: 'Perplexity', value: 'perplexity' },
   { label: 'Gemini', value: 'gemini' },
   { label: 'OpenRouter', value: 'openrouter' },
-  { label: 'Pollinations', value: 'pollinations' }
+  { label: 'Pollinations', value: 'pollinations' },
+  { label: 'Local', value: 'local' }
 ]
 
 const modelOptions = computed(() => {
@@ -870,6 +936,14 @@ watch(apiKey, async (newVal) => {
   }
 })
 
+watch(localUrl, (newVal) => {
+  localStorage.setItem('nikke_local_url', newVal)
+})
+
+watch(localModel, (newVal) => {
+  localStorage.setItem('nikke_local_model', newVal)
+})
+
 watch(useLocalProfiles, (newVal) => {
   localStorage.setItem('nikke_use_local_profiles', String(newVal))
 })
@@ -904,6 +978,10 @@ watch(tokenUsage, (newVal) => {
 
 watch(enableContextCaching, (newVal) => {
   localStorage.setItem('nikke_enable_context_caching', String(newVal))
+})
+
+watch(enableAnimationReplay, (newVal) => {
+  localStorage.setItem('nikke_enable_animation_replay', String(newVal))
 })
 
 watch(playbackMode, (newVal) => {
@@ -1099,7 +1177,11 @@ const initializeSettings = async () => {
   if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
 
   const savedHQAssets = localStorage.getItem('nikke_hq_assets')
-  if (savedHQAssets !== null) market.live2d.HQassets = (savedHQAssets === 'true')
+  if (savedHQAssets !== null) {
+    market.live2d.HQassets = (savedHQAssets === 'true')
+  } else {
+    market.live2d.HQassets = false
+  }
 
   const savedTts = localStorage.getItem('nikke_tts_enabled')
   if (savedTts !== null) ttsEnabled.value = (savedTts === 'true')
@@ -1127,6 +1209,9 @@ const initializeSettings = async () => {
 
   const savedContextCaching = localStorage.getItem('nikke_enable_context_caching')
   if (savedContextCaching !== null) enableContextCaching.value = (savedContextCaching === 'true')
+
+  const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
+  if (savedAnimationReplay !== null) enableAnimationReplay.value = (savedAnimationReplay === 'true')
 
   // Load Provider and Model
   const savedProvider = localStorage.getItem('nikke_api_provider')
@@ -1349,6 +1434,7 @@ const stopResize = () => {
 }
 
 onMounted(() => {
+  originalHQAssets.value = market.live2d.HQassets
   checkGuide()
   initializeSettings()
   initChatLayout()
@@ -1366,6 +1452,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
@@ -1386,8 +1473,23 @@ const deleteLastMessage = () => {
 }
 
 const saveSession = () => {
+  // Filter chat history based on animation replay setting
+  const exportedChatHistory = chatHistory.value.map(msg => {
+    if (!enableAnimationReplay.value) {
+      // Old format: just role and content
+      return { role: msg.role, content: msg.content }
+    } else {
+      // New format: remove content if text is present to save space
+      if (msg.role === 'assistant' && msg.text) {
+        const { content, ...rest } = msg
+        return rest
+      }
+      return msg
+    }
+  })
+
   const sessionData = {
-    chatHistory: chatHistory.value,
+    chatHistory: exportedChatHistory,
     characterProfiles: characterProfiles.value,
     characterProgression: characterProgression.value,
     storySummary: storySummary.value,
@@ -1443,7 +1545,28 @@ const handleFileUpload = (event: Event) => {
         isRestoring.value = true
 
         if (data.chatHistory && Array.isArray(data.chatHistory)) {
-          chatHistory.value = data.chatHistory
+          chatHistory.value = data.chatHistory.map((msg: any) => {
+            if (!msg.content && msg.text) {
+              // Reconstruct content
+              let reconstructedContent = msg.text
+              if (msg.speaking && msg.character && msg.character !== 'none') {
+                const name = getCharacterName(msg.character)
+                if (name) {
+                  // Check if the text already starts with the name to avoid duplication
+                  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                  const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
+                  const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
+
+                  if (!namePattern.test(reconstructedContent) && !anyNamePattern.test(reconstructedContent)) {
+                    reconstructedContent = `**${name}:** ${reconstructedContent}`
+                  }
+                }
+              }
+              return { ...msg, content: reconstructedContent }
+            }
+            return msg
+          })
+          selectedMessageIndex.value = null
         }
         if (data.characterProfiles) {
           characterProfiles.value = data.characterProfiles
@@ -1679,7 +1802,9 @@ const sendMessage = async () => {
   }
 
   if (success) {
-    invalidJsonToggle.value = false
+    if (!invalidJsonPersist.value) {
+      invalidJsonToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -1743,7 +1868,9 @@ const retryLastMessage = async () => {
   }
 
   if (success) {
-    invalidJsonToggle.value = false
+    if (!invalidJsonPersist.value) {
+      invalidJsonToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -1771,6 +1898,7 @@ const stopGeneration = () => {
   isStopped.value = true
   isLoading.value = false
   nikkeOverlayVisible.value = false
+  selectedMessageIndex.value = null
   
   if (isTyping.value) {
     stopTypewriter()
@@ -1854,7 +1982,9 @@ const continueStory = async () => {
   }
 
   if (success) {
-    invalidJsonToggle.value = false
+    if (!invalidJsonPersist.value) {
+      invalidJsonToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -2123,6 +2253,28 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     
     logDebug('Sending to Pollinations:', messages)
     response = await callPollinations(messages, enableWebSearch)
+  } else if (apiProvider.value === 'local') {
+    // Local: Use standard OpenAI format with context in system prompt
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    
+    let messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    // Inject honorifics reminder for first turn (not saved to history)
+    messages = injectHonorificsReminder(messages)
+    
+    // Inject user toggled reminders
+    messages = injectUserReminders(messages)
+    
+    logDebug('Sending to Local:', messages)
+    response = await callLocalImpl(messages, {
+      model: localModel.value,
+      apiKey: apiKey.value,
+      localUrl: localUrl.value,
+      modeIsGame: mode.value === 'game',
+      modelsWithoutJsonSupport: modelsWithoutJsonSupport
+    })
   } else {
     throw new Error('Unknown API provider')
   }
@@ -2265,6 +2417,20 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     ]
     const messagesWithReminders = injectUserReminders(messages)
     return await callPollinations(messagesWithReminders, false)
+  } else if (apiProvider.value === 'local') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const messages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+    ]
+    const messagesWithReminders = injectUserReminders(messages)
+    return await callLocalImpl(messagesWithReminders, {
+      model: localModel.value,
+      apiKey: apiKey.value,
+      localUrl: localUrl.value,
+      modeIsGame: mode.value === 'game',
+      modelsWithoutJsonSupport: modelsWithoutJsonSupport
+    })
   }
   
   throw new Error('Unknown API provider')
@@ -2479,6 +2645,33 @@ const callPollinationsWithoutJson = async (messages: any[], enableWebSearch: boo
   return await callPollinationsWithoutJsonImpl(messages, { model: model.value, apiKey: apiKey.value })
 }
 
+const replayMessage = async (msg: any, index: number) => {
+  await replayMessageUtil(msg, index, {
+    enableAnimationReplay: enableAnimationReplay.value,
+    selectedMessageIndex,
+    chatMode: chatMode.value,
+    nikkeOverlayVisible,
+    market,
+    ttsEnabled: ttsEnabled.value,
+    isTyping,
+    nikkeCurrentText,
+    nikkeCurrentSpeaker,
+    nikkeSpeakerColor,
+    effectiveCharacterProfiles: effectiveCharacterProfiles.value,
+    getCharacterName,
+    startTypewriter,
+    stopTypewriter,
+    manageYap: (duration: number) => {
+       if (yapTimeoutId) clearTimeout(yapTimeoutId)
+       market.live2d.isYapping = true
+       yapTimeoutId = setTimeout(() => {
+         if (market.live2d.isYapping) market.live2d.isYapping = false
+         yapTimeoutId = null
+       }, duration)
+    }
+  })
+}
+
 const processAIResponse = async (responseStr: string, depth: number = 0) => {
   loadingStatus.value = 'Processing response...'
   logDebug('Raw AI Response:', responseStr)
@@ -2510,11 +2703,12 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
         data = await enrichActionsWithAnimations(data, {
           apiProvider: apiProvider.value,
           apiKey: apiKey.value,
-          model: model.value,
+          model: apiProvider.value === 'local' ? localModel.value : model.value,
           currentCharacterId: market.live2d.current_id,
           filteredAnimations: getFilteredAnimations(),
           animationEnrichmentPrompt: prompts.animationEnrichment,
-          preserveExistingAnimations: true
+          preserveExistingAnimations: true,
+          localUrl: localUrl.value
         })
       } catch (e) {
         console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)
@@ -2903,7 +3097,7 @@ const executeAction = async (data: any) => {
     let yapDuration = 3000
 
     if (data.text) {
-      yapDuration = Math.max(1000, data.text.length * 60 + 300)
+      yapDuration = calculateYapDuration(data.text)
     } else if (data.duration) {
       yapDuration = data.duration
     }
@@ -2987,7 +3181,14 @@ const executeAction = async (data: any) => {
       }
     }
 
-    chatHistory.value.push({ role: 'assistant', content: content })
+    chatHistory.value.push({ 
+      role: 'assistant', 
+      content: content,
+      animation: market.live2d.current_animation,
+      character: effectiveCharId,
+      speaking: data.speaking,
+      text: data.text
+    })
     scrollToBottom()
   } else if (chatMode.value === 'nikke') {
     // Clear text but keep overlay visible for animations/switches
@@ -3082,6 +3283,8 @@ const resetSession = () => {
     summarizationLastError.value = null
     lastPrompt.value = ''
     market.live2d.isVisible = false
+    selectedMessageIndex.value = null
+    nikkeOverlayVisible.value = false
   }
 }
 
@@ -3106,6 +3309,8 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
       summary = await callOpenRouterSummarization(msgs, apiKey.value, model.value)
     } else if (apiProvider.value === 'pollinations') {
       summary = await callPollinationsSummarization(msgs, apiKey.value, model.value)
+    } else if (apiProvider.value === 'local') {
+      summary = await callLocalSummarization(msgs, { model: localModel.value, apiKey: apiKey.value, localUrl: localUrl.value })
     }
     
     if (summary && summary.trim().length > 0) {
@@ -3259,6 +3464,20 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
     padding: 8px;
     border-radius: 8px;
     position: relative;
+    
+    &.replay-enabled {
+      cursor: pointer;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    &.selected {
+      background: rgba(184, 134, 11, 0.6) !important;
+      border: 1px solid #ffd700;
+    }
     
     &.user {
       background: rgba(0, 123, 255, 0.5);

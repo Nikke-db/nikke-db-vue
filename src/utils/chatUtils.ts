@@ -1,4 +1,5 @@
 // src/utils/chatUtils.ts
+import { type Ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
 
 // Helper to identify speaker labels.
@@ -1067,4 +1068,90 @@ export const parseFallback = (text: string): any[] => {
   if (trailing) actions.push(...splitNarration(trailing))
 
   return actions
+}
+
+export const calculateYapDuration = (text: string): number => {
+  if (!text) return 3000
+  // Approx 60ms per character + 300ms base (Slightly faster than reading speed for natural feel)
+  return Math.max(1000, text.length * 60 + 300)
+}
+
+export interface ReplayContext {
+  enableAnimationReplay: boolean
+  selectedMessageIndex: Ref<number | null>
+  chatMode: string
+  nikkeOverlayVisible: Ref<boolean>
+  market: any
+  ttsEnabled: boolean
+  isTyping: Ref<boolean>
+  nikkeCurrentText: Ref<string>
+  nikkeCurrentSpeaker: Ref<string>
+  nikkeSpeakerColor: Ref<string>
+  effectiveCharacterProfiles: Record<string, any>
+  getCharacterName: (id: string) => string | null
+  startTypewriter: (text: string) => void
+  stopTypewriter: () => void
+  manageYap: (duration: number) => void
+}
+
+export const replayMessage = async (msg: any, index: number, ctx: ReplayContext) => {
+  if (!ctx.enableAnimationReplay) return
+  if (!msg.animation && !msg.character) return
+
+  if (ctx.selectedMessageIndex.value === index) {
+    if (ctx.chatMode === 'nikke' && ctx.isTyping.value) {
+      ctx.stopTypewriter()
+      return
+    }
+    ctx.selectedMessageIndex.value = null
+    if (ctx.chatMode === 'nikke') {
+      ctx.nikkeOverlayVisible.value = false
+    }
+    return
+  }
+
+  ctx.selectedMessageIndex.value = index
+
+  // Replay Animation
+  if (msg.animation) {
+    ctx.market.live2d.current_animation = msg.animation
+  }
+
+  // Switch Character
+  if (msg.character && msg.character !== 'none' && msg.character !== ctx.market.live2d.current_id) {
+    const charObj = l2d.find((c) => c.id.toLowerCase() === msg.character.toLowerCase() || c.name.toLowerCase() === msg.character.toLowerCase())
+    if (charObj) {
+      ctx.market.live2d.change_current_spine(charObj)
+    }
+  }
+
+  // Speaking / Yapping
+  if (msg.speaking && !ctx.ttsEnabled) {
+    const text = msg.text || msg.content || ''
+    const yapDuration = calculateYapDuration(text)
+    ctx.manageYap(yapDuration)
+  }
+
+  // NIKKE Mode Overlay
+  if (ctx.chatMode === 'nikke') {
+    ctx.nikkeOverlayVisible.value = true
+    
+    let textToDisplay = msg.text || msg.content
+    if (!msg.text && msg.content) {
+      textToDisplay = textToDisplay.replace(/^\*\*\s*[^*]+\s*\*\*:\s*/, '')
+    }
+
+    ctx.nikkeCurrentText.value = textToDisplay
+    
+    let speakerName = ''
+    if (msg.character && msg.character !== 'none') {
+      speakerName = ctx.getCharacterName(msg.character) || ''
+    }
+    ctx.nikkeCurrentSpeaker.value = speakerName
+    
+    const profile = ctx.effectiveCharacterProfiles[speakerName]
+    ctx.nikkeSpeakerColor.value = profile?.color || '#ffffff'
+    
+    ctx.startTypewriter(textToDisplay)
+  }
 }

@@ -296,6 +296,132 @@ export const callPollinationsWithoutJson = async (
   return data.choices[0].message.content
 }
 
+export const callLocalSummarization = async (messages: any[], opts: { model: string, apiKey?: string, localUrl: string }) => {
+  const { model, apiKey, localUrl } = opts
+  
+  let endpoint = localUrl.replace(/\/$/, '')
+  if (!endpoint.endsWith('/chat/completions')) {
+    endpoint = `${endpoint}/chat/completions`
+  }
+
+  const requestBody: any = {
+    model: model,
+    messages: messages
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(`Local Summarization API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+  const data = await response.json()
+  return data.choices[0].message.content
+}
+
+export const callLocal = async (
+  messages: any[],
+  opts: {
+    model: string,
+    apiKey?: string,
+    localUrl: string,
+    modeIsGame: boolean,
+    modelsWithoutJsonSupport: Set<string>
+  }
+) => {
+  const { model, apiKey, localUrl, modeIsGame, modelsWithoutJsonSupport } = opts
+
+  // Ensure URL ends with /chat/completions if not present
+  let endpoint = localUrl.replace(/\/$/, '')
+  if (!endpoint.endsWith('/chat/completions')) {
+    endpoint = `${endpoint}/chat/completions`
+  }
+
+  const callWithoutJsonFormat = async () => {
+    const requestBody: any = {
+      model: model,
+      messages: messages,
+      max_tokens: 8192
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(requestBody)
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(`Local API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    }
+    const data = await response.json()
+    return data.choices[0].message.content
+  }
+
+  if (modelsWithoutJsonSupport.has(model)) {
+    console.log(`Model ${model} known to not support json_schema, using text fallback...`)
+    return callWithoutJsonFormat()
+  }
+
+  const responseSchema = buildStoryResponseSchema(modeIsGame)
+  
+  const requestBody: any = {
+    model: model,
+    messages: messages,
+    max_tokens: 8192,
+    response_format: responseSchema
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Local API Error Details:', errorData)
+
+    // Check for 400 error related to response_format
+    if (response.status === 400 && (JSON.stringify(errorData).includes('response_format') || JSON.stringify(errorData).includes('json_schema') || JSON.stringify(errorData).includes('schema'))) {
+      console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
+      modelsWithoutJsonSupport.add(model)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      return callWithoutJsonFormat()
+    }
+
+    throw new Error(`Local API Error: ${response.status} ${JSON.stringify(errorData)}`)
+  }
+
+  const data = await response.json()
+  return data.choices[0].message.content
+}
+
 // Structured output schema builder (used by ChatInterface for OpenRouter/Pollinations JSON schema mode)
 export const buildStoryResponseSchema = (isGameMode: boolean) => ({
   type: 'json_schema',
@@ -639,12 +765,13 @@ export const enrichActionsWithAnimations = async (
     currentCharacterId: string,
     filteredAnimations: string[],
     animationEnrichmentPrompt: string,
-    preserveExistingAnimations?: boolean
+    preserveExistingAnimations?: boolean,
+    localUrl?: string
   }
 ): Promise<any[]> => {
   console.log('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true } = opts
+  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl } = opts
 
   const hasMeaningfulAnimation = (anim: any): boolean => {
     if (typeof anim !== 'string') return false
@@ -677,7 +804,8 @@ export const enrichActionsWithAnimations = async (
         useLocalProfiles: false,
         allowWebSearchFallback: false,
         modeIsGame: false,
-        prompts: {} as any // Not needed for this call
+        prompts: {} as any, // Not needed for this call
+        modelsWithoutJsonSupport: new Set()
       })
     } else if (apiProvider === 'pollinations') {
       response = await callPollinations(messages, {
@@ -685,6 +813,14 @@ export const enrichActionsWithAnimations = async (
         apiKey,
         useLocalProfiles: false,
         allowWebSearchFallback: false,
+        modeIsGame: false,
+        modelsWithoutJsonSupport: new Set()
+      })
+    } else if (apiProvider === 'local' && localUrl) {
+      response = await callLocal(messages, {
+        model,
+        apiKey,
+        localUrl,
         modeIsGame: false,
         modelsWithoutJsonSupport: new Set()
       })
