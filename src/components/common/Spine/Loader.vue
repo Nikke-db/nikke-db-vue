@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
 
 // @ts-ignore
@@ -42,7 +42,128 @@ const spineViewport = {
 onMounted(() => {
   market.load.beginLoad()
   spineLoader()
+  window.addEventListener('resize', handleResize)
+  document.addEventListener('mousedown', onMouseDown)
+  document.addEventListener('touchstart', onTouchStart, { passive: false })
+  document.addEventListener('mouseup', onMouseUp)
+  document.addEventListener('touchend', onTouchEnd)
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('touchmove', onTouchMove, { passive: false })
+  document.addEventListener('wheel', onWheel)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  document.removeEventListener('mousedown', onMouseDown)
+  document.removeEventListener('touchstart', onTouchStart)
+  document.removeEventListener('mouseup', onMouseUp)
+  document.removeEventListener('touchend', onTouchEnd)
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('touchmove', onTouchMove)
+  document.removeEventListener('wheel', onWheel)
+})
+
+const handleResize = () => {
+  if (canvas) {
+    applyDefaultStyle2Canvas()
+  }
+}
+
+const onMouseDown = (e: MouseEvent) => {
+  if (filterDomEvents(e)) {
+    oldX = e.clientX
+    oldY = e.clientY
+    move = true
+  }
+}
+
+const onTouchStart = (e: TouchEvent) => {
+  if (market.route.name === 'story-gen' && filterDomEvents(e)) {
+    oldX = e.touches[0].clientX
+    oldY = e.touches[0].clientY
+    move = true
+  }
+}
+
+const onMouseUp = () => {
+  oldX = 0
+  oldY = 0
+  move = false
+}
+
+const onTouchEnd = () => {
+  oldX = 0
+  oldY = 0
+  move = false
+}
+
+const onMouseMove = (e: MouseEvent) => {
+  if (move && canvas) {
+    const newX = e.clientX
+    const newY = e.clientY
+
+    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
+    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
+
+    if (newX !== oldX) {
+      canvas.style.left = stylel + (newX - oldX) + 'px'
+    }
+
+    if (newY !== oldY) {
+      canvas.style.top = stylet + (newY - oldY) + 'px'
+    }
+
+    oldX = newX
+    oldY = newY
+  }
+}
+
+const onTouchMove = (e: TouchEvent) => {
+  if (move && canvas && market.route.name === 'story-gen') {
+    // Prevent scrolling while dragging character
+    if (e.cancelable) e.preventDefault()
+
+    const newX = e.touches[0].clientX
+    const newY = e.touches[0].clientY
+
+    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
+    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
+
+    if (newX !== oldX) {
+      canvas.style.left = stylel + (newX - oldX) + 'px'
+    }
+
+    if (newY !== oldY) {
+      canvas.style.top = stylet + (newY - oldY) + 'px'
+    }
+
+    oldX = newX
+    oldY = newY
+  }
+}
+
+const onWheel = (e: WheelEvent) => {
+  if (filterDomEvents(e)) {
+    switch (e.deltaY > 0) {
+      case true:
+        transformScale -= 0.02
+        transformScale < 0.01 && transformScale > -0.01
+          ? (transformScale = -0.02)
+          : ''
+        break
+      case false:
+        transformScale += 0.02
+        transformScale < 0.01 && transformScale > -0.01
+          ? (transformScale = 0.02)
+          : ''
+        break
+      default:
+        break
+    }
+
+    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
+  }
+}
 
 const SPINE_DEFAULT_MIX = 0.25
 let spinePlayer: any = null
@@ -437,6 +558,14 @@ watch(() => market.globalParams.isMobile, (e) => {
   }
 })
 
+watch(() => market.route.name, () => {
+  applyDefaultStyle2Canvas()
+})
+
+watch(() => market.live2d.HQassets, () => {
+  applyDefaultStyle2Canvas()
+})
+
 watch(() => market.live2d.current_id, () => {
   loadSpineAfterWatcher()
 })
@@ -655,9 +784,19 @@ const applyDefaultStyle2Canvas = () => {
 const setCanvasStyleMobile = () => {
   if (!canvas) return
 
-  canvas.style.height = '90vh'
-  canvas.style.width = '100%'
-  transformScale = 1
+  if (market.route.name === 'story-gen') {
+    canvas.style.height = '70vh'
+    canvas.style.width = 'auto'
+    transformScale = 0.7
+  } else {
+    canvas.style.height = '90vh'
+    canvas.style.width = '100%'
+    transformScale = 1
+  }
+  canvas.style.position = 'absolute'
+  canvas.style.top = '0px'
+  canvas.style.transform = 'scale(' + transformScale + ')'
+  centerForPC()
   market.globalParams.hideMobileHeader()
 }
 
@@ -691,41 +830,6 @@ let oldX: number
 let oldY: number
 let move = false as boolean
 
-document.addEventListener('mousedown', (e) => {
-  if (filterDomEvents(e)) {
-    oldX = e.clientX
-    oldY = e.clientY
-    move = true
-  }
-})
-
-document.addEventListener('mouseup', () => {
-  oldX = 0
-  oldY = 0
-  move = false
-})
-
-document.addEventListener('mousemove', (e) => {
-  if (move && canvas) {
-    const newX = e.clientX
-    const newY = e.clientY
-
-    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
-    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
-
-    if (newX !== oldX) {
-      canvas.style.left = stylel + (newX - oldX) + 'px'
-    }
-
-    if (newY !== oldY) {
-      canvas.style.top = stylet + (newY - oldY) + 'px'
-    }
-
-    oldX = newX
-    oldY = newY
-  }
-})
-
 /**
  * zoom in or out for the live2d
  * it uses the property transform scale instead of buffing up or down viewport height of the canvas
@@ -738,29 +842,6 @@ document.addEventListener('mousemove', (e) => {
  */
 
 let transformScale = 0.5
-
-document.addEventListener('wheel', (e) => {
-  if (filterDomEvents(e)) {
-    switch (e.deltaY > 0) {
-      case true:
-        transformScale -= 0.02
-        transformScale < 0.01 && transformScale > -0.01
-          ? (transformScale = -0.02)
-          : ''
-        break
-      case false:
-        transformScale += 0.02
-        transformScale < 0.01 && transformScale > -0.01
-          ? (transformScale = 0.02)
-          : ''
-        break
-      default:
-        break
-    }
-
-    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
-  }
-})
 
 /**
  * Yap or talking mode for the normal people;
@@ -900,7 +981,8 @@ const triggerPreview1 = () => {
 <style scoped lang="less">
 #player-container {
    //height: calc(100vh - 100px);
-  overflow:hidden
+  overflow:hidden;
+  position: relative;
 }
 .mobile {
   height: -webkit-fill-available;

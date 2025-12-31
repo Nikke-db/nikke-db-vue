@@ -3537,7 +3537,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   align-items: flex-end;
   padding: 0 10px 10px 10px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     flex-wrap: wrap;
     
     .n-input {
@@ -3615,6 +3615,9 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   cursor: pointer;
   pointer-events: auto;
   user-select: none;
+  box-sizing: border-box;
+  /* Support iOS safe area insets */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nikke-overlay-controls {
@@ -3624,6 +3627,11 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   z-index: 10003;
   display: flex;
   align-items: center;
+
+  @media (max-width: 1024px) {
+    top: 10px;
+    right: 10px;
+  }
 }
 
 .nikke-vignette {
@@ -3650,8 +3658,26 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  pointer-events: none;
-}
+  /* Allow interaction (scroll/touch) so mobile devices can scroll overflowing text */
+  pointer-events: auto;
+  box-sizing: border-box;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+
+  @media (max-width: 1024px) {
+    padding: 40px 5% 60px 5%;
+    min-height: 150px;
+    max-height: calc(100vh - 60px);
+  }
+
+  @media (max-width: 834px) {
+    padding: 30px 4% 50px 4%;
+    min-height: 120px;
+    max-height: calc(100vh - 50px);
+  }
+} 
 
 .nikke-speaker-name {
   display: flex;
@@ -3662,6 +3688,11 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   margin-bottom: 16px;
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+
+  @media (max-width: 1024px) {
+    font-size: 1.2em;
+    margin-bottom: 8px;
+  }
 }
 
 .nikke-speaker-indicator {
@@ -3678,6 +3709,18 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
   max-width: 1400px;
   font-weight: 400;
+  word-break: break-word;
+  max-width: calc(100% - 40px);
+
+  @media (max-width: 1024px) {
+    font-size: 1.1em;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 834px) {
+    font-size: 1.0em;
+    line-height: 1.35;
+  }
 }
 
 .fade-enter-active,
@@ -3733,6 +3776,11 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   width: 100%;
   max-width: 600px;
   padding: 20px;
+
+  @media (max-width: 1024px) {
+    gap: 10px;
+    padding: 15px;
+  }
 }
 .choice-btn {
   background: rgba(0, 0, 0, 0.8);
@@ -3744,6 +3792,10 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 1024px) {
+    padding: 15px 20px;
+  }
 }
 .choice-btn:hover {
   background: rgba(0, 0, 0, 0.9);
@@ -3762,5 +3814,9 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   font-size: 1.2em;
   font-weight: 500;
   letter-spacing: 1px;
+
+  @media (max-width: 1024px) {
+    font-size: 1em;
+  }
 }
 </style>
