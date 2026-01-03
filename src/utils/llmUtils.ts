@@ -296,8 +296,8 @@ export const callPollinationsWithoutJson = async (
   return data.choices[0].message.content
 }
 
-export const callLocalSummarization = async (messages: any[], opts: { model: string, apiKey?: string, localUrl: string }) => {
-  const { model, apiKey, localUrl } = opts
+export const callLocalSummarization = async (messages: any[], opts: { model?: string, maxTokens?: number, apiKey?: string, localUrl: string }) => {
+  const { model, maxTokens = 16384, apiKey, localUrl } = opts
   
   let endpoint = localUrl.replace(/\/$/, '')
   if (!endpoint.endsWith('/chat/completions')) {
@@ -305,9 +305,10 @@ export const callLocalSummarization = async (messages: any[], opts: { model: str
   }
 
   const requestBody: any = {
-    model: model,
-    messages: messages
+    messages: messages,
+    max_tokens: maxTokens
   }
+  if (model) requestBody.model = model
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -333,14 +334,15 @@ export const callLocalSummarization = async (messages: any[], opts: { model: str
 export const callLocal = async (
   messages: any[],
   opts: {
-    model: string,
+    model?: string,
+    maxTokens?: number,
     apiKey?: string,
     localUrl: string,
     modeIsGame: boolean,
     modelsWithoutJsonSupport: Set<string>
   }
 ) => {
-  const { model, apiKey, localUrl, modeIsGame, modelsWithoutJsonSupport } = opts
+  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame, modelsWithoutJsonSupport } = opts
 
   // Ensure URL ends with /chat/completions if not present
   let endpoint = localUrl.replace(/\/$/, '')
@@ -350,10 +352,10 @@ export const callLocal = async (
 
   const callWithoutJsonFormat = async () => {
     const requestBody: any = {
-      model: model,
       messages: messages,
-      max_tokens: 8192
+      max_tokens: maxTokens
     }
+    if (model) requestBody.model = model
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
@@ -376,7 +378,7 @@ export const callLocal = async (
     return data.choices[0].message.content
   }
 
-  if (modelsWithoutJsonSupport.has(model)) {
+  if (model && modelsWithoutJsonSupport.has(model)) {
     console.log(`Model ${model} known to not support json_schema, using text fallback...`)
     return callWithoutJsonFormat()
   }
@@ -384,11 +386,11 @@ export const callLocal = async (
   const responseSchema = buildStoryResponseSchema(modeIsGame)
   
   const requestBody: any = {
-    model: model,
     messages: messages,
-    max_tokens: 8192,
+    max_tokens: maxTokens,
     response_format: responseSchema
   }
+  if (model) requestBody.model = model
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -409,9 +411,11 @@ export const callLocal = async (
 
     // Check for 400 error related to response_format
     if (response.status === 400 && (JSON.stringify(errorData).includes('response_format') || JSON.stringify(errorData).includes('json_schema') || JSON.stringify(errorData).includes('schema'))) {
-      console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
-      modelsWithoutJsonSupport.add(model)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      console.warn(`Model ${model || 'local'} does not support json_schema response format, remembering and retrying without it...`)
+      if (model) {
+        modelsWithoutJsonSupport.add(model)
+        localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      }
       return callWithoutJsonFormat()
     }
 
@@ -761,7 +765,8 @@ export const enrichActionsWithAnimations = async (
   opts: {
     apiProvider: string,
     apiKey: string,
-    model: string,
+    model?: string,
+    maxTokens?: number,
     currentCharacterId: string,
     filteredAnimations: string[],
     animationEnrichmentPrompt: string,
@@ -771,7 +776,7 @@ export const enrichActionsWithAnimations = async (
 ): Promise<any[]> => {
   console.log('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl } = opts
+  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl } = opts
 
   const hasMeaningfulAnimation = (anim: any): boolean => {
     if (typeof anim !== 'string') return false
@@ -819,6 +824,7 @@ export const enrichActionsWithAnimations = async (
     } else if (apiProvider === 'local' && localUrl) {
       response = await callLocal(messages, {
         model,
+        maxTokens,
         apiKey,
         localUrl,
         modeIsGame: false,

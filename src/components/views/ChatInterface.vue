@@ -204,8 +204,22 @@
             <n-input v-model:value="localUrl" placeholder="http://localhost:5001/v1" />
           </n-form-item>
 
-          <n-form-item label="Model Name" v-if="apiProvider === 'local'">
-            <n-input v-model:value="localModel" placeholder="e.g. llama3, mistral" />
+          <n-form-item v-if="apiProvider === 'local'">
+            <template #label>
+              Maximum Tokens
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  <p>This value should be equal to or lower than the context limit set in your local model runner (e.g., LM Studio, Ollama). Using higher values may result in errors.</p>
+                  <p>Acceptable values are between 8192 and 98304. The lower the number, the worse your experience will be. Note that higher values will require much higher system requirements.</p>
+                </div>
+              </n-popover>
+            </template>
+            <n-input-number v-model:value="localMaxTokens" :min="8192" :max="98304" :step="1024" placeholder="8192" style="width: 100%" />
           </n-form-item>
 
           <n-form-item label="API Key" v-if="apiProvider !== 'local'">
@@ -671,7 +685,7 @@ const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !=
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
-const localModel = ref(localStorage.getItem('nikke_local_model') || 'llama3')
+const localMaxTokens = ref(Number(localStorage.getItem('nikke_local_max_tokens')) || 8192)
 const model = ref('sonar')
 const mode = ref('roleplay')
 const tokenUsage = ref('medium')
@@ -867,7 +881,7 @@ const providerOptions = [
   { label: 'Gemini', value: 'gemini' },
   { label: 'OpenRouter', value: 'openrouter' },
   { label: 'Pollinations', value: 'pollinations' },
-  { label: 'Local', value: 'local' }
+  { label: 'Local (Beta, OpenAPI)', value: 'local' }
 ]
 
 const modelOptions = computed(() => {
@@ -940,8 +954,8 @@ watch(localUrl, (newVal) => {
   localStorage.setItem('nikke_local_url', newVal)
 })
 
-watch(localModel, (newVal) => {
-  localStorage.setItem('nikke_local_model', newVal)
+watch(localMaxTokens, (newVal) => {
+  localStorage.setItem('nikke_local_max_tokens', String(newVal))
 })
 
 watch(useLocalProfiles, (newVal) => {
@@ -2269,7 +2283,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     
     logDebug('Sending to Local:', messages)
     response = await callLocalImpl(messages, {
-      model: localModel.value,
+      maxTokens: localMaxTokens.value,
       apiKey: apiKey.value,
       localUrl: localUrl.value,
       modeIsGame: mode.value === 'game',
@@ -2425,7 +2439,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     ]
     const messagesWithReminders = injectUserReminders(messages)
     return await callLocalImpl(messagesWithReminders, {
-      model: localModel.value,
+      maxTokens: localMaxTokens.value,
       apiKey: apiKey.value,
       localUrl: localUrl.value,
       modeIsGame: mode.value === 'game',
@@ -2703,7 +2717,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
         data = await enrichActionsWithAnimations(data, {
           apiProvider: apiProvider.value,
           apiKey: apiKey.value,
-          model: apiProvider.value === 'local' ? localModel.value : model.value,
+          model: apiProvider.value === 'local' ? undefined : model.value,
+          maxTokens: localMaxTokens.value,
           currentCharacterId: market.live2d.current_id,
           filteredAnimations: getFilteredAnimations(),
           animationEnrichmentPrompt: prompts.animationEnrichment,
@@ -3310,7 +3325,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
     } else if (apiProvider.value === 'pollinations') {
       summary = await callPollinationsSummarization(msgs, apiKey.value, model.value)
     } else if (apiProvider.value === 'local') {
-      summary = await callLocalSummarization(msgs, { model: localModel.value, apiKey: apiKey.value, localUrl: localUrl.value })
+      summary = await callLocalSummarization(msgs, { maxTokens: localMaxTokens.value, apiKey: apiKey.value, localUrl: localUrl.value })
     }
     
     if (summary && summary.trim().length > 0) {
