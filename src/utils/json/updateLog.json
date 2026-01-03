@@ -594,5 +594,9 @@
   {
     "date": "December 30th 2025",
     "update": "Fixed the new SW full body not displaying"
+  },
+  {
+    "date": "January 3rd 2026",
+    "update": "Fixed the \"Fix broken animation\" button in the layer editor, which was previously permanently hiding the control buttons once clicked."
   }
 ]

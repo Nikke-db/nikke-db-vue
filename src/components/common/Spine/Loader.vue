@@ -218,7 +218,7 @@ const spineLoader = () => {
         atlasUrl: getPathing('atlas'),
         animation: getDefaultAnimation(),
         skin: market.live2d.getSkin(),
-        showControls: !market.live2d.hideUI && market.route.name !== 'story-gen',
+        showControls: market.route.name !== 'story-gen',
         backgroundColor: '#00000000',
         alpha: true,
         premultipliedAlpha: true,
