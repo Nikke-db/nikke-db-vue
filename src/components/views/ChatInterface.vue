@@ -1225,7 +1225,7 @@ const initializeSettings = async () => {
   if (savedContextCaching !== null) enableContextCaching.value = (savedContextCaching === 'true')
 
   const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
-  if (savedAnimationReplay !== null) enableAnimationReplay.value = (savedAnimationReplay === 'true')
+  enableAnimationReplay.value = savedAnimationReplay !== 'false'
 
   // Load Provider and Model
   const savedProvider = localStorage.getItem('nikke_api_provider')
@@ -1447,12 +1447,117 @@ const stopResize = () => {
   window.removeEventListener('touchend', stopResize)
 }
 
+let originalViewportMetaContent: string | null = null
+let viewportMetaWasModified = false
+
+let originalBodyStyle: Partial<CSSStyleDeclaration> | null = null
+let originalHtmlOverflow: string | null = null
+let scrollLockY = 0
+
+const isMobileViewport = () => window.matchMedia('(max-width: 768px)').matches
+
+const restoreViewportZoom = () => {
+  if (typeof document === 'undefined') return
+  if (!viewportMetaWasModified) return
+
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+  if (!meta) return
+
+  if (originalViewportMetaContent !== null) {
+    meta.setAttribute('content', originalViewportMetaContent)
+  }
+
+  viewportMetaWasModified = false
+}
+
+const preventMobileZoomOnThisView = () => {
+  if (typeof document === 'undefined') return
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+  if (!meta) return
+
+  if (originalViewportMetaContent === null) {
+    originalViewportMetaContent = meta.getAttribute('content') || ''
+  }
+
+  if (!isMobileViewport()) return
+
+  meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
+  viewportMetaWasModified = true
+}
+
+const lockMobilePageScroll = () => {
+  if (typeof document === 'undefined') return
+  if (!isMobileViewport()) return
+
+  const html = document.documentElement
+  const body = document.body
+  if (!body) return
+
+  scrollLockY = window.scrollY || window.pageYOffset || 0
+
+  if (originalBodyStyle === null) {
+    originalBodyStyle = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      overscrollBehavior: (body.style as any).overscrollBehavior,
+    }
+  }
+  if (originalHtmlOverflow === null) {
+    originalHtmlOverflow = html.style.overflow
+  }
+
+  html.style.overflow = 'hidden'
+  body.style.overflow = 'hidden'
+  ;(body.style as any).overscrollBehavior = 'none'
+  body.style.position = 'fixed'
+  body.style.top = `-${scrollLockY}px`
+  body.style.left = '0'
+  body.style.right = '0'
+  body.style.width = '100%'
+}
+
+const unlockMobilePageScroll = () => {
+  if (typeof document === 'undefined') return
+  const html = document.documentElement
+  const body = document.body
+  if (!body) return
+
+  if (originalHtmlOverflow !== null) {
+    html.style.overflow = originalHtmlOverflow
+    originalHtmlOverflow = null
+  }
+
+  if (originalBodyStyle) {
+    body.style.position = originalBodyStyle.position || ''
+    body.style.top = originalBodyStyle.top || ''
+    body.style.left = originalBodyStyle.left || ''
+    body.style.right = originalBodyStyle.right || ''
+    body.style.width = originalBodyStyle.width || ''
+    body.style.overflow = originalBodyStyle.overflow || ''
+    ;(body.style as any).overscrollBehavior = (originalBodyStyle as any).overscrollBehavior || ''
+    originalBodyStyle = null
+  }
+
+  if (scrollLockY) {
+    window.scrollTo(0, scrollLockY)
+  }
+  scrollLockY = 0
+}
+
 onMounted(() => {
   originalHQAssets.value = market.live2d.HQassets
   checkGuide()
   initializeSettings()
   initChatLayout()
   window.addEventListener('beforeunload', handleBeforeUnload)
+
+  preventMobileZoomOnThisView()
+  lockMobilePageScroll()
+
   window.addEventListener('resize', () => {
     // Ensure window stays in bounds on resize
     const { innerWidth, innerHeight } = window
@@ -1468,6 +1573,8 @@ onMounted(() => {
 onUnmounted(() => {
   market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  unlockMobilePageScroll()
+  restoreViewportZoom()
 })
 
 onBeforeRouteLeave((to, from) => {

@@ -216,7 +216,8 @@ export const callPollinations = async (
     model: model,
     messages: messages,
     max_tokens: 16384,
-    response_format: buildStoryResponseSchema(modeIsGame)
+    response_format: buildStoryResponseSchema(modeIsGame),
+    tools: [] // Explicitly disable tools to avoid conflict with controlled generation (Gemini 3)
   }
 
   const headers: Record<string, string> = {
@@ -242,7 +243,7 @@ export const callPollinations = async (
       throw new Error('RATE_LIMITED')
     }
     
-    if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema'))) {
+    if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.add(model)
       localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
