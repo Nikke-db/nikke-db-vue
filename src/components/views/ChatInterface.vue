@@ -151,13 +151,13 @@
       <div 
         v-if="chatMode === 'nikke' && nikkeOverlayVisible" 
         class="nikke-chat-overlay"
-        @mousedown="handleOverlayClick"
+        :class="{ passthrough: nikkeOverlayPassthrough }"
       >
         <div class="nikke-vignette"></div>
 
         <!-- Stop Button for NIKKE Mode -->
         <div class="nikke-overlay-controls">
-          <n-button type="error" circle @mousedown.stop="stopGeneration" title="Stop Generation">
+          <n-button type="error" circle @mousedown.stop="stopGeneration" @touchstart.stop="stopGeneration" title="Stop Generation">
             <template #icon><n-icon><Close /></n-icon></template>
           </n-button>
         </div>
@@ -470,7 +470,7 @@
                 </template>
                 <div>
                   Allows you to click on a message to replay the animation and character associated with it.<br>
-                  <span style="color: #ff4d4f;">Warning: Enabling this will increase the size of the save file.</span>
+                  Slightly increases file sizes and local memory usage.
                 </div>
               </n-popover>
             </template>
@@ -564,65 +564,97 @@
 
     <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw;">
       <div class="guide-content">
-        <p>In this section you can create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
+        <div v-if="guidePage === 1" class="guide-page">
+          <h3>🚀 Welcome to the Story Generator</h3>
+          <p>Create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
+          
+          <div class="guide-section">
+            <h4>🔑 API Setup</h4>
+            <ul>
+              <li><strong>Providers:</strong> Supports <strong>Perplexity</strong>, <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
+              <li><strong>Pollinations:</strong> Can be used without a key, but with limited models and rate limits.</li>
+              <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
+              <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="guidePage === 2" class="guide-page">
+          <h3>🎭 Interaction Modes</h3>
+          <div class="guide-section">
+            <ul>
+              <li><strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the narrative.
+                <ul>
+                  <li>Use <code>[brackets]</code> for actions (e.g., <code>[I nod slowly]</code>).</li>
+                  <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
+                </ul>
+              </li>
+              <li><strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
+                <ul>
+                  <li><strong>Tip:</strong> Start by defining the <strong>Setting</strong> and <strong>Characters</strong>.</li>
+                </ul>
+              </li>
+              <li><strong>Game Mode:</strong> A NIKKE-like experience.
+                <ul>
+                  <li>The AI narrates, and you choose from generated options.</li>
+                  <li>You can still override choices by clicking the red X and then typing as you would in Roleplay Mode..</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="guidePage === 3" class="guide-page">
+          <h3>✨ Immersive Features</h3>
+          <div class="guide-section">
+            <ul>
+              <li><strong>Yap Mode:</strong> Enables real-time lip-syncing for characters on screen.</li>
+              <li><strong>Text-to-Speech (TTS):</strong> Experimental support for <strong>AllTalk</strong>, <strong>GPT-SoVits</strong>, and <strong>Chatterbox</strong> for voiced dialogue.</li>
+              <li><strong>Animation Replay:</strong> Click on any message in the history to replay the character's animation and expression from that moment.</li>
+              <li><strong>Playback:</strong> Choose <strong>Auto</strong> for a continuous flow or <strong>Manual</strong> to advance at your own pace.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="guidePage === 4" class="guide-page">
+          <h3>🧠 Knowledge & Search</h3>
+          <div class="guide-section">
+            <ul>
+              <li><strong>Nikke-DB Knowledge:</strong> Uses built-in character profiles for better accuracy and lower costs.</li>
+              <li><strong>AI Memory:</strong> The AI can track <strong>Character Progression</strong>, updating personalities and relationships as the story develops.</li>
+              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by Perplexity and some OpenRouter models) or fetch from the Nikke Wiki.</li>
+              <li><strong>Local Models:</strong> Connect to your own local LLM server (like LM Studio or Ollama) via the <strong>Local</strong> provider.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="guidePage === 5" class="guide-page">
+          <h3>💡 Tips & Troubleshooting</h3>
+          <div class="guide-section">
+            <ul>
+              <li><strong>Problems? Button:</strong> Use this if the AI is misbehaving, such as showing garbled text, using wrong speech styles for characters, etc.</li>
+              <li><strong>Model Quality:</strong> The experience varies greatly between models. Larger models generally perform better. Avoid using models tuned for other tasks such as coding.</li>
+              <li><strong>Save/Load:</strong> Use the <strong>Save</strong> icon to download your session. You can resume it later by loading the file.</li>
+              <li><strong>Context Usage:</strong> Adjust "Tokens Usage" in settings to balance between speed and cost.</li>
+            </ul>
+          </div>
+        </div>
         
-        <h3>🔑 Getting Started</h3>
-        <ul>
-          <li><strong>API Key:</strong> You need an API key to use this feature, except when using Pollinations. Currently supported providers: <strong>Perplexity</strong>, <strong>Google Gemini</strong>, <strong>OpenRouter</strong>, and <strong>Pollinations</strong>.</li>
-          <ul>
-          <li>When using Pollinations without an API key, only a small subset of models is shown. You will also likely be rate-limited. Adding or removing a Pollinations API key will immediately refresh the available model list.</li>
-          </ul>
-          <li><strong>Setup:</strong> Click the <strong>Settings (Gear Icon)</strong> to enter your API key and select a model.</li>
-          <li><strong>Privacy:</strong> Your API key is stored locally and sent only to the selected API provider. Stories and keys are never shared with Nikke-DB; check your provider's policy, as some may use data for training.</li>
-          <li><strong>Cost Warning:</strong> Please be aware of your API provider's pricing. Web search for certain models/providers may incur additional costs. You can disable it in Settings.</li>
-        </ul>
-
-        <h3>🎭 Modes</h3>
-        <ul>
-          <li><strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the Nikkes.
-            <ul>
-              <li>Use <code>[brackets]</code> for actions or descriptions (e.g., <code>[I nod slowly]</code>).</li>
-              <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
-            </ul>
-          </li>
-          <li><strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
-            <ul>
-              <li><strong>Tip:</strong> In your first message, clearly state the <strong>Setting</strong> and <strong>Characters</strong> you want in the scene.</li>
-              <li>Example: <code>Scene: The Command Center. Characters: Rapi, Anis, Neon. They are discussing the next mission.</code></li>
-            </ul>
-          </li>
-          <li><strong>Game Mode:</strong> Play a story in a similar way to the videogame.
-            <ul>
-              <li>The AI narrates in first person as the Commander.</li>
-              <li>You will be presented with choices to influence the story.</li>
-            </ul>
-          </li>
-        </ul>
-
-        <h3>✨ Features</h3>
-        <ul>
-          <li><strong>Yap Mode:</strong> When enabled in Settings, characters on screen will lip-sync to the generated text.</li>
-          <li><strong>Playback Control:</strong>
-            <ul>
-              <li><strong>Auto:</strong> The story advances automatically after each message, while giving you enough time to read through it.</li>
-              <li><strong>Manual:</strong> The story waits for you to click 'Next' or 'Continue'.</li>
-            </ul>
-          </li>
-          <li>If you don't like the last message, you can delete it by clicking the trash can icon on the left side of the message bubble. You can then write something different, or press <strong>Continue</strong>. Alternatively, you can click on the <strong>Retry</strong> button in the upper right corner of the message.</li>
-          <li>If you do not want to perform any action, simply press <strong>Continue</strong>.</li>
-          <li>You can <strong>Save</strong> and <strong>Load</strong> your session at any time.</li>
-        </ul>
-
-        <h3>💡 Tips</h3>
-        <ul>
-          <li>If the model is misbehaving, try using one of the options in the <strong>Problems?</strong> button.</li>
-          <li>The quality of the session highly depends on the model that you have selected.</li>
-          <li>Be patient. Some providers/models may take a while to respond to the first prompt in particular.</li>
-          <li>Check your API usage regularly on your provider's dashboard, and set limits to prevent from overspending or being charged while using a free model.</li>
-        </ul>
-        
-        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-          <n-button type="primary" @click="closeGuide">Got it!</n-button>
+        <div class="guide-footer">
+          <div class="guide-steps">
+            <div v-for="p in 5" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
+          </div>
+          <div class="guide-actions">
+            <n-button v-if="guidePage > 1" @click="guidePage--" style="margin-right: 10px;">
+              <template #icon><n-icon><ChevronLeft /></n-icon></template>
+              Back
+            </n-button>
+            <n-button v-if="guidePage < 5" type="primary" @click="guidePage++">
+              Next
+              <template #icon><n-icon><ChevronRight /></n-icon></template>
+            </n-button>
+            <n-button v-else type="primary" @click="closeGuide">Got it!</n-button>
+          </div>
         </div>
       </div>
     </n-modal>
@@ -633,7 +665,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification, Draggable, Maximize, Close } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
@@ -681,6 +713,7 @@ const getFilteredAnimations = () => {
 // State
 const showSettings = ref(false)
 const showGuide = ref(false)
+const guidePage = ref(1)
 const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
 const apiProvider = ref('perplexity')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
@@ -722,6 +755,7 @@ const originalHQAssets = ref(true)
 // NIKKE Mode State
 const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'nikke')
 const nikkeOverlayVisible = ref(false)
+const nikkeOverlayPassthrough = ref(false)
 const nikkeCurrentSpeaker = ref('')
 const nikkeCurrentText = ref('')
 const nikkeDisplayedText = ref('')
@@ -751,9 +785,9 @@ const stopTypewriter = () => {
   isTyping.value = false
 }
 
-const handleOverlayClick = (e: MouseEvent) => {
-  if (e) {
-    e.preventDefault()
+const handleOverlayClick = (e: MouseEvent | TouchEvent) => {
+  if (e && 'stopPropagation' in e) {
+    if ('cancelable' in e && e.cancelable) e.preventDefault()
     e.stopPropagation()
   }
 
@@ -795,6 +829,159 @@ const handleOverlayClick = (e: MouseEvent) => {
   } else if (chatMode.value === 'nikke' && nikkeOverlayVisible.value) {
     nextAction()
   }
+}
+
+type SpineCanvasPlacement = {
+  left?: string
+  top?: string
+  transform?: string
+}
+
+const getSpineCanvas = (): HTMLCanvasElement | null => {
+  const container = document.querySelector('#player-container')
+  const canvas = container?.querySelector('canvas')
+  return canvas instanceof HTMLCanvasElement ? canvas : null
+}
+
+const captureSpineCanvasPlacement = (): SpineCanvasPlacement | null => {
+  if (typeof document === 'undefined') return null
+  const canvas = getSpineCanvas()
+  if (!canvas) return null
+  return {
+    left: canvas.style.left,
+    top: canvas.style.top,
+    transform: canvas.style.transform,
+  }
+}
+
+const restoreSpineCanvasPlacement = async (placement: SpineCanvasPlacement | null) => {
+  if (!placement || typeof document === 'undefined') return
+
+  // Wait a few frames for the new canvas to exist after a character switch.
+  for (let i = 0; i < 30; i++) {
+    const canvas = getSpineCanvas()
+    if (canvas) {
+      if (placement.left) canvas.style.left = placement.left
+      if (placement.top) canvas.style.top = placement.top
+      if (placement.transform) canvas.style.transform = placement.transform
+      return
+    }
+    await new Promise<void>((r) => requestAnimationFrame(() => r()))
+  }
+}
+
+// NIKKE overlay: tap anywhere to advance, but never when interacting with the spine canvas.
+const nikkeTapState = {
+  startedOnSpineCanvas: false,
+  startedOnInteractive: false,
+  moved: false,
+  startX: 0,
+  startY: 0,
+  multiTouch: false,
+}
+
+let lastNikkeTouchTs = 0
+let lastNikkeHandledTs = 0
+
+const isInteractiveOverlayTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) return false
+  return !!target.closest(
+    '.nikke-overlay-controls, .game-choices-overlay, button, a, input, textarea, select, [role="button"], [contenteditable="true"]'
+  )
+}
+
+const isSpineCanvasAtPoint = (x: number, y: number): boolean => {
+  const overlay = document.querySelector('.nikke-chat-overlay') as HTMLElement | null
+  if (!overlay) return false
+
+  // Temporarily disable overlay hit-testing to see what's underneath.
+  const prevPointerEvents = overlay.style.pointerEvents
+  overlay.style.pointerEvents = 'none'
+  const el = document.elementFromPoint(x, y) as HTMLElement | null
+  overlay.style.pointerEvents = prevPointerEvents
+
+  if (!el) return false
+
+  // Only allow pass-through if the actual canvas is under the finger.
+  if (el instanceof HTMLCanvasElement) return !!el.closest('#player-container')
+  const canvas = el.closest('#player-container canvas')
+  return canvas instanceof HTMLCanvasElement
+}
+
+const getEventPoint = (e: MouseEvent | TouchEvent) => {
+  if ('touches' in e) {
+    const t = e.touches[0] || (e.changedTouches ? e.changedTouches[0] : null)
+    return t ? { x: t.clientX, y: t.clientY, touches: e.touches.length } : { x: 0, y: 0, touches: 0 }
+  }
+  return { x: e.clientX, y: e.clientY, touches: 0 }
+}
+
+const onNikkeGlobalStart = (e: MouseEvent | TouchEvent) => {
+  if (chatMode.value !== 'nikke' || !nikkeOverlayVisible.value) return
+
+  const { x, y, touches } = getEventPoint(e)
+  nikkeTapState.startX = x
+  nikkeTapState.startY = y
+  nikkeTapState.moved = false
+  nikkeTapState.multiTouch = touches >= 2
+
+  const target = e.target
+  nikkeTapState.startedOnInteractive = isInteractiveOverlayTarget(target)
+
+  // Only pass-through if the finger starts on the actual canvas.
+  nikkeTapState.startedOnSpineCanvas = typeof document !== 'undefined' && isSpineCanvasAtPoint(x, y)
+  nikkeOverlayPassthrough.value = nikkeTapState.startedOnSpineCanvas
+
+  if ('touches' in e) {
+    lastNikkeTouchTs = Date.now()
+  }
+}
+
+const onNikkeGlobalMove = (e: MouseEvent | TouchEvent) => {
+  if (chatMode.value !== 'nikke' || !nikkeOverlayVisible.value) return
+  if (!nikkeTapState.startedOnSpineCanvas) return
+
+  const { x, y, touches } = getEventPoint(e)
+  if (touches >= 2) {
+    nikkeTapState.multiTouch = true
+    nikkeTapState.moved = true
+    return
+  }
+
+  const dx = Math.abs(x - nikkeTapState.startX)
+  const dy = Math.abs(y - nikkeTapState.startY)
+  if (dx > 6 || dy > 6) nikkeTapState.moved = true
+}
+
+const onNikkeGlobalEnd = (e: MouseEvent | TouchEvent) => {
+  if (chatMode.value !== 'nikke' || !nikkeOverlayVisible.value) return
+
+  // Always restore overlay hit-testing after the gesture.
+  nikkeOverlayPassthrough.value = false
+
+  // Ignore mouse events right after touch (mobile "ghost" mouse events).
+  const now = Date.now()
+  if (!('touches' in e) && now - lastNikkeTouchTs < 800) return
+
+  // De-dupe rapid double-fires.
+  if (now - lastNikkeHandledTs < 250) return
+  lastNikkeHandledTs = now
+
+  // Never advance if the gesture started on spine, or on an interactive overlay element.
+  if (nikkeTapState.startedOnSpineCanvas) return
+  if (nikkeTapState.startedOnInteractive) return
+  if (nikkeTapState.moved || nikkeTapState.multiTouch) return
+
+  // If choices are visible, let the choice UI handle it.
+  if (gameChoices.value.length > 0) return
+
+  // Regression fix: a single tap should never both finish typing AND advance.
+  if (isTyping.value) {
+    stopTypewriter()
+    return
+  }
+
+  handleOverlayClick(e)
 }
 
 // Window Management State
@@ -1169,11 +1356,13 @@ const checkGuide = () => {
 
   if (!seen) {
     showGuide.value = true
+    guidePage.value = 1
   }
 }
 
 const closeGuide = () => {
   showGuide.value = false
+  guidePage.value = 1
   localStorage.setItem('chat-guide-seen', 'true')
 }
 
@@ -1481,6 +1670,7 @@ const preventMobileZoomOnThisView = () => {
 
   if (!isMobileViewport()) return
 
+  // Prevent browser page zoom so Spine's custom pinch-zoom can work reliably.
   meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
   viewportMetaWasModified = true
 }
@@ -1558,6 +1748,14 @@ onMounted(() => {
   preventMobileZoomOnThisView()
   lockMobilePageScroll()
 
+  // Global "tap anywhere" for NIKKE overlay (but keep spine interactions intact)
+  document.addEventListener('touchstart', onNikkeGlobalStart as any, { passive: true })
+  document.addEventListener('touchmove', onNikkeGlobalMove as any, { passive: true })
+  document.addEventListener('touchend', onNikkeGlobalEnd as any, { passive: true })
+  document.addEventListener('mousedown', onNikkeGlobalStart as any)
+  document.addEventListener('mousemove', onNikkeGlobalMove as any)
+  document.addEventListener('mouseup', onNikkeGlobalEnd as any)
+
   window.addEventListener('resize', () => {
     // Ensure window stays in bounds on resize
     const { innerWidth, innerHeight } = window
@@ -1575,6 +1773,13 @@ onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
   unlockMobilePageScroll()
   restoreViewportZoom()
+
+  document.removeEventListener('touchstart', onNikkeGlobalStart as any)
+  document.removeEventListener('touchmove', onNikkeGlobalMove as any)
+  document.removeEventListener('touchend', onNikkeGlobalEnd as any)
+  document.removeEventListener('mousedown', onNikkeGlobalStart as any)
+  document.removeEventListener('mousemove', onNikkeGlobalMove as any)
+  document.removeEventListener('mouseup', onNikkeGlobalEnd as any)
 })
 
 onBeforeRouteLeave((to, from) => {
@@ -3160,6 +3365,7 @@ const executeAction = async (data: any) => {
               market.live2d.isVisible = true
             } else {
               logDebug(`[Chat] Switching character to: ${data.character}`)
+              const previousPlacement = captureSpineCanvasPlacement()
               const previousLoadTime = market.live2d.finishedLoading
               market.live2d.change_current_spine(charObj)
                 
@@ -3180,6 +3386,9 @@ const executeAction = async (data: any) => {
                   r()
                 }, 10000)
               })
+
+              // Restore the user's zoom/position after switching characters.
+              await restoreSpineCanvasPlacement(previousPlacement)
             }
           } else {
             console.warn(`[Chat] Character not found: ${data.character}`)
@@ -3734,12 +3943,15 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  cursor: pointer;
   pointer-events: auto;
   user-select: none;
   box-sizing: border-box;
   /* Support iOS safe area insets */
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nikke-chat-overlay.passthrough {
+  pointer-events: none;
 }
 
 .nikke-overlay-controls {
@@ -3749,6 +3961,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   z-index: 10003;
   display: flex;
   align-items: center;
+  pointer-events: auto;
 
   @media (max-width: 1024px) {
     top: 10px;
@@ -3769,6 +3982,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 .nikke-dialogue-container {
   position: relative;
   width: 100%;
+  pointer-events: auto;
   background: linear-gradient(to top, 
     rgba(0, 0, 0, 0.9) 0%, 
     rgba(0, 0, 0, 0.7) 50%, 
@@ -3941,4 +4155,86 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
     font-size: 1em;
   }
 }
+.guide-content {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  color: #e0e0e0;
+
+  h3 {
+    margin-top: 0;
+    color: #00eeff;
+    font-size: 1.4em;
+    border-bottom: 1px solid rgba(0, 238, 255, 0.2);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+
+  h4 {
+    color: #ffeb3b;
+    margin: 12px 0 8px 0;
+  }
+
+  ul {
+    padding-left: 20px;
+    li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+  }
+
+  code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #ffeb3b;
+  }
+}
+
+.guide-page {
+  flex: 1;
+  animation: fadeIn 0.3s ease;
+}
+
+.guide-section {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.guide-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.guide-steps {
+  display: flex;
+  gap: 8px;
+}
+
+.guide-step {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.guide-step.active {
+  background: #00eeff;
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(0, 238, 255, 0.5);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 </style>

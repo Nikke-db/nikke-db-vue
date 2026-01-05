@@ -47,6 +47,7 @@ onMounted(() => {
   document.addEventListener('touchstart', onTouchStart, { passive: false })
   document.addEventListener('mouseup', onMouseUp)
   document.addEventListener('touchend', onTouchEnd)
+  document.addEventListener('touchcancel', onTouchEnd)
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('touchmove', onTouchMove, { passive: false })
   document.addEventListener('wheel', onWheel)
@@ -58,6 +59,7 @@ onUnmounted(() => {
   document.removeEventListener('touchstart', onTouchStart)
   document.removeEventListener('mouseup', onMouseUp)
   document.removeEventListener('touchend', onTouchEnd)
+  document.removeEventListener('touchcancel', onTouchEnd)
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('touchmove', onTouchMove)
   document.removeEventListener('wheel', onWheel)
@@ -77,11 +79,55 @@ const onMouseDown = (e: MouseEvent) => {
   }
 }
 
+let initialDistance = 0
+let initialScale = 0.5
+
+const handlePinch = (e: TouchEvent) => {
+  if (!filterDomEvents(e) || e.touches.length !== 2 || initialDistance === 0) return
+  
+  const touch1 = e.touches[0]
+  const touch2 = e.touches[1]
+  const currentDistance = Math.sqrt(
+    Math.pow(touch2.clientX - touch1.clientX, 2) + 
+    Math.pow(touch2.clientY - touch1.clientY, 2)
+  )
+  
+  const scaleFactor = currentDistance / initialDistance
+  transformScale = initialScale * scaleFactor
+  
+  // Clamp scale between reasonable bounds
+  transformScale = Math.max(0.1, Math.min(3, transformScale))
+  
+  if (canvas) {
+    canvas.style.transform = 'scale(' + transformScale + ')'
+  }
+  
+  // Prevent page zoom during pinch
+  if (e.cancelable) e.preventDefault()
+}
+
 const onTouchStart = (e: TouchEvent) => {
   if (market.route.name === 'story-gen' && filterDomEvents(e)) {
-    oldX = e.touches[0].clientX
-    oldY = e.touches[0].clientY
-    move = true
+    // Handle pinch gesture start
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      initialDistance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      )
+      initialScale = transformScale
+      move = false
+      return
+    }
+    
+    // Only start dragging if it's a single touch (not pinch)
+    if (e.touches.length === 1) {
+      oldX = e.touches[0].clientX
+      oldY = e.touches[0].clientY
+      move = true
+      initialDistance = 0 // Reset pinch tracking
+    }
   }
 }
 
@@ -95,6 +141,7 @@ const onTouchEnd = () => {
   oldX = 0
   oldY = 0
   move = false
+  initialDistance = 0
 }
 
 const onMouseMove = (e: MouseEvent) => {
@@ -119,9 +166,19 @@ const onMouseMove = (e: MouseEvent) => {
 }
 
 const onTouchMove = (e: TouchEvent) => {
-  if (move && canvas && market.route.name === 'story-gen') {
-    // Prevent scrolling while dragging character
+  // Handle pinch zoom
+  if (e.touches.length === 2 && filterDomEvents(e)) {
+    handlePinch(e)
+    move = false
     if (e.cancelable) e.preventDefault()
+    return
+  }
+  
+  if (move && canvas && market.route.name === 'story-gen') {
+    // Only prevent default for single touch drag, allow multi-touch for pinch zoom
+    if (e.touches.length === 1 && e.cancelable) {
+      e.preventDefault()
+    }
 
     const newX = e.touches[0].clientX
     const newY = e.touches[0].clientY
@@ -811,9 +868,19 @@ const centerForPC = () => {
 }
 
 const filterDomEvents = (event: any) => {
+  const target = event.target as HTMLElement
+  const spinePlayer = document.querySelector('.spine-player')
+  const playerContainer = document.querySelector('#player-container')
+
+  // Only change behaviour in story-gen route
+  const allowContainerHit = market.route.name === 'story-gen'
+  
   if (
-    event.target === canvas ||
-    event.target === document.querySelector('.spine-player')
+    target === canvas ||
+    target === spinePlayer ||
+    canvas?.contains(target) ||
+    spinePlayer?.contains(target) ||
+    (allowContainerHit && playerContainer?.contains(target))
   ) {
     return true
   } else {
