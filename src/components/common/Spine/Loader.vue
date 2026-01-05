@@ -396,7 +396,7 @@ const spineLoader = () => {
         atlasUrl: getPathing('atlas'),
         animation: getDefaultAnimation(),
         skin: market.live2d.getSkin(),
-        showControls: !market.live2d.hideUI && market.route.name !== 'story-gen',
+        showControls: market.route.name !== 'story-gen',
         backgroundColor: '#00000000',
         alpha: true,
         premultipliedAlpha: true,
@@ -673,6 +673,8 @@ watch(() => market.live2d.customLoad, () => {
 watch(() => market.live2d.hideUI, () => {
   const controls = document.querySelector('.spine-player-controls') as HTMLElement
   if (!controls) return
+  // On story-gen route, controls should always be hidden
+  // On other routes (like L2D), controls visibility depends on hideUI state
   if (market.live2d.hideUI === false && market.route.name !== 'story-gen') {
     controls.style.visibility = 'visible'
   } else {
@@ -844,16 +846,17 @@ const setCanvasStyleMobile = () => {
   if (market.route.name === 'story-gen') {
     canvas.style.height = '70vh'
     canvas.style.width = 'auto'
+    canvas.style.position = 'absolute'
+    canvas.style.top = '0px'
+    canvas.style.transform = 'scale(0.7)'
     transformScale = 0.7
+    centerForPC()
   } else {
+    // L2D (visualiser) - use production behavior
     canvas.style.height = '90vh'
     canvas.style.width = '100%'
     transformScale = 1
   }
-  canvas.style.position = 'absolute'
-  canvas.style.top = '0px'
-  canvas.style.transform = 'scale(' + transformScale + ')'
-  centerForPC()
   market.globalParams.hideMobileHeader()
 }
 
@@ -1049,7 +1052,6 @@ const triggerPreview1 = () => {
 #player-container {
    //height: calc(100vh - 100px);
   overflow:hidden;
-  position: relative;
 }
 .mobile {
   height: -webkit-fill-available;
