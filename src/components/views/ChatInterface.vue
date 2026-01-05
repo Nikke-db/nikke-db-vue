@@ -668,21 +668,31 @@ import { useMarket } from '@/stores/market'
 import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
-import characterHonorifics from '@/utils/json/honorifics.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { cleanWikiContent, sanitizeActions, splitNarration, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil } from '@/utils/chatUtils'
+import {
+  sanitizeActions,
+  parseFallback,
+  parseAIResponse,
+  isWholeWordPresent,
+  formatChoiceAsUserTurn,
+  filterEchoedUserChoiceDialogueInGameMode,
+  stripChoicesWhenNotGameMode,
+  ensureGameModeChoicesFallback,
+  calculateYapDuration,
+  replayMessage as replayMessageUtil,
+  getHonorific,
+  createTypewriterController,
+  logDebug
+} from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
-import { allowWebSearchFallback, NATIVE_SEARCH_PREFIXES, POLLINATIONS_NATIVE_SEARCH_MODELS, hasNativeSearch, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, callLocalSummarization } from '@/utils/llmUtils'
-
-// Helper to get honorific with fallback to "Commander"
-const getHonorific = (characterName: string): string => {
-  return (characterHonorifics as Record<string, string>)[characterName] || 'Commander'
-}
+import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
+import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, callLocalSummarization, getFilteredAnimations } from '@/utils/llmUtils'
+import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
+import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 
 const market = useMarket()
 
@@ -691,24 +701,6 @@ const getResponseSchema = (isGameMode: boolean) => buildStoryResponseSchema(isGa
 
 const pendingGameChoiceText = ref<string | null>(null)
 const abortCurrentPlaybackForChoice = ref(false)
-
-// Helper for debug logging
-const logDebug = (...args: any[]) => {
-  if (import.meta.env.DEV) {
-    console.log(...args)
-  }
-}
-
-// Helper to get filtered animations (excludes internal talk tracks and unusable ones)
-const getFilteredAnimations = () => {
-  return (market.live2d.animations || []).filter((a) => 
-    a !== 'talk' &&
-    a !== 'talk_start' && 
-    a !== 'talk_end' && 
-    a !== 'expression_0' && 
-    a !== 'action'
-  )
-}
 
 // State
 const showSettings = ref(false)
@@ -761,29 +753,11 @@ const nikkeCurrentText = ref('')
 const nikkeDisplayedText = ref('')
 const isTyping = ref(false)
 const nikkeSpeakerColor = ref('#ffffff')
-let typewriterInterval: any = null
 
-const startTypewriter = (text: string) => {
-  if (typewriterInterval) clearInterval(typewriterInterval)
-  nikkeDisplayedText.value = ''
-  isTyping.value = true
-  let index = 0
-  
-  typewriterInterval = setInterval(() => {
-    if (index < text.length) {
-      nikkeDisplayedText.value += text[index]
-      index++
-    } else {
-      stopTypewriter()
-    }
-  }, 30)
-}
 
-const stopTypewriter = () => {
-  if (typewriterInterval) clearInterval(typewriterInterval)
-  nikkeDisplayedText.value = nikkeCurrentText.value
-  isTyping.value = false
-}
+// Typewriter controller (moved to utils). Instantiate a controller bound to the
+// component's refs so we keep the interval state out of the component.
+const { start: startTypewriter, stop: stopTypewriter } = createTypewriterController({ displayedRef: nikkeDisplayedText, currentTextRef: nikkeCurrentText, typingRef: isTyping })
 
 const handleOverlayClick = (e: MouseEvent | TouchEvent) => {
   if (e && 'stopPropagation' in e) {
@@ -831,45 +805,6 @@ const handleOverlayClick = (e: MouseEvent | TouchEvent) => {
   }
 }
 
-type SpineCanvasPlacement = {
-  left?: string
-  top?: string
-  transform?: string
-}
-
-const getSpineCanvas = (): HTMLCanvasElement | null => {
-  const container = document.querySelector('#player-container')
-  const canvas = container?.querySelector('canvas')
-  return canvas instanceof HTMLCanvasElement ? canvas : null
-}
-
-const captureSpineCanvasPlacement = (): SpineCanvasPlacement | null => {
-  if (typeof document === 'undefined') return null
-  const canvas = getSpineCanvas()
-  if (!canvas) return null
-  return {
-    left: canvas.style.left,
-    top: canvas.style.top,
-    transform: canvas.style.transform,
-  }
-}
-
-const restoreSpineCanvasPlacement = async (placement: SpineCanvasPlacement | null) => {
-  if (!placement || typeof document === 'undefined') return
-
-  // Wait a few frames for the new canvas to exist after a character switch.
-  for (let i = 0; i < 30; i++) {
-    const canvas = getSpineCanvas()
-    if (canvas) {
-      if (placement.left) canvas.style.left = placement.left
-      if (placement.top) canvas.style.top = placement.top
-      if (placement.transform) canvas.style.transform = placement.transform
-      return
-    }
-    await new Promise<void>((r) => requestAnimationFrame(() => r()))
-  }
-}
-
 // NIKKE overlay: tap anywhere to advance, but never when interacting with the spine canvas.
 const nikkeTapState = {
   startedOnSpineCanvas: false,
@@ -882,39 +817,6 @@ const nikkeTapState = {
 
 let lastNikkeTouchTs = 0
 let lastNikkeHandledTs = 0
-
-const isInteractiveOverlayTarget = (target: EventTarget | null) => {
-  if (!(target instanceof HTMLElement)) return false
-  return !!target.closest(
-    '.nikke-overlay-controls, .game-choices-overlay, button, a, input, textarea, select, [role="button"], [contenteditable="true"]'
-  )
-}
-
-const isSpineCanvasAtPoint = (x: number, y: number): boolean => {
-  const overlay = document.querySelector('.nikke-chat-overlay') as HTMLElement | null
-  if (!overlay) return false
-
-  // Temporarily disable overlay hit-testing to see what's underneath.
-  const prevPointerEvents = overlay.style.pointerEvents
-  overlay.style.pointerEvents = 'none'
-  const el = document.elementFromPoint(x, y) as HTMLElement | null
-  overlay.style.pointerEvents = prevPointerEvents
-
-  if (!el) return false
-
-  // Only allow pass-through if the actual canvas is under the finger.
-  if (el instanceof HTMLCanvasElement) return !!el.closest('#player-container')
-  const canvas = el.closest('#player-container canvas')
-  return canvas instanceof HTMLCanvasElement
-}
-
-const getEventPoint = (e: MouseEvent | TouchEvent) => {
-  if ('touches' in e) {
-    const t = e.touches[0] || (e.changedTouches ? e.changedTouches[0] : null)
-    return t ? { x: t.clientX, y: t.clientY, touches: e.touches.length } : { x: 0, y: 0, touches: 0 }
-  }
-  return { x: e.clientX, y: e.clientY, touches: 0 }
-}
 
 const onNikkeGlobalStart = (e: MouseEvent | TouchEvent) => {
   if (chatMode.value !== 'nikke' || !nikkeOverlayVisible.value) return
@@ -968,10 +870,10 @@ const onNikkeGlobalEnd = (e: MouseEvent | TouchEvent) => {
   lastNikkeHandledTs = now
 
   // Never advance if the gesture started on spine, or on an interactive overlay element.
-  if (nikkeTapState.startedOnSpineCanvas) return
   if (nikkeTapState.startedOnInteractive) return
   if (nikkeTapState.moved || nikkeTapState.multiTouch) return
 
+  // Allow tap-to-advance on the spine canvas too (but only if it was a tap, not a drag/pinch).
   // If choices are visible, let the choice UI handle it.
   if (gameChoices.value.length > 0) return
 
@@ -2392,7 +2294,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
   
   // Add current context
-  const filteredAnimations = getFilteredAnimations()
+  const filteredAnimations = getFilteredAnimations(market.live2d.animations)
   let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
 
   // Optimization: Limit history to prevent token overflow
@@ -2459,7 +2361,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     
     const honorificExamples: string[] = []
     for (const name of knownNames) {
-      const honorific = (characterHonorifics as Record<string, string>)[name]
+      const honorific = getHonorific(name)
 
       if (honorific && honorific !== 'Commander') {
         honorificExamples.push(`${name} calls the Commander "${honorific}"`)
@@ -2872,7 +2774,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   // Build honorifics map for only relevant characters to save tokens
   const relevantHonorifics: Record<string, string> = {}
   for (const name of relevantCharacterNames) {
-    relevantHonorifics[name] = (characterHonorifics as Record<string, string>)[name] || 'Commander'
+    relevantHonorifics[name] = getHonorific(name)
   }
   
   let modeInstructions = ''
@@ -3032,7 +2934,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
           model: apiProvider.value === 'local' ? undefined : model.value,
           maxTokens: localMaxTokens.value,
           currentCharacterId: market.live2d.current_id,
-          filteredAnimations: getFilteredAnimations(),
+          filteredAnimations: getFilteredAnimations(market.live2d.animations),
           animationEnrichmentPrompt: prompts.animationEnrichment,
           preserveExistingAnimations: true,
           localUrl: localUrl.value

@@ -1,6 +1,49 @@
 // src/utils/chatUtils.ts
 import { type Ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
+import characterHonorifics from '@/utils/json/honorifics.json'
+
+// Simple debug helper used across chat components
+export const logDebug = (...args: any[]) => {
+  if (import.meta.env.DEV) {
+    console.log(...args)
+  }
+}
+
+// Helper to get honorific with fallback to "Commander"
+export const getHonorific = (characterName: string): string => {
+  return (characterHonorifics as Record<string, string>)[characterName] || 'Commander'
+}
+
+// Typewriter controller factory: keeps internal interval state out of component and
+// returns `start` and `stop` functions bound to the provided refs.
+export const createTypewriterController = (opts: { displayedRef: Ref<string>, currentTextRef: Ref<string>, typingRef: Ref<boolean> }) => {
+  let interval: any = null
+
+  const start = (text: string) => {
+    if (interval) clearInterval(interval)
+    opts.displayedRef.value = ''
+    opts.typingRef.value = true
+    let index = 0
+
+    interval = setInterval(() => {
+      if (index < text.length) {
+        opts.displayedRef.value += text[index]
+        index++
+      } else {
+        stop()
+      }
+    }, 30)
+  }
+
+  const stop = () => {
+    if (interval) clearInterval(interval)
+    opts.displayedRef.value = opts.currentTextRef.value
+    opts.typingRef.value = false
+  }
+
+  return { start, stop }
+}
 
 // Helper to identify speaker labels.
 // Supports plain "Name:" and bolded "**Name:**" (colon inside the bold).

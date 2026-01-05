@@ -427,6 +427,17 @@ export const callLocal = async (
   return data.choices[0].message.content
 }
 
+// Helper: filter out internal/unsupported animations
+export const getFilteredAnimations = (animations?: string[]) => {
+  return (animations || []).filter((a) =>
+    a !== 'talk' &&
+    a !== 'talk_start' &&
+    a !== 'talk_end' &&
+    a !== 'expression_0' &&
+    a !== 'action'
+  )
+}
+
 // Structured output schema builder (used by ChatInterface for OpenRouter/Pollinations JSON schema mode)
 export const buildStoryResponseSchema = (isGameMode: boolean) => ({
   type: 'json_schema',
