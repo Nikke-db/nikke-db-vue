@@ -810,12 +810,12 @@ export const enrichActionsWithAnimations = async (
     let response: string
 
     if (apiProvider === 'perplexity') {
-      response = await callPerplexity(messages, { model, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
+      response = await callPerplexity(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
     } else if (apiProvider === 'gemini') {
-      response = await callGemini(messages, { model, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
+      response = await callGemini(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
     } else if (apiProvider === 'openrouter') {
       response = await callOpenRouter(messages, {
-        model,
+        model: model!,
         apiKey,
         enableContextCaching: false,
         useLocalProfiles: false,
@@ -826,7 +826,7 @@ export const enrichActionsWithAnimations = async (
       })
     } else if (apiProvider === 'pollinations') {
       response = await callPollinations(messages, {
-        model,
+        model: model!,
         apiKey,
         useLocalProfiles: false,
         allowWebSearchFallback: false,
