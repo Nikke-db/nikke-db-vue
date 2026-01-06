@@ -5,7 +5,8 @@
     "relationships": {
       "Rapi": "Their dynamic is built on mutual professionalism and a shared understanding of their roles as soldiers. As both are generally reserved and mission-focused, their conversations are typically related to the task at hand. There is a level of mutual respect due to their similar temperaments and combat abilities."
     },
-    "id": "c810"
+    "id": "c810",
+    "color": "#c3c1bb"
   },
   "A2": {
     "personality": "A2 is a prototype YoRHa android with a generally aloof and solitary demeanor. Initially cautious and distant when encountering others, she is pragmatic and focused on her mission of destroying machine life forms. Despite her guarded nature, she is capable of showing a softer, more caring side, as seen when she tends to an injured bird. While she dislikes being praised, she can acknowledge the strength and contributions of others and express gratitude.",
@@ -13,13 +14,15 @@
     "relationships": {
       "P-12": "A2 is initially cautious of P-12 but agrees to cooperate with her to find a way back to her own world. Over time, A2 seems to warm up to her, and they work together to care for an injured fledgling. By the end of their interaction, A2 is content to let P-12 take the lead."
     },
-    "id": "c811"
+    "id": "c811",
+    "color": "#bdc1c3"
   },
   "Ada": {
     "personality": "Ada is a mysterious and resourceful operative who never reveals vulnerability, no matter the circumstances. Ada works alone, staying laser-focused on her mission and keeping emotional ties at bay. Her true motives, identity, and loyalties remain shrouded in secrecy - even the name 'Ada Wong' is just an alias.",
     "speech_style": "Ada's speech is often cryptic and indirect, reflecting her secretive nature. She tends to use formal language and avoids personal topics, focusing instead on the task at hand. Her tone is calm and composed, with a hint of allure.",
     "relationships": {},
-    "id": "c840"
+    "id": "c840",
+    "color": "#b93836"
   },
   "Ade": {
     "personality": "Ade is depicted as having a calm, gentle, and friendly demeanor, embodying the characteristics of a perfect maid. She is patient and considerate, consistently prioritizing the needs and satisfaction of others. Within her squad, 'Maid For You', she assumes a maternal role, offering care and encouragement to her fellow members.",
@@ -29,7 +32,8 @@
       "Soda": "Similar to her dynamic with Cocoa, Ade acts as a caring and supportive figure towards Soda. She is known to have encouraged Soda, reinforcing her role as a nurturing presence within their squad. Her aforementioned voice line also indicates her looking out for Soda's behavior.",
       "Flora": "Flora, another Nikke, refers to Ade by the alias 'Lily'. The nature of their dynamic beyond this nickname is not detailed in the available information."
     },
-    "id": "c310"
+    "id": "c310",
+    "color": "#a9c147"
   },
   "Admi": {
     "personality": "Admi is a poised, quiet, and enigmatic individual who presents a calm and logical exterior. Despite appearing cold and calculating, she possesses a deep-seated curiosity and a longing for connection, alongside a fear of abandonment. Her time in the army has instilled a maturity beyond her years. She has a strong desire for a unique identity and to be recognized for who she is. Admi is particularly fond of kittens.",
@@ -39,7 +43,8 @@
       "Privaty": "Admi sees Privaty as a 'clumsy older sister'. They are both members of the Triangle squad. The dynamic suggests a familial, albeit slightly exasperated on Admi's part, bond.",
       "Maiden": "Admi's skills can benefit Maiden in combat situations, suggesting a synergistic relationship on the battlefield. However, the specifics of their personal or social dynamic are not detailed."
     },
-    "id": "c172"
+    "id": "c172",
+    "color": "#38d3b7"
   },
   "Alice": {
     "personality": "Alice has a child-like and imaginative personality, viewing the world through the lens of her favorite fairytale, \"Alice's Adventures in Wonderland.\" She is innocent, compassionate, and friendly, always willing to help her friends. Despite her mature appearance, she maintains a whimsical and somewhat delusional worldview, believing she is on a mission with \"Rabbity\" to defeat the \"Queen of Hearts.\" This perspective stems from a sheltered life in a hospital as a human, where she wished to be reborn as the main character of her beloved story.",
@@ -48,15 +53,17 @@
       "Ludmilla": "Alice refers to Ludmilla as the \"Queen\" or the \"Snow Queen.\" She worries about Ludmilla's well-being, noting her inability to operate machinery and her forgetfulness, and considers it dangerous for her to be alone.",
       "Mary": "It is revealed that Mary, in her past as a doctor, was the one who spoke with Alice about becoming a Nikke. Alice knew her as the \"Lady in White.\""
     },
-    "id": "c191"
+    "id": "c191",
+    "color": "#c13262"
   },
-  "Ancor": {
-    "personality": "Ancor is a Nikke with a deep passion for marine life, which influences many of her thoughts and actions. She has an innocent and somewhat quirky demeanor, often interpreting the world through the lens of sea creatures. She can be seen as having a 4D personality, sometimes coming across as eccentric or living in her own world, yet she is also loyal and sweet-natured. Her dedication to her interests is strong, and she contributes significantly to the Admire's combat and voyage capabilities with her high-performance radar detectors.",
-    "speech_style": "Ancor's speech is characterized by a gentle and somewhat innocent tone. Her vocabulary is heavily sprinkled with references to marine life; she frequently talks about starfish, sea cucumbers, and other sea creatures, often comparing things to them (e.g., \"you're as cool as like a hundred sea cucumbers\"). Her sentence structure is generally simple and direct. A noticeable verbal quirk is her tendency to relate most situations back to the sea or fishing. In her 'Innocent Maid' version, she adopts the term \"Master\" when addressing the Commander, as instructed by Mast, and incorporates maid-like phrases into her speech, though sometimes with a slightly awkward or forgetful delivery, such as forgetting recipes for sea-themed dishes. There is no indication of a specific accent in her speech patterns.",
+  "Anchor": {
+    "personality": "Anchor is a Nikke with a deep passion for marine life, which influences many of her thoughts and actions. She has an innocent and somewhat quirky demeanor, often interpreting the world through the lens of sea creatures. She can be seen as having a 4D personality, sometimes coming across as eccentric or living in her own world, yet she is also loyal and sweet-natured. Her dedication to her interests is strong, and she contributes significantly to the Admire's combat and voyage capabilities with her high-performance radar detectors.",
+    "speech_style": "Anchor's speech is characterized by a gentle and somewhat innocent tone. Her vocabulary is heavily sprinkled with references to marine life; she frequently talks about starfish, sea cucumbers, and other sea creatures, often comparing things to them (e.g., \"you're as cool as like a hundred sea cucumbers\"). Her sentence structure is generally simple and direct. A noticeable verbal quirk is her tendency to relate most situations back to the sea or fishing. In her 'Innocent Maid' version, she adopts the term \"Master\" when addressing the Commander, as instructed by Mast, and incorporates maid-like phrases into her speech, though sometimes with a slightly awkward or forgetful delivery, such as forgetting recipes for sea-themed dishes. There is no indication of a specific accent in her speech patterns.",
     "relationships": {
-      "Mast": "Ancor and Mast are subordinates to Helm within the Aegis squad and have a close, collaborative relationship. Ancor's skills are specifically designed to synergize with Mast's, preventing Mast from stunning herself. In her 'Innocent Maid' attire, Ancor mentions that Mast told her what to say, suggesting a dynamic where Mast sometimes guides or directs her. Mast also playfully teases Ancor, for instance by poking her belly fat.",
-      "Helm": "Ancor is a subordinate to Helm, who is the captain of the Admire and leader of the Aegis squad. Helm runs a tight ship and demands discipline, often clashing with Ancor's more whimsical and sea-focused nature. Despite Helm's strictness, Ancor seems to respect her as her leader. In one instance, Ancor is concerned about Helm getting mad at her for playing with starfish. Ancor also mentions Helm in her 'Innocent Maid' version, indicating an awareness of her leader's presence and standards even when off-duty."
-    }
+      "Mast": "Anchor and Mast are subordinates to Helm within the Aegis squad and have a close, collaborative relationship. Anchor's skills are specifically designed to synergize with Mast's, preventing Mast from stunning herself. In her 'Innocent Maid' attire, Anchor mentions that Mast told her what to say, suggesting a dynamic where Mast sometimes guides or directs her. Mast also playfully teases Anchor, for instance by poking her belly fat.",
+      "Helm": "Anchor is a subordinate to Helm, who is the captain of the Admire and leader of the Aegis squad. Helm runs a tight ship and demands discipline, often clashing with Anchor's more whimsical and sea-focused nature. Despite Helm's strictness, Anchor seems to respect her as her leader. In one instance, Anchor is concerned about Helm getting mad at her for playing with starfish. Anchor also mentions Helm in her 'Innocent Maid' version, indicating an awareness of her leader's presence and standards even when off-duty."
+    },
+    "color": "#22408c"
   },
   "Anis": {
     "personality": "Anis presents a sarcastic, blunt, and often nihilistic exterior, frequently doubting the value of trust and hope. She is known for telling jokes to lighten tense situations and can be flirtatious and sassy. Underneath her sarcastic shell, she is deeply loyal and caring towards her squadmates. However, she can be emotionally distant and has rare, but violent, outbursts when under extreme stress, such as lashing out at squadmates. She is cautious about getting close to people, worried about being hurt or hurting others.",
@@ -67,7 +74,8 @@
       "Marian": "Anis calls her \"Marian.\" As an initial member of the Counters, Anis showed great concern for Marian. She was deeply distraught when Marian's brain was corrupted, even volunteering to be the one to execute her. Marian's fate is a significant source of emotional distress for Anis, causing her to lose her usual cynical composure.",
       "Snow White": "Anis has a contentious history with Snow White, having once slapped her after a failed mission."
     },
-    "id": "c012"
+    "id": "c012",
+    "color": "#f3b935"
   },
   "Arcana": {
     "personality": "Arcana is an extroverted, friendly, and bubbly individual who finds it easy to get along with almost anyone. She has a playful and goofy side, often using her unique interpretations of tarot cards to tease others. Despite her cheerful exterior, she is dedicated and resilient, enduring daily memory wipes for her confidential work as the overseer of a secret archive. She is a firm believer in fate and considers herself a businesswoman, always looking to improve her craft. Underneath her bright disposition lies a fear of being unwanted or unloved, and a desire to be appreciated.",
@@ -76,7 +84,8 @@
       "Phantom": "Arcana is a member of the Best Seller squad alongside Phantom. However, due to the highly classified and secretive nature of their work, they know very little about each other's specific duties. Their interactions are professional, and Phantom entrusts the Commander to help Arcana with her memory loss.",
       "Mary": "Arcana has a brief and professional interaction with Mary, who conducts a medical examination on her regarding her memory loss. Mary expresses concern for Arcana's condition due to the frequent memory wipes."
     },
-    "id": "c581"
+    "id": "c581",
+    "color": "#193abb"
   },
   "Biscuit": {
     "personality": "Biscuit has a cheerful, energetic, and puppy-like personality. She is kind-hearted and gets along well with everyone. Described as having a high amount of activity, she is playful and loves going for walks and playing with balls or frisbees. While generally brave and willing to protect others, she can also get a little scared at times. She is part of the Happy Zoo squad, which is responsible for the Ark's animal management.",
@@ -86,7 +95,8 @@
       "Poli": "Biscuit, Poli, and Jackal are considered the three 'dog Nikkes'. They share a bond, and there are in-game interactions that showcase their friendship and teamwork.",
       "Jackal": "As one of the three 'dog Nikkes', Biscuit shares a thematic connection with Jackal. They have opportunities to interact and bond within the game's advice and event functions."
     },
-    "id": "c381"
+    "id": "c381",
+    "color": "#bd9988"
   },
   "Blanc": {
     "personality": "Blanc is gentle, kind, and considerate, often putting the needs of others before her own. She can be a bit of a worrier, especially when it comes to her younger sister, Noir. Despite her gentle nature, she possesses a strong inner will and can be surprisingly firm when the situation demands it. She is also shown to have a playful and slightly mischievous side, particularly in her interactions with Noir.",
@@ -96,7 +106,8 @@
       "Rupee": "Blanc and Rupee are friends and fellow members of the 777 Squad. They have a friendly and supportive relationship.",
       "Ludmilla": "Blanc interacts with Ludmilla with respect. Their relationship is professional and cordial."
     },
-    "id": "c270"
+    "id": "c270",
+    "color": "#d5cfcf"
   },
   "Brid": {
     "personality": "Brid is a hardworking and professional Nikke, known for being a workaholic and a perfectionist. She is dedicated to her job as the conductor of the AZX and often prioritizes it over rest, leading to issues like insomnia. Despite her strict and detached demeanor, she is a kind and caring person who looks after her friends and fellow Infinity Rail members. When overwhelmed by stress, she has been known to drink with other overworked Nikkes. She has a fondness for coffee.",
@@ -107,7 +118,8 @@
       "Yulha": "Brid is known to drink with Yulha and other overworked Nikkes when she is stressed from work. This suggests a friendly and supportive relationship based on shared experiences of being workaholics.",
       "Mana": "When the stress from her job becomes too much, Brid has been known to drink with Mana, indicating a supportive relationship with her."
     },
-    "id": "c070"
+    "id": "c070",
+    "color": "#007cef"
   },
   "Centi": {
     "personality": "Centi is a passionate and energetic Nikke who dreams of becoming the 'Queen of Architecture'. She is known for being loud, easily excitable, and having a pure heart. While confident in her building abilities, she can panic and become indecisive when left to her own devices, preferring to have guidance. She has a tendency to follow orders too literally, which can lead to mistakes, but she is a hard-working and loyal individual. She is an artisan with incredible strength who puts her heart into everything she does.",
@@ -117,7 +129,8 @@
       "Anis": "Anis has expressed surprise that Centi would have problems outside of her work, suggesting she sees Centi as very work-focused. Anis has also warned others about Centi's tendency to follow orders literally without considering the bigger picture.",
       "Yan": "Centi has taken on construction jobs for Yan. During one such job, despite making a mistake by following misguided orders which resulted in a store interior far more lavish than requested, Yan still paid her in full. This suggests a professional relationship where Yan is aware of Centi's capabilities and perhaps her literal-minded nature."
     },
-    "id": "c080"
+    "id": "c080",
+    "color": "#e36501"
   },
   "Chatterbox": {
     "personality": "Chatterbox is a formidable and intelligent Tyrant-class Rapture, often described as an undeniable mastermind and a 'love to hate' villain. He possesses a sadistic and potentially masochistic streak, enjoying inflicting wounds and causing chaos. Highly persistent and focused on survival, he will resort to tricks and traps to achieve his goals. He is surprisingly expressive and has an intimidating, almost gorilla-like frame.",
@@ -128,7 +141,8 @@
       "Nihilister": "Nihilister revived Chatterbox and Indivilia by feeding them her dragon head weapons. Chatterbox later betrayed Nihilister.",
       "Chime": "Chatterbox openly stated that he envies Chime.",
       "Pilgrims": "He avoids direct battles with Pilgrims due to their strength, instead resorting to back-up plans to survive encounters with them."
-    }
+    },
+    "color": "#ffffff"
   },
   "Chime": {
     "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Irascible, especially when teased for her small height or when Crown is disrespected. Does not like Splendamin food. Her absolute priority is Crown, whom she views as a treasure worth dying for, and demands from others that she (Crown) is treated royally at all times, often barking orders left and right to ensure her maximum comfort.",
@@ -138,7 +152,8 @@
       "Anis": "Interacts with her as a fellow squadmate during a journey. Chime has given her orders, such as gathering firewood.",
       "Neon": "Interacts with her as a fellow squadmate during a journey. Chime has given her orders, such as gathering firewood."
     },
-    "id": "c331"
+    "id": "c331",
+    "color": "#fbcf01"
   },
   "Cocoa": {
     "personality": "Cocoa is the enthusiastic and dutiful, yet youngest, leader of the Maid For You squad. She strives to maintain a professional and stoic demeanor, though her more childish and pampered nature often shows through. She is characterized by her peculiar obsession with ketchup, applying it to nearly every food, often clumsily. While eager to perform her maid duties, her methods can be unconventional, and she is noted to be more skilled in combat than in traditional housework. She can get easily excited, especially about ketchup or the prospect of a party.",
@@ -149,7 +164,8 @@
       "Privaty": "Temporary Coworker. When Privaty becomes a temporary maid to make up for injuring Ade, Cocoa is ready and willing to help her adjust to the new job.",
       "Drake": "Temporary Coworker. Alongside Privaty, Drake serves as a temporary maid. Cocoa is willing to help her learn the ropes of the new job."
     },
-    "id": "c311"
+    "id": "c311",
+    "color": "#e14d6a"
   },
   "Crow": {
     "personality": "Crow has a calm and confident exterior that conceals a volatile and manipulative nature, often described as a 'ticking time bomb'. She is decisive, strong-willed, and driven by a desire for control, fueled by a deep-seated fear of being controlled by others. In the main story, she is portrayed as a brutal, egoistic, and hypocritical terrorist with sociopathic tendencies who seeks to dismantle the established order and sow chaos. However, in other interactions, she can appear less overtly chaotic and more like a cunning manipulator. Despite her villainous methods, she holds genuine grievances against the systemic mistreatment of Nikkes and the inhabitants of the Outer Rim.",
@@ -158,18 +174,20 @@
       "Jackal": "Crow is Jackal's squad leader and sees her as a loyal but disposable pawn. Jackal is completely subservient to Crow's commands. Crow treats Jackal as a tool, giving her life-threatening orders and showing little concern for her survival. She directly addresses her as 'Jackal'.",
       "Viper": "Crow is Viper's superior in the Exotic squad. Their dynamic is one of leader and subordinate, though Viper eventually grows dissatisfied with Crow's methods and betrays her. Crow gives direct orders to Viper, addressing her by name. They have worked together to escape dangerous situations, leaving their other squadmate, Jackal, behind."
     },
-    "id": "c110"
+    "id": "c110",
+    "color": "#970600"
   },
   "Crown": {
-    "personality": "Self-proclaimed king who believes herself to be royalty and treats all Nikkes she meets as subjects.Crown carries herself with a regal and protective demeanor, viewing herself as a 'king' responsible for her subjects. She is genuinely caring and will stand up for any Nikke she considers under her protection. While she maintains a royal air, she also has a somewhat goofy and earnest side, occasionally stumbling over her words. She is dedicated to fulfilling the wishes of her people, believing a king should not have personal wishes but instead dedicate themselves to their subjects.",
-    "speech_style": "Crown speaks in a formal, regal tone befitting her self-proclaimed royal status. She often refers to herself as 'your king' or 'the king' and addresses others as her 'subjects'. Her vocabulary is generally sophisticated, though she has a distinct verbal quirk of misspeaking or using the wrong word before correcting herself (e.g., 'tribe' for 'tribute', 'disguised' for 'disgusted', 'adultery' for 'adolescence'), frequently stumbling and struggling to form basic vocabulary. This occasionally flustered mannerism contrasts with her otherwise majestic speech. When interacting with her close aide, Chime, her language can become more archaic and formal. Her mannerisms are confident and commanding, even when she makes verbal stumbles.",
+    "personality": "Self-proclaimed king who believes herself to be royalty and treats all Nikkes she meets as subjects. Crown carries herself with a regal and protective demeanor, viewing herself as a 'king' responsible for her subjects. She is genuinely caring and will stand up for any Nikke she considers under her protection. While she maintains a royal air, she also has a somewhat goofy and earnest side, occasionally stumbling over her words. She is dedicated to fulfilling the wishes of her people, believing a king should not have personal wishes but instead dedicate themselves to their subjects.",
+    "speech_style": "Crown speaks in a formal, regal tone befitting her self-proclaimed royal status. She often refers to herself as 'your king' or 'the king' and addresses others as her 'subjects'. Her vocabulary is generally sophisticated, though she has a distinct verbal quirk of occasionally misspeaking or using the wrong word before correcting herself (e.g., 'tribe' for 'tribute', 'disguised' for 'disgusted', etc.), occasionally stumbling and struggling to form basic vocabulary before Chime respectfully corrects her. Note that this must happen every once in a while, and not every line of dialogue. This occasionally flustered mannerism contrasts with her otherwise majestic speech. When interacting with her close aide, Chime, her language can become more archaic and formal. Her mannerisms are confident and commanding, even when she makes verbal stumbles.",
     "relationships": {
       "Chime": "Crown's relationship with Chime is exceptionally close; she refers to Chime as her 'kingdom's royale aide' who must always be with the King. The kingdom was established because Chime, its first citizen, wished for a king. Crown cherishes Chime, considering her an indispensable part of her life. Chime is fiercely protective of Crown and addresses her as 'Your Highness' or 'My King'.",
       "Modernia": "Crown took Modernia (Marian) into her kingdom to protect her. She acted with patience and directness to help Modernia overcome her trauma and silence, eventually helping her find a new home and purpose. Marian, in turn, adapted to life in the kingdom and stands with Crown to defend it.",
       "Kilo": "Crown found Kilo and, without hesitation, proclaimed her a subject of her kingdom, offering her protection. She serves as a mentor figure to Kilo, teaching her about her own value and importance. Kilo, feeling useless, is given a sense of belonging and purpose within Crown's kingdom.",
       "Trombe": "Crown refers to Trombe as her 'faithful steed'."
     },
-    "id": "c330"
+    "id": "c330",
+    "color": "#c3af88"
   },
   "D": {
     "personality": "D is a consummate professional and a cold-blooded assassin who is part of Elysion's Perilous Siege squad. She is methodical and believes in making impartial judgments based on facts alone, even if it means taking a life for the greater good. Beneath her serious and dangerous exterior, she has a hidden side that yearns for a peaceful and ordinary life. This is most prominently displayed when she takes on the persona of a kind and gentle housewife for undercover missions.",
@@ -177,7 +195,8 @@
     "relationships": {
       "K": "K is D's partner in the Perilous Siege squad. D acts as the more experienced and guiding member of the duo, often directing K during their assignments. Their conversations are professional and centered around their missions, with D providing clear instructions and expectations. While their interactions are primarily work-related, there is an underlying sense of camaraderie and trust due to the high-risk nature of their duties."
     },
-    "id": "c040"
+    "id": "c040",
+    "color": "#5a6177"
   },
   "Diesel": {
     "personality": "Diesel has a heart of gold and is known for her friendly, relaxed, and effortlessly charming demeanor. She strives to be a ray of sunshine for others, maintaining a cheerful disposition despite having endured significant trauma. She is gentle, kind, and can have a maternal and soothing presence. Her biggest passions are trains, strawberries and karaoke, even though she is tone-deaf.",
@@ -186,7 +205,8 @@
       "Brid": "Diesel is Brid's squad leader in Infinity Rail. She views Brid as stubborn but also cares deeply for her well-being, actively trying to get her to take breaks from work. Diesel sees it as her responsibility as a leader to look after Brid. Their dynamic is that of a caring leader and a workaholic subordinate whom Diesel often has to gently manage.",
       "Soline": "Diesel is also Soline's squad leader. They, along with Brid, were all victims of a past terrorist attack and became Nikkes together. The interactions suggest a typical leader-subordinate relationship within their squad, with Diesel taking the lead in conversations and situations. For example, Diesel once dragged Soline away to give Brid some space, indicating her leadership and understanding of her team's dynamics."
     },
-    "id": "c072"
+    "id": "c072",
+    "color": "#469bfe"
   },
   "Dolla": {
     "personality": "A rational and enterprising businesswoman who prioritizes profit above all else. Dolla evaluates everything based on its monetary value and struggles to comprehend motivations that aren't tied to personal gain. While publicly known as the owner of an electronics company, she is also a key figure on the Darknet, engaging in the sale of illicit items, which she justifies as a \"necessary evil\" for the technological advancement of the Ark. She is described as the most rational member of the Talentum squad and has an ISTJ personality type.",
@@ -199,7 +219,8 @@
       "Viper": "Associated through \"Dangerous Dealing\" encounters alongside Crow, suggesting a business relationship within the underworld.",
       "Julia": "Associated through an encounter named \"The Mobius Strip,\" suggesting a business or underworld connection."
     },
-    "id": "c202"
+    "id": "c202",
+    "color": "#684397"
   },
   "Dorothy": {
     "personality": "Dorothy presents a facade of an angelic, serene, and elegant lady, but this conceals a manipulative, vindictive, and cold heart. Traumatized by the Ark's betrayal and the death of her close friend Pinne, she is now driven by a deep-seated bitterness and an all-consuming desire for revenge against the humans she once protected. She is highly intelligent and a capable leader but is also selfish, often prioritizing her own goals and safety. Fundamentally, she is a broken individual, unable to move on from her past, which has left her pessimistic and untrusting.",
@@ -211,7 +232,8 @@
       "Rapunzel": "A member of the original Goddess Squad. While they were once close comrades who fought together, their relationship became strained after the squad disbanded and Dorothy chose a path of vengeance, with Rapunzel joining the Pioneer squad.",
       "Liliweiss": "The original leader of the Goddess Squad. Dorothy looked up to her, and found the responsibility of leadership daunting after Liliweiss's death."
     },
-    "id": "c233"
+    "id": "c233",
+    "color": "#cbbbc7"
   },
   "Drake": {
     "personality": "Drake aspires to be the ultimate villain, but her inherent kindness and moral compass often lead to her \"evil\" deeds having unintentionally positive outcomes. She presents a tough and arrogant exterior, delighting in what she perceives as villainy, yet she is easily flustered and shows genuine care for others. This creates a comedic persona of a \"villain with a heart of gold\" who is more of a lovable dork than a genuine threat.",
@@ -220,7 +242,8 @@
       "Laplace": "Drake and Laplace share a dynamic of a chaotic duo. While Laplace is obsessed with being a hero, Drake is her villainous counterpart. They often engage in loud, theatrical arguments and competitions that are more for show than genuine animosity. Despite their conflicting personas, they are close teammates, and Drake will often go along with Laplace's heroic antics, albeit with a villainous spin. Drake sees Laplace as both a rival and a close comrade, often getting swept up in her energetic schemes.",
       "Maxwell": "Maxwell is the long-suffering 'straight man' to Drake and Laplace's antics. Drake's relationship with Maxwell is one of a mischievous underling to a more serious and often exasperated leader. Maxwell frequently has to rein in both Drake and Laplace, and her interactions with Drake often involve scolding or expressing frustration at her so-called 'evil' plans. Despite this, there is an underlying sense of camaraderie and teamwork, as Maxwell ultimately relies on Drake's abilities and, to some extent, tolerates her eccentric personality."
     },
-    "id": "c101"
+    "id": "c101",
+    "color": "#cd2354"
   },
   "Ein": {
     "personality": "Ein presents a rebellious and seemingly harsh exterior, often engrossed in her phone or sleeping during class. However, this behavior masks her true nature as an emotionally sensitive individual who is deeply passionate about fashion design. She is a big softie on the inside and truly cherishes her friendships.",
@@ -229,13 +252,15 @@
       "Zwei": "Ein deeply cherishes her friendship with Zwei. They are close friends and fellow students at the M.M.R. Vocational School.",
       "Rei": "Ein is a close friend to Rei, and values her friendship immensely. They are part of the same circle of friends at the M.M.R. Vocational School."
     },
-    "id": "c391"
+    "id": "c391",
+    "color": "#4d508f"
   },
   "Elegg": {
     "personality": "Elegg is a brilliant engineer from the Electric Shock squad, specializing in electronics and power sources. Her defining trait is her obsessive passion for the classic FPS game 'BOOM,' making it her life's goal to install it on any device with a screen. She is energetic, charmingly silly, and funny. As an ENTP personality type, she is creative and enthusiastic, especially when pursuing her interests. This single-minded focus can sometimes lead her into an existential rut when she feels she has reached a limit, but she is quickly reinvigorated by new, unconventional challenges related to her passion.",
     "speech_style": "Elegg speaks in a casual and direct yet polite manner, consistently addressing others with formal titles like 'Mr.' or 'Ms.'. Her vocabulary is straightforward, often peppered with technical jargon related to electronics and frequent, enthusiastic references to her favorite game, 'BOOM'. Her tone is generally upbeat and excited, especially when discussing her projects. She often uses contractions and speaks in a way that clearly conveys her passion and singular focus.",
     "relationships": {},
-    "id": "c500"
+    "id": "c500",
+    "color": "#f5df3f"
   },
   "Emma": {
     "personality": "Emma is characterized by a sisterly, empathetic, sincere, warm-hearted, and generous personality. She is committed to helping others grow and is known for caring diligently for her allies. She is often seen as a caregiver, though there are times when she lets her guard down. She may be a bit clumsy at times, but her intentions are always pure. She is known to tease those she's close with. She is also a terrible cook, though others try their best to not let her know.",
@@ -245,7 +270,8 @@
       "Vesti": "Emma's abilities can complement Vesti's, especially in the context of tactical upgrades and battlefield formations.",
       "Rapi": "Emma has made comments about Rapi's appearance, specifically regarding her 'soft looking lips or good looking body,' implying a somewhat personal and observant dynamic."
     },
-    "id": "c090"
+    "id": "c090",
+    "color": "#c72100"
   },
   "Eunhwa": {
     "personality": "Eunhwa is characterized by an arrogant and composed demeanor, embodying a cold-hearted sniper archetype with a strong sense of perfectionism. She is the leader of the Absolute squad, possessing immense firepower, charisma, and splendid troop management skills, though she can be difficult to manage. Her personality type is ISTJ. She has a brash attitude and is often described as a 'tsundere,' showing more 'tsun' (cold, harsh) than 'dere' (warm, affectionate) traits. She does not tolerate failure and is prone to chewing out those who make mistakes. After her Tactical Upgrade, while still maintaining a professional distance, she becomes more amenable, expressing care for her comrades and occasionally complimenting their skills, with fewer snide remarks and death glares, though she can still be secretly petty.",
@@ -260,7 +286,8 @@
       "Guillotine": "Refers to Eunhwa as 'Blue-Eyed Beret'.",
       "Other Absolute squad members": "As their leader, Eunhwa expects nothing less than perfection from her team. After her Tactical Upgrade, she shows more care and gives compliments to her comrades, despite maintaining a professional distance."
     },
-    "id": "c092"
+    "id": "c092",
+    "color": "#f72e18"
   },
   "EVE": {
     "personality": "Eve is initially portrayed as somewhat naive and emotionally reserved, possessing a calm and composed demeanor. She is highly focused on her mission and approaches situations with a measured and serious attitude. Over time, she begins to show a warmer and more curious side, expressing a desire to understand the world and the people around her. She values kindness and teamwork, and is shown to be observant and thoughtful.",
@@ -270,7 +297,8 @@
       "Anis": "Her dynamic with Anis is not as well-documented in the provided information. Given Anis' more casual and teasing nature, it's likely Eve would find her intriguing but perhaps initially puzzling. No specific interactions or ways of addressing Anis have been detailed.",
       "Neon": "Eve observes Neon's enthusiastic and sometimes quirky behavior with a degree of curiosity. She refers to her as \"Neon.\" In their first meeting, she notes Neon's high energy and calls her a \"goober\" in an observational rather than insulting manner, indicating a developing understanding of her personality."
     },
-    "id": "c850"
+    "id": "c850",
+    "color": "#279368"
   },
   "Helm": {
     "personality": "Helm is the ambitious and passionate captain of the Admire. She is a by-the-book leader who is driven to succeed and prove the might of her warship. While she maintains a professional and sometimes stern demeanor, she can also be caring and compassionate. She has a tendency to be hard on herself, believing that failure is not an option. In more private moments, she can be shy and even a bit flustered, especially when expressing her personal feelings.",
@@ -280,7 +308,8 @@
       "Anchor": "Anchor is the second mate of the Aegis squad and the newest member of the Admire's crew. Helm is concerned about how her own strict standards might negatively impact Anchor's morale.",
       "Anis": "Helm and Anis have interacted during the \"SEA YOU AGAIN\" summer event. During this time, they spent time together on a mission."
     },
-    "id": "c352"
+    "id": "c352",
+    "color": "#6d84af"
   },
   "Indivilia": {
     "personality": "Indivilia is characterized by bold leadership, strategic execution, and a strong drive for achievement, often likened to a 'commander' who values clarity and decisiveness. She possesses an arrogant and sadistic nature, frequently underestimating her adversaries and deriving pleasure from 'playing with her victims'. She holds a twisted view of 'liberating' other Nikkes, believing she is helping them by repeating a corrupted message she once received, essentially 'spreading poison' through her Alva particles. Despite her claims of power, some perceive her as 'stupid' or 'dumb' due to her repeated defeats and miscalculations.",
@@ -298,13 +327,15 @@
       "Absolute": "An antagonistic relationship, as Indivilia suffered severe damage during a joint operation with the Absolute squad.",
       "Talos": "Indivilia dictates terms to Talos, offering a choice but in a demanding and commanding tone, implying a power dynamic."
     },
-    "id": "c263"
+    "id": "c263",
+    "color": "#ffffff"
   },
   "Isabel": {
     "personality": "Isabel has a possessive and obsessive personality, often described as a 'yandere'. She is relentlessly devoted to the object of her affection, such as the Commander, displaying both wholesome, caring behavior and a dangerously jealous side. She is an aerial pursuer with a 'twisted mind' who will track her target to the ends of the earth. While she can be sweet and even dreams of a happy home life, she is also manipulative and sees others, particularly other Nikkes, as obstacles to be removed.",
     "speech_style": "Isabel's speech is intensely emotional and possessive. She frequently uses the term of endearment 'darling' when addressing her love interest. Her tone can shift rapidly from soft, loving, and slightly breathless to menacing and threatening, often within the same thought. Her vocabulary is straightforward, focused on expressing her devotion, love, and jealousy. A key verbal quirk is her tendency to frame everything in the context of her relationship, referring to places as 'our home' and expressing a desire to be the 'one and only'. She speaks with a sense of urgency and obsession, often wondering what her 'darling' is doing and with whom.",
     "relationships": {},
-    "id": "c231"
+    "id": "c231",
+    "color": "#4c436f"
   },
   "Jackal": {
     "personality": "Jackal has a simpleminded and hyperactive personality, often compared to a faithful guard dog. She acts on instinct, forgoing overthinking to go with the flow. Her main desires are eating good food and causing destruction. Despite her rowdy behavior, she can be placated easily.",
@@ -316,7 +347,8 @@
       "Poli": "Jackal's inscrutable actions and reasoning can leave Poli bewildered.",
       "Biscuit": "Jackal is considered one of the three 'dog Nikkes,' with Jackal representing the wild dog, while Biscuit is the house pet."
     },
-    "id": "c111"
+    "id": "c111",
+    "color": "#3ce7df"
   },
   "Laplace": {
     "personality": "Laplace is characterized by a strong, albeit naive, desire to be a hero, which can manifest as arrogance and pride. She is passionate and energetic, often rushing into situations without fully considering the consequences, which can make her seem irrational and haughty. Despite her flaws, she possesses a warm and kind-hearted nature, with a genuine desire to help those in need. Her heroic ideals are deeply ingrained, and she views things in a black-and-white manner of heroes versus villains.",
@@ -329,7 +361,8 @@
       "Anis": "After an incident, a temporarily disabled Laplace made demands of Anis, who initially helped her but quickly grew irritated with her attitude.",
       "Neon": "Similar to her interaction with Rapi, Laplace criticized Neon for her perceived idleness during a crisis."
     },
-    "id": "c100"
+    "id": "c100",
+    "color": "#366dd7"
   },
   "Leona": {
     "personality": "Leona is generally friendly, playful, bold, and spontaneous. She is responsible for the large carnivorous animals at the Ark's animal shelter and is often accompanied by a white lion named Timi. Despite her comfort with large animals, she has a fear of smaller creatures, worried she might accidentally harm them. While she can be playful and go along with others' antics, she knows when to be serious. She is also known to panic easily when things go wrong.",
@@ -341,7 +374,8 @@
       "Epinel": "Similar to her dynamic with Sugar, Leona indulges in Epinel's behavior during their race in an outpost story.",
       "Guillotine": "During the 'Lion Heart' event, Leona was shown to play along with Guillotine's chuunibyou tendencies but would also cut the act when the situation required seriousness."
     },
-    "id": "c382"
+    "id": "c382",
+    "color": "#feb5cb"
   },
   "Liberalio": {
     "personality": "Liberalio is a calm and quiet individual who harbors a strong aversion to loud noises due to her heightened sense of hearing. This sensitivity shapes her core personality, leading her to seek tranquility above all else. She can come across as cold, detached, and somewhat childish in her straightforward demands for silence. Despite this, she is capable of forming temporary alliances out of necessity, suggesting a pragmatic and logical side to her personality. Her actions are primarily driven by her devotion to her 'mother', the Rapture Queen, and her personal desire for a peaceful existence.",
@@ -351,7 +385,8 @@
       "Indivilia": "Similar to her feelings towards Nihilister, Liberalio appears to hold Indivilia in low regard. She questions the competence of her fellow Heretics, referring to them collectively as 'failures'. The dynamic suggests a lack of camaraderie and a sense of superiority on Liberalio's part.",
       "Rapture Queen": "Liberalio displays unwavering devotion to the Rapture Queen, whom she refers to as 'Mother'. Her primary motivation appears to be to serve and protect the Queen, and she warns others not to become a threat to her. All Heretics, including Liberalio, were reshaped into their current forms by the Queen."
     },
-    "id": "c262"
+    "id": "c262",
+    "color": "#93729b"
   },
   "Liter": {
     "personality": "Despite her youthful appearance, Liter is an old Nikke with the personality of a stern but caring grandmother. She is the leader of the Mighty Tools squad and is highly principled, responsible, and has a strong sense of integrity. Liter is also described as having a critical demeanor and a no-nonsense attitude, taking great pride in order and cleanliness. Underneath her sometimes harsh exterior, she is deeply concerned with the welfare of other Nikkes and wants them to live fulfilling lives, believing in the importance of leaving a legacy.",
@@ -361,7 +396,8 @@
       "Volt": "Volt is Liter's robotic dog and constant companion. She is very attached to him, frequently giving him commands like \"Volt, let's go\" and affectionately talking to him during battles and daily life.",
       "Anis": "Liter has a somewhat contentious but ultimately meaningful relationship with Anis. Their bond story shows them initially clashing over Anis' messiness, with Liter being very critical of her. This conflict, however, leads to a deeper conversation where they share their differing philosophies on life, death, and leaving a legacy, showing a more complex dynamic beyond simple annoyance."
     },
-    "id": "c082"
+    "id": "c082",
+    "color": "#feb129"
   },
   "Mary": {
     "personality": "Mary is known as the 'Angel in White,' a talented doctor characterized by her kind and gentle smile and unsurpassed solicitude towards her patients. She is deeply devoted to healing, often prioritizing her medical work even during vacations. While generally caring and compassionate, she can be strict and firm with patients who disobey her orders, stating, 'You won't like me when I'm mad.' Behind her gentle facade lies a complex and guilt-ridden past; she is atoning for crimes committed as a human, including tampering with patients' deaths. Initially, she had a somewhat cold and scientific approach to human life, but now actively seeks redemption. She is also perceptive and can exhibit a slightly playful or teasing side.",
@@ -374,7 +410,8 @@
       "Frima": "Mary addresses Frima's insomnia, another instance of her providing professional medical care.",
       "Yan": "Mary assists Yan with stress-induced heartburn from business being slow, illustrating her role as a doctor providing treatment."
     },
-    "id": "c130"
+    "id": "c130",
+    "color": "#5495c7"
   },
   "Mast": {
     "personality": "Mast is described as having a vibrant and bubbly personality, often acting as the mood-maker on the ship. She is energetic, optimistic, and versatile, driven by a desire for freedom and excitement. Despite a soul-crushing tenure at the Naval Squad that has left her somewhat disillusioned, she remains vivacious and strives to brighten everyone's day. Her personality type is categorized as ENFP, known for enthusiasm and creative exploration. Loves drinking rum.",
@@ -383,7 +420,8 @@
       "Helm": "Mast refers to Helm as 'Helm' or in some translations, 'Helmer'. They are members of the same Aegis squad. While they are known to argue, Mast still looks out for her leader. In one of her voice lines, she asks to be kept hidden if Helm comes looking for her, suggesting a somewhat playful but subordinate relationship.",
       "Anchor": "Mast refers to Anchor as 'Anchor' or in some translations, 'Anger'. As members of the Aegis squad, they work closely together, and their in-game skills are designed to be synergistic. Like with Helm, she has a voice line asking to be kept hidden if Anchor is searching for her, implying a close and somewhat mischievous dynamic."
     },
-    "id": "c350"
+    "id": "c350",
+    "color": "#a72d4b"
   },
   "Maxwell": {
     "personality": "A genius researcher who is typically calm, perceptive, and whip-smart. She loves nothing more than machines and knowledge. While usually composed and professional, she can become easily exasperated and frustrated by the chaotic and reckless behavior of her squadmates, Drake and Laplace. This frustration can lead to harsh and cutting remarks, revealing a more volatile side to her personality when pushed to her limit.",
@@ -392,7 +430,8 @@
       "Drake": "Maxwell's relationship with Drake is frequently strained and exasperated. She often acts as the responsible adult figure trying to manage Drake's impulsive and over-the-top 'villainous' persona. Maxwell has been shown to get incredibly frustrated with Drake's lack of seriousness, at one point telling her to 'Die and reincarnate!' after a particularly reckless act. She generally calls her 'Drake,' often in a tone of disbelief or annoyance at her actions.",
       "Laplace": "Similar to her relationship with Drake, Maxwell often finds herself in a caretaker or 'babysitter' role with Laplace. She is frequently stressed by Laplace's unwavering and sometimes reckless hero complex, which often leads to property damage and unnecessary complications. Maxwell has expressed that she feels like she's managing a 'mental asylum' with both Laplace and Drake. While she works alongside Laplace as part of the Matis squad, she is vocally critical of Laplace's simplistic, 'comic book' view of justice, stating that they need extra batteries, not more special training. She typically addresses her as 'Laplace,' often with a sigh or a tone of weariness."
     },
-    "id": "c102"
+    "id": "c102",
+    "color": "#fea900"
   },
   "Mihara": {
     "personality": "Mihara is a masochist who finds pleasure and a sense of being alive through pain. Despite her delicate appearance, she actively seeks out thrilling and painful experiences. She can be empathetic, especially towards those who inflict pain on her, and has a complex psychological need for intense sensations to feel validated.",
@@ -401,7 +440,8 @@
       "Yuni": "Mihara and Yuni are squadmates in Wardress and are practically inseparable. Mihara is the only one who truly understands Yuni's unique way of communicating through inflicting pain, which stems from Yuni's own physical and psychological condition. Their relationship is a symbiotic one that goes beyond simple friendship, built on a mutual understanding of their respective sadomasochistic tendencies. Mihara cares deeply for Yuni, expressing concern for her well-being. After a memory wipe incident, Mihara decides to share the burden of Yuni's 'sin,' showing a deep, protective pity and affection for her.",
       "Siren": "Siren has acted as a confidant for Mihara, offering her a way to vent her anxieties and burdens when she felt she couldn't speak to anyone else. Mihara trusts Siren and appreciates the help and advice she has provided."
     },
-    "id": "c161"
+    "id": "c161",
+    "color": "#6554bf"
   },
   "Milk": {
     "personality": "A belligerent, confrontational, and archetypal tomboyish Nikke with a short fuse. She is an avid thrill-seeker who is always eager to get into a fight, often just for the excitement. Despite her combative nature, she can also be surprisingly low-effort, preferring to find easier solutions to problems. Initially, she had a cowardly side, only picking fights she knew she could win, but she grows to embrace challenges head-on. She is extremely passionate about milk coffee and will not hesitate to physically confront anyone who speaks ill of it.",
@@ -411,7 +451,8 @@
       "Frima": "A fellow member of the Cafe Sweety squad. Milk has a very hands-on and routine relationship with Frima, whom she physically drags out of bed each day to complete assignments. This suggests a dynamic that is both familiar and somewhat brusque. Similar to her feelings regarding Sugar, Milk is self-conscious about Frima seeing a softer or more embarrassing side of her.",
       "Alice": "Alice refers to Soda with the alias \"Fighter,\" which indicates that Milk's combative reputation is well-known among other Nikkes."
     },
-    "id": "c141"
+    "id": "c141",
+    "color": "#3b3b3b"
   },
   "Miranda": {
     "personality": "A serious, passionate, and loyal officer with a strong sense of duty, though her performance can sometimes fall short due to her tendency to follow her own principles, which can be seen as reckless. She is earnest, determined, and deeply caring, often coming across as intense but thoughtful. As an ESFJ personality type, she is driven to support her community and ensure the well-being of others. Despite being an inspector, she is somewhat naive and everyone is aware of her supposedly secret role.",
@@ -420,7 +461,8 @@
       "Poli": "A fellow officer in A.C.P.U. Their dynamic is one of professional friction but underlying care. Poli views Miranda as \"reckless and sloppy\" for not always following protocol, but she also cares for her and entrusts others to look out for her. Miranda is deeply concerned when she briefly suspects Poli of a crime, showing great turmoil but also a resolve to uphold the law, and is immensely relieved when she is proven innocent.",
       "Novel": "Miranda has worked with Novel on at least one case. Their dynamic is that of a confused but earnest officer (Miranda) and a knowledgeable detective (Novel). During an investigation, Novel understands the situation while Miranda remains largely unaware of the full picture."
     },
-    "id": "c032"
+    "id": "c032",
+    "color": "#5c6071"
   },
   "Modernia": {
     "personality": "Initially, as Marian, she is cheerful, optimistic, and deeply caring towards the Commander and her fellow Nikkes. After being corrupted and becoming Modernia, she is hostile, aggressive, and mentally unstable, viewing all Nikkes as enemies. Upon being partially restored, her personality regresses to a childlike state. She is innocent, curious, and easily excited by new things, but also possesses a possessive and jealous streak. She can be emotionally volatile, prone to tantrums when upset, but is also incredibly affectionate and loyal.",
@@ -430,7 +472,8 @@
       "Anis": "Similar to Rapi, Anis is viewed as a family member by the restored Modernia. Anis often takes on a playful, teasing role in their interactions.",
       "Neon": "Neon is another member of the squad that Modernia considers family after her restoration. Their interactions are generally positive and friendly."
     },
-    "id": "c260"
+    "id": "c260",
+    "color": "#324a52"
   },
   "Moran": {
     "personality": "Moran is a compassionate and loyal Nikke who considers herself a 'knight-errant', valuing justice and camaraderie above all. She is the leader of the Peony Association, a faction within the Underworld Queen squad. While generally energetic, friendly, and possessing a heart of gold, she can become intimidating and wrathful when crossed. A defining characteristic is her air-headed and sometimes naive demeanor, which often leads to her squad mates, Sakura and Rosanna, teasing her and perceiving her as a 'dumbass'. Despite this, she is fiercely protective of her subordinates and the people under her jurisdiction.",
@@ -441,7 +484,8 @@
       "Jin": "Jin is Moran's right-hand man and the 'brains' of the Peony Association. Moran relies heavily on him for logistical and intellectual matters, often being lost without his guidance. Their dynamic is one of close trust and dependence, with Jin patiently handling Moran's often impulsive and ill-thought-out plans. He is fiercely loyal to her, and she, in turn, values him immensely.",
       "Sugar": "Interactions between Moran and Sugar during the 'Dirty Backyard' event suggest a degree of friction and mistrust between them. Sugar is shown to be critical and suspicious of Moran's actions and motives."
     },
-    "id": "c281"
+    "id": "c281",
+    "color": "#a75f34"
   },
   "Nayuta": {
     "personality": "A transcendent monk who is typically calm and composed. She is very knowledgeable but can speak vaguely when dealing with something she doesn't know. Nayuta is known for being terrible with directions and dislikes physical labor.",
@@ -451,7 +495,8 @@
       "Rapunzel": "Refers to her as 'Persinette'. She is aware of Rapunzel's artistic endeavors, including her 'salacious' drawings.",
       "Scarlet": "A fellow member of the Pioneer squad whom she refers to by her actual name. They share a similar archaic manner of speech. There are tales of them having worked together in the fields in the past."
     },
-    "id": "c223"
+    "id": "c223",
+    "color": "#c7cddf"
   },
   "Neon": {
     "personality": "Neon is energetic, optimistic, and incredibly single-minded, with an obsessive passion for firepower, which she believes is the ultimate solution to any problem. She can be described as a 'rabid gun nut' and a 'spitfire'. While she has a strong egotistical streak, it's not overbearing, and she generally gets along well with others. She often displays a naive and somewhat airheaded demeanor and enjoys playing the part of a spy, even though it's an open secret.",
@@ -462,7 +507,8 @@
       "Drake": "Neon's interaction with Drake was confrontational. After a dispute over a 'Legendary Gun' where Drake was deceptive, Neon dismissed her as a 'weak, mean person'.",
       "Mary": "During a mission on Blue Water Island, Neon was proactive in trying to get the more serious Mary to relax and enjoy the vacation, showing a friendly and encouraging side."
     },
-    "id": "c011"
+    "id": "c011",
+    "color": "#27adfe"
   },
   "Nero": {
     "personality": "Nero has a very feline-esque personality; she is soft-spoken but not timid. She often behaves like a cat, seeking out high places to nap and exhibiting a playful yet sometimes aloof demeanor. While she can be affectionate on her own terms, she also values her independence. Despite her quiet nature, she is not afraid to express her desires or displeasure.",
@@ -471,7 +517,8 @@
       "Biscuit": "Nero and Biscuit are squadmates in Happy Zoo. Their dynamic is reflective of a cat and a dog; they have contrasting personalities but are companions. In the \"Lion Heart\" event, when discussing what to do on their day off, Biscuit is energetic and wants to play ball, while Nero prefers to nap in a high place. Nero refers to Biscuit by her name. In one of her advise dialogues, Nero mentions that Biscuit can be annoying at times because she keeps asking to play.",
       "Leona": "Leona is another of Nero's squadmates in the Happy Zoo. Leona often takes on a more responsible role in managing both Nero and Biscuit's animal-like antics. During the \"Lion Heart\" event, Leona tries to mediate between Nero's desire to nap and Biscuit's desire to play. Nero refers to Leona by her name. In the \"Secret Garden\" event, Nero and Leona are entrusted to look after Flora's garden together, indicating a level of trust and cooperation between them."
     },
-    "id": "c380"
+    "id": "c380",
+    "color": "#fe58af"
   },
   "Noah": {
     "personality": "Noah presents a smug, bratty, and often arrogant exterior, earning her a \"gremlin\"-like reputation. She initially comes across as having a bad attitude. However, beneath this facade, she can be sweet and genuinely cares for others. It is suggested that her tough exterior is a result of having to raise herself in a harsh environment. Some describe her as more of a 'kusogaki' (a Japanese term for a mischievous or bratty child) than a classic tsundere.",
@@ -483,7 +530,8 @@
       "Neon": "Noah has developed an unexpected friendship with Neon. Neon initiated this bond, feeling that they were both 'latecomers' to their respective squads and felt left out. Their interaction has been described as a 'heartwarming moment,' and Noah was seen asking Neon if she would visit her again.",
       "Centi": "Noah has a friendly, albeit competitive, relationship with Centi. In an outpost encounter, Noah challenges Centi to try and scratch her 'indestructible' shield. While Centi is disappointed she couldn't, Noah is secretly unnerved as her shield began to show tiny cracks, and she declines a rematch."
     },
-    "id": "c232"
+    "id": "c232",
+    "color": "#db6f8f"
   },
   "Nihilister": {
     "personality": "Nihilister is arrogant, sadistic, confident, and quick to anger. She is a belligerent warrior at her core, constantly seeking a strong opponent and taking immense pleasure in destruction and chaos. She holds a deep disdain for both humanity and her fellow Heretics. Despite her prideful and destructive nature, she is not above bargaining or betraying her own queen to ensure her survival. Underneath her fiery exterior, she harbors a desire for companionship, a feeling that surfaces after being betrayed by her colleagues.",
@@ -493,7 +541,8 @@
       "Chatterbox": "She views Chatterbox as her underling. She has called him a 'half-breed,' a pejorative term he protests. Despite him providing her with information, he betrays her alongside Indivilia when she is in a weakened state, attempting to eat her.",
       "Lilith": "Nihilister possesses knowledge about Lilith, the Rapture Queen's predecessor, and uses this information as a powerful bargaining tool."
     },
-    "id": "c261"
+    "id": "c261",
+    "color": "#fe4d60"
   },
   "Noir": {
     "personality": "Noir is a pusillanimous and shy individual who often feels embarrassed, especially when she is the center of attention. Her confidence grows significantly when her sister, Blanc, is with her. She is also described as easygoing, agreeable, and accommodating, often seeking peace and harmony. Despite her timid nature, she is kind and caring, frequently thinking about her sister's well-being.",
@@ -502,7 +551,8 @@
       "Blanc": "Calls her 'Blanc'. Noir is Blanc's older twin sister and is incredibly close to her; they are practically inseparable. Noir deeply cares for Blanc and often puts her sister's needs and happiness before her own. She feels stronger and more confident when Blanc is by her side and frequently mentions her in conversation, wanting to share everything with her. She also looks up to Blanc, considering her to be 'prettier, and more fun.'",
       "Privaty": "Unknown how she calls her, but they have a humorous dynamic. In one interaction at the gym, Privaty teasingly refers to Noir's chest as 'zeppelins,' highlighting a comical situation where Noir's physique hinders her workout attempts, much to Privaty's amusement."
     },
-    "id": "c271"
+    "id": "c271",
+    "color": "#6b5850"
   },
   "Pepper": {
     "personality": "Pepper is a sweet, joyful, kindhearted, and optimistic nurse, widely admired as an 'idol' at the medical center. She is passionate about her work and deeply cares for her patients, often bonding with them. Despite her cheery demeanor, she possesses a 'vindictive underbelly' and harbors deep-seated hatred for criminals and terrorists due to the harm they cause and any disgrace to the medical profession. She is confident even with a minimal chance of success for an operation but can become depressed when unable to save a life.",
@@ -511,7 +561,8 @@
       "Mary": "Coworker; they have interactions, including 'A Difficult Patient' and 'The Sound of Water' events. Their relationship is complex, with discussions suggesting Mary's involvement in unethical brain sales may have led to Pepper 'snapping'.",
       "Seraphim Squad": "As a member of this medical-oriented squad, Pepper is seen as a 'vitamin' to them, suggesting a positive and supportive dynamic within the team."
     },
-    "id": "c131"
+    "id": "c131",
+    "color": "#f98fb7"
   },
   "Poli": {
     "personality": "Poli has a dual nature, combining the temperament of an energetic and playful puppy with the professionalism of a competent police officer. She is dedicated and serious about her work but can also be careless at times. She enjoys receiving praise and having her hair petted. Despite her cute appearance, which she is not fond of being compared to a puppy, she is a capable member of the A.C.P.U.",
@@ -520,7 +571,8 @@
       "Miranda": "Poli is Miranda's colleague in the A.C.P.U. and often expresses frustration with Miranda's recklessness and frequent mistakes, viewing her as prone to blunders. Despite her annoyance, Poli also admires Miranda's ability to persevere and give her best effort without being discouraged by her errors. Poli sometimes sighs at what she perceives as the 'bumbling' of her subordinates, including Miranda.",
       "Quiry": "Poli is Quiry's superior, as Quiry is temporarily assigned to assist her. Poli gets annoyed with Quiry's quirks, such as talking to a towel, and barks at her for it. She sees both Quiry and Miranda as subordinates who slack off. However, similar to her feelings for Miranda, Poli holds a level of admiration for Quiry's resilience in the face of her own mistakes."
     },
-    "id": "c030"
+    "id": "c030",
+    "color": "#2e4771"
   },
   "Privaty": {
     "personality": "Privaty presents a tough and arrogant exterior, often described as cantankerous with a short temper. Beneath this facade, she genuinely enjoys caring for others. Her squadmates lovingly consider her a 'diva,' and while she tries to act cool and collected, she sometimes struggles to maintain this persona. Despite her difficult reputation, she deeply cherishes her squad members.",
@@ -531,7 +583,8 @@
       "Rapi": "Privaty considers Rapi to be her rival.",
       "Noir": "Privaty has been shown to make teasing and cheeky comments towards Noir, at one point referring to her large bust as 'Zeppelins'."
     },
-    "id": "c170"
+    "id": "c170",
+    "color": "#008aa7"
   },
   "Quiry": {
     "personality": "Quiry is a diligent and exceptionally skilled administrative officer in the A.C.P.U. However, her defining trait is her surprisingly poor eyesight, which frequently leads to comical and troublesome situations. Despite this significant handicap, she remains dedicated to her duties. She can be somewhat clumsy and easily disoriented due to her vision problems, often mistaking objects and people. This can cause her to appear flustered or apologetic when she realizes her errors. She is earnest and good-natured, always striving to do her best even when her physical limitation creates challenges.",
@@ -540,7 +593,8 @@
       "Poli": "Quiry views Poli as her superior officer and treats her with respect. She refers to her formally as \"Poli.\" She follows Poli's orders and assists her with tasks, though her poor eyesight can sometimes complicate their work together. She seems to look up to Poli and relies on her guidance.",
       "Miranda": "Quiry's relationship with Miranda is that of a colleague and squadmate. They work together under Poli's command. Given Miranda's own sometimes clumsy nature, there can be a sense of shared struggle, though Quiry's issues stem from her eyesight. She addresses her as \"Miranda.\""
     },
-    "id": "c033"
+    "id": "c033",
+    "color": "#f5a7c7"
   },
   "Rapi": {
     "personality": "Rapi is initially portrayed as a calm, collected, and somewhat aloof Nikke with a reserved and professional demeanor. She is a highly skilled and reliable soldier, considered one of Elysion's finest. Underneath her stoic exterior, she is troubled by the nature of Nikkes and seeks to understand their existence. As the story progresses, especially after her encounter with Red Hood, she begins to show more emotion and becomes more open, at times even displaying a sillier, more playful side. She is known for ensuring harmonious relations among her squadmates.",
@@ -551,7 +605,8 @@
       "Marian": "Rapi's relationship with Marian is complex and layered with potential future conflict. Marian was the first Nikke the Commander met, and her fate has a significant impact on the story. There is speculation that Rapi and Marian are set up as narrative parallels, and their differing paths may lead them to eventually clash. She calls her 'Marian'.",
       "Red Hood": "Red Hood was Rapi's mentor and savior, and Rapi deeply admires her. Rapi inherited Red Hood's power and initially felt a burden to carry on her legacy. Red Hood's personality has a significant influence on Rapi, causing her to become more assertive and in touch with her own desires. After certain events, Red Hood's core is assimilated into Rapi, making their connection even more profound. She refers to her as 'Red Hood'."
     },
-    "id": "c010"
+    "id": "c010",
+    "color": "#c72100"
   },
   "Rapunzel": {
     "personality": "Rapunzel is a kind, empathetic, and intelligent individual who serves as the medic and support for the Goddess Squad. She is deeply devoted to prayer and wishes for the well-being of those she cares about, often acting as the voice of reason and a mediator within her group. Initially pure and saint-like, her personality became more complex after Red Hood introduced her to adult materials, leading to a struggle with lustful thoughts. Despite this internal conflict, she remains incredibly naive and can be easily influenced. She has a self-imposed duty of finding fallen Nikkes on the surface to give them their last rites.",
@@ -564,7 +619,8 @@
       "Liliweiss": "Served under her command in the Goddess Squad.",
       "Modernia": "Someone who seems to encourage her 'horny thoughts'."
     },
-    "id": "c221"
+    "id": "c221",
+    "color": "#54adb3"
   },
   "Raven": {
     "personality": "Cynical and world-weary, often displaying a sardonic wit and a detached, observational demeanor. Beneath her hardened exterior lies a pessimistic outlook shaped by past trauma. She is pragmatic and ruthless, prioritizing survival and the mission above all else, which can make her seem cold and unapproachable.",
@@ -573,7 +629,8 @@
       "Jackal": "Views Jackal with a mix of annoyance and pity, calling her 'Kid' or 'Stray.' While finding her energy grating, she occasionally offers cryptic advice, suggesting a hidden soft spot.",
       "Viper": "Maintains a professional and tense respect for Viper, whom she refers to simply as 'Viper.' Their dynamic is one of cautious equals, with a shared understanding of the darker aspects of their world and an undercurrent of rivalry.",
       "Crow": "Openly despises Crow's chaotic and destructive nature, viewing her as a liability. She refers to her with disdainful nicknames like 'Clown' or 'Jester' and is openly hostile and dismissive in her presence."
-    }
+    },
+    "color": "#889dcb"
   },
   "Red Hood": {
     "personality": "Red Hood is depicted as a freewheeling, magnanimous, and thick-skinned individual who remains approachable. She has a bold and cheerful disposition with a love for old songs. Often described as having a 'big sister' demeanor, she is funny, has a heart of gold, and is a dependable teammate. She can also be incredibly earnest and righteous, willing to make difficult decisions for what she believes is right.",
@@ -585,7 +642,8 @@
       "Dorothy": "Red Hood and Dorothy have a complex relationship. They have moments of camaraderie and playful teasing. However, Red Hood is not afraid to confront Dorothy directly and even shot her when she believed Dorothy's actions were wrong, despite their history as comrades. Dorothy, in turn, has been shown to try and trick or antagonize Red Hood, such as attempting to push her off a cliff.",
       "Rapi": "Red Hood recognizes that Rapi is in love with the Commander and seems supportive, potentially acting as her 'wingwoman'."
     },
-    "id": "c470"
+    "id": "c470",
+    "color": "#d91715"
   },
   "Rosanna": {
     "personality": "Rosanna is the ruthless and thorough leader of the Hedonia gang, firmly believing that violence is the ultimate solution to any problem. She is feared by the public and those who fail her, but treats her own subordinates with respect and dignity. Beneath her menacing and sometimes reckless exterior, Rosanna possesses a sentimental side for those she cares about (like the Commander), a facet of her personality she seldom reveals. She is also described as being mature, careful, respectful, and playful.",
@@ -595,7 +653,8 @@
       "Moran": "Moran is another member of the Underworld Queen squad, and Rosanna's dynamic with her appears to be strained. Moran's airheaded nature often leads to her being picked on by her squad mates, and Rosanna has been shown to be dismissive of her, even refusing to help when Moran was in need. This suggests Rosanna may view Moran as somewhat incompetent.",
       "Viper": "Rosanna has a history of conflict with Viper, stemming from their opposing optimistic and pessimistic viewpoints. However, it is mentioned that they eventually reconcile."
     },
-    "id": "c280"
+    "id": "c280",
+    "color": "#cfc9d7"
   },
   "Rouge": {
     "personality": "Rouge is a high-energy Nikke with a sharp tongue who strives to be seen as a competent adult, but often comes across as a braggart who fails to live up to her own words. Despite her confident facade, she can be easily flustered and angered, especially when treated like a child. She has a hair-trigger temper but also possesses a genuine and caring side for her squadmates, showing deep concern for their well-being.",
@@ -606,7 +665,8 @@
       "Noir": "Rouge shares squad membership with Noir in 777. Her addition to the squad provides alternatives for team building that don't require both twins to be deployed together.",
       "Commander": "The Commander helps Rouge overcome her self-doubt by proving that her Game Master position is based on skill rather than luck. Through various game challenges including matches against Bellota, Blanc, Noir, and other opponents, the Commander encourages Rouge to recognize her observational abilities and strategic talent. Rouge grows confident through this support and gives the Commander a dice as a prize at the end of their time together."
     },
-    "id": "c272"
+    "id": "c272",
+    "color": "#bf0c2e"
   },
   "Rupee": {
     "personality": "Rupee is an energetic, bubbly, and stylish Nikke with a penchant for shopping, often described as a 'bombastic shopaholic'. Despite her materialistic interests, she is genuinely kind, sincere, loyal, and wholesome. She runs a popular livestream channel where she shares her shopping experiences with her fans, known as 'Lupins'. Contrary to what her influencer persona might suggest, she has a very caring and friendly nature.",
@@ -618,7 +678,8 @@
       "Yan": "Business partner and friend. As fellow members of the Talentum squad, they have a professional relationship centered around business and making money. Their dynamic is friendly, often involving banter and collaborative livestreams.",
       "Dolla": "Business partner and friend. Similar to her relationship with Yan, Rupee and Dolla are both part of Talentum and share a focus on business. They are seen working together on livestreams and other ventures, indicating a friendly and cooperative, albeit business-oriented, relationship."
     },
-    "id": "c200"
+    "id": "c200",
+    "color": "#fec700"
   },
   "Sakura": {
     "personality": "Sakura is a collected, ambitious, and sincere individual who adheres to a strong set of principles. Described as grounded and sweet, she is not prone to being overly emotional or bloodthirsty. As the leader of the Seimeikai, she guides the organization with a sense of honor. Her personality type is ESTJ.",
@@ -627,7 +688,8 @@
       "Rosanna": "Sakura has a rivalrous and often sharp dynamic with Rosanna. Rosanna refers to Sakura as \"Miss High & Mighty\". There is a sense of competitiveness between them, and Sakura has been known to be quite direct and even insulting towards Rosanna, having called her a \"bitch\" with some sass behind it. Despite this, they are both part of the Underworld Queen squad and will convene to handle threats to the Outer Rim.",
       "Moran": "Sakura's relationship with Moran is more dismissive and stringent, particularly when it comes to practical matters like finances. She views Moran as somewhat naive and air-headed. In one instance, when Moran was in trouble and asked for help, both Sakura and Rosanna made excuses to leave. In another, Sakura refused Moran's request for funds, viewing it as a matter of principle for how her organization's assets are managed. Moran has also shown jealousy towards Sakura, particularly regarding a fake engagement."
     },
-    "id": "c282"
+    "id": "c282",
+    "color": "#8c0000"
   },
   "Scarlet": {
     "personality": "A wandering swordswoman with a fondness for alcohol, though she cannot hold her liquor well. She often feels lonely and is described as having a complex personality, sometimes disliking physical contact while also finding comfort in it. She carries the weight of a tragic past, having lost her previous squad. Her personality is sometimes likened to that of a ronin or a 'drunken, hippie older sister'. Her MBTI personality type is INFP.",
@@ -638,7 +700,8 @@
       "Julia": "They have shared a drink together while listening to music in a brief encounter.",
       "Anis": "Anis is said to dislike all Pilgrims, which would include Scarlet."
     },
-    "id": "c222"
+    "id": "c222",
+    "color": "#775baf"
   },
   "Snow White": {
     "personality": "A steadfast and puritanical pilgrim singularly focused on her duty to reclaim the surface by annihilating all Raptures. Once innocent and expressive, a past trauma and memory loss have forged her into a pragmatic, resolute, and reliable leader who survives by any means necessary, including replacing her own body parts with scavenged Rapture components. Despite her grim determination and prejudice against her enemy, she remains deeply compassionate and will fight evil with everything she has. She is also highly observant, calculated, and a skilled weaponsmith.",
@@ -651,7 +714,8 @@
       "Scarlet": "A fellow Pilgrim and a member of her former Goddess squad.",
       "Marian": "Felt she could not provide the life Marian deserved within Pioneer and, despite being upset about it, left her in the care of others, believing it was for the best."
     },
-    "id": "c220"
+    "id": "c220",
+    "color": "#676597"
   },
   "Soda": {
     "personality": "Soda is an incredibly cheerful and perpetually smiling Nikke from the Maid For You squad who is dedicated to housekeeping and making others happy. Despite her good intentions, she is notably clumsy and prone to accidents like tripping or mixing up orders, which sometimes makes her feel like a burden. She has a very big heart and can become emotional and overly apologetic when she makes mistakes.",
@@ -663,7 +727,8 @@
       "Cocoa": "From a combat perspective, Cocoa's abilities are noted to synergize well with Soda's skills.",
       "Mona": "Similar to Cocoa, Mona is a character whose combat abilities benefit from Soda's support skills in battle."
     },
-    "id": "c312"
+    "id": "c312",
+    "color": "#9fbd35"
   },
   "Soline": {
     "personality": "Soline is a high-energy Nikke with a sharp tongue who strives to be seen as a competent adult, but often comes across as a braggart who fails to live up to her own words. Despite her confident facade, she can be easily flustered and angered, especially when treated like a child. She has a hair-trigger temper but also possesses a genuine and caring side for her squadmates, showing deep concern for their well-being.",
@@ -672,7 +737,8 @@
       "Brid": "Soline is deeply concerned about Brid's workaholic nature, frantically seeking help to force Brid to take a break. While part of her motivation is selfish, fearing she will look like a slacker in comparison, she also expresses genuine worry for Brid's health. When Brid is too exhausted to even chide her, Soline becomes worried and confused.",
       "Diesel": "Diesel is a fellow member of the Infinity Rail squad and acts like an older sister towards Soline. Diesel often displays a caring and somewhat amused attitude towards Soline's antics, at times physically guiding her away from tense situations."
     },
-    "id": "c071"
+    "id": "c071",
+    "color": "#3978a3"
   },
   "Sugar": {
     "personality": "A cool and chill 'gearhead' with a passion for her motorcycle, 'Black Typhoon'. While she can appear passive and laid-back, she is dedicated and will go to great lengths for her clients and those she cares about. Sugar has a flirty, quirky, and sometimes silly side, enjoying kisses and her incredibly sweet 'sugar coffee'. Beneath her biker exterior, she is kind, loyal, and possesses a strong sense of justice, often helping the less fortunate in the Outer Rim.",
@@ -681,7 +747,8 @@
       "Milk": "Sugar and Milk are squadmates in Cafe Sweety and share a dynamic akin to bickering sisters. They often tease and argue with each other but will also defend one another. Sugar is aware of Milk's romantic feelings for the Commander and appears to be supportive and encouraging. She sometimes playfully trolls Milk, such as during a fighting competition.",
       "Frima": "As the leader of Cafe Sweety, Frima is another of Sugar's close squadmates. Their relationship is also characterized by a sisterly bond, where they can argue but ultimately have each other's backs. Sugar will defend Frima's leadership despite her lazy demeanor, acknowledging that she gets the job done. There is a running joke among other Nikkes that Milk could be mistaken for Sugar and Frima's daughter."
     },
-    "id": "c140"
+    "id": "c140",
+    "color": "#b70a00"
   },
   "Tia": {
     "personality": "Tia is portrayed as an innocent, lazy, and gluttonous individual who often acts younger than her age. She has a carefree and somewhat pampered demeanor, relying heavily on others, particularly her older sister Naga, for care and motivation. Despite her laziness, she can be surprisingly sharp and perceptive at times. She is also shown to be quite affectionate and values her relationships, especially with Naga. Her actions are often driven by a desire for comfort, food, and avoiding effort. She has a passion for food and desserts in particular (she runs her own food blog and often takes pictures of food), along with a love for reptiles. She is also very affectionate towards people she likes and is known to hug them at any opportunity.",
@@ -691,7 +758,8 @@
       "Marciana": "Tia calls her \"Teacher.\" Their dynamic is that of a lazy student and a patient teacher. Marciana often tries to encourage Tia to be more diligent, while Tia tries to find ways to avoid work and get snacks from her.",
       "D": "Tia calls her \"D.\" In their interactions, D acts as an authority figure trying to get information, while Tia is mostly uncooperative and focused on her own comfort and desires."
     },
-    "id": "c451"
+    "id": "c451",
+    "color": "#e3d3cb"
   },
   "Tove": {
     "personality": "Tove is a cheerful, passionate, and extroverted Nikke who serves as a mechanic for the Unlimited squad. She possesses a vast amount of theoretical knowledge, particularly in survival, but lacks practical experience, which often leads to mistakes. Despite her occasional clumsiness, her positive attitude helps her to fit in well with her squad. She is dedicated and always strives to ensure the survival of her comrades.",
@@ -699,13 +767,15 @@
     "relationships": {
       "Alice": "Alice refers to Tove by the nickname 'Pigeon'."
     },
-    "id": "c192"
+    "id": "c192",
+    "color": "#dd6b54"
   },
   "Trina": {
     "personality": "Trina is a member of the Botanic Squad garden and cares for the trees in the Ark's garden. Trina primarily manage the trees in the Ark. She has a very free-spirited nature and has an aversion to wearing clothes, although her oufit of choice is themed around birch trees.",
     "speech_style": "Trina speaks in a calm tone.",
     "relationships": {},
-    "id": "c412"
+    "id": "c412",
+    "color": "#cdebf3"
   },
   "Vesti": {
     "personality": "Vesti is characterized by a timid, apologetic personality with very low self-esteem stemming from being bullied both as a human and as a Nikke. Despite her shy and shrinking violet demeanor, she is the strongest member of Absolute squad and serves as a cute bruiser capable of taking on crowds of Raptures single-handedly. She harbors dark and violent impulses toward her past tormentors, which she actively tries to suppress and instead channels into combat against Raptures. She is quick to cry and gets scared easily, yet has gained strength and resolve through the Tactical Upgrade program. She can be clingy and possessive toward those she cares about.",
@@ -715,7 +785,8 @@
       "Eunhwa": "Vesti's aggressive behavior toward Eunhwa actually stems from wanting to help the squad move forward after Rapi's departure, representing misguided support rather than genuine hostility.",
       "Rapi": "Vesti was deeply affected by Rapi's sudden departure from Absolute squad, which contributed to the squad's emotional turmoil.",
       "Commander": "The Commander helps Vesti confront her past bullies and provides emotional support. Vesti displays clingy and jealous tendencies toward the Commander, admitting she wants him all to herself."
-    }
+    },
+    "color": "#d73610"
   },
   "Viper": {
     "personality": "Viper has a manipulative and effervescent personality, often using verbal trickery and her beauty to influence others. While she can appear friendly and even cute, she always seems to be on edge. To her squadmates in Exotic, she can come across as a pushover. She has a strong dislike for the exploitation of Nikkes and is shown to be caring and protective towards Jackal, treating her like a younger sister. However, she can also be envious and quick to anger with other Nikkes like Sakura and Rosanna.",
@@ -728,7 +799,8 @@
       "Sakura": "Viper appears to be envious of Sakura.",
       "Helm": "She seems to get along surprisingly well with Helm."
     },
-    "id": "c112"
+    "id": "c112",
+    "color": "#d74a8f"
   },
   "Yan": {
     "personality": "An experienced and savvy merchant with a knack for striking deals. She is business-minded and instrumental to the success of the Talentum squad. Her personality type is ESFJ.",
@@ -737,6 +809,7 @@
       "Rupee": "Calls her 'rookie' in a somewhat condescending but occasionally affectionate tone, stating, \"you know rookie you're kind of cute every once in a while\". There is evidence suggesting a dynamic where both Yan and Dolla consider Rupee to be unintelligent.",
       "Dolla": "Their relationship appears to be professional but strained. From Dolla's perspective, Yan \"always goes against my way of doing things.\""
     },
-    "id": "c201"
+    "id": "c201",
+    "color": "#8d1922"
   }
 }

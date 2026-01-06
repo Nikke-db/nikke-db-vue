@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, onUnmounted } from 'vue'
 import { useMarket } from '@/stores/market'
 
 // @ts-ignore
@@ -42,7 +42,185 @@ const spineViewport = {
 onMounted(() => {
   market.load.beginLoad()
   spineLoader()
+  window.addEventListener('resize', handleResize)
+  document.addEventListener('mousedown', onMouseDown)
+  document.addEventListener('touchstart', onTouchStart, { passive: false })
+  document.addEventListener('mouseup', onMouseUp)
+  document.addEventListener('touchend', onTouchEnd)
+  document.addEventListener('touchcancel', onTouchEnd)
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('touchmove', onTouchMove, { passive: false })
+  document.addEventListener('wheel', onWheel)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  document.removeEventListener('mousedown', onMouseDown)
+  document.removeEventListener('touchstart', onTouchStart)
+  document.removeEventListener('mouseup', onMouseUp)
+  document.removeEventListener('touchend', onTouchEnd)
+  document.removeEventListener('touchcancel', onTouchEnd)
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('touchmove', onTouchMove)
+  document.removeEventListener('wheel', onWheel)
+})
+
+const handleResize = () => {
+  if (canvas) {
+    applyDefaultStyle2Canvas()
+  }
+}
+
+const onMouseDown = (e: MouseEvent) => {
+  if (filterDomEvents(e)) {
+    oldX = e.clientX
+    oldY = e.clientY
+    move = true
+  }
+}
+
+let initialDistance = 0
+let initialScale = 0.5
+
+const handlePinch = (e: TouchEvent) => {
+  if (!filterDomEvents(e) || e.touches.length !== 2 || initialDistance === 0) return
+  
+  const touch1 = e.touches[0]
+  const touch2 = e.touches[1]
+  const currentDistance = Math.sqrt(
+    Math.pow(touch2.clientX - touch1.clientX, 2) + 
+    Math.pow(touch2.clientY - touch1.clientY, 2)
+  )
+  
+  const scaleFactor = currentDistance / initialDistance
+  transformScale = initialScale * scaleFactor
+  
+  // Clamp scale between reasonable bounds
+  transformScale = Math.max(0.1, Math.min(3, transformScale))
+  
+  if (canvas) {
+    canvas.style.transform = 'scale(' + transformScale + ')'
+  }
+  
+  // Prevent page zoom during pinch
+  if (e.cancelable) e.preventDefault()
+}
+
+const onTouchStart = (e: TouchEvent) => {
+  if (market.route.name === 'story-gen' && filterDomEvents(e)) {
+    // Handle pinch gesture start
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      initialDistance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      )
+      initialScale = transformScale
+      move = false
+      return
+    }
+    
+    // Only start dragging if it's a single touch (not pinch)
+    if (e.touches.length === 1) {
+      oldX = e.touches[0].clientX
+      oldY = e.touches[0].clientY
+      move = true
+      initialDistance = 0 // Reset pinch tracking
+    }
+  }
+}
+
+const onMouseUp = () => {
+  oldX = 0
+  oldY = 0
+  move = false
+}
+
+const onTouchEnd = () => {
+  oldX = 0
+  oldY = 0
+  move = false
+  initialDistance = 0
+}
+
+const onMouseMove = (e: MouseEvent) => {
+  if (move && canvas) {
+    const newX = e.clientX
+    const newY = e.clientY
+
+    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
+    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
+
+    if (newX !== oldX) {
+      canvas.style.left = stylel + (newX - oldX) + 'px'
+    }
+
+    if (newY !== oldY) {
+      canvas.style.top = stylet + (newY - oldY) + 'px'
+    }
+
+    oldX = newX
+    oldY = newY
+  }
+}
+
+const onTouchMove = (e: TouchEvent) => {
+  // Handle pinch zoom
+  if (e.touches.length === 2 && filterDomEvents(e)) {
+    handlePinch(e)
+    move = false
+    if (e.cancelable) e.preventDefault()
+    return
+  }
+  
+  if (move && canvas && market.route.name === 'story-gen') {
+    // Only prevent default for single touch drag, allow multi-touch for pinch zoom
+    if (e.touches.length === 1 && e.cancelable) {
+      e.preventDefault()
+    }
+
+    const newX = e.touches[0].clientX
+    const newY = e.touches[0].clientY
+
+    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
+    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
+
+    if (newX !== oldX) {
+      canvas.style.left = stylel + (newX - oldX) + 'px'
+    }
+
+    if (newY !== oldY) {
+      canvas.style.top = stylet + (newY - oldY) + 'px'
+    }
+
+    oldX = newX
+    oldY = newY
+  }
+}
+
+const onWheel = (e: WheelEvent) => {
+  if (filterDomEvents(e)) {
+    switch (e.deltaY > 0) {
+      case true:
+        transformScale -= 0.02
+        transformScale < 0.01 && transformScale > -0.01
+          ? (transformScale = -0.02)
+          : ''
+        break
+      case false:
+        transformScale += 0.02
+        transformScale < 0.01 && transformScale > -0.01
+          ? (transformScale = 0.02)
+          : ''
+        break
+      default:
+        break
+    }
+
+    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
+  }
+}
 
 const SPINE_DEFAULT_MIX = 0.25
 let spinePlayer: any = null
@@ -439,6 +617,14 @@ watch(() => market.globalParams.isMobile, (e) => {
   }
 })
 
+watch(() => market.route.name, () => {
+  applyDefaultStyle2Canvas()
+})
+
+watch(() => market.live2d.HQassets, () => {
+  applyDefaultStyle2Canvas()
+})
+
 watch(() => market.live2d.current_id, () => {
   loadSpineAfterWatcher()
 })
@@ -489,6 +675,8 @@ watch(() => market.live2d.customLoad, () => {
 watch(() => market.live2d.hideUI, () => {
   const controls = document.querySelector('.spine-player-controls') as HTMLElement
   if (!controls) return
+  // On story-gen route, controls should always be hidden
+  // On other routes (like L2D), controls visibility depends on hideUI state
   if (market.live2d.hideUI === false && market.route.name !== 'story-gen') {
     controls.style.visibility = 'visible'
   } else {
@@ -657,9 +845,20 @@ const applyDefaultStyle2Canvas = () => {
 const setCanvasStyleMobile = () => {
   if (!canvas) return
 
-  canvas.style.height = '90vh'
-  canvas.style.width = '100%'
-  transformScale = 1
+  if (market.route.name === 'story-gen') {
+    canvas.style.height = '70vh'
+    canvas.style.width = 'auto'
+    canvas.style.position = 'absolute'
+    canvas.style.top = '0px'
+    canvas.style.transform = 'scale(0.7)'
+    transformScale = 0.7
+    centerForPC()
+  } else {
+    // L2D (visualiser) - use production behavior
+    canvas.style.height = '90vh'
+    canvas.style.width = '100%'
+    transformScale = 1
+  }
   market.globalParams.hideMobileHeader()
 }
 
@@ -674,9 +873,19 @@ const centerForPC = () => {
 }
 
 const filterDomEvents = (event: any) => {
+  const target = event.target as HTMLElement
+  const spinePlayer = document.querySelector('.spine-player')
+  const playerContainer = document.querySelector('#player-container')
+
+  // Only change behaviour in story-gen route
+  const allowContainerHit = market.route.name === 'story-gen'
+  
   if (
-    event.target === canvas ||
-    event.target === document.querySelector('.spine-player')
+    target === canvas ||
+    target === spinePlayer ||
+    canvas?.contains(target) ||
+    spinePlayer?.contains(target) ||
+    (allowContainerHit && playerContainer?.contains(target))
   ) {
     return true
   } else {
@@ -693,41 +902,6 @@ let oldX: number
 let oldY: number
 let move = false as boolean
 
-document.addEventListener('mousedown', (e) => {
-  if (filterDomEvents(e)) {
-    oldX = e.clientX
-    oldY = e.clientY
-    move = true
-  }
-})
-
-document.addEventListener('mouseup', () => {
-  oldX = 0
-  oldY = 0
-  move = false
-})
-
-document.addEventListener('mousemove', (e) => {
-  if (move && canvas) {
-    const newX = e.clientX
-    const newY = e.clientY
-
-    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
-    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
-
-    if (newX !== oldX) {
-      canvas.style.left = stylel + (newX - oldX) + 'px'
-    }
-
-    if (newY !== oldY) {
-      canvas.style.top = stylet + (newY - oldY) + 'px'
-    }
-
-    oldX = newX
-    oldY = newY
-  }
-})
-
 /**
  * zoom in or out for the live2d
  * it uses the property transform scale instead of buffing up or down viewport height of the canvas
@@ -740,29 +914,6 @@ document.addEventListener('mousemove', (e) => {
  */
 
 let transformScale = 0.5
-
-document.addEventListener('wheel', (e) => {
-  if (filterDomEvents(e)) {
-    switch (e.deltaY > 0) {
-      case true:
-        transformScale -= 0.02
-        transformScale < 0.01 && transformScale > -0.01
-          ? (transformScale = -0.02)
-          : ''
-        break
-      case false:
-        transformScale += 0.02
-        transformScale < 0.01 && transformScale > -0.01
-          ? (transformScale = 0.02)
-          : ''
-        break
-      default:
-        break
-    }
-
-    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
-  }
-})
 
 /**
  * Yap or talking mode for the normal people;
@@ -902,7 +1053,7 @@ const triggerPreview1 = () => {
 <style scoped lang="less">
 #player-container {
    //height: calc(100vh - 100px);
-  overflow:hidden
+  overflow:hidden;
 }
 .mobile {
   height: -webkit-fill-available;
