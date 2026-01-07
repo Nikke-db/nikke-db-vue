@@ -665,7 +665,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -685,19 +685,30 @@ import {
   replayMessage as replayMessageUtil,
   getHonorific,
   createTypewriterController,
+  getEffectiveCharacterProfiles,
   logDebug
 } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, callLocalSummarization, getFilteredAnimations } from '@/utils/llmUtils'
+import { 
+  callOpenRouter as callOpenRouterImpl, 
+  callPerplexity as callPerplexityImpl, 
+  callGemini as callGeminiImpl, 
+  callPollinations as callPollinationsImpl, 
+  enrichActionsWithAnimations, 
+  callLocal as callLocalImpl, 
+  summarizeChunk as summarizeChunkImpl,
+  getFilteredAnimations,
+  providerOptions,
+  tokenUsageOptions,
+  fetchOpenRouterModels,
+  fetchPollinationsModels
+} from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 
 const market = useMarket()
-
-// Structured output schema builder lives in utils
-const getResponseSchema = (isGameMode: boolean) => buildStoryResponseSchema(isGameMode)
 
 const pendingGameChoiceText = ref<string | null>(null)
 const abortCurrentPlaybackForChoice = ref(false)
@@ -897,34 +908,7 @@ const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
-  const base = characterProfiles.value || {}
-  const progression = characterProgression.value || {}
-  const merged: Record<string, any> = {}
-
-  const progressionKeys = Object.keys(progression)
-
-  for (const [name, profile] of Object.entries(base)) {
-    const outProfile = profile && typeof profile === 'object' && !Array.isArray(profile) ? { ...(profile as any) } : profile
-    const progKey = progressionKeys.find((k) => k.toLowerCase() === name.toLowerCase())
-    const update = progKey ? (progression as any)[progKey] : undefined
-
-    if (outProfile && typeof outProfile === 'object' && !Array.isArray(outProfile) && update && typeof update === 'object') {
-      if ((update as any).personality) {
-        ;(outProfile as any).personality = (update as any).personality
-      }
-
-      if ((update as any).relationships && typeof (update as any).relationships === 'object') {
-        ;(outProfile as any).relationships = {
-          ...((outProfile as any).relationships || {}),
-          ...((update as any).relationships || {})
-        }
-      }
-    }
-
-    merged[name] = outProfile
-  }
-
-  return merged
+  return getEffectiveCharacterProfiles(characterProfiles.value, characterProgression.value)
 })
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -932,8 +916,6 @@ const openRouterModels = ref<any[]>([])
 const pollinationsModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
-// Track models that don't support json_object, persisting to localStorage
-const modelsWithoutJsonSupport = new Set<string>(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]'))
 const isDev = import.meta.env.DEV
 
 // AI Reminders state
@@ -965,13 +947,7 @@ const setRandomLoadingMessage = () => {
 // Models/providers that have native web search in OpenRouter
 
 // Options
-const providerOptions = [
-  { label: 'Perplexity', value: 'perplexity' },
-  { label: 'Gemini', value: 'gemini' },
-  { label: 'OpenRouter', value: 'openrouter' },
-  { label: 'Pollinations', value: 'pollinations' },
-  { label: 'Local (Beta, OpenAPI)', value: 'local' }
-]
+// Handled by llmUtils.ts
 
 const modelOptions = computed(() => {
   if (apiProvider.value === 'perplexity') {
@@ -995,15 +971,7 @@ const modelOptions = computed(() => {
   return []
 })
 
-const tokenUsageOptions = [
-  { label: 'Low (10 turns)', value: 'low' },
-  { label: 'Medium (30 turns)', value: 'medium' },
-  { label: 'High (60 turns)', value: 'high' },
-  { label: 'Goddess', value: 'goddess' }
-]
-
 // Computed
-const isWebSearchAllowed = computed(() => true)
 
 const computedUsesWikiFetch = computed(() => usesWikiFetch(apiProvider.value, model.value))
 
@@ -1032,7 +1000,7 @@ watch(chatMode, (newVal) => {
 watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
   if (apiProvider.value === 'pollinations') {
-    await fetchPollinationsModels()
+    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
     if (pollinationsModels.value.length > 0) {
       model.value = pollinationsModels.value[0].value
     }
@@ -1148,110 +1116,20 @@ watch(apiProvider, async (newVal) => {
     model.value = 'gemini-2.5-flash'
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
-    await fetchOpenRouterModels()
+    openRouterModels.value = await fetchOpenRouterModels()
 
     if (openRouterModels.value.length > 0) {
       model.value = openRouterModels.value[0].value
     }
   } else if (apiProvider.value === 'pollinations') {
     model.value = ''
-    await fetchPollinationsModels()
+    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
 
     if (pollinationsModels.value.length > 0) {
       model.value = pollinationsModels.value[0].value
     }
   }
 })
-
-const fetchOpenRouterModels = async () => {
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/models')
-    const data = await response.json()
-    let models = data.data
-    
-    openRouterModels.value = models.map((m: any) => {
-      const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
-
-      return {
-        label: (isFree ? '[FREE] ' : '') + m.name,
-        value: m.id,
-        isFree: isFree,
-        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-      }
-    }).sort((a: any, b: any) => {
-      if (a.isFree && !b.isFree) return -1
-      if (!a.isFree && b.isFree) return 1
-
-      return a.label.localeCompare(b.label)
-    })
-    
-  } catch (error) {
-    console.error('Failed to fetch OpenRouter models:', error)
-  }
-}
-
-const fetchPollinationsModels = async () => {
-  let models: any[] = []
-
-  try {
-    const headers: Record<string, string> = {}
-
-    if (apiKey.value) {
-      headers['Authorization'] = `Bearer ${apiKey.value}`
-    }
-    const url = apiKey.value ? 'https://gen.pollinations.ai/text/models' : 'https://text.pollinations.ai/models'
-    const response = await fetch(url, { headers })
-    const data = await response.json()
-    models = data
-    
-    // Handle both old format (array of strings) and new format (array of objects)
-    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
-      models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
-    }
-    
-    pollinationsModels.value = models
-      .filter((m: any) => {
-        if (!apiKey.value) {
-          const allowedModels = ['gemini', 'gemini-search', 'mistral']
-          return allowedModels.includes(m.name)
-        } else {
-          const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
-          return !hiddenModels.includes(m.name)
-        }
-      })
-      .map((m: any) => {
-        const isFree = m.pricing && m.pricing.input_token_price === 0
-
-        return {
-          label: (isFree ? '[FREE] ' : '') + m.name,
-          value: m.name,
-          isFree: isFree,
-          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-        }
-      }).sort((a: any, b: any) => {
-        if (a.isFree && !b.isFree) return -1
-        if (!a.isFree && b.isFree) return 1
-
-        return a.label.localeCompare(b.label)
-      })
-    
-  } catch (error) {
-    console.error('Failed to fetch Pollinations models:', error)
-    // Fallback to hardcoded models
-    models = [
-      { name: 'gemini', pricing: { input_token_price: 0 } },
-      { name: 'gemini-search', pricing: { input_token_price: 0 } },
-      { name: 'mistral', pricing: { input_token_price: 0 } }
-    ]
-    
-    pollinationsModels.value = models.map((m: any) => ({
-      label: '[FREE] ' + m.name,
-      value: m.name,
-      isFree: true,
-      style: { color: '#18a058', fontWeight: 'bold' }
-    }))
-  }
-}
 
 const checkGuide = () => {
   const seen = localStorage.getItem('chat-guide-seen')
@@ -1326,9 +1204,9 @@ const initializeSettings = async () => {
     apiProvider.value = savedProvider
     
     if (savedProvider === 'openrouter') {
-      await fetchOpenRouterModels()
+      openRouterModels.value = await fetchOpenRouterModels()
     } else if (savedProvider === 'pollinations') {
-      await fetchPollinationsModels()
+      pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
     }
     
     // Validate and set model
@@ -1684,7 +1562,7 @@ onUnmounted(() => {
   document.removeEventListener('mouseup', onNikkeGlobalEnd as any)
 })
 
-onBeforeRouteLeave((to, from) => {
+onBeforeRouteLeave(() => {
   if (chatHistory.value.length > 0) {
     const confirmed = window.confirm('Are you sure you want to leave? All unsaved progress will be lost.')
     if (!confirmed) {
@@ -1702,14 +1580,15 @@ const deleteLastMessage = () => {
 
 const saveSession = () => {
   // Filter chat history based on animation replay setting
-  const exportedChatHistory = chatHistory.value.map(msg => {
+  const exportedChatHistory = chatHistory.value.map((msg) => {
     if (!enableAnimationReplay.value) {
       // Old format: just role and content
       return { role: msg.role, content: msg.content }
     } else {
       // New format: remove content if text is present to save space
       if (msg.role === 'assistant' && msg.text) {
-        const { content, ...rest } = msg
+        const rest = { ...msg }
+        delete (rest as any).content
         return rest
       }
       return msg
@@ -1867,7 +1746,7 @@ const handleFileUpload = (event: Event) => {
             apiProvider.value = savedProvider
             
             if (savedProvider === 'openrouter') {
-              await fetchOpenRouterModels()
+              openRouterModels.value = await fetchOpenRouterModels()
             }
             
             // Validate and set model
@@ -2430,7 +2309,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     messages = injectUserReminders(messages)
     
     logDebug('Sending to Perplexity:', messages)
-    response = await callPerplexity(messages, enableWebSearch)
+    response = await callPerplexity(messages, undefined, enableWebSearch)
   } else if (apiProvider.value === 'gemini') {
     // Gemini: Original behavior (context as separate message at end)
     let messages = [
@@ -2464,7 +2343,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     messages = injectUserReminders(messages)
     
     logDebug('Sending to OpenRouter:', messages)
-    response = await callOpenRouter(messages, enableWebSearch)
+    response = await callOpenRouter(messages, undefined, enableWebSearch)
   } else if (apiProvider.value === 'pollinations') {
     // Pollinations: Use standard OpenAI format with context in system prompt
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
@@ -2496,13 +2375,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     messages = injectUserReminders(messages)
     
     logDebug('Sending to Local:', messages)
-    response = await callLocalImpl(messages, {
-      maxTokens: localMaxTokens.value,
-      apiKey: apiKey.value,
-      localUrl: localUrl.value,
-      modeIsGame: mode.value === 'game',
-      modelsWithoutJsonSupport: modelsWithoutJsonSupport
-    })
+    response = await callLocal(messages)
   } else {
     throw new Error('Unknown API provider')
   }
@@ -2533,13 +2406,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     needsJsonReminder.value = false
   }
   
-  const filteredAnimations = market.live2d.animations.filter((a) => 
-    a !== 'talk' &&
-    a !== 'talk_start' && 
-    a !== 'talk_end' && 
-    a !== 'expression_0' && 
-    a !== 'action'
-  )
+  const filteredAnimations = getFilteredAnimations(market.live2d.animations)
   let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
 
   // Optimization: Limit history to prevent token overflow
@@ -2620,7 +2487,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
     const messagesWithReminders = injectUserReminders(messages)
 
-    return await callPerplexity(messagesWithReminders, false)
+    return await callPerplexity(messagesWithReminders, undefined, false)
   } else if (apiProvider.value === 'gemini') {
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -2636,7 +2503,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     const messagesWithReminders = injectUserReminders(messages)
-    return await callOpenRouter(messagesWithReminders, false)
+    return await callOpenRouter(messagesWithReminders, undefined, false)
   } else if (apiProvider.value === 'pollinations') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
     const messages = [
@@ -2652,13 +2519,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
       ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
     ]
     const messagesWithReminders = injectUserReminders(messages)
-    return await callLocalImpl(messagesWithReminders, {
-      maxTokens: localMaxTokens.value,
-      apiKey: apiKey.value,
-      localUrl: localUrl.value,
-      modeIsGame: mode.value === 'game',
-      modelsWithoutJsonSupport: modelsWithoutJsonSupport
-    })
+    return await callLocal(messagesWithReminders)
   }
   
   throw new Error('Unknown API provider')
@@ -2695,7 +2556,7 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
   try {
     const m = response.match(/"needs_search"\s*:\s*\[([\s\S]*?)\]/)
     if (m && m[1]) {
-      const names = Array.from(m[1].matchAll(/"([^\"]+)"/g)).map((x) => x[1])
+      const names = Array.from(m[1].matchAll(/"([^"]+)"/g)).map((x) => x[1])
       const validated = validateNames(names, response)
       if (validated.length > 0) return validated
     }
@@ -2819,7 +2680,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   return prompt
 }
 
-const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
+const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSearch: boolean = false) => {
   return await callOpenRouterImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
@@ -2829,12 +2690,11 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     modeIsGame: mode.value === 'game',
     enableWebSearch,
     searchUrl,
-    prompts,
-    modelsWithoutJsonSupport
+    prompts
   })
 }
 
-const callPerplexity = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
+const callPerplexity = async (messages: any[], searchUrl?: string, enableWebSearch: boolean = false) => {
   return await callPerplexityImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
@@ -2855,8 +2715,6 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
   })
 }
 
-
-
 const callPollinations = async (messages: any[], enableWebSearch: boolean = false) => {
   return await callPollinationsImpl(messages, {
     model: model.value,
@@ -2864,13 +2722,43 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     modeIsGame: mode.value === 'game',
-    enableWebSearch,
-    modelsWithoutJsonSupport
+    enableWebSearch
   })
 }
 
-const callPollinationsWithoutJson = async (messages: any[], enableWebSearch: boolean = false) => {
-  return await callPollinationsWithoutJsonImpl(messages, { model: model.value, apiKey: apiKey.value })
+const callLocal = async (messages: any[]) => {
+  return await callLocalImpl(messages, {
+    maxTokens: localMaxTokens.value,
+    apiKey: apiKey.value,
+    localUrl: localUrl.value,
+    modeIsGame: mode.value === 'game'
+  })
+}
+
+const handleGameChoice = (choice: any) => {
+  // IMPORTANT: Do NOT call sendMessage() here.
+  // sendMessage() is already running (it plays actions while isLoading is true).
+  // Calling it again causes concurrent requests and breaks the existing loading spinner.
+  const choiceTextToSend = formatChoiceAsUserTurn(choice)
+
+  pendingGameChoiceText.value = choiceTextToSend
+  abortCurrentPlaybackForChoice.value = true
+
+  pendingGameChoices.value = []
+  choicesAwaitingReveal.value = false
+
+  // Hide overlay immediately so the existing chatbox loading UI can show.
+  nikkeOverlayVisible.value = false
+  
+  // Resume execution
+  if (nextActionResolver) {
+    nextActionResolver()
+    nextActionResolver = null
+    waitingForNext.value = false
+  }
+  
+  // Clear choices
+  gameChoices.value = []
 }
 
 const replayMessage = async (msg: any, index: number) => {
@@ -2890,12 +2778,12 @@ const replayMessage = async (msg: any, index: number) => {
     startTypewriter,
     stopTypewriter,
     manageYap: (duration: number) => {
-       if (yapTimeoutId) clearTimeout(yapTimeoutId)
-       market.live2d.isYapping = true
-       yapTimeoutId = setTimeout(() => {
-         if (market.live2d.isYapping) market.live2d.isYapping = false
-         yapTimeoutId = null
-       }, duration)
+      if (yapTimeoutId) clearTimeout(yapTimeoutId)
+      market.live2d.isYapping = true
+      yapTimeoutId = setTimeout(() => {
+        if (market.live2d.isYapping) market.live2d.isYapping = false
+        yapTimeoutId = null
+      }, duration)
     }
   })
 }
@@ -3057,32 +2945,6 @@ const getCharacterName = (id: string): string | null => {
   return char ? char.name : id
 }
 
-const handleGameChoice = (choice: any) => {
-  // IMPORTANT: Do NOT call sendMessage() here.
-  // sendMessage() is already running (it plays actions while isLoading is true).
-  // Calling it again causes concurrent requests and breaks the existing loading spinner.
-  const choiceTextToSend = formatChoiceAsUserTurn(choice)
-
-  pendingGameChoiceText.value = choiceTextToSend
-  abortCurrentPlaybackForChoice.value = true
-
-  pendingGameChoices.value = []
-  choicesAwaitingReveal.value = false
-
-  // Hide overlay immediately so the existing chatbox loading UI can show.
-  nikkeOverlayVisible.value = false
-  
-  // Resume execution
-  if (nextActionResolver) {
-    nextActionResolver()
-    nextActionResolver = null
-    waitingForNext.value = false
-  }
-  
-  // Clear choices
-  gameChoices.value = []
-}
-
 const executeAction = async (data: any) => {
   logDebug('Executing Action:', data)
 
@@ -3118,7 +2980,7 @@ const executeAction = async (data: any) => {
     
     for (const [charName, profile] of Object.entries(data.memory)) {
       // 1. Check if already in active profiles (Case-Insensitive)
-      const existingKey = Object.keys(characterProfiles.value).find(k => k.toLowerCase() === charName.toLowerCase())
+      const existingKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
       
       if (existingKey) {
         logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
@@ -3127,7 +2989,7 @@ const executeAction = async (data: any) => {
 
       // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
       if (useLocalProfiles.value) {
-        const localKey = Object.keys(localCharacterProfiles).find(k => k.toLowerCase() === charName.toLowerCase())
+        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         if (localKey) {
           logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${localKey}'). IGNORING AI memory and loading local profile instead.`)
              
@@ -3135,26 +2997,27 @@ const executeAction = async (data: any) => {
           // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
           newProfiles[charName] = {
             ...localProfile,
-            id: localProfile.id || l2d.find(c => c.name.toLowerCase() === charName.toLowerCase())?.id
+            id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
           }
           continue
         }
       }
 
       if (typeof profile === 'object' && profile !== null) {
-        const { honorific_for_commander, honorific_to_commander, honorific, relationships, ...rest } = profile as any
+        const cleanedProfile = { ...(profile as any) }
+        delete (cleanedProfile as any).honorific_for_commander
+        delete (cleanedProfile as any).honorific_to_commander
+        delete (cleanedProfile as any).honorific
         
         // Filter Commander out of relationships if present
-        let filteredRelationships = relationships
-        if (relationships && typeof relationships === 'object') {
-          const { Commander, commander, ...otherRelationships } = relationships
-          filteredRelationships = Object.keys(otherRelationships).length > 0 ? otherRelationships : undefined
+        if (cleanedProfile.relationships && typeof cleanedProfile.relationships === 'object') {
+          const relationships = { ...cleanedProfile.relationships }
+          delete (relationships as any).Commander
+          delete (relationships as any).commander
+          cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
         }
         
-        newProfiles[charName] = {
-          ...rest,
-          ...(filteredRelationships && { relationships: filteredRelationships })
-        }
+        newProfiles[charName] = cleanedProfile
       } else {
         newProfiles[charName] = profile
       }
@@ -3173,7 +3036,7 @@ const executeAction = async (data: any) => {
 
     for (const [charName, progression] of Object.entries(data.characterProgression)) {
       // Find target profile (Case-Insensitive) in BASE profiles.
-      const targetKey = Object.keys(characterProfiles.value).find(k => k.toLowerCase() === charName.toLowerCase())
+      const targetKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
       const resolvedKey = targetKey || charName
 
       if (typeof progression === 'object' && progression !== null) {
@@ -3502,7 +3365,7 @@ const executeAction = async (data: any) => {
 
 const resetSession = () => {
   if (chatHistory.value.length === 0) return
-  
+
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
 
   if (confirmed) {
@@ -3525,44 +3388,31 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   if (messages.length === 0) return true
 
   loadingStatus.value = 'Summarizing story so far...'
-  const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
-
-  const systemMsg = { role: 'system', content: prompts.summarizeChunk.system }
-  const userMsg = { role: 'user', content: prompts.summarizeChunk.user.replace('${textToSummarize}', textToSummarize) }
-  const msgs = [systemMsg, userMsg]
-
+  
   try {
-    let summary = ''
-
-    if (apiProvider.value === 'perplexity') {
-      summary = await callPerplexity(msgs, false)
-    } else if (apiProvider.value === 'gemini') {
-      summary = await callGeminiSummarization(msgs, apiKey.value, model.value)
-    } else if (apiProvider.value === 'openrouter') {
-      summary = await callOpenRouterSummarization(msgs, apiKey.value, model.value)
-    } else if (apiProvider.value === 'pollinations') {
-      summary = await callPollinationsSummarization(msgs, apiKey.value, model.value)
-    } else if (apiProvider.value === 'local') {
-      summary = await callLocalSummarization(msgs, { maxTokens: localMaxTokens.value, apiKey: apiKey.value, localUrl: localUrl.value })
-    }
+    const summary = await summarizeChunkImpl(messages, {
+      apiProvider: apiProvider.value,
+      apiKey: apiKey.value,
+      model: model.value,
+      localMaxTokens: localMaxTokens.value,
+      localUrl: localUrl.value,
+      prompts
+    })
     
-    if (summary && summary.trim().length > 0) {
+    if (summary) {
       if (storySummary.value) {
         storySummary.value += '\n\n' + summary
       } else {
         storySummary.value = summary
       }
       summarizationLastError.value = null
-
+      
       return true
     }
-    summarizationLastError.value = 'Summarization returned empty output.'
-
     return false
   } catch (e) {
     console.error('Failed to summarize chunk:', e)
     summarizationLastError.value = e instanceof Error ? e.message : String(e)
-
     return false
   }
 }

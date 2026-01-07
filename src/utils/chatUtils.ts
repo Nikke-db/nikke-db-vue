@@ -3,6 +3,35 @@ import { type Ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
 
+// Helper to merge base profiles with progression overlays (personality + relationships only)
+export const getEffectiveCharacterProfiles = (base: Record<string, any>, progression: Record<string, any>): Record<string, any> => {
+  const merged: Record<string, any> = {}
+  const progressionKeys = Object.keys(progression || {})
+
+  for (const [name, profile] of Object.entries(base || {})) {
+    const outProfile = profile && typeof profile === 'object' && !Array.isArray(profile) ? { ...(profile as any) } : profile
+    const progKey = progressionKeys.find((k) => k.toLowerCase() === name.toLowerCase())
+    const update = progKey ? (progression as any)[progKey] : undefined
+
+    if (outProfile && typeof outProfile === 'object' && !Array.isArray(outProfile) && update && typeof update === 'object') {
+      if ((update as any).personality) {
+        ;(outProfile as any).personality = (update as any).personality
+      }
+
+      if ((update as any).relationships && typeof (update as any).relationships === 'object') {
+        ;(outProfile as any).relationships = {
+          ...((outProfile as any).relationships || {}),
+          ...((update as any).relationships || {})
+        }
+      }
+    }
+
+    merged[name] = outProfile
+  }
+
+  return merged
+}
+
 // Simple debug helper used across chat components
 export const logDebug = (...args: any[]) => {
   if (import.meta.env.DEV) {

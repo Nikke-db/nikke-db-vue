@@ -1,7 +1,116 @@
 // LLM utility functions for summarization and API calls
 // These functions handle higher token limits for summarization tasks
 
+import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
+
+export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]')))
+
+export const providerOptions = [
+  { label: 'Perplexity', value: 'perplexity' },
+  { label: 'Gemini', value: 'gemini' },
+  { label: 'OpenRouter', value: 'openrouter' },
+  { label: 'Pollinations', value: 'pollinations' },
+  { label: 'Local (Beta, OpenAPI)', value: 'local' }
+]
+
+export const tokenUsageOptions = [
+  { label: 'Low (10 turns)', value: 'low' },
+  { label: 'Medium (30 turns)', value: 'medium' },
+  { label: 'High (60 turns)', value: 'high' },
+  { label: 'Goddess', value: 'goddess' }
+]
+
+export const fetchOpenRouterModels = async () => {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models')
+    const data = await response.json()
+    const models = data.data
+    
+    return models.map((m: any) => {
+      const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
+
+      return {
+        label: (isFree ? '[FREE] ' : '') + m.name,
+        value: m.id,
+        isFree: isFree,
+        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+      }
+    }).sort((a: any, b: any) => {
+      if (a.isFree && !b.isFree) return -1
+      if (!a.isFree && b.isFree) return 1
+
+      return a.label.localeCompare(b.label)
+    })
+    
+  } catch (error) {
+    console.error('Failed to fetch OpenRouter models:', error)
+    return []
+  }
+}
+
+export const fetchPollinationsModels = async (apiKey?: string) => {
+  let models: any[] = []
+
+  try {
+    const headers: Record<string, string> = {}
+
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`
+    }
+    const url = apiKey ? 'https://gen.pollinations.ai/text/models' : 'https://text.pollinations.ai/models'
+    const response = await fetch(url, { headers })
+    const data = await response.json()
+    models = data
+    
+    // Handle both old format (array of strings) and new format (array of objects)
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
+      models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
+    }
+    
+    return models
+      .filter((m: any) => {
+        if (!apiKey) {
+          const allowedModels = ['gemini', 'gemini-search', 'mistral']
+          return allowedModels.includes(m.name)
+        } else {
+          const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
+          return !hiddenModels.includes(m.name)
+        }
+      })
+      .map((m: any) => {
+        const isFree = m.pricing && m.pricing.input_token_price === 0
+
+        return {
+          label: (isFree ? '[FREE] ' : '') + m.name,
+          value: m.name,
+          isFree: isFree,
+          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+        }
+      }).sort((a: any, b: any) => {
+        if (a.isFree && !b.isFree) return -1
+        if (!a.isFree && b.isFree) return 1
+
+        return a.label.localeCompare(b.label)
+      })
+    
+  } catch (error) {
+    console.error('Failed to fetch Pollinations models:', error)
+    // Fallback to hardcoded models
+    models = [
+      { name: 'gemini', pricing: { input_token_price: 0 } },
+      { name: 'gemini-search', pricing: { input_token_price: 0 } },
+      { name: 'mistral', pricing: { input_token_price: 0 } }
+    ]
+    
+    return models.map((m: any) => ({
+      label: '[FREE] ' + m.name,
+      value: m.name,
+      isFree: true,
+      style: { color: '#18a058', fontWeight: 'bold' }
+    }))
+  }
+}
 
 export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string) => {
   // Use higher max_tokens for summarization to handle long inputs
@@ -201,13 +310,12 @@ export const callPollinations = async (
     useLocalProfiles: boolean,
     allowWebSearchFallback: boolean,
     modeIsGame: boolean,
-    enableWebSearch?: boolean,
-    modelsWithoutJsonSupport: Set<string>
+    enableWebSearch?: boolean
   }
 ) => {
-  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, modeIsGame, enableWebSearch = false, modelsWithoutJsonSupport } = opts
+  const { model, apiKey, modeIsGame } = opts
 
-  if (modelsWithoutJsonSupport.has(model)) {
+  if (modelsWithoutJsonSupport.value.has(model)) {
     console.log(`Model ${model} known to not support json_schema, using text fallback...`)
     return callPollinationsWithoutJson(messages, { model, apiKey })
   }
@@ -217,7 +325,7 @@ export const callPollinations = async (
     messages: messages,
     max_tokens: 16384,
     response_format: buildStoryResponseSchema(modeIsGame),
-    tools: [] // Explicitly disable tools to avoid conflict with controlled generation (Gemini 3)
+    private: true
   }
 
   const headers: Record<string, string> = {
@@ -245,8 +353,8 @@ export const callPollinations = async (
     
     if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
-      modelsWithoutJsonSupport.add(model)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      modelsWithoutJsonSupport.value.add(model)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
       return callPollinationsWithoutJson(messages, { model, apiKey })
     }
     
@@ -339,11 +447,10 @@ export const callLocal = async (
     maxTokens?: number,
     apiKey?: string,
     localUrl: string,
-    modeIsGame: boolean,
-    modelsWithoutJsonSupport: Set<string>
+    modeIsGame: boolean
   }
 ) => {
-  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame, modelsWithoutJsonSupport } = opts
+  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame } = opts
 
   // Ensure URL ends with /chat/completions if not present
   let endpoint = localUrl.replace(/\/$/, '')
@@ -379,7 +486,7 @@ export const callLocal = async (
     return data.choices[0].message.content
   }
 
-  if (model && modelsWithoutJsonSupport.has(model)) {
+  if (model && modelsWithoutJsonSupport.value.has(model)) {
     console.log(`Model ${model} known to not support json_schema, using text fallback...`)
     return callWithoutJsonFormat()
   }
@@ -414,8 +521,8 @@ export const callLocal = async (
     if (response.status === 400 && (JSON.stringify(errorData).includes('response_format') || JSON.stringify(errorData).includes('json_schema') || JSON.stringify(errorData).includes('schema'))) {
       console.warn(`Model ${model || 'local'} does not support json_schema response format, remembering and retrying without it...`)
       if (model) {
-        modelsWithoutJsonSupport.add(model)
-        localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+        modelsWithoutJsonSupport.value.add(model)
+        localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
       }
       return callWithoutJsonFormat()
     }
@@ -466,22 +573,62 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
         // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
         choices: isGameMode
           ? {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  text: { type: 'string' },
-                  type: { type: 'string', enum: ['dialogue', 'action'] }
-                },
-                required: ['text', 'type']
-              }
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' },
+                type: { type: 'string', enum: ['dialogue', 'action'] }
+              },
+              required: ['text', 'type']
             }
+          }
           : undefined
       },
       required: isGameMode ? ['actions', 'choices'] : ['actions']
     }
   }
 })
+
+export const summarizeChunk = async (
+  messages: { role: string, content: string }[],
+  opts: {
+    apiProvider: string,
+    apiKey: string,
+    model: string,
+    localMaxTokens: number,
+    localUrl: string,
+    prompts: any
+  }
+): Promise<string> => {
+  if (messages.length === 0) return ''
+
+  const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
+
+  const systemMsg = { role: 'system', content: opts.prompts.summarizeChunk.system }
+  const userMsg = { role: 'user', content: opts.prompts.summarizeChunk.user.replace('${textToSummarize}', textToSummarize) }
+  const msgs = [systemMsg, userMsg]
+
+  let summary = ''
+
+  if (opts.apiProvider === 'perplexity') {
+    summary = await callPerplexity(msgs, { model: opts.model, apiKey: opts.apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
+  } else if (opts.apiProvider === 'gemini') {
+    summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model)
+  } else if (opts.apiProvider === 'openrouter') {
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model)
+  } else if (opts.apiProvider === 'pollinations') {
+    summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model)
+  } else if (opts.apiProvider === 'local') {
+    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl })
+  }
+
+  if (summary && summary.trim().length > 0) {
+    return summary
+  }
+  
+  throw new Error('Summarization returned empty output.')
+}
 
 // --- Exported network helpers moved from ChatInterface.vue ---
 
@@ -496,8 +643,7 @@ export const callOpenRouter = async (
     modeIsGame: boolean,
     enableWebSearch?: boolean,
     searchUrl?: string,
-    prompts: any,
-    modelsWithoutJsonSupport: Set<string>
+    prompts: any
   }
 ) => {
   const {
@@ -508,9 +654,7 @@ export const callOpenRouter = async (
     allowWebSearchFallback,
     modeIsGame,
     enableWebSearch = false,
-    searchUrl,
-    prompts,
-    modelsWithoutJsonSupport
+    prompts
   } = opts
 
   let processedMessages = messages
@@ -601,7 +745,7 @@ export const callOpenRouter = async (
     return data.choices[0].message.content
   }
 
-  if (modelsWithoutJsonSupport.has(model)) {
+  if (modelsWithoutJsonSupport.value.has(model)) {
     console.log(`Model ${model} known to not support json_object, skipping to fallback...`)
     return callWithoutJsonFormat()
   }
@@ -644,8 +788,8 @@ export const callOpenRouter = async (
 
     if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
       console.warn(`Model ${model} does not support json_object response format, remembering and retrying without it...`)
-      modelsWithoutJsonSupport.add(model)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport]))
+      modelsWithoutJsonSupport.value.add(model)
+      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
       return callWithoutJsonFormat()
     }
 
@@ -669,7 +813,7 @@ export const callPerplexity = async (
 
   if (shouldSearch) {
     if (searchUrl) {
-      const urlMatch = searchUrl.match(/https?:\/\/([^\/]+)/)
+      const urlMatch = searchUrl.match(/https?:\/\/([^/]+)/)
       if (urlMatch) {
         requestBody.search_domain_filter = [urlMatch[1]]
       }
