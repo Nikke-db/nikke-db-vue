@@ -573,6 +573,30 @@
   },
   {
     "date": "November 22nd 2025",
-    "update": "Galley: Updated chapter and albums. added chapter 41 & 42, "
+    "update": "Galley: Updated chapter and albums. added chapter 41 & 42, goddess fall and blank ticket galleries"
+  },
+  {
+    "date": "December 6th 2025",
+    "update": "Live2d: Added christmas diesel, blanc, brid and bready"
+  },
+  {
+    "date": "December 6th 2025",
+    "update": "Added the Story/Roleplaying Generator feature. Developped entirely by Rhystic1 on GitHub."
+  },
+  {
+    "date": "December 30th 2025",
+    "update": "Live2D: Added emma/quency/alice skins, added the new snow white, added the AZX Service Time animations, added the Terminus Ticket animation"
+  },
+  {
+    "date": "December 30th 2025",
+    "update": "Gallery: Added Terminus Ticket Album, added Terminus Ticket event gallery, added the AZX Service Time images"
+  },
+  {
+    "date": "December 30th 2025",
+    "update": "Fixed the new SW full body not displaying"
+  },
+  {
+    "date": "January 3rd 2026",
+    "update": "Fixed the \"Fix broken animation\" button in the layer editor, which was previously permanently hiding the control buttons once clicked."
   }
 ]

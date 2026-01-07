@@ -8,6 +8,7 @@ export const useLive2dStore = defineStore('live2d', () => {
   const filtered_l2d_Array: Ref<live2d_interface[]> = ref([])
   const current_id = ref('c010') as Ref<string>
   const current_pose = ref('fb') as Ref<'fb' | 'aim' | 'cover' | 'temp'>
+  const f = ref('')
   const resetPlacement = ref(0)
   const isExportingAnimation = ref(false)
   const exportAnimationTimestamp = ref(0)
@@ -73,6 +74,7 @@ export const useLive2dStore = defineStore('live2d', () => {
 
   const change_current_spine = (newSpine: live2d_interface) => {
     current_id.value = newSpine.id
+    f.value = newSpine.f ? newSpine.f : ''
   }
 
   const triggerResetPlacement = () => {
@@ -157,6 +159,8 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c043_02':
       case 'c017':
       case 'c074':
+      case 'c270_03':
+      case 'c075':
         return 'acc'
       case 'c015':
       case 'c351':
@@ -189,6 +193,9 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c016_01':
       case 'c272_01':
       case 'c223':
+      case 'c403_01':
+      case 'c191_02':
+      case 'c471':
         return 'bg'
       case 'c441':
         return 'acc+bg' // merged acc & bg skins of Avista, by Bingle
@@ -333,6 +340,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     triggerFinishedLoading,
     layerEditorPreviewObj,
     layerPreviewMode,
-    triggerLayerPreviewMode
+    triggerLayerPreviewMode,
+    f
   }
 })

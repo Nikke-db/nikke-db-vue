@@ -54,4 +54,9 @@ const props = defineProps({
   background: #87ceeb;
   color: black;
 }
+
+.skyblue2 {
+  background: #52f8f2;
+  color: black;
+}
 </style>
