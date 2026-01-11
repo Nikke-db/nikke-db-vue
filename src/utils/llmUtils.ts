@@ -26,23 +26,24 @@ export const fetchOpenRouterModels = async () => {
     const response = await fetch('https://openrouter.ai/api/v1/models')
     const data = await response.json()
     const models = data.data
-    
-    return models.map((m: any) => {
-      const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
 
-      return {
-        label: (isFree ? '[FREE] ' : '') + m.name,
-        value: m.id,
-        isFree: isFree,
-        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-      }
-    }).sort((a: any, b: any) => {
-      if (a.isFree && !b.isFree) return -1
-      if (!a.isFree && b.isFree) return 1
+    return models
+      .map((m: any) => {
+        const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
 
-      return a.label.localeCompare(b.label)
-    })
-    
+        return {
+          label: (isFree ? '[FREE] ' : '') + m.name,
+          value: m.id,
+          isFree: isFree,
+          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
+        }
+      })
+      .sort((a: any, b: any) => {
+        if (a.isFree && !b.isFree) return -1
+        if (!a.isFree && b.isFree) return 1
+
+        return a.label.localeCompare(b.label)
+      })
   } catch (error) {
     console.error('Failed to fetch OpenRouter models:', error)
     return []
@@ -62,12 +63,12 @@ export const fetchPollinationsModels = async (apiKey?: string) => {
     const response = await fetch(url, { headers })
     const data = await response.json()
     models = data
-    
+
     // Handle both old format (array of strings) and new format (array of objects)
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
       models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
     }
-    
+
     return models
       .filter((m: any) => {
         if (!apiKey) {
@@ -87,13 +88,13 @@ export const fetchPollinationsModels = async (apiKey?: string) => {
           isFree: isFree,
           style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
         }
-      }).sort((a: any, b: any) => {
+      })
+      .sort((a: any, b: any) => {
         if (a.isFree && !b.isFree) return -1
         if (!a.isFree && b.isFree) return 1
 
         return a.label.localeCompare(b.label)
       })
-    
   } catch (error) {
     console.error('Failed to fetch Pollinations models:', error)
     // Fallback to hardcoded models
@@ -102,7 +103,7 @@ export const fetchPollinationsModels = async (apiKey?: string) => {
       { name: 'gemini-search', pricing: { input_token_price: 0 } },
       { name: 'mistral', pricing: { input_token_price: 0 } }
     ]
-    
+
     return models.map((m: any) => ({
       label: '[FREE] ' + m.name,
       value: m.name,
@@ -123,7 +124,7 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'HTTP-Referer': window.location.href,
       'X-Title': 'Nikke DB Story Gen',
       'Content-Type': 'application/json'
@@ -142,7 +143,7 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
       const retryResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'HTTP-Referer': window.location.href,
           'X-Title': 'Nikke DB Story Gen',
           'Content-Type': 'application/json'
@@ -164,11 +165,11 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
   return data.choices[0].message.content
 }
 
-export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string) => {
+export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false) => {
   // Use higher max_tokens for summarization to handle long inputs
   const requestBody: any = {
     model: model,
-    messages: messages,
+    messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
     max_tokens: 16384 // Double the normal limit for summarization
   }
 
@@ -305,29 +306,35 @@ export const callGeminiSummarization = async (messages: any[], apiKey: string, m
 export const callPollinations = async (
   messages: any[],
   opts: {
-    model: string,
-    apiKey?: string,
-    useLocalProfiles: boolean,
-    allowWebSearchFallback: boolean,
-    modeIsGame: boolean,
+    model: string
+    apiKey?: string
+    useLocalProfiles: boolean
+    allowWebSearchFallback: boolean
+    modeIsGame: boolean
     enableWebSearch?: boolean
+    reasoningEffort?: string
+    enableContextCaching?: boolean
   }
 ) => {
-  const { model, apiKey, modeIsGame } = opts
+  const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching } = opts
 
   if (modelsWithoutJsonSupport.value.has(model)) {
     console.log(`Model ${model} known to not support json_schema, using text fallback...`)
-    return callPollinationsWithoutJson(messages, { model, apiKey })
+    return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching })
   }
 
   const requestBody: any = {
     model: model,
-    messages: messages,
+    messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
     max_tokens: 16384,
     response_format: buildStoryResponseSchema(modeIsGame),
     private: true
   }
 
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning_effort = reasoningEffort
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
@@ -346,18 +353,18 @@ export const callPollinations = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     console.error('Pollinations API Error Details:', errorData)
-    
+
     if (response.status === 429) {
       throw new Error('RATE_LIMITED')
     }
-    
+
     if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
       localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
-      return callPollinationsWithoutJson(messages, { model, apiKey })
+      return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching })
     }
-    
+
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
@@ -365,16 +372,17 @@ export const callPollinations = async (
   return data.choices[0].message.content
 }
 
-export const callPollinationsWithoutJson = async (
-  messages: any[],
-  opts: { model: string, apiKey?: string }
-) => {
-  const { model, apiKey } = opts
+export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean }) => {
+  const { model, apiKey, reasoningEffort, enableContextCaching } = opts
 
   const requestBody: any = {
     model: model,
-    messages: messages,
+    messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
     max_tokens: 16384
+  }
+
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning_effort = reasoningEffort
   }
 
   const headers: Record<string, string> = {
@@ -405,9 +413,9 @@ export const callPollinationsWithoutJson = async (
   return data.choices[0].message.content
 }
 
-export const callLocalSummarization = async (messages: any[], opts: { model?: string, maxTokens?: number, apiKey?: string, localUrl: string }) => {
+export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string }) => {
   const { model, maxTokens = 16384, apiKey, localUrl } = opts
-  
+
   let endpoint = localUrl.replace(/\/$/, '')
   if (!endpoint.endsWith('/chat/completions')) {
     endpoint = `${endpoint}/chat/completions`
@@ -443,10 +451,10 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
 export const callLocal = async (
   messages: any[],
   opts: {
-    model?: string,
-    maxTokens?: number,
-    apiKey?: string,
-    localUrl: string,
+    model?: string
+    maxTokens?: number
+    apiKey?: string
+    localUrl: string
     modeIsGame: boolean
   }
 ) => {
@@ -492,7 +500,7 @@ export const callLocal = async (
   }
 
   const responseSchema = buildStoryResponseSchema(modeIsGame)
-  
+
   const requestBody: any = {
     messages: messages,
     max_tokens: maxTokens,
@@ -536,13 +544,7 @@ export const callLocal = async (
 
 // Helper: filter out internal/unsupported animations
 export const getFilteredAnimations = (animations?: string[]) => {
-  return (animations || []).filter((a) =>
-    a !== 'talk' &&
-    a !== 'talk_start' &&
-    a !== 'talk_end' &&
-    a !== 'expression_0' &&
-    a !== 'action'
-  )
+  return (animations || []).filter((a) => a !== 'talk' && a !== 'talk_start' && a !== 'talk_end' && a !== 'expression_0' && a !== 'action')
 }
 
 // Structured output schema builder (used by ChatInterface for OpenRouter/Pollinations JSON schema mode)
@@ -573,16 +575,16 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
         // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
         choices: isGameMode
           ? {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' },
-                type: { type: 'string', enum: ['dialogue', 'action'] }
-              },
-              required: ['text', 'type']
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  text: { type: 'string' },
+                  type: { type: 'string', enum: ['dialogue', 'action'] }
+                },
+                required: ['text', 'type']
+              }
             }
-          }
           : undefined
       },
       required: isGameMode ? ['actions', 'choices'] : ['actions']
@@ -591,16 +593,17 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
 })
 
 export const summarizeChunk = async (
-  messages: { role: string, content: string }[],
+  messages: { role: string; content: string }[],
   opts: {
-    apiProvider: string,
-    apiKey: string,
-    model: string,
-    localMaxTokens: number,
-    localUrl: string,
+    apiProvider: string
+    apiKey: string
+    model: string
+    localMaxTokens: number
+    localUrl: string
     prompts: any
+    enableContextCaching?: boolean
   }
-): Promise<string> => {
+) => {
   if (messages.length === 0) return ''
 
   const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
@@ -618,7 +621,7 @@ export const summarizeChunk = async (
   } else if (opts.apiProvider === 'openrouter') {
     summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model)
   } else if (opts.apiProvider === 'pollinations') {
-    summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model)
+    summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching)
   } else if (opts.apiProvider === 'local') {
     summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl })
   }
@@ -626,7 +629,7 @@ export const summarizeChunk = async (
   if (summary && summary.trim().length > 0) {
     return summary
   }
-  
+
   throw new Error('Summarization returned empty output.')
 }
 
@@ -635,27 +638,19 @@ export const summarizeChunk = async (
 export const callOpenRouter = async (
   messages: any[],
   opts: {
-    model: string,
-    apiKey: string,
-    enableContextCaching: boolean,
-    useLocalProfiles: boolean,
-    allowWebSearchFallback: boolean,
-    modeIsGame: boolean,
-    enableWebSearch?: boolean,
-    searchUrl?: string,
+    model: string
+    apiKey: string
+    enableContextCaching: boolean
+    useLocalProfiles: boolean
+    allowWebSearchFallback: boolean
+    modeIsGame: boolean
+    enableWebSearch?: boolean
+    searchUrl?: string
     prompts: any
+    reasoningEffort?: string
   }
 ) => {
-  const {
-    model,
-    apiKey,
-    enableContextCaching,
-    useLocalProfiles,
-    allowWebSearchFallback,
-    modeIsGame,
-    enableWebSearch = false,
-    prompts
-  } = opts
+  const { model, apiKey, enableContextCaching, useLocalProfiles, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort } = opts
 
   let processedMessages = messages
 
@@ -696,10 +691,7 @@ export const callOpenRouter = async (
     }
   }
 
-  const messagesWithEnforcement = [
-    ...processedMessages,
-    { role: 'user', content: prompts.reminders.jsonEnforcement }
-  ]
+  const messagesWithEnforcement = [...processedMessages, { role: 'user', content: prompts.reminders.jsonEnforcement }]
 
   const buildWebPlugin = () => {
     if (!enableWebSearch) return undefined
@@ -714,6 +706,13 @@ export const callOpenRouter = async (
       max_tokens: 16384
     }
 
+    if (reasoningEffort && reasoningEffort !== 'default') {
+      requestBody.reasoning = {
+        effort: reasoningEffort,
+        exclude: true
+      }
+    }
+
     const webPlugin = buildWebPlugin()
     if (webPlugin) {
       requestBody.plugins = webPlugin
@@ -722,7 +721,7 @@ export const callOpenRouter = async (
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'HTTP-Referer': window.location.href,
         'X-Title': 'Nikke DB Story Gen',
         'Content-Type': 'application/json'
@@ -760,6 +759,13 @@ export const callOpenRouter = async (
     provider: { require_parameters: true }
   }
 
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: reasoningEffort,
+      exclude: true
+    }
+  }
+
   let plugins: any[] = []
   const webPlugin = buildWebPlugin()
   if (webPlugin) plugins = [...webPlugin]
@@ -770,7 +776,7 @@ export const callOpenRouter = async (
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'HTTP-Referer': window.location.href,
       'X-Title': 'Nikke DB Story Gen',
       'Content-Type': 'application/json'
@@ -801,10 +807,7 @@ export const callOpenRouter = async (
   return data.choices[0].message.content
 }
 
-export const callPerplexity = async (
-  messages: any[],
-  opts: { model: string, apiKey: string, useLocalProfiles: boolean, allowWebSearchFallback: boolean, enableWebSearch?: boolean, searchUrl?: string }
-) => {
+export const callPerplexity = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; searchUrl?: string }) => {
   const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, searchUrl } = opts
 
   const requestBody: any = { model: model, messages: messages }
@@ -826,7 +829,7 @@ export const callPerplexity = async (
 
   const response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody)
   })
 
@@ -840,11 +843,8 @@ export const callPerplexity = async (
   return data.choices[0].message.content
 }
 
-export const callGemini = async (
-  messages: any[],
-  opts: { model: string, apiKey: string, useLocalProfiles: boolean, allowWebSearchFallback: boolean, enableWebSearch?: boolean }
-) => {
-  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false } = opts
+export const callGemini = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; reasoningEffort?: string }) => {
+  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, reasoningEffort } = opts
 
   const hasSystemMessage = messages.length > 1 || messages[0]?.role === 'system'
 
@@ -866,6 +866,90 @@ export const callGemini = async (
     contents: contents,
     generationConfig: {
       responseMimeType: shouldSearch ? undefined : 'application/json'
+    }
+  }
+
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    if (model.includes('gemini-2.5')) {
+      // Gemini 2.5: Use thinkingBudget
+      let budget = 4096 // Default
+      switch (reasoningEffort) {
+        case 'minimal':
+          budget = 1024
+          break
+        case 'low':
+          budget = 2048
+          break
+        case 'medium':
+          budget = 8192
+          break
+        case 'high':
+          budget = 16384
+          break
+        case 'xhigh':
+          budget = 32768
+          break
+        default:
+          budget = 4096
+      }
+
+      requestBody.generationConfig.thinkingConfig = {
+        includeThoughts: false,
+        thinkingBudget: budget
+      }
+    } else if (model.includes('gemini-3')) {
+      // Gemini 3: Use thinkingLevel
+      let level = 'LOW' // Default
+      const isFlash = model.includes('flash')
+
+      if (isFlash) {
+        // Flash supports MINIMAL, LOW, MEDIUM, HIGH
+        switch (reasoningEffort) {
+          case 'minimal':
+            level = 'MINIMAL'
+            break
+          case 'low':
+            level = 'LOW'
+            break
+          case 'medium':
+            level = 'MEDIUM'
+            break
+          case 'high':
+            level = 'HIGH'
+            break
+          case 'xhigh':
+            level = 'HIGH'
+            break
+          default:
+            level = 'LOW'
+        }
+      } else {
+        // Pro supports LOW, HIGH
+        switch (reasoningEffort) {
+          case 'minimal':
+            level = 'LOW'
+            break
+          case 'low':
+            level = 'LOW'
+            break
+          case 'medium':
+            level = 'HIGH'
+            break // Map medium to high for Pro
+          case 'high':
+            level = 'HIGH'
+            break
+          case 'xhigh':
+            level = 'HIGH'
+            break
+          default:
+            level = 'LOW'
+        }
+      }
+
+      requestBody.generationConfig.thinkingConfig = {
+        includeThoughts: false,
+        thinkingLevel: level
+      }
     }
   }
 
@@ -919,14 +1003,14 @@ export const callGemini = async (
 export const enrichActionsWithAnimations = async (
   actions: any[],
   opts: {
-    apiProvider: string,
-    apiKey: string,
-    model?: string,
-    maxTokens?: number,
-    currentCharacterId: string,
-    filteredAnimations: string[],
-    animationEnrichmentPrompt: string,
-    preserveExistingAnimations?: boolean,
+    apiProvider: string
+    apiKey: string
+    model?: string
+    maxTokens?: number
+    currentCharacterId: string
+    filteredAnimations: string[]
+    animationEnrichmentPrompt: string
+    preserveExistingAnimations?: boolean
     localUrl?: string
   }
 ): Promise<any[]> => {
@@ -945,7 +1029,14 @@ export const enrichActionsWithAnimations = async (
     .replace('{currentCharacterId}', currentCharacterId)
     .replace('{filteredAnimations}', JSON.stringify(filteredAnimations))
     .replace('{animationMappings}', JSON.stringify(animationMappings, null, 2))
-    .replace('{actions}', JSON.stringify(actions.map((a, i) => ({ index: i, text: a.text, character: a.character, speaking: Boolean(a.speaking) })), null, 2))
+    .replace(
+      '{actions}',
+      JSON.stringify(
+        actions.map((a, i) => ({ index: i, text: a.text, character: a.character, speaking: Boolean(a.speaking) })),
+        null,
+        2
+      )
+    )
 
   const messages = [{ role: 'user', content: prompt }]
   let enrichedActions: any[] = []
@@ -965,8 +1056,7 @@ export const enrichActionsWithAnimations = async (
         useLocalProfiles: false,
         allowWebSearchFallback: false,
         modeIsGame: false,
-        prompts: {} as any, // Not needed for this call
-        modelsWithoutJsonSupport: new Set()
+        prompts: {} as any // Not needed for this call
       })
     } else if (apiProvider === 'pollinations') {
       response = await callPollinations(messages, {
@@ -974,8 +1064,7 @@ export const enrichActionsWithAnimations = async (
         apiKey,
         useLocalProfiles: false,
         allowWebSearchFallback: false,
-        modeIsGame: false,
-        modelsWithoutJsonSupport: new Set()
+        modeIsGame: false
       })
     } else if (apiProvider === 'local' && localUrl) {
       response = await callLocal(messages, {
@@ -983,8 +1072,7 @@ export const enrichActionsWithAnimations = async (
         maxTokens,
         apiKey,
         localUrl,
-        modeIsGame: false,
-        modelsWithoutJsonSupport: new Set()
+        modeIsGame: false
       })
     } else {
       return actions
@@ -1055,11 +1143,8 @@ export const enrichActionsWithAnimations = async (
 
     if (isShouting) {
       // Prefer high-intensity variants: angry_02, then shock, then angry
-      const bestHighIntensity = 
-        filteredAnimations.find((a) => a.toLowerCase().includes('angry_02')) ||
-        filteredAnimations.find((a) => a.toLowerCase().includes('shock')) ||
-        filteredAnimations.find((a) => a.toLowerCase().includes('angry'))
-      
+      const bestHighIntensity = filteredAnimations.find((a) => a.toLowerCase().includes('angry_02')) || filteredAnimations.find((a) => a.toLowerCase().includes('shock')) || filteredAnimations.find((a) => a.toLowerCase().includes('angry'))
+
       if (bestHighIntensity) {
         return { ...action, animation: bestHighIntensity }
       } else if (action.character !== currentCharacterId) {

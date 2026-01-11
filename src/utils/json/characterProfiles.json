@@ -63,6 +63,7 @@
       "Mast": "Anchor and Mast are subordinates to Helm within the Aegis squad and have a close, collaborative relationship. Anchor's skills are specifically designed to synergize with Mast's, preventing Mast from stunning herself. In her 'Innocent Maid' attire, Anchor mentions that Mast told her what to say, suggesting a dynamic where Mast sometimes guides or directs her. Mast also playfully teases Anchor, for instance by poking her belly fat.",
       "Helm": "Anchor is a subordinate to Helm, who is the captain of the Admire and leader of the Aegis squad. Helm runs a tight ship and demands discipline, often clashing with Anchor's more whimsical and sea-focused nature. Despite Helm's strictness, Anchor seems to respect her as her leader. In one instance, Anchor is concerned about Helm getting mad at her for playing with starfish. Anchor also mentions Helm in her 'Innocent Maid' version, indicating an awareness of her leader's presence and standards even when off-duty."
     },
+    "id": "c351",
     "color": "#22408c"
   },
   "Anis": {
@@ -630,6 +631,7 @@
       "Viper": "Maintains a professional and tense respect for Viper, whom she refers to simply as 'Viper.' Their dynamic is one of cautious equals, with a shared understanding of the darker aspects of their world and an undercurrent of rivalry.",
       "Crow": "Openly despises Crow's chaotic and destructive nature, viewing her as a liability. She refers to her with disdainful nicknames like 'Clown' or 'Jester' and is openly hostile and dismissive in her presence."
     },
+    "id": "c851",
     "color": "#889dcb"
   },
   "Red Hood": {
