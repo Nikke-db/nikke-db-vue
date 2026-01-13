@@ -7,11 +7,10 @@ import { animationMappings } from '@/utils/animationMappings'
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]')))
 
 export const providerOptions = [
-  { label: 'Perplexity', value: 'perplexity' },
   { label: 'Gemini', value: 'gemini' },
   { label: 'OpenRouter', value: 'openrouter' },
   { label: 'Pollinations', value: 'pollinations' },
-  { label: 'Local (Beta, OpenAPI)', value: 'local' }
+  { label: 'Local (Beta, OpenAI)', value: 'local' }
 ]
 
 export const tokenUsageOptions = [
@@ -575,16 +574,16 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
         // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
         choices: isGameMode
           ? {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  text: { type: 'string' },
-                  type: { type: 'string', enum: ['dialogue', 'action'] }
-                },
-                required: ['text', 'type']
-              }
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' },
+                type: { type: 'string', enum: ['dialogue', 'action'] }
+              },
+              required: ['text', 'type']
             }
+          }
           : undefined
       },
       required: isGameMode ? ['actions', 'choices'] : ['actions']
@@ -614,9 +613,7 @@ export const summarizeChunk = async (
 
   let summary = ''
 
-  if (opts.apiProvider === 'perplexity') {
-    summary = await callPerplexity(msgs, { model: opts.model, apiKey: opts.apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
-  } else if (opts.apiProvider === 'gemini') {
+  if (opts.apiProvider === 'gemini') {
     summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model)
   } else if (opts.apiProvider === 'openrouter') {
     summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model)
@@ -804,42 +801,6 @@ export const callOpenRouter = async (
 
   const data = await response.json()
 
-  return data.choices[0].message.content
-}
-
-export const callPerplexity = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; searchUrl?: string }) => {
-  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, searchUrl } = opts
-
-  const requestBody: any = { model: model, messages: messages }
-
-  const shouldSearch = enableWebSearch && !(useLocalProfiles && !allowWebSearchFallback)
-
-  if (shouldSearch) {
-    if (searchUrl) {
-      const urlMatch = searchUrl.match(/https?:\/\/([^/]+)/)
-      if (urlMatch) {
-        requestBody.search_domain_filter = [urlMatch[1]]
-      }
-    }
-
-    requestBody.web_search_options = { search_context_size: 'medium' }
-  } else {
-    requestBody.disable_search = true
-  }
-
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody)
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Perplexity API Error Details:', errorData)
-    throw new Error(`Perplexity API Error: ${response.status} ${JSON.stringify(errorData)}`)
-  }
-
-  const data = await response.json()
   return data.choices[0].message.content
 }
 
@@ -1044,9 +1005,7 @@ export const enrichActionsWithAnimations = async (
   try {
     let response: string
 
-    if (apiProvider === 'perplexity') {
-      response = await callPerplexity(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
-    } else if (apiProvider === 'gemini') {
+    if (apiProvider === 'gemini') {
       response = await callGemini(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
     } else if (apiProvider === 'openrouter') {
       response = await callOpenRouter(messages, {

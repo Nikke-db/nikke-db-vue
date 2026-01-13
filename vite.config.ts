@@ -27,7 +27,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/gptsovits/, '')
       },
       '/chatterbox': {
-        target: 'http://127.0.0.1:7860',
+        target: 'http://127.0.0.1:4123',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/chatterbox/, '')
       }

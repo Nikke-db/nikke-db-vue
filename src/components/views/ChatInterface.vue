@@ -117,6 +117,10 @@
               <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
               <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
             </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <n-checkbox v-model:checked="incorrectAnimationsToggle">Incorrect or Lazy Animations</n-checkbox>
+              <n-checkbox v-model:checked="incorrectAnimationsPersist" size="small">Persist</n-checkbox>
+            </div>
             <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
             <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
             <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
@@ -520,26 +524,7 @@
           </n-form-item>
 
           <n-form-item label="Chatterbox Endpoint" v-if="ttsEnabled && ttsProvider === 'chatterbox'">
-            <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:7860" />
-          </n-form-item>
-
-          <n-form-item v-if="ttsEnabled && ttsProvider === 'chatterbox'">
-            <template #label>
-              Chatterbox Voices Path
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  Path to your Chatterbox voices folder.<br />
-                  Voice files should be placed at: <code>{voicesPath}/{character}.wav</code><br />
-                  Example: <code>anis.wav</code>, <code>neon.wav</code>, etc.
-                </div>
-              </n-popover>
-            </template>
-            <n-input v-model:value="chatterboxVoicesPath" placeholder="C:/chatterbox-tts-api/voices" />
+            <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:4123" />
           </n-form-item>
           <n-divider />
         </n-form>
@@ -557,7 +542,7 @@
           <div class="guide-section">
             <h4>🔑 API Setup</h4>
             <ul>
-              <li><strong>Providers:</strong> Supports <strong>Perplexity</strong>, <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
+              <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
               <li><strong>Pollinations:</strong> Can be used without a key, but with limited models and rate limits.</li>
               <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
               <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
@@ -611,7 +596,7 @@
             <ul>
               <li><strong>Nikke-DB Knowledge:</strong> Uses built-in character profiles for better accuracy and lower costs.</li>
               <li><strong>AI Memory:</strong> The AI can track <strong>Character Progression</strong>, updating personalities and relationships as the story develops.</li>
-              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by Perplexity and some OpenRouter models) or fetch from the Nikke Wiki.</li>
+              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by some OpenRouter models) or fetch from the Nikke Wiki.</li>
               <li><strong>Local Models:</strong> Connect to your own local LLM server (like LM Studio or Ollama) via the <strong>Local</strong> provider.</li>
             </ul>
           </div>
@@ -667,9 +652,9 @@ import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
 import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
-import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
-import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
+import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
+import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 
@@ -683,7 +668,7 @@ const showSettings = ref(false)
 const showGuide = ref(false)
 const guidePage = ref(1)
 const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
-const apiProvider = ref('perplexity')
+const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
 const localMaxTokens = ref(Number(localStorage.getItem('nikke_local_max_tokens')) || 8192)
@@ -928,6 +913,8 @@ const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
 const wrongSpeechStylesToggle = ref(false)
+const incorrectAnimationsToggle = ref(false)
+const incorrectAnimationsPersist = ref(false)
 
 watch(invalidJsonPersist, (val) => {
   if (val) {
@@ -938,6 +925,18 @@ watch(invalidJsonPersist, (val) => {
 watch(invalidJsonToggle, (val) => {
   if (!val) {
     invalidJsonPersist.value = false
+  }
+})
+
+watch(incorrectAnimationsPersist, (val) => {
+  if (val) {
+    incorrectAnimationsToggle.value = true
+  }
+})
+
+watch(incorrectAnimationsToggle, (val) => {
+  if (!val) {
+    incorrectAnimationsPersist.value = false
   }
 })
 
@@ -952,12 +951,7 @@ const setRandomLoadingMessage = () => {
 // Handled by llmUtils.ts
 
 const modelOptions = computed(() => {
-  if (apiProvider.value === 'perplexity') {
-    return [
-      { label: 'Sonar', value: 'sonar' },
-      { label: 'Sonar Pro', value: 'sonar-pro' }
-    ]
-  } else if (apiProvider.value === 'gemini') {
+  if (apiProvider.value === 'gemini') {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
@@ -1085,10 +1079,6 @@ watch(chatterboxEndpoint, (newVal) => {
   localStorage.setItem('nikke_chatterbox_endpoint', newVal)
 })
 
-watch(chatterboxVoicesPath, (newVal) => {
-  localStorage.setItem('nikke_chatterbox_voices_path', newVal)
-})
-
 watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
 })
@@ -1121,9 +1111,7 @@ watch(apiProvider, async (newVal) => {
   reasoningEffort.value = 'default'
 
   // Reset model when provider changes
-  if (apiProvider.value === 'perplexity') {
-    model.value = 'sonar'
-  } else if (apiProvider.value === 'gemini') {
+  if (apiProvider.value === 'gemini') {
     model.value = 'gemini-2.5-flash'
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
@@ -1194,9 +1182,6 @@ const initializeSettings = async () => {
 
   const savedChatterboxEndpoint = localStorage.getItem('nikke_chatterbox_endpoint')
   if (savedChatterboxEndpoint) chatterboxEndpoint.value = savedChatterboxEndpoint
-
-  const savedChatterboxVoicesPath = localStorage.getItem('nikke_chatterbox_voices_path')
-  if (savedChatterboxVoicesPath) chatterboxVoicesPath.value = savedChatterboxVoicesPath
 
   const savedTokenUsage = localStorage.getItem('nikke_token_usage')
   if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
@@ -1931,6 +1916,9 @@ const sendMessage = async () => {
     if (!invalidJsonPersist.value) {
       invalidJsonToggle.value = false
     }
+    if (!incorrectAnimationsPersist.value) {
+      incorrectAnimationsToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -1996,6 +1984,9 @@ const retryLastMessage = async () => {
   if (success) {
     if (!invalidJsonPersist.value) {
       invalidJsonToggle.value = false
+    }
+    if (!incorrectAnimationsPersist.value) {
+      incorrectAnimationsToggle.value = false
     }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
@@ -2109,6 +2100,9 @@ const continueStory = async () => {
     if (!invalidJsonPersist.value) {
       invalidJsonToggle.value = false
     }
+    if (!incorrectAnimationsPersist.value) {
+      incorrectAnimationsToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -2121,39 +2115,36 @@ const continueStory = async () => {
   flushPendingGameChoice()
 }
 
-// Helper to inject user-toggled reminders into the last user message
-const injectUserReminders = (messages: any[]): any[] => {
+// Helper to get user-toggled reminders string
+const getUserReminders = (): string => {
   let reminders = ''
 
   if (invalidJsonToggle.value) {
     reminders += '\n\n' + prompts.reminders.invalidJsonReminder
+    if (!invalidJsonPersist.value) invalidJsonToggle.value = false
   }
   if (honorificsToggle.value) {
     reminders += '\n\n' + prompts.reminders.honorificsReminder
+    honorificsToggle.value = false // No persist for honorifics
   }
   if (narrationAndDialogueNotSplitToggle.value) {
     reminders += '\n\n' + prompts.reminders.narrationAndDialogueNotSplit
+    narrationAndDialogueNotSplitToggle.value = false // No persist
   }
   if (aiControllingUserToggle.value) {
     reminders += '\n\n' + prompts.reminders.aiControllingUserReminder
+    aiControllingUserToggle.value = false // No persist
   }
   if (wrongSpeechStylesToggle.value) {
     reminders += '\n\n' + prompts.reminders.wrongSpeechStylesReminder
+    wrongSpeechStylesToggle.value = false // No persist
+  }
+  if (incorrectAnimationsToggle.value) {
+    reminders += '\n\n' + prompts.reminders.incorrectAnimationsReminder
+    if (!incorrectAnimationsPersist.value) incorrectAnimationsToggle.value = false
   }
 
-  if (!reminders) return messages
-
-  const result = [...messages]
-  // Find the last user message
-  for (let i = result.length - 1; i >= 0; i--) {
-    if (result[i].role === 'user') {
-      result[i] = { ...result[i], content: result[i].content + reminders }
-
-      break
-    }
-  }
-
-  return result
+  return reminders
 }
 
 const callAI = async (isRetry: boolean = false): Promise<string> => {
@@ -2288,91 +2279,48 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   let response: string
 
-  if (apiProvider.value === 'perplexity') {
-    // Perplexity: Merge context into system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+  // Get user toggled reminders
+  const reminders = getUserReminders()
 
-    // Sanitize history for Perplexity (Strict alternation required)
-    // 1. Filter out system messages from history (we provide our own system prompt)
-    // 2. Merge consecutive messages of the same role
-    const rawHistory = historyToSend.filter((m) => m.role !== 'system')
-    const sanitizedHistory: any[] = []
-
-    if (rawHistory.length > 0) {
-      let currentMsg = { role: rawHistory[0].role, content: rawHistory[0].content }
-
-      for (let i = 1; i < rawHistory.length; i++) {
-        const msg = rawHistory[i]
-        if (msg.role === currentMsg.role) {
-          currentMsg.content += '\n\n' + msg.content
-        } else {
-          sanitizedHistory.push(currentMsg)
-          currentMsg = { role: msg.role, content: msg.content }
-        }
-      }
-      sanitizedHistory.push(currentMsg)
-    }
-
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...sanitizedHistory]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
-
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
-
-    logDebug('Sending to Perplexity:', messages)
-    response = await callPerplexity(messages, undefined, enableWebSearch)
-  } else if (apiProvider.value === 'gemini') {
+  if (apiProvider.value === 'gemini') {
     // Gemini: Original behavior (context as separate message at end)
     let messages = [{ role: 'system', content: systemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     messages.push({
       role: 'system',
-      content: contextMsg + retryInstruction
+      content: contextMsg + retryInstruction + reminders
     })
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
 
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
 
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, undefined, enableWebSearch)
   } else if (apiProvider.value === 'pollinations') {
     // Pollinations: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
 
     logDebug('Sending to Pollinations:', messages)
     response = await callPollinations(messages, enableWebSearch)
   } else if (apiProvider.value === 'local') {
     // Local: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
 
     logDebug('Sending to Local:', messages)
     response = await callLocal(messages)
@@ -2408,6 +2356,9 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
   const filteredAnimations = getFilteredAnimations(market.live2d.animations)
   let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+
+  // Get user toggled reminders
+  const reminders = getUserReminders()
 
   // Optimization: Limit history to prevent token overflow
   // Tumbling window: Summarize every X turns
@@ -2461,50 +2412,22 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
 
-  if (apiProvider.value === 'perplexity') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    const rawHistory = historyToSend.filter((m) => m.role !== 'system')
-    const sanitizedHistory: any[] = []
-
-    if (rawHistory.length > 0) {
-      let currentMsg = { role: rawHistory[0].role, content: rawHistory[0].content }
-      for (let i = 1; i < rawHistory.length; i++) {
-        const msg = rawHistory[i]
-        if (msg.role === currentMsg.role) {
-          currentMsg.content += '\n\n' + msg.content
-        } else {
-          sanitizedHistory.push(currentMsg)
-          currentMsg = { role: msg.role, content: msg.content }
-        }
-      }
-      sanitizedHistory.push(currentMsg)
-    }
-
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...sanitizedHistory]
-
-    const messagesWithReminders = injectUserReminders(messages)
-
-    return await callPerplexity(messagesWithReminders, undefined, false)
-  } else if (apiProvider.value === 'gemini') {
+  if (apiProvider.value === 'gemini') {
     const messages = [{ role: 'system', content: systemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages.push({ role: 'system', content: contextMsg + retryInstruction })
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callGemini(messagesWithReminders, false)
+    messages.push({ role: 'system', content: contextMsg + retryInstruction + reminders })
+    return await callGemini(messages, false)
   } else if (apiProvider.value === 'openrouter') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
     const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callOpenRouter(messagesWithReminders, undefined, false)
+    return await callOpenRouter(messages, undefined, false)
   } else if (apiProvider.value === 'pollinations') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
     const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callPollinations(messagesWithReminders, false)
+    return await callPollinations(messages, false)
   } else if (apiProvider.value === 'local') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
     const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callLocal(messagesWithReminders)
+    return await callLocal(messages)
   }
 
   throw new Error('Unknown API provider')
@@ -2563,10 +2486,6 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
 // Its code is open-sourced and available in the
 
 // Wrapper functions for web search
-const wrappedSearchForCharactersPerplexity = async (characterNames: string[]) => {
-  return searchForCharactersPerplexity(characterNames, characterProfiles.value, callPerplexity)
-}
-
 const wrappedSearchForCharactersWithNativeSearch = async (characterNames: string[]) => {
   return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
 }
@@ -2576,7 +2495,7 @@ const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) 
 }
 
 const wrappedSearchForCharacters = async (characterNames: string[]) => {
-  return searchForCharacters(characterNames, characterProfiles.value, useLocalProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersPerplexity, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
+  return searchForCharacters(characterNames, characterProfiles.value, useLocalProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
@@ -2662,17 +2581,6 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     searchUrl,
     prompts,
     reasoningEffort: reasoningEffort.value
-  })
-}
-
-const callPerplexity = async (messages: any[], searchUrl?: string, enableWebSearch: boolean = false) => {
-  return await callPerplexityImpl(messages, {
-    model: model.value,
-    apiKey: apiKey.value,
-    useLocalProfiles: useLocalProfiles.value,
-    allowWebSearchFallback: allowWebSearchFallback.value,
-    enableWebSearch: enableWebSearch,
-    searchUrl: searchUrl
   })
 }
 
