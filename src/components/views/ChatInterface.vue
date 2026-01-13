@@ -672,7 +672,7 @@ const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
 const localMaxTokens = ref(Number(localStorage.getItem('nikke_local_max_tokens')) || 8192)
-const model = ref('sonar')
+const model = ref('')
 const mode = ref('roleplay')
 const tokenUsage = ref('medium')
 const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
@@ -1208,9 +1208,7 @@ const initializeSettings = async () => {
     // Validate and set model
     let validModels: string[] = []
 
-    if (savedProvider === 'perplexity') {
-      validModels = ['sonar', 'sonar-pro']
-    } else if (savedProvider === 'gemini') {
+    if (savedProvider === 'gemini') {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
     } else if (savedProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
@@ -1222,13 +1220,25 @@ const initializeSettings = async () => {
       model.value = savedModel
     } else {
       // Fallback to default if saved model is invalid
-      if (savedProvider === 'perplexity') model.value = 'sonar'
-      else if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
+      if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
       else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
 
       if (savedModel) {
         console.warn(`Saved model '${savedModel}' is invalid or unavailable. Using default.`)
       }
+    }
+  }
+
+  // Ensure models are loaded for the current provider
+  if (apiProvider.value === 'openrouter' && openRouterModels.value.length === 0) {
+    openRouterModels.value = await fetchOpenRouterModels()
+    if (openRouterModels.value.length > 0 && !model.value) {
+      model.value = openRouterModels.value[0].value
+    }
+  } else if (apiProvider.value === 'pollinations' && pollinationsModels.value.length === 0) {
+    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
+    if (pollinationsModels.value.length > 0 && !model.value) {
+      model.value = pollinationsModels.value[0].value
     }
   }
 
@@ -1757,9 +1767,7 @@ const handleFileUpload = (event: Event) => {
             // Validate and set model
             let validModels: string[] = []
 
-            if (savedProvider === 'perplexity') {
-              validModels = ['sonar', 'sonar-pro']
-            } else if (savedProvider === 'gemini') {
+            if (savedProvider === 'gemini') {
               validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
             } else if (savedProvider === 'openrouter') {
               validModels = openRouterModels.value.map((m) => m.value)
@@ -1769,8 +1777,7 @@ const handleFileUpload = (event: Event) => {
               model.value = savedModel
             } else {
               // Fallback to default if saved model is invalid
-              if (savedProvider === 'perplexity') model.value = 'sonar'
-              else if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
+              if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
               else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
 
               if (savedModel) {
