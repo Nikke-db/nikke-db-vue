@@ -737,6 +737,7 @@ const characterProgression = ref<Record<string, any>>({})
 const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
 const pendingGameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
 const choicesAwaitingReveal = ref(false)
+const animationCache = ref<Record<string, string[]>>({})
 
 // Settings
 const enableAnimationReplay = ref(false)
@@ -1100,6 +1101,18 @@ watch(
     localStorage.setItem('nikke_hq_assets', String(newVal))
     market.live2d.triggerResetPlacement()
   }
+)
+
+// Cache animations when they're loaded for any character
+watch(
+  () => [market.live2d.current_id, market.live2d.animations] as const,
+  ([currentId, animations]) => {
+    if (currentId && animations && animations.length > 0) {
+      animationCache.value[currentId] = [...animations]
+      logDebug(`[AnimationCache] Cached ${animations.length} animations for ${currentId}`)
+    }
+  },
+  { deep: true }
 )
 
 watch(apiProvider, async (newVal) => {
@@ -2714,7 +2727,9 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
           filteredAnimations: getFilteredAnimations(market.live2d.animations),
           animationEnrichmentPrompt: prompts.animationEnrichment,
           preserveExistingAnimations: true,
-          localUrl: localUrl.value
+          localUrl: localUrl.value,
+          rawResponseText: responseStr,
+          characterAnimations: animationCache.value
         })
       } catch (e) {
         console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)

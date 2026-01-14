@@ -3,6 +3,7 @@
 
 import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
+import { logDebug } from '@/utils/chatUtils'
 
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]')))
 
@@ -973,11 +974,13 @@ export const enrichActionsWithAnimations = async (
     animationEnrichmentPrompt: string
     preserveExistingAnimations?: boolean
     localUrl?: string
+    rawResponseText?: string
+    characterAnimations?: Record<string, string[]>
   }
 ): Promise<any[]> => {
-  console.log('Enriching actions with animations...')
+  logDebug('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl } = opts
+  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations } = opts
 
   const hasMeaningfulAnimation = (anim: any): boolean => {
     if (typeof anim !== 'string') return false
@@ -986,10 +989,41 @@ export const enrichActionsWithAnimations = async (
     return t !== 'idle' && t !== 'none'
   }
 
+  // Get unique characters present in the scene
+  const charactersInScene = Array.from(new Set(actions.map((a) => a.character).filter((c) => c && c !== 'none')))
+
+  // Build formatted animation list for ALL characters in the scene
+  let formattedAnimations = ''
+  if (characterAnimations) {
+    // Get character names
+    const l2dData = await import('@/utils/json/l2d.json')
+    const l2dArray = l2dData.default as Array<{ id: string; name: string }>
+
+    formattedAnimations = charactersInScene
+      .filter((charId) => charId.toLowerCase() !== 'commander') // Never include commander
+      .map((charId) => {
+        const charData = l2dArray.find((c) => c.id === charId)
+        const charName = charData?.name || charId
+        const anims = characterAnimations[charId]
+
+        if (anims && anims.length > 0) {
+          const filtered = getFilteredAnimations(anims)
+          return `Available Animations for ${charName} (${charId}): ${JSON.stringify(filtered)}`
+        } else {
+          return `Available Animations for ${charName} (${charId}): (not loaded yet - use generic emotions)`
+        }
+      })
+      .join('\n')
+  } else {
+    // Fallback to old format if no characterAnimations provided
+    formattedAnimations = `Available Animations for Current Character (${currentCharacterId}): ${JSON.stringify(filteredAnimations)}`
+  }
+
   const prompt = animationEnrichmentPrompt
     .replace('{currentCharacterId}', currentCharacterId)
-    .replace('{filteredAnimations}', JSON.stringify(filteredAnimations))
-    .replace('{animationMappings}', JSON.stringify(animationMappings, null, 2))
+    .replace('{filteredAnimations}', formattedAnimations)
+    .replace('{charactersInScene}', JSON.stringify(charactersInScene))
+    .replace('{rawResponseText}', rawResponseText || 'No raw response text available')
     .replace(
       '{actions}',
       JSON.stringify(
@@ -1000,6 +1034,7 @@ export const enrichActionsWithAnimations = async (
     )
 
   const messages = [{ role: 'user', content: prompt }]
+  logDebug('[enrichActionsWithAnimations] Full prompt being sent to model:', prompt)
   let enrichedActions: any[] = []
 
   try {
@@ -1034,8 +1069,11 @@ export const enrichActionsWithAnimations = async (
         modeIsGame: false
       })
     } else {
+      console.warn('[enrichActionsWithAnimations] No valid API provider, returning original actions')
       return actions
     }
+
+    logDebug('[enrichActionsWithAnimations] API response:', response?.substring(0, 200))
 
     let jsonStr = response.replace(/```json\n?|\n?```/g, '').trim()
     const start = jsonStr.indexOf('[')
@@ -1045,30 +1083,66 @@ export const enrichActionsWithAnimations = async (
       jsonStr = jsonStr.substring(start, end + 1)
       const animations = JSON.parse(jsonStr)
 
-      if (Array.isArray(animations) && animations.length === actions.length) {
-        enrichedActions = actions.map((action, index) => ({
-          ...action,
-          animation: animations[index]
-        }))
+      logDebug('[enrichActionsWithAnimations] Parsed animations:', animations.length, 'expected:', actions.length)
+
+      if (Array.isArray(animations)) {
+        // Use API animations where available, fall back to local for missing ones
+        enrichedActions = actions.map((action, index) => {
+          const apiAnimation = animations[index]
+          if (apiAnimation && typeof apiAnimation === 'string') {
+            return { ...action, animation: apiAnimation }
+          } else {
+            const text = (action.text || '').toLowerCase()
+            let animation = 'idle'
+
+            // Use animationMappings to find matching animation
+            for (const [animationType, keywords] of Object.entries(animationMappings)) {
+              const foundKeyword = keywords.find((keyword) => text.includes(keyword.toLowerCase()))
+
+              if (foundKeyword) {
+                const matchedAnim = filteredAnimations.find((a: string) => a.toLowerCase().includes(animationType.toLowerCase()))
+                if (matchedAnim) {
+                  animation = matchedAnim
+                } else {
+                  animation = animationType
+                }
+                break
+              }
+            }
+
+            if (animation !== 'idle') {
+              logDebug(`[enrichActionsWithAnimations] Action ${index}: matched keyword -> ${animation}`)
+            }
+
+            return { ...action, animation }
+          }
+        })
+
+        const apiCount = enrichedActions.filter((_, idx) => animations[idx] && typeof animations[idx] === 'string').length
+        const localCount = enrichedActions.length - apiCount
+        logDebug(`[enrichActionsWithAnimations] Mixed enrichment: ${apiCount} from API, ${localCount} from local fallback`)
+      } else {
+        console.warn('[enrichActionsWithAnimations] API response is not an array')
       }
+    } else {
+      console.warn('[enrichActionsWithAnimations] Could not find JSON array in response')
     }
   } catch (e) {
-    console.error('Failed to enrich animations via API, using local fallback', e)
-  }
+    console.error('[enrichActionsWithAnimations] API call failed, using full local fallback', e)
 
-  if (enrichedActions.length === 0) {
-    // Local fallback: use animationMappings to match keywords to animations
-    enrichedActions = actions.map((action) => {
+    // Full local fallback when API completely fails
+    enrichedActions = actions.map((action, idx) => {
       const text = (action.text || '').toLowerCase()
       let animation = 'idle'
+      let matchedKeyword = ''
 
-      // Use animationMappings to find matching animation
       for (const [animationType, keywords] of Object.entries(animationMappings)) {
-        const hasKeyword = keywords.some((keyword) => text.includes(keyword.toLowerCase()))
+        const foundKeyword = keywords.find((keyword) => text.includes(keyword.toLowerCase()))
 
-        if (hasKeyword) {
+        if (foundKeyword) {
+          matchedKeyword = foundKeyword
           // Find the best available animation matching this type
-          const matchedAnim = filteredAnimations.find((a: string) => a.includes(animationType))
+          const matchedAnim = filteredAnimations.find((a: string) => a.toLowerCase().includes(animationType.toLowerCase()))
           if (matchedAnim) {
             animation = matchedAnim
           } else {
@@ -1078,8 +1152,20 @@ export const enrichActionsWithAnimations = async (
         }
       }
 
+      if (animation !== 'idle') {
+        logDebug(`[enrichActionsWithAnimations] Action ${idx}: matched "${matchedKeyword}" -> ${animation}`)
+      }
+
       return { ...action, animation }
     })
+
+    const nonIdleCount = enrichedActions.filter((a) => a.animation !== 'idle').length
+    logDebug(`[enrichActionsWithAnimations] Full local fallback complete: ${nonIdleCount}/${enrichedActions.length} actions got non-idle animations`)
+  }
+
+  if (enrichedActions.length === 0) {
+    console.warn('[enrichActionsWithAnimations] No animations were generated, returning original actions')
+    return actions
   }
 
   // Merge: preserve existing non-idle animations unless explicitly missing.
