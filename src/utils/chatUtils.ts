@@ -714,26 +714,6 @@ export const sanitizeActions = (actions: any[]): any[] => {
     }
   }
 
-  // Post-process: Force high intensity for ALL CAPS (shouting/anger)
-  for (const action of newActions) {
-    const originalText = action.text || ''
-    // Match words with at least 2 uppercase letters to avoid single-letter words like "I" or "A"
-    const capsWords = originalText.match(/\b[A-Z]{2,}\b/g)
-    const isShouting = capsWords && capsWords.length > 0
-
-    if (isShouting) {
-      const currentAnim = (action.animation || '').toLowerCase()
-      // If it's already a high-intensity animation, don't overwrite it.
-      const isAlreadyHighIntensity = currentAnim.includes('_02') || currentAnim === 'shock' || currentAnim === 'furious' || currentAnim === 'shouting'
-
-      if (!isAlreadyHighIntensity && (!currentAnim || currentAnim === 'idle' || currentAnim.includes('angry') || currentAnim.includes('shock') || currentAnim.includes('surprise'))) {
-        // We use 'angry_02' as the canonical high-intensity anger.
-        // Loader.vue will handle falling back to 'angry' or 'shock' if 'angry_02' isn't available.
-        action.animation = 'angry_02'
-      }
-    }
-  }
-
   // Post-process: If a narration action (speaking=false) is followed by a dialogue action (speaking=true),
   // copy the animation from the narration to the dialogue.
   // This ensures the emotion set during narration persists into the dialogue.

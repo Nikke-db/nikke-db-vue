@@ -729,6 +729,7 @@ const lastSummarizedIndex = ref(0)
 const summarizationRetryPending = ref(false)
 const summarizationAttemptCount = ref(0)
 const summarizationLastError = ref<string | null>(null)
+const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
 const chatHistory = ref<{ role: string; content: string; animation?: string; character?: string; speaking?: boolean; text?: string }[]>([])
@@ -1105,12 +1106,19 @@ watch(
 
 // Cache animations when they're loaded for any character
 watch(
-  () => [market.live2d.current_id, market.live2d.animations] as const,
-  ([currentId, animations]) => {
-    if (currentId && animations && animations.length > 0) {
-      animationCache.value[currentId] = [...animations]
-      logDebug(`[AnimationCache] Cached ${animations.length} animations for ${currentId}`)
+  () => market.live2d.animations,
+  (animations) => {
+    const currentId = market.live2d.current_id
+    if (!currentId || !animations || animations.length === 0) return
+
+    const existing = animationCache.value[currentId]
+    if (existing && existing.length >= animations.length) {
+      logDebug(`[AnimationCache] Skipping cache update for ${currentId}: existing has ${existing.length}, new has ${animations.length}`)
+      return
     }
+
+    animationCache.value[currentId] = [...animations]
+    logDebug(`[AnimationCache] Cached ${animations.length} animations for ${currentId}`)
   },
   { deep: true }
 )
@@ -1815,6 +1823,9 @@ const handleFileUpload = (event: Event) => {
 
         isRestoring.value = false
 
+        // Mark this as a loaded session so overflow detection can handle large unsummarized portions
+        isLoadedSession.value = true
+
         // Clear input value so same file can be selected again if needed
         target.value = ''
 
@@ -2167,6 +2178,65 @@ const getUserReminders = (): string => {
   return reminders
 }
 
+const getFormattedAnimationsForContext = () => {
+  const placeholderAnimations = ['angry', 'angry_02', 'angry_03', 'cry', 'delight', 'idle', 'pain', 'sad', 'sad_02', 'shy', 'smile', 'surprise', 'void']
+
+  const getCharacterInfo = (id: string) => {
+    const charData = (l2d as any[]).find((c) => c.id === id)
+    return {
+      name: charData?.name || id,
+      id: id
+    }
+  }
+
+  const getCachedAnimations = (id: string): string[] | null => {
+    let anims = animationCache.value[id]
+    if (!anims && id === market.live2d.current_id) {
+      anims = market.live2d.animations
+    }
+    if (anims && anims.length > 0) {
+      return getFilteredAnimations(anims)
+    }
+    return null
+  }
+
+  const formatAnimationsForCharacter = (info: { name: string; id: string }, animations: string[]): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(animations)}`
+  }
+
+  const formatPlaceholderForCharacter = (info: { name: string; id: string }): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(placeholderAnimations)}`
+  }
+
+  const allCharacterIds = new Set<string>()
+
+  for (const profileKey of Object.keys(characterProfiles.value)) {
+    if (profileKey.toLowerCase() !== 'commander') {
+      const profile = characterProfiles.value[profileKey]
+      const id = profile.id || profileKey
+      allCharacterIds.add(id)
+    }
+  }
+
+  if (market.live2d.current_id) {
+    allCharacterIds.add(market.live2d.current_id)
+  }
+
+  const animsList = Array.from(allCharacterIds).map((id) => {
+    const cached = getCachedAnimations(id)
+    const info = getCharacterInfo(id)
+    if (cached) {
+      logDebug(`[AnimationContext] Using cached animations for ${id} (${info.name}): ${cached.length} animations`)
+      return formatAnimationsForCharacter(info, cached)
+    }
+    logDebug(`[AnimationContext] No cached animations for ${id} (${info.name}), using placeholder array`)
+    return formatPlaceholderForCharacter(info)
+  })
+
+  if (animsList.length === 0) return 'No characters available yet.'
+  return animsList.join('\n')
+}
+
 const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
@@ -2199,8 +2269,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   // Add current context
-  const filteredAnimations = getFilteredAnimations(market.live2d.animations)
-  let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+  let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
 
   // Optimization: Limit history to prevent token overflow
   // Tumbling window: Summarize every X turns
@@ -2214,6 +2283,17 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   if (tokenUsage.value !== 'goddess') {
     const endIndex = chatHistory.value.length - 1
+    const unsummarizedCount = endIndex - lastSummarizedIndex.value
+
+    // Calculate the maximum messages we want in context (user + assistant)
+    // historyLimit is the number of user turns, so double it for total messages
+    const maxContextMessages = historyLimit * 2
+
+    // Check if we need to summarize due to having too many unsummarized messages
+    // This ONLY applies to loaded sessions to handle large unsummarized portions from restored files
+    // For normal sessions, we rely solely on userMsgCount to trigger summarization
+    const overflowThreshold = Math.floor(maxContextMessages * 1.5)
+    const shouldSummarizeDueToOverflow = isLoadedSession.value && unsummarizedCount > overflowThreshold
 
     let userMsgCount = 0
     // Count user messages in the unsummarized portion, excluding the current pending prompt
@@ -2227,16 +2307,29 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const shouldSummarizeByLimit = userMsgCount >= historyLimit
 
     // If summarization previously failed, retry on next user prompt/retry.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit) {
-      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
-      logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+    // Also trigger if we have overflow from a loaded session.
+    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+      // Calculate where to summarize up to
+      // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
+      let summarizeUpTo = endIndex
+      if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
+        // Only summarize the overflow, keeping maxContextMessages in context
+        summarizeUpTo = endIndex - maxContextMessages
+      }
+
+      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, summarizeUpTo)
+      logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
       const ok = await summarizeChunk(chunkToSummarize)
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = endIndex
+        lastSummarizedIndex.value = summarizeUpTo
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        // Clear the loaded session flag after successful summarization
+        if (shouldSummarizeDueToOverflow) {
+          isLoadedSession.value = false
+        }
       } else {
         summarizationRetryPending.value = true
         summarizationAttemptCount.value++
@@ -2303,12 +2396,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   const reminders = getUserReminders()
 
   if (apiProvider.value === 'gemini') {
-    // Gemini: Original behavior (context as separate message at end)
-    let messages = [{ role: 'system', content: systemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages.push({
-      role: 'system',
-      content: contextMsg + retryInstruction + reminders
-    })
+    // Gemini: Merge context into system prompt to avoid confusion at the end of history
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
 
@@ -2374,8 +2465,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     needsJsonReminder.value = false
   }
 
-  const filteredAnimations = getFilteredAnimations(market.live2d.animations)
-  let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+  let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
 
   // Get user toggled reminders
   const reminders = getUserReminders()
@@ -2392,6 +2482,17 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
   if (tokenUsage.value !== 'goddess') {
     const endIndex = chatHistory.value.length - 1
+    const unsummarizedCount = endIndex - lastSummarizedIndex.value
+
+    // Calculate the maximum messages we want in context (user + assistant)
+    // historyLimit is the number of user turns, so double it for total messages
+    const maxContextMessages = historyLimit * 2
+
+    // Check if we need to summarize due to having too many unsummarized messages
+    // This ONLY applies to loaded sessions to handle large unsummarized portions from restored files
+    // For normal sessions, we rely solely on userMsgCount to trigger summarization
+    const overflowThreshold = Math.floor(maxContextMessages * 1.5)
+    const shouldSummarizeDueToOverflow = isLoadedSession.value && unsummarizedCount > overflowThreshold
 
     let userMsgCount = 0
     // Count user messages in the unsummarized portion, excluding the current pending prompt
@@ -2405,16 +2506,29 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     const shouldSummarizeByLimit = userMsgCount >= historyLimit
 
     // If summarization previously failed, retry on next user prompt/retry.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit) {
-      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
-      logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+    // Also trigger if we have overflow from a loaded session.
+    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+      // Calculate where to summarize up to
+      // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
+      let summarizeUpTo = endIndex
+      if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
+        // Only summarize the overflow, keeping maxContextMessages in context
+        summarizeUpTo = endIndex - maxContextMessages
+      }
+
+      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, summarizeUpTo)
+      logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
       const ok = await summarizeChunk(chunkToSummarize)
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = endIndex
+        lastSummarizedIndex.value = summarizeUpTo
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        // Clear the loaded session flag after successful summarization
+        if (shouldSummarizeDueToOverflow) {
+          isLoadedSession.value = false
+        }
       } else {
         summarizationRetryPending.value = true
         summarizationAttemptCount.value++
@@ -2433,8 +2547,8 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   }
 
   if (apiProvider.value === 'gemini') {
-    const messages = [{ role: 'system', content: systemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages.push({ role: 'system', content: contextMsg + retryInstruction + reminders })
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     return await callGemini(messages, false)
   } else if (apiProvider.value === 'openrouter') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
@@ -2560,26 +2674,26 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   }
 
   let prompt = `${prompts.systemPrompt.intro}
-  
+
   ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : mode.value === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story}
-  
+
   ${prompts.systemPrompt.honorifics.header}
   ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
-  
+
   ${prompts.systemPrompt.honorifics.rules}
-  
+
   ${enableWebSearch ? prompts.systemPrompt.characterResearch.enabled : prompts.systemPrompt.characterResearch.disabled}
-  
+
   ${prompts.systemPrompt.criticalErrors}
 
-  ${prompts.systemPrompt.jsonStructure}
-  
+  ${mode.value === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
+
   ${prompts.systemPrompt.knownProfiles}
   ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : prompts.systemPrompt.noProfilesMessage}
-  
+
   ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
-  
+
   ${prompts.systemPrompt.instructions.base}
   ${modeInstructions}
   ${prompts.systemPrompt.instructions.closing}
@@ -3277,6 +3391,7 @@ const resetSession = () => {
     summarizationRetryPending.value = false
     summarizationAttemptCount.value = 0
     summarizationLastError.value = null
+    isLoadedSession.value = false
     lastPrompt.value = ''
     market.live2d.isVisible = false
     selectedMessageIndex.value = null

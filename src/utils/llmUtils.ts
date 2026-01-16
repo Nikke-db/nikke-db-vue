@@ -166,11 +166,10 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
 }
 
 export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false) => {
-  // Use higher max_tokens for summarization to handle long inputs
   const requestBody: any = {
     model: model,
     messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
-    max_tokens: 16384 // Double the normal limit for summarization
+    max_tokens: 32768 // Double the normal limit for summarization
   }
 
   const headers: Record<string, string> = {
@@ -194,8 +193,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
 
     // If max_tokens is too high for this model, try with standard limit
     if (response.status === 400 && errorData?.error?.message?.includes('max_tokens')) {
-      console.warn(`Model ${model} doesn't support 16384 max_tokens, falling back to 8192...`)
-      requestBody.max_tokens = 8192
+      console.warn(`Model ${model} doesn't support 32768 max_tokens, falling back to 16384...`)
+      requestBody.max_tokens = 16384
       const retryResponse = await fetch(url, {
         method: 'POST',
         headers: headers,
@@ -247,7 +246,7 @@ export const callGeminiSummarization = async (messages: any[], apiKey: string, m
   const requestBody: any = {
     contents: contents,
     generationConfig: {
-      maxOutputTokens: 8192 // Higher limit for summarization
+      maxOutputTokens: 32768 // Higher limit for summarization
     }
   }
 
@@ -544,7 +543,7 @@ export const callLocal = async (
 
 // Helper: filter out internal/unsupported animations
 export const getFilteredAnimations = (animations?: string[]) => {
-  return (animations || []).filter((a) => a !== 'talk' && a !== 'talk_start' && a !== 'talk_end' && a !== 'expression_0' && a !== 'action')
+  return (animations || []).filter((a) => a !== 'talk' && a !== 'talk_start' && a !== 'talk_end' && a !== 'expression_0' && a !== 'expression_0_alt' && a !== 'action')
 }
 
 // Structured output schema builder (used by ChatInterface for OpenRouter/Pollinations JSON schema mode)
@@ -1179,24 +1178,5 @@ export const enrichActionsWithAnimations = async (
     return action
   })
 
-  // FINAL PASS: Force high intensity for ALL CAPS (shouting/anger)
-  // This applies to both preserved and enriched results.
-  return mergedActions.map((action) => {
-    const originalText = action.text || ''
-    const capsWords = originalText.match(/\b[A-Z]{2,}\b/g)
-    const isShouting = capsWords && capsWords.length > 0
-
-    if (isShouting) {
-      // Prefer high-intensity variants: angry_02, then shock, then angry
-      const bestHighIntensity = filteredAnimations.find((a) => a.toLowerCase().includes('angry_02')) || filteredAnimations.find((a) => a.toLowerCase().includes('shock')) || filteredAnimations.find((a) => a.toLowerCase().includes('angry'))
-
-      if (bestHighIntensity) {
-        return { ...action, animation: bestHighIntensity }
-      } else if (action.character !== currentCharacterId) {
-        // For non-current characters, use generic high-intensity name
-        return { ...action, animation: 'angry_02' }
-      }
-    }
-    return action
-  })
+  return mergedActions
 }
