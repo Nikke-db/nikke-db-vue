@@ -1815,8 +1815,6 @@ const handleFileUpload = (event: Event) => {
           // If the current summarized index leaves less than safeBuffer messages, pull it back
           if (chatHistory.value.length - lastSummarizedIndex.value < safeBuffer) {
             lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
-            // We can't use logDebug here easily as it might not be in scope or I'd have to check imports,
-            // but console.log is safe.
             console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
           }
         }

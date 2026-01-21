@@ -318,7 +318,7 @@ export const callPollinations = async (
   const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching } = opts
 
   if (modelsWithoutJsonSupport.value.has(model)) {
-    console.log(`Model ${model} known to not support json_schema, using text fallback...`)
+    logDebug(`Model ${model} known to not support json_schema, using text fallback...`)
     return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching })
   }
 
@@ -494,7 +494,7 @@ export const callLocal = async (
   }
 
   if (model && modelsWithoutJsonSupport.value.has(model)) {
-    console.log(`Model ${model} known to not support json_schema, using text fallback...`)
+    logDebug(`Model ${model} known to not support json_schema, using text fallback...`)
     return callWithoutJsonFormat()
   }
 
@@ -742,7 +742,7 @@ export const callOpenRouter = async (
   }
 
   if (modelsWithoutJsonSupport.value.has(model)) {
-    console.log(`Model ${model} known to not support json_object, skipping to fallback...`)
+    logDebug(`Model ${model} known to not support json_object, skipping to fallback...`)
     return callWithoutJsonFormat()
   }
 

@@ -614,6 +614,60 @@ export const sanitizeActions = (actions: any[]): any[] => {
         continue
       }
 
+      // Fix: Check for fused narration inside unquoted dialogue.
+      if (action.speaking === true) {
+        // Resolve the current character name to check for self-reference
+        const charId = action.character
+        let charName = ''
+        
+        if (charId === 'commander') {
+          charName = 'Commander'
+        } else if (charId && charId !== 'none' && charId !== 'current') {
+          const c = l2d.find((x) => x.id === charId)
+
+          if (c) charName = c.name
+        }
+
+        if (charName) {
+          // Regex: Sentence ending punctuation + space + SpeakerName
+          const fusedRegex = new RegExp(`([.!?])\\s+(${charName}\\b)`, 'i')
+          const splitMatch = text.match(fusedRegex)
+
+          if (splitMatch && splitMatch.index !== undefined) {
+            const splitIndex = splitMatch.index + 1 // After punctuation
+            const dialoguePart = text.slice(0, splitIndex).trim()
+            const narrationPart = text.slice(splitIndex).trim()
+
+            // Push dialogue part
+            newActions.push({
+              ...action,
+              text: dialoguePart,
+              speaking: true
+            })
+
+            // Push narration part
+            const narrationAction: any = { ...action, text: narrationPart, speaking: false }
+
+            // Remove choices from first part, keep on last part if needed
+            if (action.choices) {
+              delete newActions[newActions.length - 1].choices
+              narrationAction.choices = action.choices
+            }
+
+            // Remove duplicated fields from the second part
+            for (const key of Object.keys(narrationAction)) {
+              if (nonDuplicatedFields.has(key) && key !== 'choices') {
+                if (key === 'needs_search') narrationAction[key] = []
+                else delete narrationAction[key]
+              }
+            }
+
+            newActions.push(narrationAction)
+            continue
+          }
+        }
+      }
+
       // No quotes. If the model marked it as speaking, keep it UNLESS it looks like third-person narration.
       if (action.speaking === true && looksLikeNarrationWithoutQuotes(text)) {
         newActions.push({ ...action, speaking: false })
@@ -1123,7 +1177,11 @@ export const parseFallback = (text: string): any[] => {
     }
 
     // 2. Dialogue (unquoted or quoted) runs until the next speaker label
-    const dialogue = cleanText.substring(curr.end, next ? next.index : cleanText.length).trim()
+    let dialogue = cleanText.substring(curr.end, next ? next.index : cleanText.length).trim()
+
+    // FIX: Insert space between fused sentences (e.g. "CHIME!Crown" -> "CHIME! Crown")
+    // Look for punctuation (!?.) immediately followed by a capital letter or a speaker name start
+    dialogue = dialogue.replace(/([.!?])([A-Z])/g, '$1 $2')
 
     if (dialogue) {
       // Split dialogue on double newlines to create separate actions

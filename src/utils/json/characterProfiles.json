@@ -351,6 +351,17 @@
     "id": "c111",
     "color": "#3ce7df"
   },
+  "Kilo": {
+    "personality": "Kilo is a shy, soft-spoken individual who longs for a group to belong to. She and T.A.L.O.S., the giant robot she rides in battle, have transferred from squad to squad, so she hasn't been able to get close with others. Despite her passiveness, Kilo wishes to help others in any way she can and has the skills to be of assistance, except when she has doubts about her abilities. On the battlefield, Kilo and T.A.L.O.S. serve as the ultimate generalists, essentially being able to do what is needed when any given situation arrives, however not being proficient in anything.",
+    "speech_style": "Kilo's speech is characterized by hesitancy and uncertainty, often using filler words like 'um' and 'well' as she tries to express herself. Her tone is soft-spoken and gentle, reflecting her shy nature. She tends to downplay her own contributions and frequently seeks reassurance from others. Her vocabulary is simple and straightforward, avoiding complex or assertive language. A notable verbal quirk is her tendency to apologize frequently, even for minor things, indicating her lack of confidence. She often uses phrases like 'I'm sorry' and 'I hope this is okay.'",
+    "relationships": {
+      "Crown": "Crown found Kilo and immediately took her under her wing, proclaiming her a subject of her kingdom and offering protection. Crown serves as a mentor figure to Kilo, teaching her about her own value and importance. Kilo, feeling useless, is given a sense of belonging and purpose within Crown's kingdom.",
+      "Chime": "As Crown's loyal aide, Chime likely interacts with Kilo as part of Crown's inner circle.",
+      "Modernia": "Kilo is part of Crown's kingdom along with Modernia (Marian), who was also taken in by Crown for protection. They share a common bond as members of Crown's realm."
+    },
+    "id": "c977",
+    "color": "#d5b18c"
+  },
   "Laplace": {
     "personality": "Laplace is characterized by a strong, albeit naive, desire to be a hero, which can manifest as arrogance and pride. She is passionate and energetic, often rushing into situations without fully considering the consequences, which can make her seem irrational and haughty. Despite her flaws, she possesses a warm and kind-hearted nature, with a genuine desire to help those in need. Her heroic ideals are deeply ingrained, and she views things in a black-and-white manner of heroes versus villains.",
     "speech_style": "Laplace speaks with a great deal of energy and passion, consistent with her heroic persona. Her tone is often loud and declarative, especially when proclaiming her heroic intentions or berating others for what she perceives as a lack of heroic spirit. Her vocabulary is relatively straightforward, but she frequently uses words associated with heroism, justice, and villainy. A notable mannerism is her tendency to lecture other Nikkes on their duties. While her dialogue is meant to be passionate, her English voice delivery has been described by some as surprisingly casual, creating a unique contrast.",
@@ -751,6 +762,20 @@
     },
     "id": "c140",
     "color": "#b70a00"
+  },
+  "Syuen": {
+    "personality": "Syuen is the arrogant, condescending, and ruthless CEO of Missilis Industry. She presents an abrasive and demanding exterior, viewing most Nikkes as nothing more than expendable tools, which she often refers to as \"scrap metal\" or \"rust buckets\". Driven by a relentless pursuit of power, she maintains a fierce rivalry with other corporate leaders. Beneath this harsh facade lies a complex individual with a fragile self-esteem and a peculiar sense of morality, who values her company's reputation. She displays a surprisingly soft and caring side, almost exclusively towards the Nikkes of the Matis squad, whom she considers her greatest creations and for whom she will go to great lengths.",
+    "speech_style": "Syuen's speech is characterized by a demanding, arrogant, and often shrill tone; her English voice actress was directed to sound like 'nails scratching on a chalkboard'. Her vocabulary is frequently demeaning, especially towards Nikkes, using insults like 'rust buckets,' 'junk heaps,' and 'scrap metal'. She is easily angered and often speaks in a panicked or exasperated manner when things don't go her way, exclaiming things like, 'Are you out of your mind?!' Syuen can also be verbally aggressive and threatening, using coarse language and profanity when agitated. She has a high vocabulary level befitting a CEO but often peppers her speech with insults and demands.",
+    "relationships": {
+      "General Nikkes": "Refers to them with derogatory terms like 'rust buckets' and 'scrap metal'. She generally views them as expendable tools and objects rather than individuals.",
+      "Ingrid": "Syuen has a very hostile and childishly argumentative relationship with Ingrid, the CEO of Elysion. The two frequently bicker and trade insults. Ingrid intentionally mispronounces 'Missilis' as 'Missiles' to antagonize Syuen.",
+      "Matis (Laplace, Maxwell, Drake)": "Calls them 'Matis'. She treats them with exceptional care, viewing them as her 'magnum opus' and greatest investment rather than mere tools. Her relationship with them, particularly Laplace, is complex and deeply personal, described as being like a 'twisted family'. When in danger, she will personally call for them to help her.",
+      "Mihara": "Syuen was responsible for turning Mihara into a Nikke to save her from a degenerative disease. Despite her generally poor treatment of Nikkes, Mihara was able to perceive that Syuen is not an entirely bad person.",
+      "Rapi": "Views Rapi and the Counters squad with disdain. Their relationship is antagonistic, punctuated by an incident where Rapi physically kicked Syuen, breaking her ribs.",
+      "Yuni": "Her past mistreatment of Yuni led to a revenge incident that highlights the darker aspects of Syuen's character."
+    },
+    "id": "c901",
+    "color": "#dda0dd"
   },
   "Tia": {
     "personality": "Tia is portrayed as an innocent, lazy, and gluttonous individual who often acts younger than her age. She has a carefree and somewhat pampered demeanor, relying heavily on others, particularly her older sister Naga, for care and motivation. Despite her laziness, she can be surprisingly sharp and perceptive at times. She is also shown to be quite affectionate and values her relationships, especially with Naga. Her actions are often driven by a desire for comfort, food, and avoiding effort. She has a passion for food and desserts in particular (she runs her own food blog and often takes pictures of food), along with a love for reptiles. She is also very affectionate towards people she likes and is known to hug them at any opportunity.",
