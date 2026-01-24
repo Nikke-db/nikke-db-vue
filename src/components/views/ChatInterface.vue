@@ -313,7 +313,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="useLocalProfiles" />
+            <n-switch v-model:value="useLocalProfiles" :disabled="!isDev" />
           </n-form-item>
 
           <n-form-item v-if="useLocalProfiles">
@@ -907,6 +907,8 @@ const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
 
+if (!isDev) useLocalProfiles.value = true
+
 // AI Reminders state
 const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
@@ -1014,7 +1016,11 @@ watch(localMaxTokens, (newVal) => {
 })
 
 watch(useLocalProfiles, (newVal) => {
-  localStorage.setItem('nikke_use_local_profiles', String(newVal))
+  if (isDev || newVal) {
+    localStorage.setItem('nikke_use_local_profiles', String(newVal))
+  } else {
+    useLocalProfiles.value = true
+  }
 })
 
 watch(allowWebSearchFallback, (newVal) => {

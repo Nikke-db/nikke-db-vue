@@ -619,7 +619,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
         // Resolve the current character name to check for self-reference
         const charId = action.character
         let charName = ''
-        
+
         if (charId === 'commander') {
           charName = 'Commander'
         } else if (charId && charId !== 'none' && charId !== 'current') {
@@ -1179,68 +1179,72 @@ export const parseFallback = (text: string): any[] => {
     // 2. Dialogue (unquoted or quoted) runs until the next speaker label
     let dialogue = cleanText.substring(curr.end, next ? next.index : cleanText.length).trim()
 
-    // FIX: Insert space between fused sentences (e.g. "CHIME!Crown" -> "CHIME! Crown")
-    // Look for punctuation (!?.) immediately followed by a capital letter or a speaker name start
-    dialogue = dialogue.replace(/([.!?])([A-Z])/g, '$1 $2')
-
     if (dialogue) {
-      // Split dialogue on double newlines to create separate actions
-      const paragraphs = dialogue.split(/\n\n+/).filter((p) => p.trim())
+      const dialogueSegments = dialogue
+        .replace(/([.!?]+)(?=[^\s.!?"”])/g, '$1__DIALOGUE_SPLIT__')
+        .split('__DIALOGUE_SPLIT__')
+        .map((segment) => segment.trim())
+        .filter((segment) => segment.length > 0)
 
-      if (paragraphs.length <= 1) {
-        // Single paragraph or no splits - check for trailing speaker label
-        const { text: cleanedDialogue, speakerId: trailingSpeaker } = extractTrailingSpeakerLabel(dialogue)
+      for (const segment of dialogueSegments) {
+        // Split dialogue on double newlines to create separate actions
+        const paragraphs = segment.split(/\n\n+/).filter((p) => p.trim())
 
-        if (cleanedDialogue) {
-          actions.push({
-            text: cleanedDialogue,
-            character: charId,
-            animation: 'idle',
-            speaking: true
-          })
-        }
+        if (paragraphs.length <= 1) {
+          // Single paragraph or no splits - check for trailing speaker label
+          const { text: cleanedDialogue, speakerId: trailingSpeaker } = extractTrailingSpeakerLabel(segment)
 
-        // If there's a trailing speaker, mark it for the next action
-        if (trailingSpeaker) {
-          // Store the pending speaker for the next iteration or trailing text
-          // We use a marker action that will be processed when we encounter the next content
-          actions.push({
-            _pendingSpeaker: trailingSpeaker,
-            _isPendingMarker: true
-          })
-        }
-      } else {
-        // Multiple paragraphs - process each one
-        for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
-          const para = paragraphs[pIdx].trim()
-
-          if (!para) continue
-
-          // Check if this paragraph ends with a trailing speaker label
-          const { text: cleanedPara, speakerId: trailingSpeaker } = extractTrailingSpeakerLabel(para)
-
-          // Determine if this paragraph looks like dialogue (has quotes) or narration
-          const hasQuotes = /[""]/.test(cleanedPara)
-
-          if (cleanedPara) {
-            // First paragraph inherits the current speaker's character
-            // Subsequent paragraphs without clear speaker association become narration
-            const isSpeaking = pIdx === 0 || hasQuotes
-
+          if (cleanedDialogue) {
             actions.push({
-              text: cleanedPara,
+              text: cleanedDialogue,
               character: charId,
               animation: 'idle',
-              speaking: isSpeaking
+              speaking: true
             })
           }
 
-          // If there's a trailing speaker, mark it for the next paragraph/action
+          // If there's a trailing speaker, mark it for the next action
           if (trailingSpeaker) {
+            // Store the pending speaker for the next iteration or trailing text
+            // We use a marker action that will be processed when we encounter the next content
             actions.push({
               _pendingSpeaker: trailingSpeaker,
               _isPendingMarker: true
             })
+          }
+        } else {
+          // Multiple paragraphs - process each one
+          for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
+            const para = paragraphs[pIdx].trim()
+
+            if (!para) continue
+
+            // Check if this paragraph ends with a trailing speaker label
+            const { text: cleanedPara, speakerId: trailingSpeaker } = extractTrailingSpeakerLabel(para)
+
+            // Determine if this paragraph looks like dialogue (has quotes) or narration
+            const hasQuotes = /["”]/.test(cleanedPara)
+
+            if (cleanedPara) {
+              // First paragraph inherits the current speaker's character
+              // Subsequent paragraphs without clear speaker association become narration
+              const isSpeaking = pIdx === 0 || hasQuotes
+
+              actions.push({
+                text: cleanedPara,
+                character: charId,
+                animation: 'idle',
+                speaking: isSpeaking
+              })
+            }
+
+            // If there's a trailing speaker, mark it for the next paragraph/action
+            if (trailingSpeaker) {
+              actions.push({
+                _pendingSpeaker: trailingSpeaker,
+                _isPendingMarker: true
+              })
+            }
           }
         }
       }
