@@ -497,261 +497,303 @@ export const sanitizeActions = (actions: any[]): any[] => {
     return undefined
   }
 
-  for (const action of actions) {
-    if (!action.text || typeof action.text !== 'string') {
-      newActions.push(action)
+  const splitActionOnDoubleNewlines = (action: any): any[] => {
+    if (!action || typeof action.text !== 'string') return [action]
 
-      continue
+    const rawText = action.text
+    if (!/\n\n+/.test(rawText)) return [action]
+
+    const parts = rawText
+      .split(/\n\n+/)
+      .map((part: string) => part.trim())
+      .filter((part: string) => part.length > 0)
+
+    if (parts.length <= 1) return [action]
+
+    const out: any[] = []
+
+    for (let i = 0; i < parts.length; i++) {
+      const partAction: any = { ...action, text: parts[i] }
+
+      if (i > 0) {
+        for (const key of Object.keys(partAction)) {
+          if (nonDuplicatedFields.has(key)) {
+            if (key === 'needs_search') partAction[key] = []
+            else delete partAction[key]
+          }
+        }
+      }
+
+      if (action.choices) {
+        if (i === parts.length - 1) partAction.choices = action.choices
+        else delete partAction.choices
+      }
+
+      out.push(partAction)
     }
 
-    // Extra fallback: some models ignore JSON and output plain prose with inline speaker labels
-    // like "**Chime:** ..." or "Chime: ..." without quotes.
-    // In that case, split the action into narration + dialogue segments and mark dialogue as speaking.
-    const splitOnSpeakerLabels = (raw: string): { text: string; speaking: boolean; character?: string }[] | null => {
-      const input = (raw || '').trim()
-      if (!input) return null
+    return out
+  }
 
-      // Match a potential speaker label. We validate against known character names to avoid false positives.
-      // Example matches: "Chime:", "**Chime:**" (colon can be outside/inside bold; sanitize handles both).
-      const labelRegex = /(^|[\s\n.!?]|[-—–])(?:\*\*)?([A-Za-z0-9\s\-()]{1,40})(?:\*\*)?\s*:\s*/g
-      const matches: Array<{ start: number; end: number; name: string }> = []
+  for (const rawAction of actions) {
+    const actionParts = splitActionOnDoubleNewlines(rawAction)
 
-      let m: RegExpExecArray | null
-      while ((m = labelRegex.exec(raw)) !== null) {
-        const boundary = m[1] || ''
-        const name = (m[2] || '').trim().replace(/\s+/g, ' ')
+    for (const action of actionParts) {
+      if (!action.text || typeof action.text !== 'string') {
+        newActions.push(action)
 
-        if (!name) continue
-
-        // Validate name by resolving to an l2d character or Commander.
-        // IMPORTANT: Do NOT do substring matching here. It causes false positives like "Crow" matching "Crown".
-        const resolved = name.toLowerCase() === 'commander' ? 'commander' : l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
-
-        if (!resolved) continue
-
-        const start = m.index + boundary.length
-        const end = labelRegex.lastIndex
-        matches.push({ start, end, name })
+        continue
       }
 
-      if (matches.length === 0) return null
+      // Extra fallback: some models ignore JSON and output plain prose with inline speaker labels
+      // like "**Chime:** ..." or "Chime: ..." without quotes.
+      // In that case, split the action into narration + dialogue segments and mark dialogue as speaking.
+      const splitOnSpeakerLabels = (raw: string): { text: string; speaking: boolean; character?: string }[] | null => {
+        const input = (raw || '').trim()
+        if (!input) return null
 
-      const out: { text: string; speaking: boolean; character?: string }[] = []
-      let cursor = 0
+        // Match a potential speaker label. We validate against known character names to avoid false positives.
+        // Example matches: "Chime:", "**Chime:**" (colon can be outside/inside bold; sanitize handles both).
+        const labelRegex = /(^|[\s\n.!?]|[-—–])(?:\*\*)?([A-Za-z0-9\s\-()]{1,40})(?:\*\*)?\s*:\s*/g
+        const matches: Array<{ start: number; end: number; name: string }> = []
 
-      const resolveId = (name: string): string | undefined => {
-        if (!name) return undefined
-        if (name.toLowerCase() === 'commander') return 'commander'
+        let m: RegExpExecArray | null
+        while ((m = labelRegex.exec(raw)) !== null) {
+          const boundary = m[1] || ''
+          const name = (m[2] || '').trim().replace(/\s+/g, ' ')
 
-        const exact = l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
+          if (!name) continue
 
-        return exact ? (exact as any).id : undefined
-      }
+          // Validate name by resolving to an l2d character or Commander.
+          // IMPORTANT: Do NOT do substring matching here. It causes false positives like "Crow" matching "Crown".
+          const resolved = name.toLowerCase() === 'commander' ? 'commander' : l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
 
-      for (let i = 0; i < matches.length; i++) {
-        const curr = matches[i]
-        const next = matches[i + 1]
+          if (!resolved) continue
 
-        const narrationBefore = raw.slice(cursor, curr.start).trim()
-
-        if (narrationBefore) {
-          out.push({ text: narrationBefore, speaking: false })
+          const start = m.index + boundary.length
+          const end = labelRegex.lastIndex
+          matches.push({ start, end, name })
         }
 
-        const dialogueText = raw.slice(curr.end, next ? next.start : raw.length).trim()
+        if (matches.length === 0) return null
 
-        if (dialogueText) {
-          out.push({ text: dialogueText, speaking: true, character: resolveId(curr.name) })
+        const out: { text: string; speaking: boolean; character?: string }[] = []
+        let cursor = 0
+
+        const resolveId = (name: string): string | undefined => {
+          if (!name) return undefined
+          if (name.toLowerCase() === 'commander') return 'commander'
+
+          const exact = l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
+
+          return exact ? (exact as any).id : undefined
         }
 
-        cursor = next ? next.start : raw.length
+        for (let i = 0; i < matches.length; i++) {
+          const curr = matches[i]
+          const next = matches[i + 1]
+
+          const narrationBefore = raw.slice(cursor, curr.start).trim()
+
+          if (narrationBefore) {
+            out.push({ text: narrationBefore, speaking: false })
+          }
+
+          const dialogueText = raw.slice(curr.end, next ? next.start : raw.length).trim()
+
+          if (dialogueText) {
+            out.push({ text: dialogueText, speaking: true, character: resolveId(curr.name) })
+          }
+
+          cursor = next ? next.start : raw.length
+        }
+
+        return out.length > 0 ? out : null
       }
 
-      return out.length > 0 ? out : null
-    }
+      // Check if the text contains dialogue.
+      // Supports straight quotes ("...") and curly quotes (open “ ... close ”).
+      // Curly quotes are asymmetric, so we match them as a pair explicitly.
+      const text = action.text
+      const dialogueRegex = /("[\s\S]*?"|“[\s\S]*?”)/g
 
-    // Check if the text contains dialogue.
-    // Supports straight quotes ("...") and curly quotes (open “ ... close ”).
-    // Curly quotes are asymmetric, so we match them as a pair explicitly.
-    const text = action.text
-    const dialogueRegex = /("[\s\S]*?"|“[\s\S]*?”)/g
+      if (!dialogueRegex.test(text)) {
+        // No quotes. If the text includes inline speaker labels, split them into dialogue segments.
+        const speakerSplit = splitOnSpeakerLabels(text)
 
-    if (!dialogueRegex.test(text)) {
-      // No quotes. If the text includes inline speaker labels, split them into dialogue segments.
-      const speakerSplit = splitOnSpeakerLabels(text)
+        if (speakerSplit) {
+          for (let i = 0; i < speakerSplit.length; i++) {
+            const part = speakerSplit[i]
 
-      if (speakerSplit) {
-        for (let i = 0; i < speakerSplit.length; i++) {
-          const part = speakerSplit[i]
+            if (!part.text.trim()) continue
 
-          if (!part.text.trim()) continue
+            const base: any = { ...action }
 
-          const base: any = { ...action }
-
-          if (i > 0) {
-            for (const key of Object.keys(base)) {
-              if (nonDuplicatedFields.has(key)) {
-                if (key === 'needs_search') base[key] = []
-                else delete base[key]
+            if (i > 0) {
+              for (const key of Object.keys(base)) {
+                if (nonDuplicatedFields.has(key)) {
+                  if (key === 'needs_search') base[key] = []
+                  else delete base[key]
+                }
               }
             }
+
+            // Move choices to the last segment.
+            if (action.choices) {
+              if (i === speakerSplit.length - 1) base.choices = action.choices
+              else delete base.choices
+            }
+
+            newActions.push({
+              ...base,
+              text: part.text.trim(),
+              speaking: part.speaking,
+              character: part.character || base.character
+            })
           }
 
-          // Move choices to the last segment.
-          if (action.choices) {
-            if (i === speakerSplit.length - 1) base.choices = action.choices
-            else delete base.choices
+          continue
+        }
+
+        // Fix: Check for fused narration inside unquoted dialogue.
+        if (action.speaking === true) {
+          // Resolve the current character name to check for self-reference
+          const charId = action.character
+          let charName = ''
+
+          if (charId === 'commander') {
+            charName = 'Commander'
+          } else if (charId && charId !== 'none' && charId !== 'current') {
+            const c = l2d.find((x) => x.id === charId)
+
+            if (c) charName = c.name
           }
 
-          newActions.push({
-            ...base,
-            text: part.text.trim(),
-            speaking: part.speaking,
-            character: part.character || base.character
-          })
+          if (charName) {
+            // Regex: Sentence ending punctuation + space + SpeakerName
+            const fusedRegex = new RegExp(`([.!?])\\s+(${charName}\\b)`, 'i')
+            const splitMatch = text.match(fusedRegex)
+
+            if (splitMatch && splitMatch.index !== undefined) {
+              const splitIndex = splitMatch.index + 1 // After punctuation
+              const dialoguePart = text.slice(0, splitIndex).trim()
+              const narrationPart = text.slice(splitIndex).trim()
+
+              // Push dialogue part
+              newActions.push({
+                ...action,
+                text: dialoguePart,
+                speaking: true
+              })
+
+              // Push narration part
+              const narrationAction: any = { ...action, text: narrationPart, speaking: false }
+
+              // Remove choices from first part, keep on last part if needed
+              if (action.choices) {
+                delete newActions[newActions.length - 1].choices
+                narrationAction.choices = action.choices
+              }
+
+              // Remove duplicated fields from the second part
+              for (const key of Object.keys(narrationAction)) {
+                if (nonDuplicatedFields.has(key) && key !== 'choices') {
+                  if (key === 'needs_search') narrationAction[key] = []
+                  else delete narrationAction[key]
+                }
+              }
+
+              newActions.push(narrationAction)
+              continue
+            }
+          }
+        }
+
+        // No quotes. If the model marked it as speaking, keep it UNLESS it looks like third-person narration.
+        if (action.speaking === true && looksLikeNarrationWithoutQuotes(text)) {
+          newActions.push({ ...action, speaking: false })
+        } else {
+          newActions.push(action)
         }
 
         continue
       }
 
-      // Fix: Check for fused narration inside unquoted dialogue.
-      if (action.speaking === true) {
-        // Resolve the current character name to check for self-reference
-        const charId = action.character
-        let charName = ''
+      // Split on dialogue quotes only, being very precise
+      const parts: { text: string; isDialogue: boolean; character?: string }[] = []
+      let lastIndex = 0
 
-        if (charId === 'commander') {
-          charName = 'Commander'
-        } else if (charId && charId !== 'none' && charId !== 'current') {
-          const c = l2d.find((x) => x.id === charId)
+      // Reset regex for splitting
+      dialogueRegex.lastIndex = 0
+      let match
 
-          if (c) charName = c.name
+      while ((match = dialogueRegex.exec(text)) !== null) {
+        // Add any narration before this dialogue
+        const narrationBefore = text.substring(lastIndex, match.index).trim()
+        // If this chunk is ONLY a speaker label (e.g. "**Chime:**"), treat it as metadata:
+        // - Assign the character for the upcoming dialogue
+        // - Do NOT include the label in the dialogue text
+        const isLabelOnly = !!narrationBefore && isSpeakerLabel(narrationBefore)
+
+        if (narrationBefore && !isLabelOnly) {
+          parts.push({ text: narrationBefore, isDialogue: false })
         }
 
-        if (charName) {
-          // Regex: Sentence ending punctuation + space + SpeakerName
-          const fusedRegex = new RegExp(`([.!?])\\s+(${charName}\\b)`, 'i')
-          const splitMatch = text.match(fusedRegex)
+        // Add the dialogue (with quotes)
+        const dialogue = match[0] // Full match including quotes
+        const speakerId = isLabelOnly ? resolveCharacterIdFromSpeakerLabel(narrationBefore) : undefined
+        parts.push({ text: dialogue, isDialogue: true, character: speakerId })
 
-          if (splitMatch && splitMatch.index !== undefined) {
-            const splitIndex = splitMatch.index + 1 // After punctuation
-            const dialoguePart = text.slice(0, splitIndex).trim()
-            const narrationPart = text.slice(splitIndex).trim()
+        lastIndex = match.index + match[0].length
+      }
 
-            // Push dialogue part
-            newActions.push({
-              ...action,
-              text: dialoguePart,
-              speaking: true
-            })
+      // Add any remaining narration
+      const remaining = text.substring(lastIndex).trim()
+      if (remaining) {
+        parts.push({ text: remaining, isDialogue: false })
+      }
 
-            // Push narration part
-            const narrationAction: any = { ...action, text: narrationPart, speaking: false }
+      // Convert parts to actions
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i]
+        if (!part.text.trim()) continue
 
-            // Remove choices from first part, keep on last part if needed
-            if (action.choices) {
-              delete newActions[newActions.length - 1].choices
-              narrationAction.choices = action.choices
+        // Preserve all original fields by default, but avoid duplicating side-effect fields.
+        const base: any = { ...action }
+        if (i > 0) {
+          for (const key of Object.keys(base)) {
+            if (nonDuplicatedFields.has(key)) {
+              if (key === 'needs_search') base[key] = []
+              else delete base[key]
             }
-
-            // Remove duplicated fields from the second part
-            for (const key of Object.keys(narrationAction)) {
-              if (nonDuplicatedFields.has(key) && key !== 'choices') {
-                if (key === 'needs_search') narrationAction[key] = []
-                else delete narrationAction[key]
-              }
-            }
-
-            newActions.push(narrationAction)
-            continue
           }
         }
-      }
 
-      // No quotes. If the model marked it as speaking, keep it UNLESS it looks like third-person narration.
-      if (action.speaking === true && looksLikeNarrationWithoutQuotes(text)) {
-        newActions.push({ ...action, speaking: false })
-      } else {
-        newActions.push(action)
-      }
-
-      continue
-    }
-
-    // Split on dialogue quotes only, being very precise
-    const parts: { text: string; isDialogue: boolean; character?: string }[] = []
-    let lastIndex = 0
-
-    // Reset regex for splitting
-    dialogueRegex.lastIndex = 0
-    let match
-
-    while ((match = dialogueRegex.exec(text)) !== null) {
-      // Add any narration before this dialogue
-      const narrationBefore = text.substring(lastIndex, match.index).trim()
-      // If this chunk is ONLY a speaker label (e.g. "**Chime:**"), treat it as metadata:
-      // - Assign the character for the upcoming dialogue
-      // - Do NOT include the label in the dialogue text
-      const isLabelOnly = !!narrationBefore && isSpeakerLabel(narrationBefore)
-
-      if (narrationBefore && !isLabelOnly) {
-        parts.push({ text: narrationBefore, isDialogue: false })
-      }
-
-      // Add the dialogue (with quotes)
-      const dialogue = match[0] // Full match including quotes
-      const speakerId = isLabelOnly ? resolveCharacterIdFromSpeakerLabel(narrationBefore) : undefined
-      parts.push({ text: dialogue, isDialogue: true, character: speakerId })
-
-      lastIndex = match.index + match[0].length
-    }
-
-    // Add any remaining narration
-    const remaining = text.substring(lastIndex).trim()
-    if (remaining) {
-      parts.push({ text: remaining, isDialogue: false })
-    }
-
-    // Convert parts to actions
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]
-      if (!part.text.trim()) continue
-
-      // Preserve all original fields by default, but avoid duplicating side-effect fields.
-      const base: any = { ...action }
-      if (i > 0) {
-        for (const key of Object.keys(base)) {
-          if (nonDuplicatedFields.has(key)) {
-            if (key === 'needs_search') base[key] = []
-            else delete base[key]
+        // Special handling for choices: Move to the LAST part
+        if (action.choices) {
+          if (i === parts.length - 1) {
+            base.choices = action.choices
+          } else {
+            delete base.choices
           }
         }
-      }
 
-      // Special handling for choices: Move to the LAST part
-      if (action.choices) {
-        if (i === parts.length - 1) {
-          base.choices = action.choices
+        if (part.isDialogue) {
+          newActions.push({
+            ...base,
+            text: part.text.trim(),
+            speaking: true,
+            character: part.character || base.character
+          })
         } else {
-          delete base.choices
+          // Keep the original character for narration (the narration is *about* that character).
+          // This prevents narration like from being treated/displayed as spoken dialogue.
+          newActions.push({
+            ...base,
+            text: part.text.trim(),
+            speaking: false
+          })
         }
-      }
-
-      if (part.isDialogue) {
-        newActions.push({
-          ...base,
-          text: part.text.trim(),
-          speaking: true,
-          character: part.character || base.character
-        })
-      } else {
-        // Keep the original character for narration (the narration is *about* that character).
-        // This prevents narration like from being treated/displayed as spoken dialogue.
-        newActions.push({
-          ...base,
-          text: part.text.trim(),
-          speaking: false
-        })
       }
     }
   }
@@ -1088,7 +1130,7 @@ export const parseFallback = (text: string): any[] => {
 
   // Regex to find speaker labels.
   // We support both quoted dialogue ("...") and unquoted dialogue (common for NIKKE-style outputs).
-  const regex = /(^|[\s\n.!?]|[-—–])([A-Za-z0-9\s\-()]{1,40})\s*:\s*/g
+  const regex = /(^|[\s\n.!?]|[-—–]|["“”])([A-Za-z0-9\s\-()]{1,40})\s*:\s*/g
 
   let lastIndex = 0
   let match
@@ -1179,6 +1221,35 @@ export const parseFallback = (text: string): any[] => {
     // 2. Dialogue (unquoted or quoted) runs until the next speaker label
     let dialogue = cleanText.substring(curr.end, next ? next.index : cleanText.length).trim()
 
+    const splitQuotedSegments = (input: string): { text: string; isDialogue: boolean }[] | null => {
+      if (!input) return null
+
+      const quoteRegex = /("[\s\S]*?"|“[\s\S]*?”)/g
+      if (!quoteRegex.test(input)) return null
+
+      quoteRegex.lastIndex = 0
+      const parts: { text: string; isDialogue: boolean }[] = []
+      let cursor = 0
+      let quoteMatch
+
+      while ((quoteMatch = quoteRegex.exec(input)) !== null) {
+        const narrationBefore = input.substring(cursor, quoteMatch.index).trim()
+        if (narrationBefore) {
+          parts.push({ text: narrationBefore, isDialogue: false })
+        }
+
+        parts.push({ text: quoteMatch[0], isDialogue: true })
+        cursor = quoteMatch.index + quoteMatch[0].length
+      }
+
+      const remaining = input.substring(cursor).trim()
+      if (remaining) {
+        parts.push({ text: remaining, isDialogue: false })
+      }
+
+      return parts.length > 0 ? parts : null
+    }
+
     if (dialogue) {
       const dialogueSegments = dialogue
         .replace(/([.!?]+)(?=[^\s.!?"”])/g, '$1__DIALOGUE_SPLIT__')
@@ -1195,12 +1266,25 @@ export const parseFallback = (text: string): any[] => {
           const { text: cleanedDialogue, speakerId: trailingSpeaker } = extractTrailingSpeakerLabel(segment)
 
           if (cleanedDialogue) {
-            actions.push({
-              text: cleanedDialogue,
-              character: charId,
-              animation: 'idle',
-              speaking: true
-            })
+            const quotedParts = splitQuotedSegments(cleanedDialogue)
+
+            if (quotedParts) {
+              for (const part of quotedParts) {
+                actions.push({
+                  text: part.text,
+                  character: charId,
+                  animation: 'idle',
+                  speaking: part.isDialogue
+                })
+              }
+            } else {
+              actions.push({
+                text: cleanedDialogue,
+                character: charId,
+                animation: 'idle',
+                speaking: true
+              })
+            }
           }
 
           // If there's a trailing speaker, mark it for the next action
@@ -1222,20 +1306,30 @@ export const parseFallback = (text: string): any[] => {
             // Check if this paragraph ends with a trailing speaker label
             const { text: cleanedPara, speakerId: trailingSpeaker } = extractTrailingSpeakerLabel(para)
 
-            // Determine if this paragraph looks like dialogue (has quotes) or narration
-            const hasQuotes = /["”]/.test(cleanedPara)
-
             if (cleanedPara) {
-              // First paragraph inherits the current speaker's character
-              // Subsequent paragraphs without clear speaker association become narration
-              const isSpeaking = pIdx === 0 || hasQuotes
+              const quotedParts = splitQuotedSegments(cleanedPara)
 
-              actions.push({
-                text: cleanedPara,
-                character: charId,
-                animation: 'idle',
-                speaking: isSpeaking
-              })
+              if (quotedParts) {
+                for (const part of quotedParts) {
+                  actions.push({
+                    text: part.text,
+                    character: charId,
+                    animation: 'idle',
+                    speaking: part.isDialogue
+                  })
+                }
+              } else {
+                // First paragraph inherits the current speaker's character
+                // Subsequent paragraphs without clear speaker association become narration
+                const isSpeaking = pIdx === 0
+
+                actions.push({
+                  text: cleanedPara,
+                  character: charId,
+                  animation: 'idle',
+                  speaking: isSpeaking
+                })
+              }
             }
 
             // If there's a trailing speaker, mark it for the next paragraph/action

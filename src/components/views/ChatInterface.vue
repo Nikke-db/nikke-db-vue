@@ -1617,20 +1617,33 @@ const deleteLastMessage = () => {
 
 const saveSession = () => {
   // Filter chat history based on animation replay setting
-  const exportedChatHistory = chatHistory.value.map((msg) => {
-    if (!enableAnimationReplay.value) {
-      // Old format: just role and content
-      return { role: msg.role, content: msg.content }
-    } else {
-      // New format: remove content if text is present to save space
-      if (msg.role === 'assistant' && msg.text) {
-        const rest = { ...msg }
-        delete (rest as any).content
-        return rest
+  const shouldExcludeFromExport = (msg: any): boolean => {
+    if (msg?.role !== 'system' || typeof msg?.content !== 'string') return false
+
+    const content = msg.content
+
+    if (content === 'Session restored successfully.') return true
+    if (content.startsWith("Warning: Saved model '") && content.endsWith('Using default.')) return true
+
+    return false
+  }
+
+  const exportedChatHistory = chatHistory.value
+    .filter((msg) => !shouldExcludeFromExport(msg))
+    .map((msg) => {
+      if (!enableAnimationReplay.value) {
+        // Old format: just role and content
+        return { role: msg.role, content: msg.content }
+      } else {
+        // New format: remove content if text is present to save space
+        if (msg.role === 'assistant' && msg.text) {
+          const rest = { ...msg }
+          delete (rest as any).content
+          return rest
+        }
+        return msg
       }
-      return msg
-    }
-  })
+    })
 
   const sessionData = {
     chatHistory: exportedChatHistory,

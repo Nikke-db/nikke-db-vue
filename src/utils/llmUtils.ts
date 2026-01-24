@@ -5,7 +5,8 @@ import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
 import { logDebug } from '@/utils/chatUtils'
 
-export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]')))
+export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
+export const modelsRequiringStreamForHighTokens = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsRequiringStreamForHighTokens') || '[]')))
 
 export const providerOptions = [
   { label: 'Gemini', value: 'gemini' },
@@ -20,6 +21,48 @@ export const tokenUsageOptions = [
   { label: 'High (60 turns)', value: 'high' },
   { label: 'Goddess', value: 'goddess' }
 ]
+
+const parsePollinationsStreamResponse = async (response: Response) => {
+  if (!response.body) {
+    throw new Error('Pollinations API Error: Missing response body for stream')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder('utf-8')
+  let buffer = ''
+  let content = ''
+
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data:')) continue
+      const data = trimmed.slice(5).trim()
+      if (!data || data === '[DONE]') continue
+
+      try {
+        const parsed = JSON.parse(data)
+        const delta = parsed?.choices?.[0]?.delta?.content
+        const message = parsed?.choices?.[0]?.message?.content
+        if (typeof delta === 'string') {
+          content += delta
+        } else if (typeof message === 'string') {
+          content += message
+        }
+      } catch (error) {
+        console.warn('Pollinations stream chunk parse error:', error)
+      }
+    }
+  }
+
+  return content
+}
 
 export const fetchOpenRouterModels = async () => {
   try {
@@ -172,6 +215,10 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
     max_tokens: 32768 // Double the normal limit for summarization
   }
 
+  if (modelsRequiringStreamForHighTokens.value.has(model) && requestBody.max_tokens > 4096) {
+    requestBody.stream = true
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
@@ -190,6 +237,23 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     console.error('Pollinations Summarization API Error Details:', errorData)
+
+    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens > 4096') && errorData?.error?.message?.includes('stream=true')) {
+      console.warn('Pollinations requires stream=true for max_tokens > 4096, retrying with stream enabled...')
+      requestBody.stream = true
+      modelsRequiringStreamForHighTokens.value.add(model)
+      sessionStorage.setItem('modelsRequiringStreamForHighTokens', JSON.stringify([...modelsRequiringStreamForHighTokens.value]))
+      const retryResponse = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!retryResponse.ok) {
+        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+      }
+      return await parsePollinationsStreamResponse(retryResponse)
+    }
 
     // If max_tokens is too high for this model, try with standard limit
     if (response.status === 400 && errorData?.error?.message?.includes('max_tokens')) {
@@ -210,8 +274,12 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
 
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
-  const data = await response.json()
 
+  if (requestBody.stream) {
+    return await parsePollinationsStreamResponse(response)
+  }
+
+  const data = await response.json()
   return data.choices[0].message.content
 }
 
@@ -330,6 +398,10 @@ export const callPollinations = async (
     private: true
   }
 
+  if (modelsRequiringStreamForHighTokens.value.has(model) && requestBody.max_tokens > 4096) {
+    requestBody.stream = true
+  }
+
   if (reasoningEffort && reasoningEffort !== 'default') {
     requestBody.reasoning_effort = reasoningEffort
   }
@@ -357,17 +429,38 @@ export const callPollinations = async (
       throw new Error('RATE_LIMITED')
     }
 
+    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens > 4096') && errorData?.error?.message?.includes('stream=true')) {
+      console.warn('Pollinations requires stream=true for max_tokens > 4096, retrying with stream enabled...')
+      requestBody.stream = true
+      modelsRequiringStreamForHighTokens.value.add(model)
+      sessionStorage.setItem('modelsRequiringStreamForHighTokens', JSON.stringify([...modelsRequiringStreamForHighTokens.value]))
+      const retryResponse = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!retryResponse.ok) {
+        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+      }
+      return await parsePollinationsStreamResponse(retryResponse)
+    }
+
     if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
+      sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
       return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching })
     }
 
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
-  const data = await response.json()
 
+  if (requestBody.stream) {
+    return await parsePollinationsStreamResponse(response)
+  }
+
+  const data = await response.json()
   return data.choices[0].message.content
 }
 
@@ -380,6 +473,10 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
     max_tokens: 16384
   }
 
+  if (modelsRequiringStreamForHighTokens.value.has(model) && requestBody.max_tokens > 4096) {
+    requestBody.stream = true
+  }
+
   if (reasoningEffort && reasoningEffort !== 'default') {
     requestBody.reasoning_effort = reasoningEffort
   }
@@ -405,10 +502,30 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
     if (response.status === 429) {
       throw new Error('RATE_LIMITED')
     }
+    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens > 4096') && errorData?.error?.message?.includes('stream=true')) {
+      console.warn('Pollinations requires stream=true for max_tokens > 4096, retrying with stream enabled...')
+      requestBody.stream = true
+      modelsRequiringStreamForHighTokens.value.add(model)
+      sessionStorage.setItem('modelsRequiringStreamForHighTokens', JSON.stringify([...modelsRequiringStreamForHighTokens.value]))
+      const retryResponse = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!retryResponse.ok) {
+        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+      }
+      return await parsePollinationsStreamResponse(retryResponse)
+    }
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
-  const data = await response.json()
 
+  if (requestBody.stream) {
+    return await parsePollinationsStreamResponse(response)
+  }
+
+  const data = await response.json()
   return data.choices[0].message.content
 }
 
@@ -529,7 +646,7 @@ export const callLocal = async (
       console.warn(`Model ${model || 'local'} does not support json_schema response format, remembering and retrying without it...`)
       if (model) {
         modelsWithoutJsonSupport.value.add(model)
-        localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
+        sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
       }
       return callWithoutJsonFormat()
     }
@@ -574,16 +691,16 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
         // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
         choices: isGameMode
           ? {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' },
-                type: { type: 'string', enum: ['dialogue', 'action'] }
-              },
-              required: ['text', 'type']
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  text: { type: 'string' },
+                  type: { type: 'string', enum: ['dialogue', 'action'] }
+                },
+                required: ['text', 'type']
+              }
             }
-          }
           : undefined
       },
       required: isGameMode ? ['actions', 'choices'] : ['actions']
@@ -792,7 +909,7 @@ export const callOpenRouter = async (
     if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
       console.warn(`Model ${model} does not support json_object response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
-      localStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
+      sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
       return callWithoutJsonFormat()
     }
 
