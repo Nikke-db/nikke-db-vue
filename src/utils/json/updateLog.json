@@ -598,5 +598,17 @@
   {
     "date": "January 3rd 2026",
     "update": "Fixed the \"Fix broken animation\" button in the layer editor, which was previously permanently hiding the control buttons once clicked."
+  },
+  {
+    "date": "January 17th 2026",
+    "update": "Live2d: Added Label and 3 NPCs idk their names from ark guardian. Added Ark Guardian and Sin Editor scenes"
+  },
+  {
+    "date": "January 17th 2026",
+    "update": "Gallery: Added Ark Guardian Album Cover, Ark Guardian and Sin Editor galleries"
+  },
+  {
+    "date": "January 17th 2026",
+    "update": "Live2d: Chinese exclusive nikkes Hua Pi (画皮) and Ying Ning (婴宁)"
   }
 ]

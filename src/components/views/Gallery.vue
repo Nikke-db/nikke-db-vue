@@ -216,6 +216,8 @@ import goddessfall from '@/utils/json/Gallery/goddessfall.json'
 import blankticket from '@/utils/json/Gallery/blankticket.json'
 import terminusticket from '@/utils/json/Gallery/terminusticket.json'
 import azxservicetime from '@/utils/json/Gallery/azxservicetime.json'
+import arkguardian from '@/utils/json/Gallery/arkguardian.json'
+import sineditor from '@/utils/json/Gallery/sineditor.json'
 
 const market = useMarket()
 
@@ -292,7 +294,9 @@ const buttonListEvents = [
   { data: goninjathief },
   { data: goddessfall },
   { data: blankticket },
-  { data: terminusticket }
+  { data: terminusticket },
+  { data: arkguardian },
+  { data: sineditor }
 ] as buttonInterface[]
 
 const buttonListOther = [
