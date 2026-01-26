@@ -15,8 +15,7 @@ export const ttsProvider = ref<TTSProvider>((localStorage.getItem('nikke_tts_pro
 export const gptSovitsEndpoint = ref(localStorage.getItem('nikke_gptsovits_endpoint') || 'http://localhost:9880')
 export const gptSovitsBasePath = ref(localStorage.getItem('nikke_gptsovits_basepath') || 'C:/GPT-SoVITS')
 export const gptSovitsPromptTextCache = new Map<string, string>()
-export const chatterboxEndpoint = ref(localStorage.getItem('nikke_chatterbox_endpoint') || 'http://localhost:7860')
-export const chatterboxVoicesPath = ref(localStorage.getItem('nikke_chatterbox_voices_path') || 'C:/chatterbox-tts-api/voices')
+export const chatterboxEndpoint = ref(localStorage.getItem('nikke_chatterbox_endpoint') || 'http://localhost:4123')
 
 // Helper for debug logging
 const logDebug = (...args: any[]) => {
@@ -28,7 +27,10 @@ const logDebug = (...args: any[]) => {
 export const playTTSGptSovits = async (text: string, characterName: string, market: any) => {
   // Clean up character name to match folder/filename
   // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer"
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
+  const cleanName = characterName
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .replace(/\s+/g, '_')
 
   logDebug(`[TTS-GPTSoVits] Requesting TTS for ${characterName} (${cleanName})`)
 
@@ -46,8 +48,8 @@ export const playTTSGptSovits = async (text: string, characterName: string, mark
     // And prompt text at: {basePath}/GPT_SoVITS/voices/{character}/{character}.txt
     // Clean up the base path: remove trailing slashes/backslashes, normalize to forward slashes
     const basePath = gptSovitsBasePath.value
-      .replace(/[\\/]+$/, '')  // Remove trailing slashes (both / and \)
-      .replace(/\\/g, '/')     // Convert backslashes to forward slashes
+      .replace(/[\\/]+$/, '') // Remove trailing slashes (both / and \)
+      .replace(/\\/g, '/') // Convert backslashes to forward slashes
     const refAudioPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.wav`
     const promptTextPath = `${basePath}/GPT_SoVITS/voices/${cleanName}/${cleanName}.txt`
 
@@ -94,7 +96,7 @@ export const playTTSGptSovits = async (text: string, characterName: string, mark
     const response = await fetch(`${baseUrl}/tts`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     })
@@ -136,148 +138,140 @@ export const playTTSGptSovits = async (text: string, characterName: string, mark
 }
 
 export const playTTSChatterbox = async (text: string, characterName: string, market: any) => {
-  // Clean up character name to match voice file
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
+  // Clean up character name to match voice library name
+  // e.g., "Anis: Sparkling Summer" -> "anis_sparkling_summer"
+  const cleanName = characterName
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .replace(/\s+/g, '_')
 
-  logDebug(`[TTS-Chatterbox] Requesting TTS for ${characterName} (${cleanName})`)  
+  logDebug(`[TTS-Chatterbox] Requesting TTS for ${characterName} (${cleanName})`)
 
   try {
-    let baseUrl = chatterboxEndpoint.value
-    baseUrl = baseUrl.replace(/\/$/, '')
+    let baseUrl = chatterboxEndpoint.value.replace(/\/$/, '')
 
-    if (import.meta.env.DEV && (baseUrl.includes('localhost:7860') || baseUrl.includes('127.0.0.1:7860'))) {
+    // Handle CORS in dev mode by using Vite proxy
+    if (import.meta.env.DEV && (baseUrl.includes('localhost:4123') || baseUrl.includes('127.0.0.1:4123'))) {
       baseUrl = '/chatterbox'
     }
 
-    const voicePreset = characterName 
-      ? `${cleanName}.wav` 
-      : ""  // Empty string for default voice (no cloning)
+    // Voice name for the voice library (without extension)
+    const voiceName = characterName ? cleanName : ''
 
-    const callGenerate = async (preset: string): Promise<string | null> => {  // Renamed param for clarity
-      const startPayload = {
-        data: [
-          null,          // 1. State
-          text,          // 2. Text to synthesize
-          null,          // 3. Reference Audio (null - no upload; using preset instead)
-          preset,        // 4. Voice Preset filename (string, e.g., "anis_sparkling_summer.wav" or "")
-          0.8,           // 5. Temperature
-          0,             // 6. Random seed
-          0.0,           // 7. Min P
-          0.95,          // 8. Top P
-          1000,          // 9. Top K
-          1.2,           // 10. Repetition Penalty
-          true           // 11. Normalize loudness
-        ]
+    /**
+     * Calls the Chatterbox FastAPI streaming endpoint and plays audio in real-time.
+     * Uses MediaSource API for progressive playback as chunks arrive.
+     */
+    const streamAndPlay = async (voice: string): Promise<boolean> => {
+      const payload = {
+        input: text,
+        voice: voice,
+        exaggeration: 0.7,
+        cfg_weight: 0.5,
+        temperature: 0.8,
+        streaming_strategy: 'sentence',
+        streaming_quality: 'balanced'
       }
 
-      logDebug(`[TTS-Chatterbox] Calling ${baseUrl}/gradio_api/call/generate with payload:`, startPayload)
+      logDebug(`[TTS-Chatterbox] Calling ${baseUrl}/v1/audio/speech/stream with payload:`, payload)
 
-      const startResponse = await fetch(`${baseUrl}/gradio_api/call/generate`, {
+      const response = await fetch(`${baseUrl}/v1/audio/speech/stream`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(startPayload)
+        body: JSON.stringify(payload)
       })
 
-      if (!startResponse.ok) {
-        const errText = await startResponse.text()
-        console.warn(`[TTS-Chatterbox] API Error (start): ${startResponse.status} - ${errText}`)
-        return null
+      if (!response.ok) {
+        const errText = await response.text()
+        console.warn(`[TTS-Chatterbox] API Error: ${response.status} - ${errText}`)
+        return false
       }
 
-      const startResult = await startResponse.json()
-      const eventId: string | undefined = startResult?.event_id
-      if (!eventId) {
-        console.warn('[TTS-Chatterbox] Missing event_id in response:', startResult)
-        return null
+      if (!response.body) {
+        console.warn('[TTS-Chatterbox] No response body for streaming')
+        return false
       }
 
-      const sseResponse = await fetch(`${baseUrl}/gradio_api/call/generate/${encodeURIComponent(eventId)}`)
-      if (!sseResponse.ok) {
-        const errText = await sseResponse.text()
-        console.warn(`[TTS-Chatterbox] API Error (sse): ${sseResponse.status} - ${errText}`)
-        return null
-      }
+      // Collect all chunks and play as a single audio file
+      // This is more reliable than MediaSource API which has limited codec support
+      const reader = response.body.getReader()
+      const chunks: Uint8Array[] = []
 
-      const sseText = await sseResponse.text()
-      let currentEvent = ''
-      let completeData: string | null = null
-      let sawErrorEvent = false
-      for (const rawLine of sseText.split(/\r?\n/)) {
-        const line = rawLine.trimEnd()
-        if (line.startsWith('event:')) {
-          currentEvent = line.slice('event:'.length).trim()
-          if (currentEvent === 'error') sawErrorEvent = true
-          continue
-        }
-        if (line.startsWith('data:')) {
-          const payload = line.slice('data:'.length).trim()
-          if (currentEvent === 'complete') {
-            completeData = payload
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          if (value) {
+            chunks.push(value)
+            logDebug(`[TTS-Chatterbox] Received chunk: ${value.length} bytes`)
           }
         }
+      } catch (e) {
+        console.warn('[TTS-Chatterbox] Stream reading error:', e)
+        return false
       }
 
-      if (!completeData) {
-        if (sawErrorEvent) {
-          console.warn('[TTS-Chatterbox] Gradio returned event:error. This often means the reference audio path was invalid or not allowed by Gradio allowed_paths.')
-        }
-        console.warn('[TTS-Chatterbox] No complete data in SSE response:', sseText)
-        return null
+      if (chunks.length === 0) {
+        console.warn('[TTS-Chatterbox] No audio data received')
+        return false
+      }
+
+      // Combine chunks into a single Blob
+      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
+      const audioData = new Uint8Array(totalLength)
+      let offset = 0
+      for (const chunk of chunks) {
+        audioData.set(chunk, offset)
+        offset += chunk.length
+      }
+
+      const audioBlob = new Blob([audioData], { type: 'audio/wav' })
+      const audioUrl = URL.createObjectURL(audioBlob)
+
+      logDebug(`[TTS-Chatterbox] Audio ready, total size: ${totalLength} bytes`)
+
+      // Play the audio
+      const audio = new Audio(audioUrl)
+      audio.volume = 1.0
+
+      // Sync yapping with audio
+      audio.onplay = () => {
+        market.live2d.isYapping = true
+      }
+      audio.onended = () => {
+        market.live2d.isYapping = false
+        URL.revokeObjectURL(audioUrl)
+      }
+      audio.onerror = () => {
+        market.live2d.isYapping = false
+        URL.revokeObjectURL(audioUrl)
       }
 
       try {
-        const data = JSON.parse(completeData)
-        const audioUrl = data?.[0]?.url
-        return audioUrl || null
+        await audio.play()
+        return true
       } catch (e) {
-        console.warn('[TTS-Chatterbox] Failed to parse SSE complete data:', completeData, e)
-        return null
+        console.warn('[TTS-Chatterbox] Playback failed:', e)
+        market.live2d.isYapping = false
+        URL.revokeObjectURL(audioUrl)
+        return false
       }
     }
 
-    // Single call – server auto-fallbacks if preset invalid
-    let audioUrl = await callGenerate(voicePreset)
+    // Try with character voice first
+    let success = await streamAndPlay(voiceName)
 
-    if (!audioUrl) {
-      logDebug('[TTS-Chatterbox] Retrying with explicit default voice.')
-      audioUrl = await callGenerate("")  // Force default (no cloning)
+    // If failed and we had a specific voice, retry with default
+    if (!success && voiceName) {
+      logDebug('[TTS-Chatterbox] Retrying with default voice.')
+      success = await streamAndPlay('')
     }
 
-    if (!audioUrl) {
-      return
+    if (!success) {
+      console.warn('[TTS-Chatterbox] Failed to generate or play audio')
     }
-
-    // When using the Vite proxy, rewrite returned absolute URLs to go through it.
-    // This avoids cross-origin fetch issues in dev.
-    if (import.meta.env.DEV && baseUrl === '/chatterbox') {
-      audioUrl = audioUrl.replace(/^https?:\/\/(localhost|127\.0\.0\.1):7860/i, '')
-      if (!audioUrl.startsWith('/')) audioUrl = `/${audioUrl}`
-      audioUrl = `/chatterbox${audioUrl}`
-    }
-
-    logDebug(`[TTS-Chatterbox] Received audio URL: ${audioUrl}`)
-
-    // Play the audio
-    const audio = new Audio(audioUrl)
-    audio.volume = 1.0
-
-    // Sync yapping with audio
-    audio.onplay = () => {
-      market.live2d.isYapping = true
-    }
-    audio.onended = () => {
-      market.live2d.isYapping = false
-    }
-    audio.onerror = () => {
-      market.live2d.isYapping = false
-    }
-
-    audio.play().catch((e) => {
-      console.warn('[TTS-Chatterbox] Playback failed:', e)
-      market.live2d.isYapping = false
-    })
   } catch (e) {
     console.warn('[TTS-Chatterbox] Error:', e)
   }
@@ -298,7 +292,10 @@ export const playTTS = async (text: string, characterName: string, market: any) 
   // Clean up character name to match filename
   // Remove special chars, replace spaces with underscores
   // e.g. "Anis: Sparkling Summer" -> "anis_sparkling_summer.wav"
-  const cleanName = characterName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '_')
+  const cleanName = characterName
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .replace(/\s+/g, '_')
   const voiceFile = `${cleanName}.wav`
 
   logDebug(`[TTS] Requesting TTS for ${characterName} (${voiceFile})`)
@@ -306,7 +303,10 @@ export const playTTS = async (text: string, characterName: string, market: any) 
   try {
     let baseUrl = ttsEndpoint.value
     // Clean up the base URL to ensure we have the root (remove /v1, /api, trailing slashes)
-    baseUrl = baseUrl.replace(/\/$/, '').replace(/\/v1$/, '').replace(/\/api$/, '')
+    baseUrl = baseUrl
+      .replace(/\/$/, '')
+      .replace(/\/v1$/, '')
+      .replace(/\/api$/, '')
 
     // Handle CORS in dev mode by using Vite proxy
     // This requires the proxy to be configured in vite.config.ts
@@ -334,7 +334,7 @@ export const playTTS = async (text: string, characterName: string, market: any) 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: params
     })

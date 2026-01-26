@@ -1208,6 +1208,10 @@
     "id": "c581"
   },
   {
+    "name": "Label",
+    "id": "c582"
+  },
+  {
     "name": "Mori",
     "id": "c590"
   },
@@ -1780,6 +1784,18 @@
     "id": "c996"
   },
   {
+    "name": "Ying Ning (婴宁) (CN)",
+    "id": "c8004"
+  },
+  {
+    "name": "Hua Pi (画皮) (CN)",
+    "id": "c8005"
+  },
+  {
+    "name": "Ying Ning (婴宁) (CN)",
+    "id": "c8006"
+  },
+  {
     "name": "Only One",
     "id": "c997"
   },
@@ -1852,15 +1868,15 @@
     "id": "c9009"
   },
   {
-    "name": "HIDDEN NPC: TBA",
+    "name": "NPC: TBA",
     "id": "c9014"
   },
   {
-    "name": "HIDDEN NPC: TBA",
+    "name": "NPC: TBA",
     "id": "c9015"
   },
   {
-    "name": "HIDDEN NPC: TBA",
+    "name": "NPC: TBA",
     "id": "c9016"
   },
   {
@@ -2143,6 +2159,15 @@
     "name": "Terminus Ticket",
     "id": "terminusticket",
     "f": "EventScene_terminusticket_01"
+  },
+  {
+    "name": "Ark Guardian",
+    "id": "arkguardian"
+  },
+  {
+    "name": "Sin Editor",
+    "id": "sineditor",
+    "f": "EventScene_sineditor_01"
   },
   {
     "name": "Smol Ade",

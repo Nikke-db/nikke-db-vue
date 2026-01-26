@@ -12,13 +12,19 @@
       </template>
     </n-button>
 
-    <div 
+    <n-button class="reset-btn" circle @click="resetCharacterPlacement" title="Reset Character Position">
+      <template #icon>
+        <n-icon><Reset /></n-icon>
+      </template>
+    </n-button>
+
+    <div
       class="chat-container"
       v-show="chatMode === 'classic' || (chatMode === 'nikke' && !nikkeOverlayVisible)"
-      :style="{ 
-        top: chatPosition.y + 'px', 
-        left: chatPosition.x + 'px', 
-        width: chatSize.width + 'px', 
+      :style="{
+        top: chatPosition.y + 'px',
+        left: chatPosition.x + 'px',
+        width: chatSize.width + 'px',
         height: chatSize.height + 'px',
         bottom: 'auto',
         maxHeight: 'none'
@@ -32,133 +38,118 @@
         </div>
         <div class="window-controls">
           <n-button size="tiny" circle quaternary @click="initChatLayout" title="Reset Position">
-            <template #icon><n-icon><Reset /></n-icon></template>
+            <template #icon
+              ><n-icon><Reset /></n-icon
+            ></template>
           </n-button>
         </div>
       </div>
 
       <div class="chat-history" ref="chatHistoryRef">
-      <div 
-        v-for="(msg, index) in chatHistory" 
-        :key="index" 
-        :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), 'selected': selectedMessageIndex === index }]"
-        @click="msg.role !== 'user' ? replayMessage(msg, index) : null"
-      >
-        <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
-        <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role === 'assistant'" class="message-top-actions" style="right: 0; left: auto;">
-          <n-button size="tiny" circle type="warning" @click.stop="regenerateResponse" title="Retry this message">
-            <template #icon><n-icon><Renew /></n-icon></template>
-          </n-button>
+        <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), selected: selectedMessageIndex === index }]" @click="msg.role !== 'user' ? replayMessage(msg, index) : null">
+          <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
+          <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role === 'assistant'" class="message-top-actions" style="right: 0; left: auto">
+            <n-button size="tiny" circle type="warning" @click.stop="regenerateResponse" title="Retry this message">
+              <template #icon
+                ><n-icon><Renew /></n-icon
+              ></template>
+            </n-button>
+          </div>
+          <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role !== 'system'" class="message-actions">
+            <n-button size="tiny" circle type="error" @click.stop="deleteLastMessage" title="Delete last message">
+              <template #icon
+                ><n-icon><TrashCan /></n-icon
+              ></template>
+            </n-button>
+          </div>
         </div>
-        <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role !== 'system'" class="message-actions">
-          <n-button size="tiny" circle type="error" @click.stop="deleteLastMessage" title="Delete last message">
-            <template #icon><n-icon><TrashCan /></n-icon></template>
-          </n-button>
+        <div v-if="isLoading" class="message assistant">
+          <div class="message-content loading-container">
+            <n-spin size="small" v-if="isGenerating" />
+            <transition name="fade" mode="out-in">
+              <span :key="loadingStatus" class="loading-text">{{ loadingStatus }}</span>
+            </transition>
+          </div>
         </div>
-      </div>
-      <div v-if="isLoading" class="message assistant">
-        <div class="message-content loading-container">
-          <n-spin size="small" v-if="isGenerating" />
-          <transition name="fade" mode="out-in">
-            <span :key="loadingStatus" class="loading-text">{{ loadingStatus }}</span>
-          </transition>
-        </div>
-      </div>
       </div>
 
-      <div class="chat-input-area" style="gap: 6px;">
-      <n-input
-      v-model:value="userInput"
-      type="textarea"
-      :placeholder="(apiKey || apiProvider === 'pollinations' || apiProvider === 'local') ? 'Type your message...' : 'Please enter API Key in settings'"
-      :disabled="!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local'"
-      :autosize="{ minRows: 1, maxRows: 4 }"
-      @keydown.enter.prevent="handleEnter"
-      />
-      <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local')">Send</n-button>
-      <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
-      <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
-      <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
-      {{ waitingForNext ? 'Next' : 'Continue' }}
-      </n-button>
+      <div class="chat-input-area" style="gap: 6px">
+        <n-input v-model:value="userInput" type="textarea" :placeholder="apiKey || apiProvider === 'pollinations' || apiProvider === 'local' ? 'Type your message...' : 'Please enter API Key in settings'" :disabled="!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local'" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
+        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local')">Send</n-button>
+        <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
+        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
+        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
+          {{ waitingForNext ? 'Next' : 'Continue' }}
+        </n-button>
       </div>
 
-      <div class="session-controls" style="justify-content: flex-start; gap: 2px;">
-      <n-button
-      type="error"
-      size="small"
-      @click="saveSession"
-      :disabled="chatHistory.length === 0 || isLoading"
-      :style="{ opacity: (chatHistory.length === 0 || isLoading) ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
-      >
-      <template #icon><n-icon><Save /></n-icon></template>
-      Save
-      </n-button>
-      <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-      <template #icon><n-icon><Upload /></n-icon></template>
-      Load
-      </n-button>
-      <n-button
-        type="error"
-        size="small"
-        @click="resetSession"
-        :disabled="isLoading || chatHistory.length === 0"
-        :style="{ marginLeft: '4px', opacity: (chatHistory.length === 0 || isLoading) ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
-      >
-        <template #icon><n-icon><Reset /></n-icon></template>
-        Reset
-      </n-button>
-      <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
-        <template #trigger>
-          <n-button 
-            type="info" 
-            size="small" 
-            :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }"
-          >
-            <template #icon>
-              <n-icon><Help /></n-icon>
-            </template>
-            Problems?
-          </n-button>
-        </template>
-        <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px; min-width: 150px;">
-          <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px;">
-            Inject one or more reminders to the model for the next turn:
+      <div class="session-controls" style="justify-content: flex-start; gap: 2px">
+        <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+          <template #icon
+            ><n-icon><Save /></n-icon
+          ></template>
+          Save
+        </n-button>
+        <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+          <template #icon
+            ><n-icon><Upload /></n-icon
+          ></template>
+          Load
+        </n-button>
+        <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ marginLeft: '4px', opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+          <template #icon
+            ><n-icon><Reset /></n-icon
+          ></template>
+          Reset
+        </n-button>
+        <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
+          <template #trigger>
+            <n-button type="info" size="small" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon>
+                <n-icon><Help /></n-icon>
+              </template>
+              Problems?
+            </n-button>
+          </template>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px; min-width: 150px">
+            <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px">Inject one or more reminders to the model for the next turn:</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+              <n-checkbox v-model:checked="invalidJsonAuto" size="small">Auto</n-checkbox>
+              <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+              <n-checkbox v-model:checked="incorrectAnimationsToggle">Incorrect or Lazy Animations</n-checkbox>
+              <n-checkbox v-model:checked="incorrectAnimationsPersist" size="small">Persist</n-checkbox>
+            </div>
+            <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
+            <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
+            <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
+            <n-checkbox v-if="mode === 'roleplay'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
-            <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
-          </div>
-          <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
-          <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
-          <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
-          <n-checkbox v-if="mode === 'roleplay'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
-        </div>
-      </n-popover>
-    </div>
-    
-    <!-- Resize Handles -->
-    <div class="resize-handle nw" @mousedown="startResize($event, 'nw')" @touchstart="startResize($event, 'nw')"></div>
-    <div class="resize-handle ne" @mousedown="startResize($event, 'ne')" @touchstart="startResize($event, 'ne')"></div>
-    <div class="resize-handle sw" @mousedown="startResize($event, 'sw')" @touchstart="startResize($event, 'sw')"></div>
-    <div class="resize-handle se" @mousedown="startResize($event, 'se')" @touchstart="startResize($event, 'se')">
-      <n-icon size="16"><Maximize /></n-icon>
-    </div>
+        </n-popover>
+      </div>
+
+      <!-- Resize Handles -->
+      <div class="resize-handle nw" @mousedown="startResize($event, 'nw')" @touchstart="startResize($event, 'nw')"></div>
+      <div class="resize-handle ne" @mousedown="startResize($event, 'ne')" @touchstart="startResize($event, 'ne')"></div>
+      <div class="resize-handle sw" @mousedown="startResize($event, 'sw')" @touchstart="startResize($event, 'sw')"></div>
+      <div class="resize-handle se" @mousedown="startResize($event, 'se')" @touchstart="startResize($event, 'se')">
+        <n-icon size="16"><Maximize /></n-icon>
+      </div>
     </div>
 
     <!-- NIKKE Mode Overlay -->
     <transition name="fade">
-      <div 
-        v-if="chatMode === 'nikke' && nikkeOverlayVisible" 
-        class="nikke-chat-overlay"
-        :class="{ passthrough: nikkeOverlayPassthrough }"
-      >
+      <div v-if="chatMode === 'nikke' && nikkeOverlayVisible" class="nikke-chat-overlay" :class="{ passthrough: nikkeOverlayPassthrough }">
         <div class="nikke-vignette"></div>
 
         <!-- Stop Button for NIKKE Mode -->
         <div class="nikke-overlay-controls">
           <n-button type="error" circle @mousedown.stop="stopGeneration" @touchstart.stop="stopGeneration" title="Stop Generation">
-            <template #icon><n-icon><Close /></n-icon></template>
+            <template #icon
+              ><n-icon><Close /></n-icon
+            ></template>
           </n-button>
         </div>
 
@@ -176,12 +167,7 @@
         <transition name="fade">
           <div v-if="gameChoices.length > 0" class="game-choices-overlay">
             <div class="choices-container">
-              <div 
-                v-for="(choice, index) in gameChoices" 
-                :key="index"
-                class="choice-btn"
-                @click="handleGameChoice(choice)"
-              >
+              <div v-for="(choice, index) in gameChoices" :key="index" class="choice-btn" @click="handleGameChoice(choice)">
                 <div class="choice-marker"></div>
                 <span class="choice-text">{{ (choice.text || (choice as any).label || '').replace(/^["']|["']$/g, '') }}</span>
               </div>
@@ -193,7 +179,7 @@
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
-      <n-form>
+        <n-form>
           <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
           <n-divider />
           <n-form-item label="API Provider">
@@ -225,15 +211,9 @@
           <n-form-item label="API Key" v-if="apiProvider !== 'local'">
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
-          <n-alert type="info" style="margin-bottom: 12px" title="">
-            Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB.
-          </n-alert>
-          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title="">
-            For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to increase rates and available models.
-          </n-alert>
-          <n-alert type="warning" style="margin-bottom: 12px" title="">
-            Users are responsible for any possible cost using this functionality.
-          </n-alert>
+          <n-alert type="info" style="margin-bottom: 12px" title=""> Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB. </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to increase rates and available models. </n-alert>
+          <n-alert type="warning" style="margin-bottom: 12px" title=""> Users are responsible for any possible cost using this functionality. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
             <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
@@ -253,6 +233,25 @@
           <n-form-item label="Model" v-if="apiProvider !== 'local'">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
+
+          <n-form-item v-if="reasoningEffortOptions.length > 0">
+            <template #label>
+              Reasoning Effort
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Controls how much time/budget the model spends "thinking" before answering.<br /><br />
+                  Recommended to use lower values or disable thinking entirely. <br /><br />
+                  Has no effect on models without thinking capabilities.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="reasoningEffort" :options="reasoningEffortOptions" />
+          </n-form-item>
           <n-divider />
 
           <h4 class="settings-section-header accent-green">AI Settings</h4>
@@ -267,10 +266,10 @@
                   </n-icon>
                 </template>
                 <div>
-                  Controls how often the story is summarized to save tokens. Will affect costs and speed.<br><br>Does not affect the Save and Load functionality.<br><br>
-                  <strong>Low:</strong> Summarizes every 10 turns. Cost-efficient.<br>
-                  <strong>Medium:</strong> Summarizes every 30 turns. Balanced.<br>
-                  <strong>High:</strong> Summarizes every 60 turns. Uses more tokens.<br>
+                  Controls how often the story is summarized to save tokens. Will affect costs and speed.<br /><br />Does not affect the Save and Load functionality.<br /><br />
+                  <strong>Low:</strong> Summarizes every 10 turns. Cost-efficient.<br />
+                  <strong>Medium:</strong> Summarizes every 30 turns. Balanced.<br />
+                  <strong>High:</strong> Summarizes every 60 turns. Uses more tokens.<br />
                   <strong>Goddess:</strong> Disables summarization and sends the full history to the model on every turn. This may result in higher costs and slower responses in time, but provides the best context for the AI.
                 </div>
               </n-popover>
@@ -280,7 +279,7 @@
 
           <n-form-item v-if="isDev">
             <template #label>
-              Context Caching <span style="font-size: smaller;">(Experimental)</span>
+              Context Caching <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -288,8 +287,8 @@
                   </n-icon>
                 </template>
                 <div>
-                  Adds explicit caching headers for supported models (Claude, Gemini) on OpenRouter.<br><br>
-                  Significantly reduces costs for long conversations by caching the history.<br>
+                  Adds explicit caching headers for supported models (Claude, Gemini) on OpenRouter and Pollinations.<br /><br />
+                  Significantly reduces costs for long conversations by caching the history.<br />
                   Other models (OpenAI, DeepSeek) cache automatically without this setting.
                 </div>
               </n-popover>
@@ -302,7 +301,7 @@
           <n-divider />
           <n-form-item>
             <template #label>
-              Use Nikke-DB Knowledge <span style="font-size: smaller;">(Recommended)</span>
+              Use Nikke-DB Knowledge <span style="font-size: smaller">(Recommended)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -310,17 +309,17 @@
                   </n-icon>
                 </template>
                 <div>
-                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br><br>
+                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br /><br />
                   Faster and saves API costs.
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="useLocalProfiles" />
+            <n-switch v-model:value="useLocalProfiles" :disabled="!isDev" />
           </n-form-item>
 
           <n-form-item v-if="useLocalProfiles">
             <template #label>
-              Allow Web Search Fallback <span style="font-size: smaller;">(Recommended)</span>
+              Allow Web Search Fallback <span style="font-size: smaller">(Recommended)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -346,8 +345,8 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br><br>
-                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.<br><br>
+                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br /><br />
+                  <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.<br /><br />
                   <strong>Game:</strong> Similar to Roleplay, but instead of typing in the chatbox, you are presented choices similarly to the videogame. You may still override the choices by typing your own after pressing the red X icon on the upper right corner.
                 </div>
               </n-popover>
@@ -369,7 +368,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  Prevents any action in the story from causing the Commander's death.<br><br>
+                  Prevents any action in the story from causing the Commander's death.<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
               </n-popover>
@@ -390,14 +389,14 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>High:</strong> Best visual quality, but uses more GPU resources and VRAM.<br><br>
-                  <strong>Low:</strong> Slightly worse quality and detail, but much better performance on low-end systems.
+                  <strong>Low:</strong> Slightly worse quality and detail, but much better performance on low-end systems.<br /><br />
+                  <strong>High:</strong> Best visual quality, but uses more GPU resources and VRAM.
                 </div>
               </n-popover>
             </template>
             <n-radio-group v-model:value="assetQuality" name="assetqualitygroup">
-              <n-radio-button value="high">High</n-radio-button>
               <n-radio-button value="low">Low</n-radio-button>
+              <n-radio-button value="high">High</n-radio-button>
             </n-radio-group>
           </n-form-item>
 
@@ -411,7 +410,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br>Not available in Game Mode.<br><br>
+                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode.<br /><br />
                   <strong>NIKKE:</strong> Interface looks much more similar to the videogame, with overlay text and typewriter effects.
                 </div>
               </n-popover>
@@ -432,7 +431,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Auto:</strong> Advances automatically.<br>
+                  <strong>Auto:</strong> Advances automatically.<br />
                   <strong>Manual:</strong> Click 'Next' to advance.
                 </div>
               </n-popover>
@@ -451,9 +450,7 @@
                     <Help />
                   </n-icon>
                 </template>
-                <div>
-                  Enables lip-sync animation when characters speak.
-                </div>
+                <div>Enables lip-sync animation when characters speak.</div>
               </n-popover>
             </template>
             <n-switch v-model:value="market.live2d.yapEnabled" />
@@ -469,7 +466,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  Allows you to click on a message to replay the animation and character associated with it.<br>
+                  Allows you to click on a message to replay the animation and character associated with it.<br />
                   Slightly increases file sizes and local memory usage.
                 </div>
               </n-popover>
@@ -479,7 +476,7 @@
 
           <n-form-item>
             <template #label>
-              Text to Speech <span style="font-size: smaller;">(Experimental)</span>
+              Text to Speech <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -487,8 +484,8 @@
                   </n-icon>
                 </template>
                 <div>
-                  Enables TTS using a local TTS server.<br>
-                  Supports AllTalk (XTTSv2) or GPT-SoVits.<br><br>
+                  Enables TTS using a local TTS server.<br />
+                  Supports AllTalk (XTTSv2) or GPT-SoVits.<br /><br />
                   Character voices must be in the appropriate voices folder.
                 </div>
               </n-popover>
@@ -518,8 +515,8 @@
                   </n-icon>
                 </template>
                 <div>
-                  Path to your GPT-SoVits installation folder.<br>
-                  Voice files should be at: <code>{basePath}/voices/{character}/{character}.wav</code><br>
+                  Path to your GPT-SoVits installation folder.<br />
+                  Voice files should be at: <code>{basePath}/voices/{character}/{character}.wav</code><br />
                   Prompt text at: <code>{basePath}/voices/{character}/{character}.txt</code>
                 </div>
               </n-popover>
@@ -528,50 +525,45 @@
           </n-form-item>
 
           <n-form-item label="Chatterbox Endpoint" v-if="ttsEnabled && ttsProvider === 'chatterbox'">
-            <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:7860" />
-          </n-form-item>
-
-          <n-form-item v-if="ttsEnabled && ttsProvider === 'chatterbox'">
-            <template #label>
-              Chatterbox Voices Path
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  Path to your Chatterbox voices folder.<br>
-                  Voice files should be placed at: <code>{voicesPath}/{character}.wav</code><br>
-                  Example: <code>anis.wav</code>, <code>neon.wav</code>, etc.
-                </div>
-              </n-popover>
-            </template>
-            <n-input v-model:value="chatterboxVoicesPath" placeholder="C:/chatterbox-tts-api/voices" />
+            <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:4123" />
           </n-form-item>
           <n-divider />
+          <h4 class="settings-section-header accent-orange">Support this feature!</h4>
+          <n-divider />
+          <div style="display: flex; justify-content: center; padding-bottom: 10px">
+            <a href="https://ko-fi.com/rhystic1" target="_blank"><img height="36" style="border: 0px; height: 36px" src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" /></a>
+          </div>
         </n-form>
       </n-drawer-content>
     </n-drawer>
 
-    <input
-      type="file"
-      ref="fileInput"
-      style="display: none"
-      accept=".json"
-      @change="handleFileUpload"
-    />
+    <input type="file" ref="fileInput" style="display: none" accept=".json" @change="handleFileUpload" />
 
-    <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw;">
+    <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw">
       <div class="guide-content">
         <div v-if="guidePage === 1" class="guide-page">
+          <h3>🆕 What's New?</h3>
+          <div class="guide-section">
+            <ul>
+              <li>Control reasoning/thinking tokens for supported models</li>
+              <li>Greatly improved fallback parsing for text and animations</li>
+              <li>Improved compatibility with various AI models</li>
+              <li>Reminders improvements, including an 'Auto' mode for the JSON schema enforcement (can be disabled)</li>
+              <li>Ability to reset the active character's zoom and positioning</li>
+              <li>Removed support for the Perplexity API</li>
+              <li>Tons of other improvements and bug fixes</li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="guidePage === 2" class="guide-page">
           <h3>🚀 Welcome to the Story Generator</h3>
           <p>Create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
-          
+
           <div class="guide-section">
             <h4>🔑 API Setup</h4>
             <ul>
-              <li><strong>Providers:</strong> Supports <strong>Perplexity</strong>, <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
+              <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
               <li><strong>Pollinations:</strong> Can be used without a key, but with limited models and rate limits.</li>
               <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
               <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
@@ -579,22 +571,25 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 2" class="guide-page">
+        <div v-if="guidePage === 3" class="guide-page">
           <h3>🎭 Interaction Modes</h3>
           <div class="guide-section">
             <ul>
-              <li><strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the narrative.
+              <li>
+                <strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the narrative.
                 <ul>
                   <li>Use <code>[brackets]</code> for actions (e.g., <code>[I nod slowly]</code>).</li>
                   <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
                 </ul>
               </li>
-              <li><strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
+              <li>
+                <strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
                 <ul>
                   <li><strong>Tip:</strong> Start by defining the <strong>Setting</strong> and <strong>Characters</strong>.</li>
                 </ul>
               </li>
-              <li><strong>Game Mode:</strong> A NIKKE-like experience.
+              <li>
+                <strong>Game Mode:</strong> A NIKKE-like experience.
                 <ul>
                   <li>The AI narrates, and you choose from generated options.</li>
                   <li>You can still override choices by clicking the red X and then typing as you would in Roleplay Mode..</li>
@@ -604,7 +599,7 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 3" class="guide-page">
+        <div v-if="guidePage === 4" class="guide-page">
           <h3>✨ Immersive Features</h3>
           <div class="guide-section">
             <ul>
@@ -616,19 +611,19 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 4" class="guide-page">
+        <div v-if="guidePage === 5" class="guide-page">
           <h3>🧠 Knowledge & Search</h3>
           <div class="guide-section">
             <ul>
               <li><strong>Nikke-DB Knowledge:</strong> Uses built-in character profiles for better accuracy and lower costs.</li>
               <li><strong>AI Memory:</strong> The AI can track <strong>Character Progression</strong>, updating personalities and relationships as the story develops.</li>
-              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by Perplexity and some OpenRouter models) or fetch from the Nikke Wiki.</li>
+              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by some OpenRouter models) or fetch from the Nikke Wiki.</li>
               <li><strong>Local Models:</strong> Connect to your own local LLM server (like LM Studio or Ollama) via the <strong>Local</strong> provider.</li>
             </ul>
           </div>
         </div>
 
-        <div v-if="guidePage === 5" class="guide-page">
+        <div v-if="guidePage === 6" class="guide-page">
           <h3>💡 Tips & Troubleshooting</h3>
           <div class="guide-section">
             <ul>
@@ -639,19 +634,23 @@
             </ul>
           </div>
         </div>
-        
+
         <div class="guide-footer">
           <div class="guide-steps">
-            <div v-for="p in 5" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
+            <div v-for="p in 6" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
           </div>
           <div class="guide-actions">
-            <n-button v-if="guidePage > 1" @click="guidePage--" style="margin-right: 10px;">
-              <template #icon><n-icon><ChevronLeft /></n-icon></template>
+            <n-button v-if="guidePage > 1" @click="guidePage--" style="margin-right: 10px">
+              <template #icon
+                ><n-icon><ChevronLeft /></n-icon
+              ></template>
               Back
             </n-button>
-            <n-button v-if="guidePage < 5" type="primary" @click="guidePage++">
+            <n-button v-if="guidePage < 6" type="primary" @click="guidePage++">
               Next
-              <template #icon><n-icon><ChevronRight /></n-icon></template>
+              <template #icon
+                ><n-icon><ChevronRight /></n-icon
+              ></template>
             </n-button>
             <n-button v-else type="primary" @click="closeGuide">Got it!</n-button>
           </div>
@@ -665,39 +664,22 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Notification, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import {
-  sanitizeActions,
-  parseFallback,
-  parseAIResponse,
-  isWholeWordPresent,
-  formatChoiceAsUserTurn,
-  filterEchoedUserChoiceDialogueInGameMode,
-  stripChoicesWhenNotGameMode,
-  ensureGameModeChoicesFallback,
-  calculateYapDuration,
-  replayMessage as replayMessageUtil,
-  getHonorific,
-  createTypewriterController,
-  logDebug
-} from '@/utils/chatUtils'
+import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
-import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, chatterboxVoicesPath, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
-import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersPerplexity, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouterSummarization, callPollinationsSummarization, callGeminiSummarization, buildStoryResponseSchema, callOpenRouter as callOpenRouterImpl, callPerplexity as callPerplexityImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callPollinationsWithoutJson as callPollinationsWithoutJsonImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, callLocalSummarization, getFilteredAnimations } from '@/utils/llmUtils'
+import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
+import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 
 const market = useMarket()
-
-// Structured output schema builder lives in utils
-const getResponseSchema = (isGameMode: boolean) => buildStoryResponseSchema(isGameMode)
 
 const pendingGameChoiceText = ref<string | null>(null)
 const abortCurrentPlaybackForChoice = ref(false)
@@ -707,13 +689,51 @@ const showSettings = ref(false)
 const showGuide = ref(false)
 const guidePage = ref(1)
 const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
-const apiProvider = ref('perplexity')
+const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
 const localMaxTokens = ref(Number(localStorage.getItem('nikke_local_max_tokens')) || 8192)
-const model = ref('sonar')
+const model = ref('')
 const mode = ref('roleplay')
 const tokenUsage = ref('medium')
+const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
+
+watch(reasoningEffort, (val) => {
+  localStorage.setItem('nikke_reasoning_effort', val)
+})
+
+const reasoningEffortOptions = computed(() => {
+  let options: { label: string; value: string }[] = []
+
+  if (apiProvider.value === 'openrouter' || apiProvider.value === 'pollinations') {
+    options = [
+      { label: 'Default', value: 'default' },
+      { label: 'None', value: 'none' },
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Low', value: 'low' },
+      { label: 'Medium', value: 'medium' },
+      { label: 'High', value: 'high' },
+      { label: 'Extra High', value: 'xhigh' }
+    ]
+  } else if (apiProvider.value === 'gemini') {
+    options = [
+      { label: 'Default', value: 'default' },
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Low', value: 'low' },
+      { label: 'Medium', value: 'medium' },
+      { label: 'High', value: 'high' },
+      { label: 'Extra High', value: 'xhigh' }
+    ]
+  }
+
+  // Restrict options in production since anything beyond 'medium' is silly
+  if (!import.meta.env.DEV) {
+    const allowedValues = ['default', 'none', 'minimal', 'low', 'medium']
+    options = options.filter((o) => allowedValues.includes(o.value))
+  }
+
+  return options
+})
 const enableContextCaching = ref(true)
 const playbackMode = ref('manual')
 const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
@@ -730,14 +750,16 @@ const lastSummarizedIndex = ref(0)
 const summarizationRetryPending = ref(false)
 const summarizationAttemptCount = ref(0)
 const summarizationLastError = ref<string | null>(null)
+const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
-const chatHistory = ref<{ role: string, content: string, animation?: string, character?: string, speaking?: boolean, text?: string }[]>([])
+const chatHistory = ref<{ role: string; content: string; animation?: string; character?: string; speaking?: boolean; text?: string }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const characterProgression = ref<Record<string, any>>({})
-const gameChoices = ref<{ text: string, type?: 'dialogue' | 'action', label?: string }[]>([])
-const pendingGameChoices = ref<{ text: string, type?: 'dialogue' | 'action', label?: string }[]>([])
+const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
+const pendingGameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
 const choicesAwaitingReveal = ref(false)
+const animationCache = ref<Record<string, string[]>>({})
 
 // Settings
 const enableAnimationReplay = ref(false)
@@ -753,7 +775,6 @@ const nikkeCurrentText = ref('')
 const nikkeDisplayedText = ref('')
 const isTyping = ref(false)
 const nikkeSpeakerColor = ref('#ffffff')
-
 
 // Typewriter controller (moved to utils). Instantiate a controller bound to the
 // component's refs so we keep the interval state out of the component.
@@ -797,7 +818,7 @@ const handleOverlayClick = (e: MouseEvent | TouchEvent) => {
 
     return
   }
-  
+
   if (isTyping.value) {
     stopTypewriter()
   } else if (chatMode.value === 'nikke' && nikkeOverlayVisible.value) {
@@ -812,7 +833,7 @@ const nikkeTapState = {
   moved: false,
   startX: 0,
   startY: 0,
-  multiTouch: false,
+  multiTouch: false
 }
 
 let lastNikkeTouchTs = 0
@@ -897,34 +918,7 @@ const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
-  const base = characterProfiles.value || {}
-  const progression = characterProgression.value || {}
-  const merged: Record<string, any> = {}
-
-  const progressionKeys = Object.keys(progression)
-
-  for (const [name, profile] of Object.entries(base)) {
-    const outProfile = profile && typeof profile === 'object' && !Array.isArray(profile) ? { ...(profile as any) } : profile
-    const progKey = progressionKeys.find((k) => k.toLowerCase() === name.toLowerCase())
-    const update = progKey ? (progression as any)[progKey] : undefined
-
-    if (outProfile && typeof outProfile === 'object' && !Array.isArray(outProfile) && update && typeof update === 'object') {
-      if ((update as any).personality) {
-        ;(outProfile as any).personality = (update as any).personality
-      }
-
-      if ((update as any).relationships && typeof (update as any).relationships === 'object') {
-        ;(outProfile as any).relationships = {
-          ...((outProfile as any).relationships || {}),
-          ...((update as any).relationships || {})
-        }
-      }
-    }
-
-    merged[name] = outProfile
-  }
-
-  return merged
+  return getEffectiveCharacterProfiles(characterProfiles.value, characterProgression.value)
 })
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -932,28 +926,47 @@ const openRouterModels = ref<any[]>([])
 const pollinationsModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
-// Track models that don't support json_object, persisting to localStorage
-const modelsWithoutJsonSupport = new Set<string>(JSON.parse(localStorage.getItem('modelsWithoutJsonSupport') || '[]'))
 const isDev = import.meta.env.DEV
+
+if (!isDev) useLocalProfiles.value = true
 
 // AI Reminders state
 const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
 const invalidJsonPersist = ref(false)
+const invalidJsonAuto = ref(true)
 const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
 const wrongSpeechStylesToggle = ref(false)
+const incorrectAnimationsToggle = ref(false)
+const incorrectAnimationsPersist = ref(false)
 
 watch(invalidJsonPersist, (val) => {
   if (val) {
     invalidJsonToggle.value = true
+    invalidJsonAuto.value = false
   }
 })
 
 watch(invalidJsonToggle, (val) => {
+  if (val) {
+    invalidJsonAuto.value = false
+  }
   if (!val) {
     invalidJsonPersist.value = false
+  }
+})
+
+watch(incorrectAnimationsPersist, (val) => {
+  if (val) {
+    incorrectAnimationsToggle.value = true
+  }
+})
+
+watch(incorrectAnimationsToggle, (val) => {
+  if (!val) {
+    incorrectAnimationsPersist.value = false
   }
 })
 
@@ -965,21 +978,10 @@ const setRandomLoadingMessage = () => {
 // Models/providers that have native web search in OpenRouter
 
 // Options
-const providerOptions = [
-  { label: 'Perplexity', value: 'perplexity' },
-  { label: 'Gemini', value: 'gemini' },
-  { label: 'OpenRouter', value: 'openrouter' },
-  { label: 'Pollinations', value: 'pollinations' },
-  { label: 'Local (Beta, OpenAPI)', value: 'local' }
-]
+// Handled by llmUtils.ts
 
 const modelOptions = computed(() => {
-  if (apiProvider.value === 'perplexity') {
-    return [
-      { label: 'Sonar', value: 'sonar' },
-      { label: 'Sonar Pro', value: 'sonar-pro' },
-    ]
-  } else if (apiProvider.value === 'gemini') {
+  if (apiProvider.value === 'gemini') {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
@@ -995,15 +997,7 @@ const modelOptions = computed(() => {
   return []
 })
 
-const tokenUsageOptions = [
-  { label: 'Low (10 turns)', value: 'low' },
-  { label: 'Medium (30 turns)', value: 'medium' },
-  { label: 'High (60 turns)', value: 'high' },
-  { label: 'Goddess', value: 'goddess' }
-]
-
 // Computed
-const isWebSearchAllowed = computed(() => true)
 
 const computedUsesWikiFetch = computed(() => usesWikiFetch(apiProvider.value, model.value))
 
@@ -1012,7 +1006,7 @@ const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAuto
 const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
 
 const assetQuality = computed({
-  get: () => market.live2d.HQassets ? 'high' : 'low',
+  get: () => (market.live2d.HQassets ? 'high' : 'low'),
   set: (val: string) => {
     market.live2d.HQassets = val === 'high'
   }
@@ -1032,7 +1026,7 @@ watch(chatMode, (newVal) => {
 watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
   if (apiProvider.value === 'pollinations') {
-    await fetchPollinationsModels()
+    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
     if (pollinationsModels.value.length > 0) {
       model.value = pollinationsModels.value[0].value
     }
@@ -1048,7 +1042,11 @@ watch(localMaxTokens, (newVal) => {
 })
 
 watch(useLocalProfiles, (newVal) => {
-  localStorage.setItem('nikke_use_local_profiles', String(newVal))
+  if (isDev || newVal) {
+    localStorage.setItem('nikke_use_local_profiles', String(newVal))
+  } else {
+    useLocalProfiles.value = true
+  }
 })
 
 watch(allowWebSearchFallback, (newVal) => {
@@ -1115,10 +1113,6 @@ watch(chatterboxEndpoint, (newVal) => {
   localStorage.setItem('nikke_chatterbox_endpoint', newVal)
 })
 
-watch(chatterboxVoicesPath, (newVal) => {
-  localStorage.setItem('nikke_chatterbox_voices_path', newVal)
-})
-
 watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
 })
@@ -1127,131 +1121,67 @@ watch(model, (newVal) => {
   if (newVal) localStorage.setItem('nikke_model', newVal)
 })
 
-watch(() => market.live2d.yapEnabled, (newVal) => {
-  localStorage.setItem('nikke_yap_enabled', String(newVal))
-})
+watch(
+  () => market.live2d.yapEnabled,
+  (newVal) => {
+    localStorage.setItem('nikke_yap_enabled', String(newVal))
+  }
+)
 
-watch(() => market.live2d.HQassets, (newVal) => {
-  localStorage.setItem('nikke_hq_assets', String(newVal))
-  market.live2d.triggerResetPlacement()
-})
+watch(
+  () => market.live2d.HQassets,
+  (newVal) => {
+    localStorage.setItem('nikke_hq_assets', String(newVal))
+    market.live2d.triggerResetPlacement()
+  }
+)
+
+// Cache animations when they're loaded for any character
+watch(
+  () => market.live2d.animations,
+  (animations) => {
+    const currentId = market.live2d.current_id
+    if (!currentId || !animations || animations.length === 0) return
+
+    const existing = animationCache.value[currentId]
+    if (existing && existing.length >= animations.length) {
+      logDebug(`[AnimationCache] Skipping cache update for ${currentId}: existing has ${existing.length}, new has ${animations.length}`)
+      return
+    }
+
+    animationCache.value[currentId] = [...animations]
+    logDebug(`[AnimationCache] Cached ${animations.length} animations for ${currentId}`)
+  },
+  { deep: true }
+)
 
 watch(apiProvider, async (newVal) => {
   localStorage.setItem('nikke_api_provider', newVal)
-  
+
   if (isRestoring.value) return
 
+  // Reset reasoning effort
+  reasoningEffort.value = 'default'
+
   // Reset model when provider changes
-  if (apiProvider.value === 'perplexity') {
-    model.value = 'sonar'
-  } else if (apiProvider.value === 'gemini') {
+  if (apiProvider.value === 'gemini') {
     model.value = 'gemini-2.5-flash'
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
-    await fetchOpenRouterModels()
+    openRouterModels.value = await fetchOpenRouterModels()
 
     if (openRouterModels.value.length > 0) {
       model.value = openRouterModels.value[0].value
     }
   } else if (apiProvider.value === 'pollinations') {
     model.value = ''
-    await fetchPollinationsModels()
+    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
 
     if (pollinationsModels.value.length > 0) {
       model.value = pollinationsModels.value[0].value
     }
   }
 })
-
-const fetchOpenRouterModels = async () => {
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/models')
-    const data = await response.json()
-    let models = data.data
-    
-    openRouterModels.value = models.map((m: any) => {
-      const isFree = m.pricing.prompt === '0' && m.pricing.completion === '0'
-
-      return {
-        label: (isFree ? '[FREE] ' : '') + m.name,
-        value: m.id,
-        isFree: isFree,
-        style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-      }
-    }).sort((a: any, b: any) => {
-      if (a.isFree && !b.isFree) return -1
-      if (!a.isFree && b.isFree) return 1
-
-      return a.label.localeCompare(b.label)
-    })
-    
-  } catch (error) {
-    console.error('Failed to fetch OpenRouter models:', error)
-  }
-}
-
-const fetchPollinationsModels = async () => {
-  let models: any[] = []
-
-  try {
-    const headers: Record<string, string> = {}
-
-    if (apiKey.value) {
-      headers['Authorization'] = `Bearer ${apiKey.value}`
-    }
-    const url = apiKey.value ? 'https://gen.pollinations.ai/text/models' : 'https://text.pollinations.ai/models'
-    const response = await fetch(url, { headers })
-    const data = await response.json()
-    models = data
-    
-    // Handle both old format (array of strings) and new format (array of objects)
-    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
-      models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
-    }
-    
-    pollinationsModels.value = models
-      .filter((m: any) => {
-        if (!apiKey.value) {
-          const allowedModels = ['gemini', 'gemini-search', 'mistral']
-          return allowedModels.includes(m.name)
-        } else {
-          const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
-          return !hiddenModels.includes(m.name)
-        }
-      })
-      .map((m: any) => {
-        const isFree = m.pricing && m.pricing.input_token_price === 0
-
-        return {
-          label: (isFree ? '[FREE] ' : '') + m.name,
-          value: m.name,
-          isFree: isFree,
-          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-        }
-      }).sort((a: any, b: any) => {
-        if (a.isFree && !b.isFree) return -1
-        if (!a.isFree && b.isFree) return 1
-
-        return a.label.localeCompare(b.label)
-      })
-    
-  } catch (error) {
-    console.error('Failed to fetch Pollinations models:', error)
-    // Fallback to hardcoded models
-    models = [
-      { name: 'gemini', pricing: { input_token_price: 0 } },
-      { name: 'gemini-search', pricing: { input_token_price: 0 } },
-      { name: 'mistral', pricing: { input_token_price: 0 } }
-    ]
-    
-    pollinationsModels.value = models.map((m: any) => ({
-      label: '[FREE] ' + m.name,
-      value: m.name,
-      isFree: true,
-      style: { color: '#18a058', fontWeight: 'bold' }
-    }))
-  }
-}
 
 const checkGuide = () => {
   const seen = localStorage.getItem('chat-guide-seen')
@@ -1270,26 +1200,26 @@ const closeGuide = () => {
 
 const initializeSettings = async () => {
   isRestoring.value = true
-  
+
   // Load simple settings
   const savedMode = localStorage.getItem('nikke_mode')
   if (savedMode && (savedMode === 'roleplay' || savedMode === 'story' || savedMode === 'game')) mode.value = savedMode
-  
+
   const savedPlayback = localStorage.getItem('nikke_playback_mode')
   if (savedPlayback && (savedPlayback === 'auto' || savedPlayback === 'manual')) playbackMode.value = savedPlayback
-  
+
   const savedYap = localStorage.getItem('nikke_yap_enabled')
-  if (savedYap !== null) market.live2d.yapEnabled = (savedYap === 'true')
+  if (savedYap !== null) market.live2d.yapEnabled = savedYap === 'true'
 
   const savedHQAssets = localStorage.getItem('nikke_hq_assets')
   if (savedHQAssets !== null) {
-    market.live2d.HQassets = (savedHQAssets === 'true')
+    market.live2d.HQassets = savedHQAssets === 'true'
   } else {
     market.live2d.HQassets = false
   }
 
   const savedTts = localStorage.getItem('nikke_tts_enabled')
-  if (savedTts !== null) ttsEnabled.value = (savedTts === 'true')
+  if (savedTts !== null) ttsEnabled.value = savedTts === 'true'
 
   const savedTtsEndpoint = localStorage.getItem('nikke_tts_endpoint')
   if (savedTtsEndpoint) ttsEndpoint.value = savedTtsEndpoint
@@ -1306,14 +1236,11 @@ const initializeSettings = async () => {
   const savedChatterboxEndpoint = localStorage.getItem('nikke_chatterbox_endpoint')
   if (savedChatterboxEndpoint) chatterboxEndpoint.value = savedChatterboxEndpoint
 
-  const savedChatterboxVoicesPath = localStorage.getItem('nikke_chatterbox_voices_path')
-  if (savedChatterboxVoicesPath) chatterboxVoicesPath.value = savedChatterboxVoicesPath
-
   const savedTokenUsage = localStorage.getItem('nikke_token_usage')
   if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
 
   const savedContextCaching = localStorage.getItem('nikke_enable_context_caching')
-  if (savedContextCaching !== null) enableContextCaching.value = (savedContextCaching === 'true')
+  if (savedContextCaching !== null) enableContextCaching.value = savedContextCaching === 'true'
 
   const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
   enableAnimationReplay.value = savedAnimationReplay !== 'false'
@@ -1321,43 +1248,53 @@ const initializeSettings = async () => {
   // Load Provider and Model
   const savedProvider = localStorage.getItem('nikke_api_provider')
   const savedModel = localStorage.getItem('nikke_model')
-  
+
   if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
     apiProvider.value = savedProvider
-    
+
     if (savedProvider === 'openrouter') {
-      await fetchOpenRouterModels()
+      openRouterModels.value = await fetchOpenRouterModels()
     } else if (savedProvider === 'pollinations') {
-      await fetchPollinationsModels()
+      pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
     }
-    
+
     // Validate and set model
     let validModels: string[] = []
 
-    if (savedProvider === 'perplexity') {
-      validModels = ['sonar', 'sonar-pro']
-    } else if (savedProvider === 'gemini') {
+    if (savedProvider === 'gemini') {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
     } else if (savedProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
     } else if (savedProvider === 'pollinations') {
       validModels = pollinationsModels.value.map((m) => m.value)
     }
-    
+
     if (savedModel && validModels.includes(savedModel)) {
       model.value = savedModel
     } else {
       // Fallback to default if saved model is invalid
-      if (savedProvider === 'perplexity') model.value = 'sonar'
-      else if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
+      if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
       else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
-      
+
       if (savedModel) {
         console.warn(`Saved model '${savedModel}' is invalid or unavailable. Using default.`)
       }
     }
   }
-  
+
+  // Ensure models are loaded for the current provider
+  if (apiProvider.value === 'openrouter' && openRouterModels.value.length === 0) {
+    openRouterModels.value = await fetchOpenRouterModels()
+    if (openRouterModels.value.length > 0 && !model.value) {
+      model.value = openRouterModels.value[0].value
+    }
+  } else if (apiProvider.value === 'pollinations' && pollinationsModels.value.length === 0) {
+    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
+    if (pollinationsModels.value.length > 0 && !model.value) {
+      model.value = pollinationsModels.value[0].value
+    }
+  }
+
   isRestoring.value = false
 }
 
@@ -1371,15 +1308,15 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 const initChatLayout = () => {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
-  
+
   if (viewportWidth <= 768) {
     // Mobile default: Bottom sheet style
     const width = Math.min(viewportWidth - 20, 400)
     const height = viewportHeight * 0.5
     chatSize.value = { width, height }
-    chatPosition.value = { 
-      x: (viewportWidth - width) / 2, 
-      y: viewportHeight - height - 20 
+    chatPosition.value = {
+      x: (viewportWidth - width) / 2,
+      y: viewportHeight - height - 20
     }
   } else {
     // Desktop default
@@ -1392,21 +1329,21 @@ const initChatLayout = () => {
 const startDrag = (e: MouseEvent | TouchEvent) => {
   // Only allow dragging from the handle
   if ((e.target as HTMLElement).closest('.window-controls') || (e.target as HTMLElement).closest('.n-button')) return
-  
+
   // Prevent default to avoid text selection which can interfere with mouseup events
   if (e instanceof MouseEvent) {
     e.preventDefault()
   }
-  
+
   isDragging.value = true
   const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
   const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-  
+
   dragOffset.value = {
     x: clientX - chatPosition.value.x,
     y: clientY - chatPosition.value.y
   }
-  
+
   window.addEventListener('mousemove', onDrag)
   window.addEventListener('touchmove', onDrag, { passive: false })
   window.addEventListener('mouseup', stopDrag)
@@ -1415,7 +1352,7 @@ const startDrag = (e: MouseEvent | TouchEvent) => {
 
 const onDrag = (e: MouseEvent | TouchEvent) => {
   if (!isDragging.value) return
-  
+
   // Safety check: if mouse button is not pressed, stop dragging
   if (e instanceof MouseEvent && e.buttons === 0) {
     stopDrag()
@@ -1423,20 +1360,20 @@ const onDrag = (e: MouseEvent | TouchEvent) => {
   }
 
   e.preventDefault()
-  
+
   const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
   const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-  
+
   let newX = clientX - dragOffset.value.x
   let newY = clientY - dragOffset.value.y
-  
+
   // Boundaries
   const maxX = window.innerWidth - 50 // Keep at least 50px visible
   const maxY = window.innerHeight - 50
-  
+
   newX = Math.max(-chatSize.value.width + 50, Math.min(newX, maxX))
   newY = Math.max(0, Math.min(newY, maxY))
-  
+
   chatPosition.value = { x: newX, y: newY }
 }
 
@@ -1454,10 +1391,10 @@ const startResize = (e: MouseEvent | TouchEvent, direction: string) => {
   e.preventDefault()
   isResizing.value = true
   resizeDirection.value = direction
-  
+
   const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
   const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-  
+
   resizeStart.value = {
     x: clientX,
     y: clientY,
@@ -1466,7 +1403,7 @@ const startResize = (e: MouseEvent | TouchEvent, direction: string) => {
     initialX: chatPosition.value.x,
     initialY: chatPosition.value.y
   }
-  
+
   window.addEventListener('mousemove', onResize)
   window.addEventListener('touchmove', onResize, { passive: false })
   window.addEventListener('mouseup', stopResize)
@@ -1475,27 +1412,27 @@ const startResize = (e: MouseEvent | TouchEvent, direction: string) => {
 
 const onResize = (e: MouseEvent | TouchEvent) => {
   if (!isResizing.value) return
-  
+
   if (e instanceof MouseEvent && e.buttons === 0) {
     stopResize()
     return
   }
 
   e.preventDefault()
-  
+
   const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
   const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-  
+
   const deltaX = clientX - resizeStart.value.x
   const deltaY = clientY - resizeStart.value.y
-  
+
   let newWidth = resizeStart.value.width
   let newHeight = resizeStart.value.height
   let newX = resizeStart.value.initialX
   let newY = resizeStart.value.initialY
-  
+
   const dir = resizeDirection.value
-  
+
   // Horizontal
   if (dir.includes('e')) {
     newWidth += deltaX
@@ -1503,7 +1440,7 @@ const onResize = (e: MouseEvent | TouchEvent) => {
     newWidth -= deltaX
     newX += deltaX
   }
-  
+
   // Vertical
   if (dir.includes('s')) {
     newHeight += deltaY
@@ -1511,21 +1448,21 @@ const onResize = (e: MouseEvent | TouchEvent) => {
     newHeight -= deltaY
     newY += deltaY
   }
-  
+
   // Min dimensions
   const minWidth = 300
   const minHeight = 200
-  
+
   if (newWidth < minWidth) {
     if (dir.includes('w')) newX = resizeStart.value.initialX + (resizeStart.value.width - minWidth)
     newWidth = minWidth
   }
-  
+
   if (newHeight < minHeight) {
     if (dir.includes('n')) newY = resizeStart.value.initialY + (resizeStart.value.height - minHeight)
     newHeight = minHeight
   }
-  
+
   chatSize.value = { width: newWidth, height: newHeight }
   chatPosition.value = { x: newX, y: newY }
 }
@@ -1595,7 +1532,7 @@ const lockMobilePageScroll = () => {
       right: body.style.right,
       width: body.style.width,
       overflow: body.style.overflow,
-      overscrollBehavior: (body.style as any).overscrollBehavior,
+      overscrollBehavior: (body.style as any).overscrollBehavior
     }
   }
   if (originalHtmlOverflow === null) {
@@ -1684,7 +1621,7 @@ onUnmounted(() => {
   document.removeEventListener('mouseup', onNikkeGlobalEnd as any)
 })
 
-onBeforeRouteLeave((to, from) => {
+onBeforeRouteLeave(() => {
   if (chatHistory.value.length > 0) {
     const confirmed = window.confirm('Are you sure you want to leave? All unsaved progress will be lost.')
     if (!confirmed) {
@@ -1694,6 +1631,10 @@ onBeforeRouteLeave((to, from) => {
 })
 
 // Methods
+const resetCharacterPlacement = () => {
+  market.live2d.triggerResetPlacement()
+}
+
 const deleteLastMessage = () => {
   if (chatHistory.value.length > 0) {
     chatHistory.value.pop()
@@ -1702,19 +1643,33 @@ const deleteLastMessage = () => {
 
 const saveSession = () => {
   // Filter chat history based on animation replay setting
-  const exportedChatHistory = chatHistory.value.map(msg => {
-    if (!enableAnimationReplay.value) {
-      // Old format: just role and content
-      return { role: msg.role, content: msg.content }
-    } else {
-      // New format: remove content if text is present to save space
-      if (msg.role === 'assistant' && msg.text) {
-        const { content, ...rest } = msg
-        return rest
+  const shouldExcludeFromExport = (msg: any): boolean => {
+    if (msg?.role !== 'system' || typeof msg?.content !== 'string') return false
+
+    const content = msg.content
+
+    if (content === 'Session restored successfully.') return true
+    if (content.startsWith("Warning: Saved model '") && content.endsWith('Using default.')) return true
+
+    return false
+  }
+
+  const exportedChatHistory = chatHistory.value
+    .filter((msg) => !shouldExcludeFromExport(msg))
+    .map((msg) => {
+      if (!enableAnimationReplay.value) {
+        // Old format: just role and content
+        return { role: msg.role, content: msg.content }
+      } else {
+        // New format: remove content if text is present to save space
+        if (msg.role === 'assistant' && msg.text) {
+          const rest = { ...msg }
+          delete (rest as any).content
+          return rest
+        }
+        return msg
       }
-      return msg
-    }
-  })
+    })
 
   const sessionData = {
     chatHistory: exportedChatHistory,
@@ -1737,10 +1692,11 @@ const saveSession = () => {
       tokenUsage: tokenUsage.value,
       enableContextCaching: enableContextCaching.value,
       useLocalProfiles: useLocalProfiles.value,
-      allowWebSearchFallback: allowWebSearchFallback.value
+      allowWebSearchFallback: allowWebSearchFallback.value,
+      reasoningEffort: reasoningEffort.value
     }
   }
-  
+
   const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1769,7 +1725,7 @@ const handleFileUpload = (event: Event) => {
       try {
         const content = e.target?.result as string
         const data = JSON.parse(content)
-        
+
         isRestoring.value = true
 
         if (data.chatHistory && Array.isArray(data.chatHistory)) {
@@ -1811,14 +1767,14 @@ const handleFileUpload = (event: Event) => {
         if (data.mode) {
           mode.value = data.mode
         }
-        
+
         // Restore Settings
         if (data.settings) {
           // Restore simple settings
           if (data.settings.playbackMode && (data.settings.playbackMode === 'auto' || data.settings.playbackMode === 'manual')) {
             playbackMode.value = data.settings.playbackMode
           }
-          
+
           if (typeof data.settings.yapEnabled === 'boolean') {
             market.live2d.yapEnabled = data.settings.yapEnabled
           }
@@ -1826,7 +1782,7 @@ const handleFileUpload = (event: Event) => {
           if (typeof data.settings.ttsEnabled === 'boolean') {
             ttsEnabled.value = data.settings.ttsEnabled
           }
-          
+
           if (data.settings.ttsEndpoint) {
             ttsEndpoint.value = data.settings.ttsEndpoint
           }
@@ -1858,37 +1814,38 @@ const handleFileUpload = (event: Event) => {
           if (typeof data.settings.allowWebSearchFallback === 'boolean') {
             allowWebSearchFallback.value = data.settings.allowWebSearchFallback
           }
-          
+
+          if (data.settings.reasoningEffort) {
+            reasoningEffort.value = data.settings.reasoningEffort
+          }
+
           // Restore Provider and Model
           const savedProvider = data.settings.apiProvider
           const savedModel = data.settings.model
-          
+
           if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
             apiProvider.value = savedProvider
-            
+
             if (savedProvider === 'openrouter') {
-              await fetchOpenRouterModels()
+              openRouterModels.value = await fetchOpenRouterModels()
             }
-            
+
             // Validate and set model
             let validModels: string[] = []
 
-            if (savedProvider === 'perplexity') {
-              validModels = ['sonar', 'sonar-pro']
-            } else if (savedProvider === 'gemini') {
+            if (savedProvider === 'gemini') {
               validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
             } else if (savedProvider === 'openrouter') {
               validModels = openRouterModels.value.map((m) => m.value)
             }
-            
+
             if (savedModel && validModels.includes(savedModel)) {
               model.value = savedModel
             } else {
               // Fallback to default if saved model is invalid
-              if (savedProvider === 'perplexity') model.value = 'sonar'
-              else if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
+              if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
               else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
-              
+
               if (savedModel) {
                 chatHistory.value.push({ role: 'system', content: `Warning: Saved model '${savedModel}' is invalid or unavailable. Using default.` })
               }
@@ -1903,26 +1860,26 @@ const handleFileUpload = (event: Event) => {
           // If the current summarized index leaves less than safeBuffer messages, pull it back
           if (chatHistory.value.length - lastSummarizedIndex.value < safeBuffer) {
             lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
-            // We can't use logDebug here easily as it might not be in scope or I'd have to check imports, 
-            // but console.log is safe.
             console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
           }
         }
-        
+
         isRestoring.value = false
+
+        // Mark this as a loaded session so overflow detection can handle large unsummarized portions
+        isLoadedSession.value = true
 
         // Clear input value so same file can be selected again if needed
         target.value = ''
-        
+
         // Close settings
         showSettings.value = false
-        
+
         // Scroll to bottom
         scrollToBottom()
-        
+
         // Add system message to confirm restore
         chatHistory.value.push({ role: 'system', content: 'Session restored successfully.' })
-        
       } catch (error) {
         console.error('Failed to parse session file:', error)
         chatHistory.value.push({ role: 'system', content: 'Error: Failed to restore session. Invalid JSON file.' })
@@ -2033,6 +1990,9 @@ const sendMessage = async () => {
     if (!invalidJsonPersist.value) {
       invalidJsonToggle.value = false
     }
+    if (!incorrectAnimationsPersist.value) {
+      incorrectAnimationsToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -2099,6 +2059,9 @@ const retryLastMessage = async () => {
     if (!invalidJsonPersist.value) {
       invalidJsonToggle.value = false
     }
+    if (!incorrectAnimationsPersist.value) {
+      incorrectAnimationsToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -2127,7 +2090,7 @@ const stopGeneration = () => {
   isLoading.value = false
   nikkeOverlayVisible.value = false
   selectedMessageIndex.value = null
-  
+
   if (isTyping.value) {
     stopTypewriter()
   }
@@ -2157,10 +2120,8 @@ const nextAction = () => {
 
 const continueStory = async () => {
   if (isLoading.value) return
-  
-  const text = mode.value === 'story' 
-    ? prompts.continue.story 
-    : prompts.continue.roleplay
+
+  const text = mode.value === 'story' ? prompts.continue.story : prompts.continue.roleplay
   chatHistory.value.push({ role: 'user', content: text })
 
   scrollToBottom()
@@ -2213,6 +2174,9 @@ const continueStory = async () => {
     if (!invalidJsonPersist.value) {
       invalidJsonToggle.value = false
     }
+    if (!incorrectAnimationsPersist.value) {
+      incorrectAnimationsToggle.value = false
+    }
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
@@ -2225,81 +2189,134 @@ const continueStory = async () => {
   flushPendingGameChoice()
 }
 
-// Helper to inject user-toggled reminders into the last user message
-const injectUserReminders = (messages: any[]): any[] => {
+// Helper to get user-toggled reminders string
+const getUserReminders = (): string => {
   let reminders = ''
 
   if (invalidJsonToggle.value) {
     reminders += '\n\n' + prompts.reminders.invalidJsonReminder
+    if (!invalidJsonPersist.value) invalidJsonToggle.value = false
   }
   if (honorificsToggle.value) {
     reminders += '\n\n' + prompts.reminders.honorificsReminder
+    honorificsToggle.value = false // No persist for honorifics
   }
   if (narrationAndDialogueNotSplitToggle.value) {
     reminders += '\n\n' + prompts.reminders.narrationAndDialogueNotSplit
+    narrationAndDialogueNotSplitToggle.value = false // No persist
   }
   if (aiControllingUserToggle.value) {
     reminders += '\n\n' + prompts.reminders.aiControllingUserReminder
+    aiControllingUserToggle.value = false // No persist
   }
   if (wrongSpeechStylesToggle.value) {
     reminders += '\n\n' + prompts.reminders.wrongSpeechStylesReminder
+    wrongSpeechStylesToggle.value = false // No persist
   }
-  
-  if (!reminders) return messages
+  if (incorrectAnimationsToggle.value) {
+    reminders += '\n\n' + prompts.reminders.incorrectAnimationsReminder
+    if (!incorrectAnimationsPersist.value) incorrectAnimationsToggle.value = false
+  }
 
-  const result = [...messages]
-  // Find the last user message
-  for (let i = result.length - 1; i >= 0; i--) {
-    if (result[i].role === 'user') {
-      result[i] = { ...result[i], content: result[i].content + reminders }
+  return reminders
+}
 
-      break
+const getFormattedAnimationsForContext = () => {
+  const placeholderAnimations = ['angry', 'angry_02', 'angry_03', 'cry', 'delight', 'idle', 'pain', 'sad', 'sad_02', 'shy', 'smile', 'surprise', 'void']
+
+  const getCharacterInfo = (id: string) => {
+    const charData = (l2d as any[]).find((c) => c.id === id)
+    return {
+      name: charData?.name || id,
+      id: id
     }
   }
 
-  return result
+  const getCachedAnimations = (id: string): string[] | null => {
+    let anims = animationCache.value[id]
+    if (!anims && id === market.live2d.current_id) {
+      anims = market.live2d.animations
+    }
+    if (anims && anims.length > 0) {
+      return getFilteredAnimations(anims)
+    }
+    return null
+  }
+
+  const formatAnimationsForCharacter = (info: { name: string; id: string }, animations: string[]): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(animations)}`
+  }
+
+  const formatPlaceholderForCharacter = (info: { name: string; id: string }): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(placeholderAnimations)}`
+  }
+
+  const allCharacterIds = new Set<string>()
+
+  for (const profileKey of Object.keys(characterProfiles.value)) {
+    if (profileKey.toLowerCase() !== 'commander') {
+      const profile = characterProfiles.value[profileKey]
+      const id = profile.id || profileKey
+      allCharacterIds.add(id)
+    }
+  }
+
+  if (market.live2d.current_id) {
+    allCharacterIds.add(market.live2d.current_id)
+  }
+
+  const animsList = Array.from(allCharacterIds).map((id) => {
+    const cached = getCachedAnimations(id)
+    const info = getCharacterInfo(id)
+    if (cached) {
+      logDebug(`[AnimationContext] Using cached animations for ${id} (${info.name}): ${cached.length} animations`)
+      return formatAnimationsForCharacter(info, cached)
+    }
+    logDebug(`[AnimationContext] No cached animations for ${id} (${info.name}), using placeholder array`)
+    return formatPlaceholderForCharacter(info)
+  })
+
+  if (animsList.length === 0) return 'No characters available yet.'
+  return animsList.join('\n')
 }
 
 const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
-  
+
   // If using local profiles, we disable initial web search to force the "needs_search" flow
   // This allows us to check local JSON first before falling back to web search
   const enableWebSearch = isFirstTurn && !useLocalProfiles.value
-  
+
   // If using local profiles, pre-load profiles for any characters mentioned in the first prompt
   if (isFirstTurn && useLocalProfiles.value && chatHistory.value.length > 0) {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
     // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
     const localNames = Object.keys(localCharacterProfiles)
-    const foundNames = localNames.filter((name) => 
-      isWholeWordPresent(firstPrompt, name)
-    )
-    
+    const foundNames = localNames.filter((name) => isWholeWordPresent(firstPrompt, name))
+
     if (foundNames.length > 0) {
       logDebug('[callAI] Pre-loading local profiles for:', foundNames)
       await wrappedSearchForCharacters(foundNames)
     }
   }
-  
+
   logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
-  
+
   const systemPrompt = generateSystemPrompt(enableWebSearch)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
-  
+
   if (needsJsonReminder.value) {
     retryInstruction += prompts.reminders.json
     needsJsonReminder.value = false
   }
-  
+
   // Add current context
-  const filteredAnimations = getFilteredAnimations(market.live2d.animations)
-  let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+  let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
 
   // Optimization: Limit history to prevent token overflow
   // Tumbling window: Summarize every X turns
-  
+
   let historyLimit = 30
 
   if (tokenUsage.value === 'low') historyLimit = 10
@@ -2309,6 +2326,17 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   if (tokenUsage.value !== 'goddess') {
     const endIndex = chatHistory.value.length - 1
+    const unsummarizedCount = endIndex - lastSummarizedIndex.value
+
+    // Calculate the maximum messages we want in context (user + assistant)
+    // historyLimit is the number of user turns, so double it for total messages
+    const maxContextMessages = historyLimit * 2
+
+    // Check if we need to summarize due to having too many unsummarized messages
+    // This ONLY applies to loaded sessions to handle large unsummarized portions from restored files
+    // For normal sessions, we rely solely on userMsgCount to trigger summarization
+    const overflowThreshold = Math.floor(maxContextMessages * 1.5)
+    const shouldSummarizeDueToOverflow = isLoadedSession.value && unsummarizedCount > overflowThreshold
 
     let userMsgCount = 0
     // Count user messages in the unsummarized portion, excluding the current pending prompt
@@ -2322,16 +2350,29 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const shouldSummarizeByLimit = userMsgCount >= historyLimit
 
     // If summarization previously failed, retry on next user prompt/retry.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit) {
-      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
-      logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+    // Also trigger if we have overflow from a loaded session.
+    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+      // Calculate where to summarize up to
+      // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
+      let summarizeUpTo = endIndex
+      if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
+        // Only summarize the overflow, keeping maxContextMessages in context
+        summarizeUpTo = endIndex - maxContextMessages
+      }
+
+      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, summarizeUpTo)
+      logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
       const ok = await summarizeChunk(chunkToSummarize)
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = endIndex
+        lastSummarizedIndex.value = summarizeUpTo
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        // Clear the loaded session flag after successful summarization
+        if (shouldSummarizeDueToOverflow) {
+          isLoadedSession.value = false
+        }
       } else {
         summarizationRetryPending.value = true
         summarizationAttemptCount.value++
@@ -2353,12 +2394,12 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // This is injected into the first user message but NOT saved to history
   const buildHonorificsReminder = (): string => {
     if (!isFirstTurn) return ''
-    
+
     // Get relevant honorifics from the characterHonorifics JSON
     const knownNames = Object.keys(characterProfiles.value)
 
     if (knownNames.length === 0) return ''
-    
+
     const honorificExamples: string[] = []
     for (const name of knownNames) {
       const honorific = getHonorific(name)
@@ -2367,9 +2408,9 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
         honorificExamples.push(`${name} calls the Commander "${honorific}"`)
       }
     }
-    
+
     if (honorificExamples.length === 0) return ''
-    
+
     return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
   }
 
@@ -2378,7 +2419,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const reminder = buildHonorificsReminder()
 
     if (!reminder) return messages
-    
+
     // Find the last user message and append the reminder
     const result = [...messages]
     for (let i = result.length - 1; i >= 0; i--) {
@@ -2394,115 +2435,49 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   let response: string
 
-  if (apiProvider.value === 'perplexity') {
-    // Perplexity: Merge context into system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    
-    // Sanitize history for Perplexity (Strict alternation required)
-    // 1. Filter out system messages from history (we provide our own system prompt)
-    // 2. Merge consecutive messages of the same role
-    const rawHistory = historyToSend.filter((m) => m.role !== 'system')
-    const sanitizedHistory: any[] = []
-    
-    if (rawHistory.length > 0) {
-      let currentMsg = { role: rawHistory[0].role, content: rawHistory[0].content }
-      
-      for (let i = 1; i < rawHistory.length; i++) {
-        const msg = rawHistory[i]
-        if (msg.role === currentMsg.role) {
-          currentMsg.content += '\n\n' + msg.content
-        } else {
-          sanitizedHistory.push(currentMsg)
-          currentMsg = { role: msg.role, content: msg.content }
-        }
-      }
-      sanitizedHistory.push(currentMsg)
-    }
+  // Get user toggled reminders
+  const reminders = getUserReminders()
 
-    let messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...sanitizedHistory
-    ]
+  if (apiProvider.value === 'gemini') {
+    // Gemini: Merge context into system prompt to avoid confusion at the end of history
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-    
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
-    
-    logDebug('Sending to Perplexity:', messages)
-    response = await callPerplexity(messages, enableWebSearch)
-  } else if (apiProvider.value === 'gemini') {
-    // Gemini: Original behavior (context as separate message at end)
-    let messages = [
-      { role: 'system', content: systemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
-    messages.push({
-      role: 'system',
-      content: contextMsg + retryInstruction
-    })
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
-    
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
-    
+
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    
-    let messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-    
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
-    
+
     logDebug('Sending to OpenRouter:', messages)
-    response = await callOpenRouter(messages, enableWebSearch)
+    response = await callOpenRouter(messages, undefined, enableWebSearch)
   } else if (apiProvider.value === 'pollinations') {
     // Pollinations: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    
-    let messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-    
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
-    
+
     logDebug('Sending to Pollinations:', messages)
     response = await callPollinations(messages, enableWebSearch)
   } else if (apiProvider.value === 'local') {
     // Local: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    
-    let messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     // Inject honorifics reminder for first turn (not saved to history)
     messages = injectHonorificsReminder(messages)
-    
-    // Inject user toggled reminders
-    messages = injectUserReminders(messages)
-    
+
     logDebug('Sending to Local:', messages)
-    response = await callLocalImpl(messages, {
-      maxTokens: localMaxTokens.value,
-      apiKey: apiKey.value,
-      localUrl: localUrl.value,
-      modeIsGame: mode.value === 'game',
-      modelsWithoutJsonSupport: modelsWithoutJsonSupport
-    })
+    response = await callLocal(messages)
   } else {
     throw new Error('Unknown API provider')
   }
@@ -2527,24 +2502,20 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
   const systemPrompt = generateSystemPrompt(false)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
-  
+
   if (needsJsonReminder.value) {
     retryInstruction += prompts.reminders.json
     needsJsonReminder.value = false
   }
-  
-  const filteredAnimations = market.live2d.animations.filter((a) => 
-    a !== 'talk' &&
-    a !== 'talk_start' && 
-    a !== 'talk_end' && 
-    a !== 'expression_0' && 
-    a !== 'action'
-  )
-  let contextMsg = `Current Character: ${market.live2d.current_id}. Available Animations: ${JSON.stringify(filteredAnimations)}`
+
+  let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
+
+  // Get user toggled reminders
+  const reminders = getUserReminders()
 
   // Optimization: Limit history to prevent token overflow
   // Tumbling window: Summarize every X turns
-  
+
   let historyLimit = 30
 
   if (tokenUsage.value === 'low') historyLimit = 10
@@ -2554,6 +2525,17 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
   if (tokenUsage.value !== 'goddess') {
     const endIndex = chatHistory.value.length - 1
+    const unsummarizedCount = endIndex - lastSummarizedIndex.value
+
+    // Calculate the maximum messages we want in context (user + assistant)
+    // historyLimit is the number of user turns, so double it for total messages
+    const maxContextMessages = historyLimit * 2
+
+    // Check if we need to summarize due to having too many unsummarized messages
+    // This ONLY applies to loaded sessions to handle large unsummarized portions from restored files
+    // For normal sessions, we rely solely on userMsgCount to trigger summarization
+    const overflowThreshold = Math.floor(maxContextMessages * 1.5)
+    const shouldSummarizeDueToOverflow = isLoadedSession.value && unsummarizedCount > overflowThreshold
 
     let userMsgCount = 0
     // Count user messages in the unsummarized portion, excluding the current pending prompt
@@ -2567,16 +2549,29 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     const shouldSummarizeByLimit = userMsgCount >= historyLimit
 
     // If summarization previously failed, retry on next user prompt/retry.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit) {
-      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, endIndex)
-      logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window)...`)
+    // Also trigger if we have overflow from a loaded session.
+    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+      // Calculate where to summarize up to
+      // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
+      let summarizeUpTo = endIndex
+      if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
+        // Only summarize the overflow, keeping maxContextMessages in context
+        summarizeUpTo = endIndex - maxContextMessages
+      }
+
+      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, summarizeUpTo)
+      logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
       const ok = await summarizeChunk(chunkToSummarize)
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = endIndex
+        lastSummarizedIndex.value = summarizeUpTo
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        // Clear the loaded session flag after successful summarization
+        if (shouldSummarizeDueToOverflow) {
+          isLoadedSession.value = false
+        }
       } else {
         summarizationRetryPending.value = true
         summarizationAttemptCount.value++
@@ -2594,73 +2589,24 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
   }
 
-  if (apiProvider.value === 'perplexity') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    const rawHistory = historyToSend.filter((m) => m.role !== 'system')
-    const sanitizedHistory: any[] = []
-    
-    if (rawHistory.length > 0) {
-      let currentMsg = { role: rawHistory[0].role, content: rawHistory[0].content }
-      for (let i = 1; i < rawHistory.length; i++) {
-        const msg = rawHistory[i]
-        if (msg.role === currentMsg.role) {
-          currentMsg.content += '\n\n' + msg.content
-        } else {
-          sanitizedHistory.push(currentMsg)
-          currentMsg = { role: msg.role, content: msg.content }
-        }
-      }
-      sanitizedHistory.push(currentMsg)
-    }
-
-    const messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...sanitizedHistory
-    ]
-
-    const messagesWithReminders = injectUserReminders(messages)
-
-    return await callPerplexity(messagesWithReminders, false)
-  } else if (apiProvider.value === 'gemini') {
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
-    messages.push({ role: 'system', content: contextMsg + retryInstruction })
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callGemini(messagesWithReminders, false)
+  if (apiProvider.value === 'gemini') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    return await callGemini(messages, false)
   } else if (apiProvider.value === 'openrouter') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    const messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callOpenRouter(messagesWithReminders, false)
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    return await callOpenRouter(messages, undefined, false)
   } else if (apiProvider.value === 'pollinations') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    const messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callPollinations(messagesWithReminders, false)
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    return await callPollinations(messages, false)
   } else if (apiProvider.value === 'local') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}`
-    const messages = [
-      { role: 'system', content: fullSystemPrompt },
-      ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
-    ]
-    const messagesWithReminders = injectUserReminders(messages)
-    return await callLocalImpl(messagesWithReminders, {
-      maxTokens: localMaxTokens.value,
-      apiKey: apiKey.value,
-      localUrl: localUrl.value,
-      modeIsGame: mode.value === 'game',
-      modelsWithoutJsonSupport: modelsWithoutJsonSupport
-    })
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    return await callLocal(messages)
   }
-  
+
   throw new Error('Unknown API provider')
 }
 
@@ -2695,14 +2641,14 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
   try {
     const m = response.match(/"needs_search"\s*:\s*\[([\s\S]*?)\]/)
     if (m && m[1]) {
-      const names = Array.from(m[1].matchAll(/"([^\"]+)"/g)).map((x) => x[1])
+      const names = Array.from(m[1].matchAll(/"([^"]+)"/g)).map((x) => x[1])
       const validated = validateNames(names, response)
       if (validated.length > 0) return validated
     }
   } catch {
     // Ignore
   }
-  
+
   // For Pollinations, only allow search if web search fallback is enabled
   if (apiProvider.value === 'pollinations' && !allowWebSearchFallback.value) {
     return null
@@ -2717,10 +2663,6 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
 // Its code is open-sourced and available in the
 
 // Wrapper functions for web search
-const wrappedSearchForCharactersPerplexity = async (characterNames: string[]) => {
-  return searchForCharactersPerplexity(characterNames, characterProfiles.value, callPerplexity)
-}
-
 const wrappedSearchForCharactersWithNativeSearch = async (characterNames: string[]) => {
   return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
 }
@@ -2730,29 +2672,17 @@ const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) 
 }
 
 const wrappedSearchForCharacters = async (characterNames: string[]) => {
-  return searchForCharacters(
-    characterNames,
-    characterProfiles.value,
-    useLocalProfiles.value,
-    allowWebSearchFallback.value,
-    apiProvider.value,
-    model.value,
-    loadingStatus,
-    setRandomLoadingMessage,
-    wrappedSearchForCharactersPerplexity,
-    wrappedSearchForCharactersWithNativeSearch,
-    wrappedSearchForCharactersViaWikiFetch
-  )
+  return searchForCharacters(characterNames, characterProfiles.value, useLocalProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
   const knownCharacterNames = Object.keys(effectiveCharacterProfiles.value)
-  
+
   // Build a minimal character ID lookup for characters mentioned in profiles or current character
   // This prevents massive token usage from including all 200+ characters
   const relevantCharacterIds: string[] = []
   const relevantCharacterNames: string[] = []
-  
+
   // Add current character
   if (market.live2d.current_id) {
     const currentChar = l2d.find((c) => c.id === market.live2d.current_id)
@@ -2761,7 +2691,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
       relevantCharacterNames.push(currentChar.name)
     }
   }
-  
+
   // Add characters from profiles
   for (const name of knownCharacterNames) {
     const char = l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
@@ -2770,13 +2700,13 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
       relevantCharacterNames.push(char.name)
     }
   }
-  
+
   // Build honorifics map for only relevant characters to save tokens
   const relevantHonorifics: Record<string, string> = {}
   for (const name of relevantCharacterNames) {
     relevantHonorifics[name] = getHonorific(name)
   }
-  
+
   let modeInstructions = ''
   if (mode.value === 'game') {
     modeInstructions = prompts.systemPrompt.instructions.game
@@ -2785,31 +2715,28 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   } else {
     modeInstructions = prompts.systemPrompt.instructions.roleplay
   }
-  
+
   let prompt = `${prompts.systemPrompt.intro}
-  
-  ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : (mode.value === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story)}
-  
+
+  ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : mode.value === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story}
+
   ${prompts.systemPrompt.honorifics.header}
-  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'
-}
-  
+  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
+
   ${prompts.systemPrompt.honorifics.rules}
-  
-  ${enableWebSearch 
-    ? prompts.systemPrompt.characterResearch.enabled
-    : prompts.systemPrompt.characterResearch.disabled}
-  
+
+  ${enableWebSearch ? prompts.systemPrompt.characterResearch.enabled : prompts.systemPrompt.characterResearch.disabled}
+
   ${prompts.systemPrompt.criticalErrors}
 
-  ${prompts.systemPrompt.jsonStructure}
-  
+  ${mode.value === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
+
   ${prompts.systemPrompt.knownProfiles}
   ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : prompts.systemPrompt.noProfilesMessage}
-  
+
   ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
-  
+
   ${prompts.systemPrompt.instructions.base}
   ${modeInstructions}
   ${prompts.systemPrompt.instructions.closing}
@@ -2819,7 +2746,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   return prompt
 }
 
-const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
+const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSearch: boolean = false) => {
   return await callOpenRouterImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
@@ -2830,18 +2757,7 @@ const callOpenRouter = async (messages: any[], enableWebSearch: boolean = false,
     enableWebSearch,
     searchUrl,
     prompts,
-    modelsWithoutJsonSupport
-  })
-}
-
-const callPerplexity = async (messages: any[], enableWebSearch: boolean = false, searchUrl?: string) => {
-  return await callPerplexityImpl(messages, {
-    model: model.value,
-    apiKey: apiKey.value,
-    useLocalProfiles: useLocalProfiles.value,
-    allowWebSearchFallback: allowWebSearchFallback.value,
-    enableWebSearch: enableWebSearch,
-    searchUrl: searchUrl
+    reasoningEffort: reasoningEffort.value
   })
 }
 
@@ -2851,11 +2767,10 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
     apiKey: apiKey.value,
     useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
-    enableWebSearch
+    enableWebSearch,
+    reasoningEffort: reasoningEffort.value
   })
 }
-
-
 
 const callPollinations = async (messages: any[], enableWebSearch: boolean = false) => {
   return await callPollinationsImpl(messages, {
@@ -2865,12 +2780,44 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     allowWebSearchFallback: allowWebSearchFallback.value,
     modeIsGame: mode.value === 'game',
     enableWebSearch,
-    modelsWithoutJsonSupport
+    reasoningEffort: reasoningEffort.value,
+    enableContextCaching: enableContextCaching.value
   })
 }
 
-const callPollinationsWithoutJson = async (messages: any[], enableWebSearch: boolean = false) => {
-  return await callPollinationsWithoutJsonImpl(messages, { model: model.value, apiKey: apiKey.value })
+const callLocal = async (messages: any[]) => {
+  return await callLocalImpl(messages, {
+    maxTokens: localMaxTokens.value,
+    apiKey: apiKey.value,
+    localUrl: localUrl.value,
+    modeIsGame: mode.value === 'game'
+  })
+}
+
+const handleGameChoice = (choice: any) => {
+  // IMPORTANT: Do NOT call sendMessage() here.
+  // sendMessage() is already running (it plays actions while isLoading is true).
+  // Calling it again causes concurrent requests and breaks the existing loading spinner.
+  const choiceTextToSend = formatChoiceAsUserTurn(choice)
+
+  pendingGameChoiceText.value = choiceTextToSend
+  abortCurrentPlaybackForChoice.value = true
+
+  pendingGameChoices.value = []
+  choicesAwaitingReveal.value = false
+
+  // Hide overlay immediately so the existing chatbox loading UI can show.
+  nikkeOverlayVisible.value = false
+
+  // Resume execution
+  if (nextActionResolver) {
+    nextActionResolver()
+    nextActionResolver = null
+    waitingForNext.value = false
+  }
+
+  // Clear choices
+  gameChoices.value = []
 }
 
 const replayMessage = async (msg: any, index: number) => {
@@ -2890,33 +2837,59 @@ const replayMessage = async (msg: any, index: number) => {
     startTypewriter,
     stopTypewriter,
     manageYap: (duration: number) => {
-       if (yapTimeoutId) clearTimeout(yapTimeoutId)
-       market.live2d.isYapping = true
-       yapTimeoutId = setTimeout(() => {
-         if (market.live2d.isYapping) market.live2d.isYapping = false
-         yapTimeoutId = null
-       }, duration)
+      if (yapTimeoutId) clearTimeout(yapTimeoutId)
+      market.live2d.isYapping = true
+      yapTimeoutId = setTimeout(() => {
+        if (market.live2d.isYapping) market.live2d.isYapping = false
+        yapTimeoutId = null
+      }, duration)
     }
   })
 }
 
-const processAIResponse = async (responseStr: string, depth: number = 0) => {
+const processAIResponse = async (responseStr: string, depth: number = 0, autoRetryAttempted: boolean = false) => {
   loadingStatus.value = 'Processing response...'
   logDebug('Raw AI Response:', responseStr)
-  
+
   // Check for empty or too-short responses (model sometimes returns nothing)
   if (!responseStr || responseStr.trim().length < 20) {
     console.warn('Response too short or empty, triggering retry...')
     throw new Error('JSON_PARSE_ERROR')
   }
-  
+
   let data: any[] = []
-  
+
   try {
     data = parseAIResponse(responseStr)
   } catch (e) {
     console.warn('JSON parse failed, attempting text fallback parsing...', e)
-    
+
+    // If Auto mode is enabled and we haven't tried auto-retry yet, retry with the invalidJsonReminder
+    if (invalidJsonAuto.value && !autoRetryAttempted) {
+      console.log('[processAIResponse] Auto mode enabled, retrying with invalidJsonReminder...')
+
+      // Temporarily enable the invalidJsonToggle to inject the reminder
+      const previousToggleValue = invalidJsonToggle.value
+      invalidJsonToggle.value = true
+
+      try {
+        setRandomLoadingMessage()
+        const retryResponse = await callAI(true)
+
+        // Restore the toggle to its previous state
+        invalidJsonToggle.value = previousToggleValue
+
+        // Process the retry response, marking that we've attempted auto-retry
+        await processAIResponse(retryResponse, depth, true)
+        return
+      } catch (retryError) {
+        // Restore the toggle even if retry failed
+        invalidJsonToggle.value = previousToggleValue
+        console.warn('[processAIResponse] Auto-retry failed, falling back to text parsing...', retryError)
+        // Continue to fallback parsing below
+      }
+    }
+
     try {
       data = parseFallback(responseStr)
 
@@ -2937,7 +2910,9 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
           filteredAnimations: getFilteredAnimations(market.live2d.animations),
           animationEnrichmentPrompt: prompts.animationEnrichment,
           preserveExistingAnimations: true,
-          localUrl: localUrl.value
+          localUrl: localUrl.value,
+          rawResponseText: responseStr,
+          characterAnimations: animationCache.value
         })
       } catch (e) {
         console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)
@@ -2945,7 +2920,6 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
 
       // Fallback was successful, but we should remind the model to use JSON next time
       needsJsonReminder.value = true
-      
     } catch (fallbackError) {
       console.error('Failed to parse JSON response and Fallback failed', e, fallbackError)
 
@@ -2999,13 +2973,12 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
 
   data = filterEchoedUserChoiceDialogueInGameMode(data, lastPrompt.value, mode.value === 'game')
   data = stripChoicesWhenNotGameMode(data, mode.value === 'game')
-  
+
   // Truncate extremely long sequences that look like hallucinations
   if (data.length > 15 && mode.value !== 'story') {
     logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
     data = data.slice(0, 15)
-  }
-  else if (data.length > 50 && mode.value === 'story') {
+  } else if (data.length > 50 && mode.value === 'story') {
     logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
     data = data.slice(0, 50)
   }
@@ -3044,7 +3017,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
       break
     }
   }
-  
+
   nikkeOverlayVisible.value = false
 }
 
@@ -3055,32 +3028,6 @@ const getCharacterName = (id: string): string | null => {
   const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
 
   return char ? char.name : id
-}
-
-const handleGameChoice = (choice: any) => {
-  // IMPORTANT: Do NOT call sendMessage() here.
-  // sendMessage() is already running (it plays actions while isLoading is true).
-  // Calling it again causes concurrent requests and breaks the existing loading spinner.
-  const choiceTextToSend = formatChoiceAsUserTurn(choice)
-
-  pendingGameChoiceText.value = choiceTextToSend
-  abortCurrentPlaybackForChoice.value = true
-
-  pendingGameChoices.value = []
-  choicesAwaitingReveal.value = false
-
-  // Hide overlay immediately so the existing chatbox loading UI can show.
-  nikkeOverlayVisible.value = false
-  
-  // Resume execution
-  if (nextActionResolver) {
-    nextActionResolver()
-    nextActionResolver = null
-    waitingForNext.value = false
-  }
-  
-  // Clear choices
-  gameChoices.value = []
 }
 
 const executeAction = async (data: any) => {
@@ -3100,7 +3047,7 @@ const executeAction = async (data: any) => {
   if (data.characterProfile || data.characterProfiles) {
     const legacyData = data.characterProfile || data.characterProfiles
     logDebug('[AI Compatibility] Remapping characterProfile/s to memory (Read-Only for existing):', legacyData)
-    
+
     if (!data.memory) {
       data.memory = legacyData
     } else {
@@ -3115,11 +3062,11 @@ const executeAction = async (data: any) => {
   if (data.memory) {
     logDebug('[AI Memory Update - New Characters Only]:', data.memory)
     const newProfiles: Record<string, any> = {}
-    
+
     for (const [charName, profile] of Object.entries(data.memory)) {
       // 1. Check if already in active profiles (Case-Insensitive)
-      const existingKey = Object.keys(characterProfiles.value).find(k => k.toLowerCase() === charName.toLowerCase())
-      
+      const existingKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+
       if (existingKey) {
         logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
         continue
@@ -3127,39 +3074,55 @@ const executeAction = async (data: any) => {
 
       // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
       if (useLocalProfiles.value) {
-        const localKey = Object.keys(localCharacterProfiles).find(k => k.toLowerCase() === charName.toLowerCase())
+        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         if (localKey) {
           logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${localKey}'). IGNORING AI memory and loading local profile instead.`)
-             
+
           const localProfile = (localCharacterProfiles as any)[localKey]
           // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
           newProfiles[charName] = {
             ...localProfile,
-            id: localProfile.id || l2d.find(c => c.name.toLowerCase() === charName.toLowerCase())?.id
+            id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
           }
           continue
         }
       }
 
       if (typeof profile === 'object' && profile !== null) {
-        const { honorific_for_commander, honorific_to_commander, honorific, relationships, ...rest } = profile as any
-        
+        const cleanedProfile = { ...(profile as any) }
+        delete (cleanedProfile as any).honorific_for_commander
+        delete (cleanedProfile as any).honorific_to_commander
+        delete (cleanedProfile as any).honorific
+
         // Filter Commander out of relationships if present
-        let filteredRelationships = relationships
-        if (relationships && typeof relationships === 'object') {
-          const { Commander, commander, ...otherRelationships } = relationships
-          filteredRelationships = Object.keys(otherRelationships).length > 0 ? otherRelationships : undefined
+        if (cleanedProfile.relationships && typeof cleanedProfile.relationships === 'object') {
+          const relationships = { ...cleanedProfile.relationships }
+          delete (relationships as any).Commander
+          delete (relationships as any).commander
+          cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
         }
-        
-        newProfiles[charName] = {
-          ...rest,
-          ...(filteredRelationships && { relationships: filteredRelationships })
+
+        // Add id from l2d.json if available
+        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+        if (char) {
+          cleanedProfile.id = char.id
         }
+
+        // Lookup color from local profiles even if full profile isn't used
+        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+        if (localKey) {
+          const localProfile = (localCharacterProfiles as any)[localKey]
+          if (localProfile?.color) {
+            cleanedProfile.color = localProfile.color
+          }
+        }
+
+        newProfiles[charName] = cleanedProfile
       } else {
         newProfiles[charName] = profile
       }
     }
-    
+
     if (Object.keys(newProfiles).length > 0) {
       characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
     }
@@ -3173,14 +3136,12 @@ const executeAction = async (data: any) => {
 
     for (const [charName, progression] of Object.entries(data.characterProgression)) {
       // Find target profile (Case-Insensitive) in BASE profiles.
-      const targetKey = Object.keys(characterProfiles.value).find(k => k.toLowerCase() === charName.toLowerCase())
+      const targetKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
       const resolvedKey = targetKey || charName
 
       if (typeof progression === 'object' && progression !== null) {
         const updates = progression as any
-        const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object'
-          ? (updatedProgression as any)[resolvedKey]
-          : {}
+        const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object' ? (updatedProgression as any)[resolvedKey] : {}
 
         if (updates.personality) {
           current.personality = updates.personality
@@ -3212,7 +3173,7 @@ const executeAction = async (data: any) => {
 
   // Resolve Character ID EARLY to ensure TTS gets the right name
   let effectiveCharId = data.character
-  
+
   // Handle 'current' character resolution and speaker detection
   if (effectiveCharId === 'current') {
     // Check for speaker override in text
@@ -3240,7 +3201,7 @@ const executeAction = async (data: any) => {
       if (data.character === 'none') {
         logDebug('[Chat] Hiding character sprite')
         market.live2d.isVisible = false
-      } 
+      }
       // Handle specific character switch (including resolved 'current')
       else {
         // Force 'none' if in Story Mode and character is Commander
@@ -3250,16 +3211,13 @@ const executeAction = async (data: any) => {
         } else {
           // Find character object
           // Case-insensitive search for name or ID
-          const charObj = l2d.find((c) => 
-            c.id.toLowerCase() === data.character.toLowerCase() || 
-              c.name.toLowerCase() === data.character.toLowerCase()
-          )
-            
+          const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
+
           if (charObj) {
             // Ensure visible
             logDebug('[Chat] Setting visibility to true')
             market.live2d.isVisible = true
-              
+
             // Check if character is already active to avoid unnecessary reload
             if (charObj.id === market.live2d.current_id) {
               logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
@@ -3270,18 +3228,21 @@ const executeAction = async (data: any) => {
               const previousPlacement = captureSpineCanvasPlacement()
               const previousLoadTime = market.live2d.finishedLoading
               market.live2d.change_current_spine(charObj)
-                
+
               // Wait for load to complete
               logDebug('[Chat] Waiting for character load...')
               await new Promise<void>((r) => {
-                const unwatch = watch(() => market.live2d.finishedLoading, (newVal) => {
-                  if (newVal > previousLoadTime) {
-                    logDebug('[Chat] Character loaded.')
-                    unwatch()
-                    // Add a small delay to ensure the spine player is fully ready to accept new tracks
-                    setTimeout(r, 100)
+                const unwatch = watch(
+                  () => market.live2d.finishedLoading,
+                  (newVal) => {
+                    if (newVal > previousLoadTime) {
+                      logDebug('[Chat] Character loaded.')
+                      unwatch()
+                      // Add a small delay to ensure the spine player is fully ready to accept new tracks
+                      setTimeout(r, 100)
+                    }
                   }
-                })
+                )
                 // Safety timeout
                 setTimeout(() => {
                   unwatch()
@@ -3299,7 +3260,7 @@ const executeAction = async (data: any) => {
       }
     }
   })()
-    
+
   // Play Animation
   if (data.animation) {
     const requested = String(data.animation).trim()
@@ -3316,15 +3277,15 @@ const executeAction = async (data: any) => {
 
   if (data.speaking && !ttsEnabled.value) {
     logDebug('Starting yap')
-      
+
     // Clear previous timeout if exists
     if (yapTimeoutId) {
       clearTimeout(yapTimeoutId)
       yapTimeoutId = null
     }
-      
+
     market.live2d.isYapping = true
-      
+
     // Calculate yap duration based on text length
     // Approx 60ms per character + 300ms base (Slightly faster than reading speed for natural feel)
     let yapDuration = 3000
@@ -3335,9 +3296,9 @@ const executeAction = async (data: any) => {
       yapDuration = data.duration
     }
     calculatedYapDuration = yapDuration
-      
+
     logDebug(`Yap duration calculated: ${yapDuration}ms`)
-      
+
     // Auto-stop yap after calculated duration
     yapTimeoutId = setTimeout(() => {
       if (market.live2d.isYapping) {
@@ -3351,18 +3312,18 @@ const executeAction = async (data: any) => {
   // Add text to chat
   if (data.text) {
     let content = data.text
-      
+
     if (chatMode.value === 'nikke') {
       nikkeCurrentText.value = data.text
-      nikkeCurrentSpeaker.value = data.speaking ? (getCharacterName(effectiveCharId) || '') : ''
-      
+      nikkeCurrentSpeaker.value = data.speaking ? getCharacterName(effectiveCharId) || '' : ''
+
       // Get color from profile
       const speakerName = nikkeCurrentSpeaker.value
       const profile = effectiveCharacterProfiles.value[speakerName]
       nikkeSpeakerColor.value = profile?.color || '#ffffff'
-      
+
       startTypewriter(data.text)
-      
+
       // Wait for BOTH typewriter AND character load
       await Promise.all([
         characterUpdatePromise,
@@ -3383,7 +3344,7 @@ const executeAction = async (data: any) => {
     // Add speaker name if speaking
     if (data.speaking) {
       let name = null
-        
+
       if (effectiveCharId === 'none') {
         // If character is explicitly none, it's likely the Commander in Story Mode
         if (mode.value === 'story') {
@@ -3403,7 +3364,7 @@ const executeAction = async (data: any) => {
         // We check for "Name:", "**Name:**", "Name :", etc.
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
-        
+
         // Also check for ANY bolded name at the start (e.g. "**Chime:**") to prevent double naming
         // if the AI messed up the character ID but got the text right.
         const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
@@ -3414,8 +3375,8 @@ const executeAction = async (data: any) => {
       }
     }
 
-    chatHistory.value.push({ 
-      role: 'assistant', 
+    chatHistory.value.push({
+      role: 'assistant',
       content: content,
       animation: market.live2d.current_animation,
       character: effectiveCharId,
@@ -3437,12 +3398,12 @@ const executeAction = async (data: any) => {
     choicesAwaitingReveal.value = true
     loadingStatus.value = 'Click to show choices...'
     waitingForNext.value = true // Pause auto-advance
-    
+
     // Wait for user selection
     await new Promise<void>((r) => {
       nextActionResolver = r
     })
-    
+
     // Clear choices after selection (handled in handleGameChoice)
     gameChoices.value = []
     pendingGameChoices.value = []
@@ -3454,7 +3415,7 @@ const executeAction = async (data: any) => {
   }
 
   const duration = data.duration || 3000
-    
+
   if (playbackMode.value === 'manual') {
     loadingStatus.value = 'Click Next to advance...'
     logDebug('Waiting for user input (Manual Mode)')
@@ -3486,7 +3447,7 @@ const executeAction = async (data: any) => {
     if (data.speaking && calculatedYapDuration > 0) {
       autoDuration = Math.max(autoDuration, calculatedYapDuration + 2000)
     }
-      
+
     logDebug(`Waiting for ${autoDuration}ms (Auto Mode)`)
     await new Promise<void>((resolve) => {
       setTimeout(() => {
@@ -3502,7 +3463,7 @@ const executeAction = async (data: any) => {
 
 const resetSession = () => {
   if (chatHistory.value.length === 0) return
-  
+
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
 
   if (confirmed) {
@@ -3514,6 +3475,7 @@ const resetSession = () => {
     summarizationRetryPending.value = false
     summarizationAttemptCount.value = 0
     summarizationLastError.value = null
+    isLoadedSession.value = false
     lastPrompt.value = ''
     market.live2d.isVisible = false
     selectedMessageIndex.value = null
@@ -3521,32 +3483,23 @@ const resetSession = () => {
   }
 }
 
-const summarizeChunk = async (messages: { role: string, content: string }[]): Promise<boolean> => {
+const summarizeChunk = async (messages: { role: string; content: string }[]): Promise<boolean> => {
   if (messages.length === 0) return true
 
   loadingStatus.value = 'Summarizing story so far...'
-  const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
-
-  const systemMsg = { role: 'system', content: prompts.summarizeChunk.system }
-  const userMsg = { role: 'user', content: prompts.summarizeChunk.user.replace('${textToSummarize}', textToSummarize) }
-  const msgs = [systemMsg, userMsg]
 
   try {
-    let summary = ''
+    const summary = await summarizeChunkImpl(messages, {
+      apiProvider: apiProvider.value,
+      apiKey: apiKey.value,
+      model: model.value,
+      localMaxTokens: localMaxTokens.value,
+      localUrl: localUrl.value,
+      prompts,
+      enableContextCaching: enableContextCaching.value
+    })
 
-    if (apiProvider.value === 'perplexity') {
-      summary = await callPerplexity(msgs, false)
-    } else if (apiProvider.value === 'gemini') {
-      summary = await callGeminiSummarization(msgs, apiKey.value, model.value)
-    } else if (apiProvider.value === 'openrouter') {
-      summary = await callOpenRouterSummarization(msgs, apiKey.value, model.value)
-    } else if (apiProvider.value === 'pollinations') {
-      summary = await callPollinationsSummarization(msgs, apiKey.value, model.value)
-    } else if (apiProvider.value === 'local') {
-      summary = await callLocalSummarization(msgs, { maxTokens: localMaxTokens.value, apiKey: apiKey.value, localUrl: localUrl.value })
-    }
-    
-    if (summary && summary.trim().length > 0) {
+    if (summary) {
       if (storySummary.value) {
         storySummary.value += '\n\n' + summary
       } else {
@@ -3556,13 +3509,10 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 
       return true
     }
-    summarizationLastError.value = 'Summarization returned empty output.'
-
     return false
   } catch (e) {
     console.error('Failed to summarize chunk:', e)
     summarizationLastError.value = e instanceof Error ? e.message : String(e)
-
     return false
   }
 }
@@ -3605,6 +3555,19 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   }
 }
 
+.reset-btn {
+  position: absolute;
+  top: 150px;
+  right: 120px;
+  pointer-events: auto;
+  z-index: 1001;
+
+  @media (max-width: 768px) {
+    top: 150px;
+    right: 110px;
+  }
+}
+
 .chat-container {
   position: absolute;
   /* Initial values will be overridden by inline styles */
@@ -3638,7 +3601,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
     align-items: center;
     gap: 6px;
     color: rgba(255, 255, 255, 0.7);
-    
+
     .drag-title {
       font-size: 12px;
       font-weight: 600;
@@ -3656,28 +3619,30 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &.se {
     bottom: 0;
     right: 0;
     cursor: nwse-resize;
     color: rgba(255, 255, 255, 0.3);
-    &:hover { color: rgba(255, 255, 255, 0.8); }
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
   }
-  
+
   &.sw {
     bottom: 0;
     left: 0;
     cursor: nesw-resize;
   }
-  
+
   &.ne {
     top: 0;
     right: 0;
     cursor: nesw-resize;
     z-index: 20; /* Above drag handle */
   }
-  
+
   &.nw {
     top: 0;
     left: 0;
@@ -3691,43 +3656,43 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   overflow-y: auto;
   padding: 10px;
   margin-bottom: 0;
-  
+
   .message {
     margin-bottom: 8px;
     padding: 8px;
     border-radius: 8px;
     position: relative;
-    
+
     &.replay-enabled {
       cursor: pointer;
       transition: background-color 0.2s;
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.2);
       }
     }
-    
+
     &.selected {
       background: rgba(184, 134, 11, 0.6) !important;
       border: 1px solid #ffd700;
     }
-    
+
     &.user {
       background: rgba(0, 123, 255, 0.5);
       align-self: flex-end;
       max-width: 85%;
     }
-    
+
     &.assistant {
       background: rgba(255, 255, 255, 0.1);
       max-width: 95%;
     }
-    
+
     &.system {
       color: #ff4d4f;
       font-size: 0.8em;
     }
-    
+
     .message-content {
       color: white;
       word-wrap: break-word;
@@ -3744,7 +3709,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
       left: 0;
       opacity: 0.5;
       transition: opacity 0.2s;
-      
+
       &:hover {
         opacity: 1;
       }
@@ -3756,7 +3721,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
       left: 0;
       opacity: 0.5;
       transition: opacity 0.2s;
-      
+
       &:hover {
         opacity: 1;
       }
@@ -3772,12 +3737,12 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 
   @media (max-width: 1024px) {
     flex-wrap: wrap;
-    
+
     .n-input {
       width: 100%;
       order: 1;
     }
-    
+
     .n-button {
       flex: 1;
       order: 2;
@@ -3885,11 +3850,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   position: relative;
   width: 100%;
   pointer-events: auto;
-  background: linear-gradient(to top, 
-    rgba(0, 0, 0, 0.9) 0%, 
-    rgba(0, 0, 0, 0.7) 50%, 
-    transparent 100%
-  );
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
   padding: 60px 10% 80px 10%;
   color: white;
   min-height: 200px;
@@ -3915,7 +3876,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
     min-height: 120px;
     max-height: calc(100vh - 50px);
   }
-} 
+}
 
 .nikke-speaker-name {
   display: flex;
@@ -3925,7 +3886,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   font-weight: 700;
   margin-bottom: 16px;
   color: white;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 
   @media (max-width: 1024px) {
     font-size: 1.2em;
@@ -3944,7 +3905,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   font-size: 1.4em;
   line-height: 1.6;
   white-space: pre-wrap;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   max-width: 1400px;
   font-weight: 400;
   word-break: break-word;
@@ -3956,7 +3917,7 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   }
 
   @media (max-width: 834px) {
-    font-size: 1.0em;
+    font-size: 1em;
     line-height: 1.35;
   }
 }
@@ -3985,15 +3946,27 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
   gap: 8px;
   color: var(--accent, #1565c0);
   border-left: 4px solid var(--accent, #1565c0);
-  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0));
 }
 
-.accent-blue { --accent: #1565c0; }
-.accent-green { --accent: #2e7d32; }
-.accent-purple { --accent: #6a1b9a; }
-.accent-light-blue { --accent: #00eeff; }
-.accent-orange { --accent: #ef6c00; }
-.accent-red { --accent: #c62828; }
+.accent-blue {
+  --accent: #1565c0;
+}
+.accent-green {
+  --accent: #2e7d32;
+}
+.accent-purple {
+  --accent: #6a1b9a;
+}
+.accent-light-blue {
+  --accent: #00eeff;
+}
+.accent-orange {
+  --accent: #ef6c00;
+}
+.accent-red {
+  --accent: #c62828;
+}
 
 .game-choices-overlay {
   position: absolute;
@@ -4135,8 +4108,13 @@ const summarizeChunk = async (messages: { role: string, content: string }[]): Pr
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
 </style>

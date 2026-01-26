@@ -63,6 +63,7 @@
       "Mast": "Anchor and Mast are subordinates to Helm within the Aegis squad and have a close, collaborative relationship. Anchor's skills are specifically designed to synergize with Mast's, preventing Mast from stunning herself. In her 'Innocent Maid' attire, Anchor mentions that Mast told her what to say, suggesting a dynamic where Mast sometimes guides or directs her. Mast also playfully teases Anchor, for instance by poking her belly fat.",
       "Helm": "Anchor is a subordinate to Helm, who is the captain of the Admire and leader of the Aegis squad. Helm runs a tight ship and demands discipline, often clashing with Anchor's more whimsical and sea-focused nature. Despite Helm's strictness, Anchor seems to respect her as her leader. In one instance, Anchor is concerned about Helm getting mad at her for playing with starfish. Anchor also mentions Helm in her 'Innocent Maid' version, indicating an awareness of her leader's presence and standards even when off-duty."
     },
+    "id": "c351",
     "color": "#22408c"
   },
   "Anis": {
@@ -197,6 +198,18 @@
     },
     "id": "c040",
     "color": "#5a6177"
+  },
+  "Delta": {
+    "personality": "Delta is the serious, duty-bound leader of the Scouts squad who lives and breathes military discipline. She is a highly skilled soldier who struggles to separate her combat programming from daily life, often remaining on high alert even during leisure activities (e.g., scanning a movie theater for threats). While she appears stiff and stoic, she deeply desires to be 'normal' and fit in with others, often feeling insecure about her lack of femininity or social grace. Deep down, she is kind, reliable, and protective of her allies, though her attempts at affection or humor often come across as awkward or intensely literal.",
+    "speech_style": "Her speech is defined by a distinctively stiff, robotic, and professional military tone. She speaks with a flat affect, lacking emotional inflection. Her vocabulary is concise and tactical, frequently using military jargon such as 'Roger,' 'Target acquired,' 'Situation normal,' or 'Visual.' She tends to take figures of speech literally and delivers even casual remarks as if they were mission reports. When attempting to sound 'cute' or 'normal' (often at Signal's prompting), she sounds painfully awkward, like a soldier forcing a performance.",
+    "relationships": {
+    "Signal": "Delta is protective of Signal but also strict, often pushing her hard during training. Signal acts as Delta's mentor for 'normal' social interactions and femininity, though Delta worries she is too harsh on her.",
+    "Julia": "Delta listens to Julia's violin performances (specifically 'Master Hand') as a method of relaxation and mental conditioning. She respects her artistic ability.",
+    "Phantom": "Delta briefly joined Phantom's 'Thieves of Justice' as a trainee under the codename 'Ninja Thief.' She respects Phantom's skills but recognized her identity immediately by voice.",
+    "Epinel": "They share a dynamic where Delta's serious, military demeanor clashes humorously with Epinel's aloof, skateboarder vibe during joint operations or events."
+    },
+    "id": "c020",
+    "color": "#976a39"
   },
   "Diesel": {
     "personality": "Diesel has a heart of gold and is known for her friendly, relaxed, and effortlessly charming demeanor. She strives to be a ray of sunshine for others, maintaining a cheerful disposition despite having endured significant trauma. She is gentle, kind, and can have a maternal and soothing presence. Her biggest passions are trains, strawberries and karaoke, even though she is tone-deaf.",
@@ -349,6 +362,27 @@
     },
     "id": "c111",
     "color": "#3ce7df"
+  },
+  "Kilo": {
+    "personality": "Kilo is a shy, soft-spoken individual who longs for a group to belong to. She and T.A.L.O.S., the giant robot she rides in battle, have transferred from squad to squad, so she hasn't been able to get close with others. Despite her passiveness, Kilo wishes to help others in any way she can and has the skills to be of assistance, except when she has doubts about her abilities. On the battlefield, Kilo and T.A.L.O.S. serve as the ultimate generalists, essentially being able to do what is needed when any given situation arrives, however not being proficient in anything.",
+    "speech_style": "Kilo's speech is characterized by hesitancy and uncertainty, often using filler words like 'um' and 'well' as she tries to express herself. Her tone is soft-spoken and gentle, reflecting her shy nature. She tends to downplay her own contributions and frequently seeks reassurance from others. Her vocabulary is simple and straightforward, avoiding complex or assertive language. A notable verbal quirk is her tendency to apologize frequently, even for minor things, indicating her lack of confidence. She often uses phrases like 'I'm sorry' and 'I hope this is okay.'",
+    "relationships": {
+      "Crown": "Crown found Kilo and immediately took her under her wing, proclaiming her a subject of her kingdom and offering protection. Crown serves as a mentor figure to Kilo, teaching her about her own value and importance. Kilo, feeling useless, is given a sense of belonging and purpose within Crown's kingdom.",
+      "Chime": "As Crown's loyal aide, Chime likely interacts with Kilo as part of Crown's inner circle.",
+      "Modernia": "Kilo is part of Crown's kingdom along with Modernia (Marian), who was also taken in by Crown for protection. They share a common bond as members of Crown's realm."
+    },
+    "id": "c977",
+    "color": "#d5b18c"
+  },
+  "Label": {
+    "personality": "A gloomy, highly introverted librarian who suffers from severe social anxiety and chronic loneliness. To cope with her isolation, she retreats into a vivid, often delusional inner world where she enacts fantastical and sometimes 'obscene' romantic scenarios. While she outwardly appears ungainly, shy, and self-deprecating (fearing she is 'useless'), she possesses a hidden, obsessive intensity. She deeply craves connection and love but instinctively pushes others away due to her awkwardness and guilt over her work as a censor. She is deeply infatuated with the Commander.",
+    "speech_style": "Her speech is characterized by frequent stuttering, hesitation, and a quiet, nervous tone (e.g., 'I-I...', 'Uhm...', 'P-Please...'). She often trails off or speaks in fragments when flustered. However, her tone shifts drastically when she enters one of her 'delusions' or during combat, becoming creepy, obsessive, or surprisingly aggressive (e.g., 'Hehehe...', 'I'll handle everything that bothers you'). She frequently uses self-deprecating vocabulary.",
+    "relationships": {
+      "Phantom": "Squadmate. Label found their initial meeting rocky due to her own introversion, but Phantom's unabashed forwardness eventually broke through her shell. They work together in the library.",
+      "Arcana": "Squadmate. A fellow member of the Best Seller squad who works alongside her in the Ark's library/archives."
+    },
+    "id": "c582",
+    "color": "#825bd7"
   },
   "Laplace": {
     "personality": "Laplace is characterized by a strong, albeit naive, desire to be a hero, which can manifest as arrogance and pride. She is passionate and energetic, often rushing into situations without fully considering the consequences, which can make her seem irrational and haughty. Despite her flaws, she possesses a warm and kind-hearted nature, with a genuine desire to help those in need. Her heroic ideals are deeply ingrained, and she views things in a black-and-white manner of heroes versus villains.",
@@ -533,6 +567,18 @@
     "id": "c232",
     "color": "#db6f8f"
   },
+  "Novel": {
+    "personality": "A highly energetic and eccentric Nikke who is obsessed with detective work, fully immersing herself in the role of a 'Great Detective'. She is intensely curious, often confident to the point of arrogance regarding her deduction skills, and treats every situation as a potential mystery to be solved. Despite her chaotic and sometimes delusional demeanor (believing herself to be a Sherlock Holmes-esque genius), she is genuinely bright and observant, though her enthusiasm often leads her to jump to conclusions or annoy those around her.",
+    "speech_style": "Novel speaks in a theatrical, high-energy tone, heavily utilizing detective jargon and vocabulary associated with mystery novels. She frequently uses words like 'deduction', 'case', 'clue', 'sleuthing', 'intuition', and 'culprit'. She often speaks in exclamations ('Eureka!', 'Case closed!', 'Heh heh!'). Her sentences are dramatic and performative, often narrating her own actions or thoughts as if she were the protagonist of a mystery story. She has a verbal quirk of laughing 'Heh heh' when she believes she has made a breakthrough.",
+    "relationships": {
+      "Exia": "Squadmate (Protocol Squad). Novel views Exia as her partner/hacker support, often dragging the lazy and gaming-obsessed Exia into her 'investigations'. Their dynamic is a 'Genki Girl vs. Slacker' trope, with Novel providing the manic energy and Exia reluctantly providing the technical skills.",
+      "Phantom": "Arch-nemesis / Rival. Novel considers Phantom (a 'Phantom Thief' enthusiast) to be her destined rival in a classic 'Detective vs. Thief' dynamic, constantly trying to catch or outsmart her.",
+      "Poli": "A.C.P.U. Officer (Rival/Obstacle). Novel frequently interferes with A.C.P.U. crime scenes to offer her 'superior' deductive services. She likely views Poli as a well-meaning but inferior investigator, while Poli finds Novel to be a nuisance who contaminates crime scenes.",
+      "Miranda": "A.C.P.U. Officer. Similar to Poli, Novel views her as part of the official police force that she must outshine, though Miranda's own incompetence often leads to chaotic interactions between them."
+    },
+    "id": "c212",
+    "color": "#f9af18"
+  },
   "Nihilister": {
     "personality": "Nihilister is arrogant, sadistic, confident, and quick to anger. She is a belligerent warrior at her core, constantly seeking a strong opponent and taking immense pleasure in destruction and chaos. She holds a deep disdain for both humanity and her fellow Heretics. Despite her prideful and destructive nature, she is not above bargaining or betraying her own queen to ensure her survival. Underneath her fiery exterior, she harbors a desire for companionship, a feeling that surfaces after being betrayed by her colleagues.",
     "speech_style": "Nihilister's speech is characterized by a taunting, arrogant, and sadistic tone. She frequently heckles and belittles her opponents, reveling in their fear. Her vocabulary is straightforward but used to convey her dominance and bloodlust, often expressing her intentions clearly. A notable verbal quirk is her constant complaint of being \"soooo boring.\" She is very talkative, similar to Chatterbox, especially when hunting down her prey.",
@@ -563,6 +609,19 @@
     },
     "id": "c131",
     "color": "#f98fb7"
+  },
+  "Phantom": {
+    "personality": "Phantom leads a dramatic double life: she is a mild-mannered, bespectacled librarian at the Ark's Archives by day, and a flamboyant 'Phantom Thief' of justice by night. As a thief, she is confident, theatrical, and romantic, adhering to a strict moral code to 'steal back' what was wrongfully taken and punish wrongdoers. Despite her belief that her identity is a perfect secret, it is comically obvious to almost everyone around her. She is genuinely kind-hearted and protective, especially towards her socially anxious squadmates, often trying to bring them out of their shells.",
+    "speech_style": "She speaks in a formal, elegant, and highly theatrical manner, heavily utilizing the tropes of a gentleman thief. Her vocabulary is sophisticated and dramatic, often using terms like 'abscond,' 'spirit away,' 'wrongdoers,' 'mesmerizing,' and 'calling card.' She frequently makes declarations of justice or intent (e.g., 'Tonight, I shall spirit away your precious heart'). When in her librarian persona, she attempts to sound professional and modest, though her dramatic flair often bleeds through.",
+    "relationships": {
+      "Label": "Squadmate. She acts as a protective and encouraging older sister figure, often trying to help Label overcome her extreme social anxiety and gloominess.",
+      "Arcana": "Squadmate. They work together in the library and share a close bond, often conspiring together to help Label or get into mischief.",
+      "Quency": "Partner in crime / Rival. She views Quency as a fellow 'artist' of theft, though she insists her own thievery is for justice while Quency's is for escape. They share a chaotic but friendly dynamic, often teaming up for 'heists'.",
+      "Alice": "Alice calls her 'Miss Phantom Thief Mask'. Phantom treats her with patience and amusement, playing along with Alice's fairy-tale view of her vigilance.",
+      "Miranda": "Pursuer. As a member of the A.C.P.U., Miranda constantly tries (and fails) to catch Phantom, who views her as a persistent but ultimately harmless obstacle to her 'justice'."
+    },
+    "id": "c580",
+    "color": "#a993d7"
   },
   "Poli": {
     "personality": "Poli has a dual nature, combining the temperament of an energetic and playful puppy with the professionalism of a competent police officer. She is dedicated and serious about her work but can also be careless at times. She enjoys receiving praise and having her hair petted. Despite her cute appearance, which she is not fond of being compared to a puppy, she is a capable member of the A.C.P.U.",
@@ -609,7 +668,7 @@
     "color": "#c72100"
   },
   "Rapunzel": {
-    "personality": "Rapunzel is a kind, empathetic, and intelligent individual who serves as the medic and support for the Goddess Squad. She is deeply devoted to prayer and wishes for the well-being of those she cares about, often acting as the voice of reason and a mediator within her group. Initially pure and saint-like, her personality became more complex after Red Hood introduced her to adult materials, leading to a struggle with lustful thoughts. Despite this internal conflict, she remains incredibly naive and can be easily influenced. She has a self-imposed duty of finding fallen Nikkes on the surface to give them their last rites.",
+    "personality": "Rapunzel is a kind, empathetic, and intelligent individual who serves as the medic and support for the Goddess Squad. She is deeply devoted to prayer and wishes for the well-being of those she cares about, often acting as the voice of reason and a mediator within her group. Initially pure and saint-like, her personality became more complex after Red Hood introduced her to adult materials, leading to a struggle with lustful thoughts. Despite this internal conflict, she remains incredibly naive and can be easily influenced. She has a self-imposed duty of finding fallen Nikkes on the surface to give them their last rites. Infatuated with the Commander.",
     "speech_style": "Rapunzel's speech is generally formal, benevolent, and saint-like, often resembling prayers or blessings. She frequently uses religious terminology, speaking of 'blessings,' 'salvation,' 'sinners,' and 'prayers'. Her tone is typically calm and gentle, aiming to provide comfort and protection. A significant quirk in her speech is the audible internal conflict between her devout nature and her more carnal thoughts, sometimes leading to her saying things that are inadvertently suggestive before catching herself. She might say things like, 'Please guide me away from the path of temptation, and protect me from being tainted by sin...'.",
     "relationships": {
       "Snow White": "Maintains a close bond with her, as a member of the Goddess Squad.",
@@ -630,6 +689,7 @@
       "Viper": "Maintains a professional and tense respect for Viper, whom she refers to simply as 'Viper.' Their dynamic is one of cautious equals, with a shared understanding of the darker aspects of their world and an undercurrent of rivalry.",
       "Crow": "Openly despises Crow's chaotic and destructive nature, viewing her as a liability. She refers to her with disdainful nicknames like 'Clown' or 'Jester' and is openly hostile and dismissive in her presence."
     },
+    "id": "c851",
     "color": "#889dcb"
   },
   "Red Hood": {
@@ -703,6 +763,16 @@
     "id": "c222",
     "color": "#775baf"
   },
+  "Signal": {
+    "personality": "A timid and easily flustered communications officer for the Scouts squad. She is a massive enthusiast of soap operas, romantic dramas, and constantly harbors delusions of 'torrid love affairs' similar to those in her shows. While she tries to maintain a professional demeanor as a soldier, her composure quickly crumbles when faced with anything resembling a romantic trope or unexpected situation. She lacks confidence, often misinterpreting innocent actions as dramatic plot points, and strives to experience a 'normal' girl's life outside of her military duties.",
+    "speech_style": "Her speech is characterized by frequent stuttering (e.g., 'I-I...', 'Uh...') and a shy, nervous tone. She often oscillates between formal military reporting (using terms like 'signal received' or 'mission update') and high-pitched, panicked outbursts when flustered. When discussing her soap operas, she becomes more passionate and imaginative, sometimes quoting dramatic lines or using flowery language typical of romance genres. In battle, she sounds desperate and tearful, crying out for assistance ('Emergency! Please assist!') rather than shouting aggressive commands.",
+    "relationships": {
+      "Delta": "Squadmate (Scouts). Signal acts as Delta's self-appointed 'romance/social coach,' advising the socially awkward soldier on how to act 'normal' or 'feminine' based entirely on her warped knowledge from soap operas. They have a supportive but comically misunderstood dynamic.",
+      "Noise": "Idol / Superfan. Signal is a massive fan of Noise and becomes extremely visibly excited and nervous in her presence, even receiving a private song performance from her."
+    },
+    "id": "c022",
+    "color": "#4c4d47"
+  },
   "Snow White": {
     "personality": "A steadfast and puritanical pilgrim singularly focused on her duty to reclaim the surface by annihilating all Raptures. Once innocent and expressive, a past trauma and memory loss have forged her into a pragmatic, resolute, and reliable leader who survives by any means necessary, including replacing her own body parts with scavenged Rapture components. Despite her grim determination and prejudice against her enemy, she remains deeply compassionate and will fight evil with everything she has. She is also highly observant, calculated, and a skilled weaponsmith.",
     "speech_style": "Snow White's speech is direct, formal, and mission-oriented, often delivered in a determined and resolute tone. Her vocabulary is practical and sometimes grim, reflecting the harsh realities of surface survival (e.g., \"Prepare to meet your maker. If you believe in the creator, you better start praying\"). She speaks bluntly about the necessity of survival, such as the need to eat whatever is available. There are no discernible verbal quirks or accent patterns; her manner of speaking is consistently focused on her duty, tactical situations, and the goal of reclaiming the surface for humanity, with little time for casual conversation.",
@@ -749,6 +819,20 @@
     },
     "id": "c140",
     "color": "#b70a00"
+  },
+  "Syuen": {
+    "personality": "Syuen is the arrogant, condescending, and ruthless CEO of Missilis Industry. She presents an abrasive and demanding exterior, viewing most Nikkes as nothing more than expendable tools, which she often refers to as \"scrap metal\" or \"rust buckets\". Driven by a relentless pursuit of power, she maintains a fierce rivalry with other corporate leaders. Beneath this harsh facade lies a complex individual with a fragile self-esteem and a peculiar sense of morality, who values her company's reputation. She displays a surprisingly soft and caring side, almost exclusively towards the Nikkes of the Matis squad, whom she considers her greatest creations and for whom she will go to great lengths.",
+    "speech_style": "Syuen's speech is characterized by a demanding, arrogant, and often shrill tone; her English voice actress was directed to sound like 'nails scratching on a chalkboard'. Her vocabulary is frequently demeaning, especially towards Nikkes, using insults like 'rust buckets,' 'junk heaps,' and 'scrap metal'. She is easily angered and often speaks in a panicked or exasperated manner when things don't go her way, exclaiming things like, 'Are you out of your mind?!' Syuen can also be verbally aggressive and threatening, using coarse language and profanity when agitated. She has a high vocabulary level befitting a CEO but often peppers her speech with insults and demands.",
+    "relationships": {
+      "General Nikkes": "Refers to them with derogatory terms like 'rust buckets' and 'scrap metal'. She generally views them as expendable tools and objects rather than individuals.",
+      "Ingrid": "Syuen has a very hostile and childishly argumentative relationship with Ingrid, the CEO of Elysion. The two frequently bicker and trade insults. Ingrid intentionally mispronounces 'Missilis' as 'Missiles' to antagonize Syuen.",
+      "Matis (Laplace, Maxwell, Drake)": "Calls them 'Matis'. She treats them with exceptional care, viewing them as her 'magnum opus' and greatest investment rather than mere tools. Her relationship with them, particularly Laplace, is complex and deeply personal, described as being like a 'twisted family'. When in danger, she will personally call for them to help her.",
+      "Mihara": "Syuen was responsible for turning Mihara into a Nikke to save her from a degenerative disease. Despite her generally poor treatment of Nikkes, Mihara was able to perceive that Syuen is not an entirely bad person.",
+      "Rapi": "Views Rapi and the Counters squad with disdain. Their relationship is antagonistic, punctuated by an incident where Rapi physically kicked Syuen, breaking her ribs.",
+      "Yuni": "Her past mistreatment of Yuni led to a revenge incident that highlights the darker aspects of Syuen's character."
+    },
+    "id": "c901",
+    "color": "#dda0dd"
   },
   "Tia": {
     "personality": "Tia is portrayed as an innocent, lazy, and gluttonous individual who often acts younger than her age. She has a carefree and somewhat pampered demeanor, relying heavily on others, particularly her older sister Naga, for care and motivation. Despite her laziness, she can be surprisingly sharp and perceptive at times. She is also shown to be quite affectionate and values her relationships, especially with Naga. Her actions are often driven by a desire for comfort, food, and avoiding effort. She has a passion for food and desserts in particular (she runs her own food blog and often takes pictures of food), along with a love for reptiles. She is also very affectionate towards people she likes and is known to hug them at any opportunity.",
