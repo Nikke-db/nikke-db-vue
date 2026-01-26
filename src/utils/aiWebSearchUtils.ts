@@ -67,14 +67,7 @@ export const fetchWikiContent = async (characterName: string): Promise<string | 
   }
 }
 
-export const searchForCharactersViaWikiFetch = async (
-  characterNames: string[],
-  characterProfiles: Record<string, any>,
-  apiProvider: string,
-  callGemini: Function,
-  callOpenRouter: Function,
-  callPollinations: Function
-): Promise<void> => {
+export const searchForCharactersViaWikiFetch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function): Promise<void> => {
   logDebug('[searchForCharactersViaWikiFetch] Fetching wiki pages for:', characterNames)
 
   for (const name of characterNames) {
@@ -89,9 +82,7 @@ export const searchForCharactersViaWikiFetch = async (
     const cleanedContent = cleanWikiContent(wikiContent)
     logDebug(`[searchForCharactersViaWikiFetch] Fetched ${cleanedContent.length} chars for ${name}`)
 
-    const summarizePrompt = prompts.search.wikiFetch
-      .replace(/{name}/g, name)
-      .replace('{content}', cleanedContent)
+    const summarizePrompt = prompts.search.wikiFetch.replace(/{name}/g, name).replace('{content}', cleanedContent)
 
     const messages = [
       { role: 'system', content: prompts.search.system.wikiFetch },
@@ -126,11 +117,19 @@ export const searchForCharactersViaWikiFetch = async (
 
         const profiles = JSON.parse(jsonStr)
 
-        // Add character IDs
+        // Add character IDs and colors
         for (const charName of Object.keys(profiles)) {
           const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
           if (char) {
             profiles[charName].id = char.id
+          }
+          // Lookup color from local profiles
+          const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+          if (localKey) {
+            const localProfile = (localCharacterProfiles as any)[localKey]
+            if (localProfile?.color) {
+              profiles[charName].color = localProfile.color
+            }
           }
         }
 
@@ -149,14 +148,7 @@ export const searchForCharactersViaWikiFetch = async (
   }
 }
 
-export const searchForCharactersWithNativeSearch = async (
-  characterNames: string[],
-  characterProfiles: Record<string, any>,
-  apiProvider: string,
-  callGemini: Function,
-  callOpenRouter: Function,
-  callPollinations: Function
-): Promise<void> => {
+export const searchForCharactersWithNativeSearch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function): Promise<void> => {
   logDebug('[searchForCharactersWithNativeSearch] Searching for:', characterNames)
 
   for (const name of characterNames) {
@@ -165,9 +157,7 @@ export const searchForCharactersWithNativeSearch = async (
     const wikiName = name.replace(/ /g, '_')
     const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
 
-    const searchPrompt = prompts.search.native
-      .replace(/{name}/g, name)
-      .replace('{url}', storyUrl)
+    const searchPrompt = prompts.search.native.replace(/{name}/g, name).replace('{url}', storyUrl)
 
     const messages = [
       { role: 'system', content: prompts.search.system.native },
@@ -203,10 +193,19 @@ export const searchForCharactersWithNativeSearch = async (
 
         const profiles = JSON.parse(jsonStr)
 
+        // Add character IDs and colors
         for (const charName of Object.keys(profiles)) {
           const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
           if (char) {
             profiles[charName].id = char.id
+          }
+          // Lookup color from local profiles
+          const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+          if (localKey) {
+            const localProfile = (localCharacterProfiles as any)[localKey]
+            if (localProfile?.color) {
+              profiles[charName].color = localProfile.color
+            }
           }
         }
 
@@ -225,78 +224,7 @@ export const searchForCharactersWithNativeSearch = async (
   }
 }
 
-export const searchForCharactersPerplexity = async (
-  characterNames: string[],
-  characterProfiles: Record<string, any>,
-  callPerplexity: Function
-): Promise<void> => {
-  logDebug('[searchForCharactersPerplexity] Searching individually for:', characterNames)
-
-  for (const name of characterNames) {
-    // Skip if we already have this character's profile
-    if (characterProfiles[name]) {
-      logDebug(`[searchForCharactersPerplexity] Skipping ${name} - already have profile`)
-      continue
-    }
-
-    // Build the direct wiki URL for this character's Story page
-    // Replace spaces with underscores for wiki URL format
-    const wikiName = name.replace(/ /g, '_')
-    const storyUrl = `https://nikke-goddess-of-victory-international.fandom.com/wiki/${wikiName}/Story`
-
-    // Search prompt pointing directly to the Story page for personality info
-    const searchPrompt = prompts.search.perplexity
-      .replace(/{name}/g, name)
-      .replace('{url}', storyUrl)
-
-    const messages = [
-      { role: 'system', content: prompts.search.system.perplexity },
-      { role: 'user', content: searchPrompt }
-    ]
-
-    try {
-      const result = await callPerplexity(messages, true, storyUrl)
-
-      let jsonStr = result.replace(/```json\n?|\n?```/g, '').trim()
-      const start = jsonStr.indexOf('{')
-      const end = jsonStr.lastIndexOf('}')
-      if (start !== -1 && end !== -1) {
-        jsonStr = jsonStr.substring(start, end + 1)
-      }
-
-      const profile = JSON.parse(jsonStr)
-
-      // Add character ID
-      for (const charName of Object.keys(profile)) {
-        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-        if (char) {
-          profile[charName].id = char.id
-        }
-      }
-
-      Object.assign(characterProfiles, profile)
-
-      logDebug(`[searchForCharactersPerplexity] Added profile for ${name}:`, profile)
-    } catch (e) {
-      console.error(`[searchForCharactersPerplexity] Failed to search for ${name}:`, e)
-      // Continue with other characters
-    }
-  }
-}
-
-export const searchForCharacters = async (
-  characterNames: string[],
-  characterProfiles: Record<string, any>,
-  useLocalProfiles: boolean,
-  allowWebSearchFallback: boolean,
-  apiProvider: string,
-  model: string,
-  loadingStatus: any,
-  setRandomLoadingMessage: Function,
-  searchForCharactersPerplexity: Function,
-  searchForCharactersWithNativeSearch: Function,
-  searchForCharactersViaWikiFetch: Function
-): Promise<void> => {
+export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, useLocalProfiles: boolean, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<void> => {
   logDebug('[searchForCharacters] Searching for:', characterNames)
 
   if (useLocalProfiles) {
@@ -313,9 +241,7 @@ export const searchForCharacters = async (
 
     for (const name of charsToSearch) {
       // Case-insensitive lookup in local profiles
-      const localKey = Object.keys(localCharacterProfiles).find(
-        (k) => k.toLowerCase() === name.toLowerCase()
-      )
+      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
 
       if (localKey) {
         const profile = (localCharacterProfiles as any)[localKey]
@@ -348,12 +274,6 @@ export const searchForCharacters = async (
   }
 
   loadingStatus.value = 'Searching the web for characters...'
-
-  // For Perplexity, search each character individually for better results
-  if (apiProvider === 'perplexity') {
-    await searchForCharactersPerplexity(charsToSearch)
-    return
-  }
 
   // For Gemini, use native search
   if (apiProvider === 'gemini') {
