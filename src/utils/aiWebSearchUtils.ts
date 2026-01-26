@@ -117,11 +117,19 @@ export const searchForCharactersViaWikiFetch = async (characterNames: string[], 
 
         const profiles = JSON.parse(jsonStr)
 
-        // Add character IDs
+        // Add character IDs and colors
         for (const charName of Object.keys(profiles)) {
           const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
           if (char) {
             profiles[charName].id = char.id
+          }
+          // Lookup color from local profiles
+          const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+          if (localKey) {
+            const localProfile = (localCharacterProfiles as any)[localKey]
+            if (localProfile?.color) {
+              profiles[charName].color = localProfile.color
+            }
           }
         }
 
@@ -185,10 +193,19 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
 
         const profiles = JSON.parse(jsonStr)
 
+        // Add character IDs and colors
         for (const charName of Object.keys(profiles)) {
           const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
           if (char) {
             profiles[charName].id = char.id
+          }
+          // Lookup color from local profiles
+          const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+          if (localKey) {
+            const localProfile = (localCharacterProfiles as any)[localKey]
+            if (localProfile?.color) {
+              profiles[charName].color = localProfile.color
+            }
           }
         }
 

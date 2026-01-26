@@ -115,6 +115,7 @@
             <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px">Inject one or more reminders to the model for the next turn:</div>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
               <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+              <n-checkbox v-model:checked="invalidJsonAuto" size="small">Auto</n-checkbox>
               <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
@@ -913,6 +914,7 @@ if (!isDev) useLocalProfiles.value = true
 const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
 const invalidJsonPersist = ref(false)
+const invalidJsonAuto = ref(true)
 const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
@@ -923,10 +925,14 @@ const incorrectAnimationsPersist = ref(false)
 watch(invalidJsonPersist, (val) => {
   if (val) {
     invalidJsonToggle.value = true
+    invalidJsonAuto.value = false
   }
 })
 
 watch(invalidJsonToggle, (val) => {
+  if (val) {
+    invalidJsonAuto.value = false
+  }
   if (!val) {
     invalidJsonPersist.value = false
   }
@@ -2821,7 +2827,7 @@ const replayMessage = async (msg: any, index: number) => {
   })
 }
 
-const processAIResponse = async (responseStr: string, depth: number = 0) => {
+const processAIResponse = async (responseStr: string, depth: number = 0, autoRetryAttempted: boolean = false) => {
   loadingStatus.value = 'Processing response...'
   logDebug('Raw AI Response:', responseStr)
 
@@ -2837,6 +2843,32 @@ const processAIResponse = async (responseStr: string, depth: number = 0) => {
     data = parseAIResponse(responseStr)
   } catch (e) {
     console.warn('JSON parse failed, attempting text fallback parsing...', e)
+
+    // If Auto mode is enabled and we haven't tried auto-retry yet, retry with the invalidJsonReminder
+    if (invalidJsonAuto.value && !autoRetryAttempted) {
+      console.log('[processAIResponse] Auto mode enabled, retrying with invalidJsonReminder...')
+
+      // Temporarily enable the invalidJsonToggle to inject the reminder
+      const previousToggleValue = invalidJsonToggle.value
+      invalidJsonToggle.value = true
+
+      try {
+        setRandomLoadingMessage()
+        const retryResponse = await callAI(true)
+
+        // Restore the toggle to its previous state
+        invalidJsonToggle.value = previousToggleValue
+
+        // Process the retry response, marking that we've attempted auto-retry
+        await processAIResponse(retryResponse, depth, true)
+        return
+      } catch (retryError) {
+        // Restore the toggle even if retry failed
+        invalidJsonToggle.value = previousToggleValue
+        console.warn('[processAIResponse] Auto-retry failed, falling back to text parsing...', retryError)
+        // Continue to fallback parsing below
+      }
+    }
 
     try {
       data = parseFallback(responseStr)
@@ -3048,6 +3080,21 @@ const executeAction = async (data: any) => {
           delete (relationships as any).Commander
           delete (relationships as any).commander
           cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
+        }
+
+        // Add id from l2d.json if available
+        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+        if (char) {
+          cleanedProfile.id = char.id
+        }
+
+        // Lookup color from local profiles even if full profile isn't used
+        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+        if (localKey) {
+          const localProfile = (localCharacterProfiles as any)[localKey]
+          if (localProfile?.color) {
+            cleanedProfile.color = localProfile.color
+          }
         }
 
         newProfiles[charName] = cleanedProfile
