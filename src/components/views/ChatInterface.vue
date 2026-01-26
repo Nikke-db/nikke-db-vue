@@ -528,6 +528,11 @@
             <n-input v-model:value="chatterboxEndpoint" placeholder="http://localhost:4123" />
           </n-form-item>
           <n-divider />
+          <h4 class="settings-section-header accent-orange">Support this feature!</h4>
+          <n-divider />
+          <div style="display: flex; justify-content: center; padding-bottom: 10px">
+            <a href="https://ko-fi.com/rhystic1" target="_blank"><img height="36" style="border: 0px; height: 36px" src="https://storage.ko-fi.com/cdn/kofi6.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com" /></a>
+          </div>
         </n-form>
       </n-drawer-content>
     </n-drawer>
@@ -537,6 +542,21 @@
     <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw">
       <div class="guide-content">
         <div v-if="guidePage === 1" class="guide-page">
+          <h3>🆕 What's New?</h3>
+          <div class="guide-section">
+            <ul>
+              <li>Control reasoning/thinking tokens for supported models</li>
+              <li>Greatly improved fallback parsing for text and animations</li>
+              <li>Improved compatibility with various AI models</li>
+              <li>Reminders improvements, including an 'Auto' mode for the JSON schema enforcement (can be disabled)</li>
+              <li>Ability to reset the active character's zoom and positioning</li>
+              <li>Removed support for the Perplexity API</li>
+              <li>Tons of other improvements and bug fixes</li>
+            </ul>
+          </div>
+        </div>
+
+        <div v-if="guidePage === 2" class="guide-page">
           <h3>🚀 Welcome to the Story Generator</h3>
           <p>Create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
 
@@ -551,7 +571,7 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 2" class="guide-page">
+        <div v-if="guidePage === 3" class="guide-page">
           <h3>🎭 Interaction Modes</h3>
           <div class="guide-section">
             <ul>
@@ -579,7 +599,7 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 3" class="guide-page">
+        <div v-if="guidePage === 4" class="guide-page">
           <h3>✨ Immersive Features</h3>
           <div class="guide-section">
             <ul>
@@ -591,7 +611,7 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 4" class="guide-page">
+        <div v-if="guidePage === 5" class="guide-page">
           <h3>🧠 Knowledge & Search</h3>
           <div class="guide-section">
             <ul>
@@ -603,7 +623,7 @@
           </div>
         </div>
 
-        <div v-if="guidePage === 5" class="guide-page">
+        <div v-if="guidePage === 6" class="guide-page">
           <h3>💡 Tips & Troubleshooting</h3>
           <div class="guide-section">
             <ul>
@@ -617,7 +637,7 @@
 
         <div class="guide-footer">
           <div class="guide-steps">
-            <div v-for="p in 5" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
+            <div v-for="p in 6" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
           </div>
           <div class="guide-actions">
             <n-button v-if="guidePage > 1" @click="guidePage--" style="margin-right: 10px">
@@ -626,7 +646,7 @@
               ></template>
               Back
             </n-button>
-            <n-button v-if="guidePage < 5" type="primary" @click="guidePage++">
+            <n-button v-if="guidePage < 6" type="primary" @click="guidePage++">
               Next
               <template #icon
                 ><n-icon><ChevronRight /></n-icon
