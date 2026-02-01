@@ -840,6 +840,14 @@
     "id": "c315"
   },
   {
+    "name": "Velvet Sensual Rabbit",
+    "id": "c316"
+  },
+  {
+    "name": "Velvet",
+    "id": "c316_01"
+  },
+  {
     "name": "Marciana",
     "id": "c321"
   },
@@ -1844,10 +1852,6 @@
     "id": "c9003"
   },
   {
-    "name": "Velvet",
-    "id": "c9004"
-  },
-  {
     "name": "Rapture",
     "id": "c9005"
   },
@@ -2168,6 +2172,11 @@
     "name": "Sin Editor",
     "id": "sineditor",
     "f": "EventScene_sineditor_01"
+  },
+  {
+    "name": "Fatal Maid",
+    "id": "fatalmaid",
+    "f": "EventScene_fatalmaid_01"
   },
   {
     "name": "Smol Ade",
