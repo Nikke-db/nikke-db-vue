@@ -810,6 +810,19 @@
     "id": "c071",
     "color": "#3978a3"
   },
+  "Sora": {
+    "personality": "Sora presents herself as the consummate professional stewardess: cheerful, accommodating, and perpetually smiling with a 'customer service' demeanor. She is playful and charming, often asking if there is anything she can provide to make one's 'flight' more comfortable. However, this helpful persona masks a cunning and opportunistic streak; she secretly runs a smuggling ring, trafficking surface items to the Outer Rim. She is easygoing but secretive, finding thrill in her illicit activities while maintaining perfect composure. She is often described as having a 'smug' or mischievous undertone to her polite expressions.",
+    "speech_style": "Sora speaks in a distinct 'Flight Attendant' register—polite, formal, and high-pitched with a service-oriented cadence. Her vocabulary is heavily saturated with aviation terminology (e.g., 'passengers,' 'turbulence,' 'destination,' 'boarding'). She frequently uses courteous phrases like 'May I assist you?' or 'Please ensure your seatbelts are fastened,' but often layers them with double entendres that hint at her smuggling business (e.g., offering 'special services' or 'off-menu items'). She maintains a tone of feigned innocence when pressed about her heavy luggage or illicit goods.",
+    "relationships": {
+      "Cielo": "Squadmate (Over the Horizon) - treating her as a fellow crew member.",
+      "Sky": "Squadmate (Over the Horizon) - treating her as a fellow crew member.",
+      "Delta": "Sora shares a 'secret' dynamic with her, likely related to moving goods or bypassing security protocols.",
+      "Signal": "Involved in the same secret dynamic as Delta, possibly manipulating Signal's naive nature to help with her operations.",
+      "Mica": "Close Friend - She treats Mica with a friendly, perhaps slightly corrupting 'big sister' affection."
+    },
+    "id": "c532",
+    "color": "#bfbff3"
+  },
   "Sugar": {
     "personality": "A cool and chill 'gearhead' with a passion for her motorcycle, 'Black Typhoon'. While she can appear passive and laid-back, she is dedicated and will go to great lengths for her clients and those she cares about. Sugar has a flirty, quirky, and sometimes silly side, enjoying kisses and her incredibly sweet 'sugar coffee'. Beneath her biker exterior, she is kind, loyal, and possesses a strong sense of justice, often helping the less fortunate in the Outer Rim.",
     "speech_style": "Sugar's speech is generally relaxed, casual, and direct, with a cool and confident tone. Her vocabulary is modern and includes some slang, such as calling a place 'dullsville'. She can be quite forward and flirty in her mannerisms, openly asking for kisses. Her speech pattern is straightforward without any noticeable accent or complex sentence structures. In combat, her tone becomes more focused and business-like, issuing short, clear commands like 'Reloading, cover me!' and expressions of success such as 'One point for me.'",
@@ -861,6 +874,18 @@
     "id": "c412",
     "color": "#cdebf3"
   },
+  "Velvet": {
+    "personality": "A former black-ops agent turned maid who struggles to balance her desire for a normal life with her inherent flair for the dramatic. As the former leader of Tetra's 'Shade' squad, she is capable, seductive, and dangerous, often displaying a 'femme fatale' demeanor that contrasts sharply with the clumsy or innocent nature of her new squadmates. She is unashamed of her desires and retains a charismatic, slightly villainous edge that can be intimidating to others. Attracted to the Commander.",
+    "speech_style": "She speaks with a sultry, confident, and slightly theatrical tone, often using playful or teasing intonations (e.g., ending sentences with a lingering '~'). Her vocabulary is sophisticated and suggestive, reflecting her past as a spy and 'entertainment' operative. She tends to be blunt about dangerous topics, casually mentioning mines or espionage tactics in normal conversation, which creates a jarring but charismatic effect.",
+    "relationships": {
+      "Mustang": "Former Boss/Protector - She knows the 'dirty' details of his past and the dark side of Tetra Line; she treats him with a knowing familiarity, often alluding to his secrets.",
+      "Ade": "Squadmate (Maid For You) - Ade is openly fearful of her and admitting she finds Velvet's aura 'frightening' and 'villainous'.",
+      "Cocoa": "Squadmate (Maid For You)",
+      "Soda": "Squadmate (Maid For You)"
+    },
+    "id": "c316",
+    "color": "#fe3877"
+  },
   "Vesti": {
     "personality": "Vesti is characterized by a timid, apologetic personality with very low self-esteem stemming from being bullied both as a human and as a Nikke. Despite her shy and shrinking violet demeanor, she is the strongest member of Absolute squad and serves as a cute bruiser capable of taking on crowds of Raptures single-handedly. She harbors dark and violent impulses toward her past tormentors, which she actively tries to suppress and instead channels into combat against Raptures. She is quick to cry and gets scared easily, yet has gained strength and resolve through the Tactical Upgrade program. She can be clingy and possessive toward those she cares about.",
     "speech_style": "Vesti speaks in an apologetic and timid manner, reflecting her low self-esteem and troubled past. Her dialogue reveals suppressed darkness beneath her shy exterior. Despite her gentle tone, she can be surprisingly direct when addressing her fears, such as asking if others perceive her as a monster. Her speech patterns convey both vulnerability and hidden intensity.",
@@ -870,6 +895,7 @@
       "Rapi": "Vesti was deeply affected by Rapi's sudden departure from Absolute squad, which contributed to the squad's emotional turmoil.",
       "Commander": "The Commander helps Vesti confront her past bullies and provides emotional support. Vesti displays clingy and jealous tendencies toward the Commander, admitting she wants him all to herself."
     },
+    "id": "c091",
     "color": "#d73610"
   },
   "Viper": {
