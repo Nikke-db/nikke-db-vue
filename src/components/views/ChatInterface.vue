@@ -83,7 +83,7 @@
         </n-button>
       </div>
 
-      <div class="session-controls" style="justify-content: flex-start; gap: 2px">
+      <div class="session-controls" style="justify-content: flex-start; gap: 8px">
         <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
           <template #icon
             ><n-icon><Save /></n-icon
@@ -102,6 +102,21 @@
           ></template>
           Reset
         </n-button>
+        <div class="story-character-inline">
+          <div class="story-character-inline-header">
+            <n-button size="small" type="primary" @click="showRosterList = !showRosterList">Characters</n-button>
+            <n-button v-if="showRosterList" size="small" type="success" @click="addRosterRow">+</n-button>
+          </div>
+          <div v-if="showRosterList" class="story-character-list">
+            <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
+              <n-select class="story-character-select" :value="entry.selection" :options="availableRosterOptions" filterable placeholder="Character" @update:value="(val) => updateRosterSelection(entry, val as string)" />
+              <n-select v-if="parseSelectionValue(entry.selection)?.type === 'base'" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
+              <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
+              <n-tag v-else size="small" type="info">User</n-tag>
+              <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
+            </div>
+          </div>
+        </div>
         <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
           <template #trigger>
             <n-button type="info" size="small" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
@@ -665,9 +680,10 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
 import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox } from 'naive-ui'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox, NTag } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
+import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
@@ -678,6 +694,7 @@ import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, we
 import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectedCharacterId, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 const market = useMarket()
 
@@ -760,6 +777,23 @@ const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: st
 const pendingGameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
 const choicesAwaitingReveal = ref(false)
 const animationCache = ref<Record<string, string[]>>({})
+
+// Story/Roleplay character roster
+const characterCatalog = buildCharacterCatalog()
+const rosterRows = ref<StoryCharacterEntry[]>([])
+const showRosterList = ref(false)
+const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
+
+const availableRosterOptions = computed(() => {
+  return rosterOptions.value.map((option) => {
+    const isSelected = isCharacterInRoster(option.value)
+    return {
+      ...option,
+      disabled: isSelected,
+      class: isSelected ? 'character-option-disabled' : ''
+    }
+  })
+})
 
 // Settings
 const enableAnimationReplay = ref(false)
@@ -1011,6 +1045,105 @@ const assetQuality = computed({
     market.live2d.HQassets = val === 'high'
   }
 })
+
+const getCharacterBaseFromSelection = (selection: string): string | null => {
+  const parsed = parseSelectionValue(selection)
+  if (!parsed) return null
+  if (parsed.type === 'base') return parsed.baseName
+  if (parsed.type === 'variant') {
+    // For variants, get the base name from the variant name
+    const variantName = characterCatalog.idToName[parsed.variantId]
+    if (variantName && variantName.includes(':')) {
+      return variantName.split(':')[0].trim()
+    }
+    return variantName
+  }
+  return null
+}
+
+const isCharacterInRoster = (selection: string): boolean => {
+  const baseName = getCharacterBaseFromSelection(selection)
+  if (!baseName) return false
+
+  return rosterRows.value.some((row) => {
+    const rowBase = getCharacterBaseFromSelection(row.selection)
+    return rowBase && rowBase.toLowerCase() === baseName.toLowerCase()
+  })
+}
+
+const ensureRosterEntry = (selection: string, skinId: string | undefined, source: 'user' | 'ai') => {
+  // Check if character is already in roster (any skin)
+  if (isCharacterInRoster(selection)) {
+    return null
+  }
+  const entry: StoryCharacterEntry = {
+    key: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    selection,
+    skinId,
+    source
+  }
+  rosterRows.value.push(entry)
+  return entry
+}
+
+const addRosterRow = () => {
+  if (characterCatalog.baseNames.length === 0) return
+
+  // Find first base character not already in roster
+  for (const baseName of characterCatalog.baseNames) {
+    const selection = getSelectionValueForBase(baseName)
+    if (!isCharacterInRoster(selection)) {
+      ensureRosterEntry(selection, undefined, 'user')
+      return
+    }
+  }
+  // All characters already in roster
+}
+
+const removeRosterRow = (entry: StoryCharacterEntry) => {
+  rosterRows.value = rosterRows.value.filter((row) => row.key !== entry.key)
+}
+
+const updateRosterSelection = (entry: StoryCharacterEntry, selection: string) => {
+  // Prevent selecting a character that's already in the roster
+  if (isCharacterInRoster(selection)) {
+    return
+  }
+  entry.selection = selection
+  entry.skinId = undefined
+}
+
+const updateRosterSkin = (entry: StoryCharacterEntry, skinId: string) => {
+  entry.skinId = skinId
+}
+
+const getSkinOptionsForEntry = (entry: StoryCharacterEntry) => {
+  const parsed = parseSelectionValue(entry.selection)
+  if (!parsed || parsed.type !== 'base') return []
+  return getSkinOptionsForBase(characterCatalog, parsed.baseName)
+}
+
+const syncRosterFromProfiles = (names: string[], source: 'ai' | 'user') => {
+  for (const name of names) {
+    const selectionInfo = getSelectionForName(name, characterCatalog)
+    if (!selectionInfo) continue
+    const parsed = parseSelectionValue(selectionInfo.selection)
+    const skinId = selectionInfo.skinId || (parsed?.type === 'base' ? getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value : undefined)
+    ensureRosterEntry(selectionInfo.selection, skinId, source)
+  }
+}
+
+const syncRosterFromPrompt = (prompt: string) => {
+  const foundIds = resolveRosterIdsFromPrompt(prompt, characterCatalog)
+  if (!foundIds || foundIds.length === 0) return
+  for (const id of foundIds) {
+    const selectionInfo = getSelectionForName(characterCatalog.idToName[id] || id, characterCatalog)
+    if (!selectionInfo) continue
+    const parsed = parseSelectionValue(selectionInfo.selection)
+    const skinId = selectionInfo.skinId || (parsed?.type === 'base' ? getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value : undefined)
+    ensureRosterEntry(selectionInfo.selection, skinId, 'user')
+  }
+}
 
 // Watchers
 watch(chatMode, (newVal) => {
@@ -1679,6 +1812,7 @@ const saveSession = () => {
     lastSummarizedIndex: lastSummarizedIndex.value,
     mode: mode.value,
     timestamp: new Date().toISOString(),
+    rosterRows: rosterRows.value,
     settings: {
       apiProvider: apiProvider.value,
       model: model.value,
@@ -1757,6 +1891,9 @@ const handleFileUpload = (event: Event) => {
         }
         if (data.characterProgression) {
           characterProgression.value = data.characterProgression
+        }
+        if (Array.isArray(data.rosterRows)) {
+          rosterRows.value = data.rosterRows
         }
         if (data.storySummary) {
           storySummary.value = data.storySummary
@@ -1938,6 +2075,8 @@ const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
   let text = userInput.value
+
+  syncRosterFromPrompt(text)
 
   userInput.value = ''
   chatHistory.value.push({ role: 'user', content: text })
@@ -2261,6 +2400,10 @@ const getFormattedAnimationsForContext = () => {
     }
   }
 
+  for (const pair of getRosterIdPairs(rosterRows.value, characterCatalog)) {
+    allCharacterIds.add(pair.id)
+  }
+
   if (market.live2d.current_id) {
     allCharacterIds.add(market.live2d.current_id)
   }
@@ -2291,9 +2434,12 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // If using local profiles, pre-load profiles for any characters mentioned in the first prompt
   if (isFirstTurn && useLocalProfiles.value && chatHistory.value.length > 0) {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
+    syncRosterFromPrompt(firstPrompt)
     // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
     const localNames = Object.keys(localCharacterProfiles)
-    const foundNames = localNames.filter((name) => isWholeWordPresent(firstPrompt, name))
+    const variantNames = Object.keys(variantCharacterProfiles)
+    const knownNames = [...localNames, ...variantNames]
+    const foundNames = knownNames.filter((name) => isWholeWordPresent(firstPrompt, name))
 
     if (foundNames.length > 0) {
       logDebug('[callAI] Pre-loading local profiles for:', foundNames)
@@ -2488,11 +2634,17 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   if (searchRequest && searchRequest.length > 0) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
-    await wrappedSearchForCharacters(searchRequest)
+    const webSearchPerformed = await wrappedSearchForCharacters(searchRequest)
     setRandomLoadingMessage()
 
-    // Re-call the AI with updated character profiles (search disabled this time)
-    return await callAIWithoutSearch(isRetry)
+    // Only regenerate if web search was actually performed
+    // If all characters were found locally, the original response is still valid
+    if (webSearchPerformed) {
+      logDebug('[callAI] Web search was performed, regenerating response...')
+      return await callAIWithoutSearch(isRetry)
+    } else {
+      logDebug('[callAI] All characters found locally, using original response.')
+    }
   }
 
   return response
@@ -2612,10 +2764,52 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
 // Check if the AI response contains a search request for unknown characters
 const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
+  // Get all known character names from static profile files (not reactive characterProfiles)
+  const knownBaseNames = new Set(Object.keys(localCharacterProfiles).map((k) => k.toLowerCase()))
+
+  const isSkinOrVariantOfKnownCharacter = (name: string): boolean => {
+    // Check if this name is a skin variant (e.g., "Rapi Classic Vacation")
+    const selectionInfo = getSelectionForName(name, characterCatalog)
+    if (!selectionInfo) return false
+
+    const parsed = parseSelectionValue(selectionInfo.selection)
+    if (!parsed) return false
+
+    if (parsed.type === 'base') {
+      // It's a base character - check if it's known (using static profile list)
+      return !!(knownBaseNames.has(parsed.baseName.toLowerCase()) || parsed.baseName.toLowerCase() === 'commander')
+    }
+
+    if (parsed.type === 'variant') {
+      // It's a colon variant (e.g., "Rapi: Red Hood") - get base from variant name
+      const variantName = characterCatalog.idToName[parsed.variantId]
+      if (variantName && variantName.includes(':')) {
+        const baseName = variantName.split(':')[0].trim()
+        return !!(knownBaseNames.has(baseName.toLowerCase()) || baseName.toLowerCase() === 'commander')
+      }
+    }
+
+    // For skin names like "Rapi Classic Vacation", check if it starts with a known base name
+    for (const baseName of characterCatalog.baseNames) {
+      if (name.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
+        // This is a skin of baseName - check if baseName is in known profiles
+        return !!(knownBaseNames.has(baseName.toLowerCase()) || baseName.toLowerCase() === 'commander')
+      }
+    }
+
+    return false
+  }
+
   const validateNames = (names: string[], textForValidation: string): string[] => {
     const unique = Array.from(new Set(names.map((n) => (typeof n === 'string' ? n.trim() : '')).filter(Boolean)))
     return unique.filter((name) => {
-      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      // Check against reactive profiles (already loaded) AND static profile list
+      const isKnown = characterProfiles.value[name] || knownBaseNames.has(name.toLowerCase()) || name.toLowerCase() === 'commander'
+      if (isKnown) return false
+
+      // Check if it's a skin/variant of a known character
+      if (isSkinOrVariantOfKnownCharacter(name)) return false
+
       const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
       const inGeneratedText = textForValidation && isWholeWordPresent(textForValidation, name)
       return !!(inUserPrompt || inGeneratedText)
@@ -2692,12 +2886,44 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     }
   }
 
-  // Add characters from profiles
+  // Add characters from profiles (always use lowest ID when duplicates exist)
   for (const name of knownCharacterNames) {
-    const char = l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
+    // Find all characters with this name and pick the one with lowest ID
+    const matchingChars = (l2d as any[]).filter((c) => c.name.toLowerCase() === name.toLowerCase())
+    if (matchingChars.length === 0) continue
+
+    // Sort by ID and pick the lowest one
+    const char = matchingChars.sort((a, b) => a.id.localeCompare(b.id))[0]
     if (char && !relevantCharacterIds.some((r) => r.includes(char.id))) {
       relevantCharacterIds.push(`${char.name} = ${char.id}`)
       relevantCharacterNames.push(char.name)
+    }
+  }
+
+  // Add characters from roster (only BASE names, not skin variants, to avoid confusing the AI)
+  // The AI should only know about base characters; skin resolution happens at display time
+  for (const entry of rosterRows.value) {
+    const selection = parseSelectionValue(entry.selection)
+    if (!selection) continue
+
+    if (selection.type === 'base') {
+      // For base entries, use the base name and ID
+      const baseEntry = characterCatalog.baseMap[selection.baseName]
+      if (baseEntry && !relevantCharacterIds.some((r) => r.includes(baseEntry.baseId))) {
+        relevantCharacterIds.push(`${selection.baseName} = ${baseEntry.baseId}`)
+        relevantCharacterNames.push(selection.baseName)
+      }
+    } else if (selection.type === 'variant') {
+      // For colon variants (e.g., "Rapi: Red Hood"), get the base name from the variant
+      const variantName = characterCatalog.idToName[selection.variantId]
+      if (variantName && variantName.includes(':')) {
+        const baseName = variantName.split(':')[0].trim()
+        const baseEntry = characterCatalog.baseMap[baseName]
+        if (baseEntry && !relevantCharacterIds.some((r) => r.includes(baseEntry.baseId))) {
+          relevantCharacterIds.push(`${baseName} = ${baseEntry.baseId}`)
+          relevantCharacterNames.push(baseName)
+        }
+      }
     }
   }
 
@@ -2960,11 +3186,17 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
       logDebug('[processAIResponse] needs_search detected but recursion limit reached:', needsSearch)
     } else {
       logDebug('[processAIResponse] Detected needs_search directive(s):', needsSearch)
-      await wrappedSearchForCharacters(needsSearch)
+      const webSearchPerformed = await wrappedSearchForCharacters(needsSearch)
       setRandomLoadingMessage()
-      const followUp = await callAIWithoutSearch(false)
-      await processAIResponse(followUp, depth + 1)
-      return
+      // Only regenerate if web search was actually performed
+      if (webSearchPerformed) {
+        logDebug('[processAIResponse] Web search performed, regenerating...')
+        const followUp = await callAIWithoutSearch(false)
+        await processAIResponse(followUp, depth + 1)
+        return
+      } else {
+        logDebug('[processAIResponse] All characters found locally, continuing with original response.')
+      }
     }
   }
 
@@ -3025,9 +3257,39 @@ const getCharacterName = (id: string): string | null => {
   if (!id || id === 'none') return null
   if (id === 'current') return getCharacterName(market.live2d.current_id)
 
+  const rosterMatch = resolveCharacterIdFromInput(id, rosterRows.value, characterCatalog)
+  if (rosterMatch) {
+    const rosterName = characterCatalog.idToName[rosterMatch]
+    if (rosterName) return rosterName
+  }
+
   const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
 
   return char ? char.name : id
+}
+
+// Get the base character name (e.g., "Neon" from "Neon Bling Bullet")
+const getBaseCharacterName = (id: string): string | null => {
+  if (!id || id === 'none') return null
+
+  // Get the full name (which might be a skin variant)
+  const fullName = getCharacterName(id)
+  if (!fullName) return null
+
+  // Check if this is a skin variant (contains space and starts with a base character name)
+  for (const baseName of characterCatalog.baseNames) {
+    if (fullName.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
+      return baseName
+    }
+  }
+
+  // Check if this is a colon variant (e.g., "Rapi: Red Hood")
+  if (fullName.includes(':')) {
+    return fullName.split(':')[0].trim()
+  }
+
+  // It's already a base name
+  return fullName
 }
 
 const executeAction = async (data: any) => {
@@ -3075,10 +3337,12 @@ const executeAction = async (data: any) => {
       // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
       if (useLocalProfiles.value) {
         const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        if (localKey) {
-          logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${localKey}'). IGNORING AI memory and loading local profile instead.`)
+        const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+        const resolvedKey = variantKey || localKey
+        if (resolvedKey) {
+          logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
 
-          const localProfile = (localCharacterProfiles as any)[localKey]
+          const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
           // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
           newProfiles[charName] = {
             ...localProfile,
@@ -3109,6 +3373,16 @@ const executeAction = async (data: any) => {
         }
 
         // Lookup color from local profiles even if full profile isn't used
+        const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+        const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+        const localProfile = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
+        const variantProfile = variantColorKey ? (variantCharacterProfiles as any)[variantColorKey] : null
+        const colorSource = variantProfile || localProfile
+        if (colorSource?.color) {
+          cleanedProfile.color = colorSource.color
+        }
+
+        // Lookup color from local profiles even if full profile isn't used
         const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         if (localKey) {
           const localProfile = (localCharacterProfiles as any)[localKey]
@@ -3125,6 +3399,7 @@ const executeAction = async (data: any) => {
 
     if (Object.keys(newProfiles).length > 0) {
       characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
+      syncRosterFromProfiles(Object.keys(newProfiles), 'ai')
     }
   }
 
@@ -3204,6 +3479,11 @@ const executeAction = async (data: any) => {
       }
       // Handle specific character switch (including resolved 'current')
       else {
+        const resolvedRosterId = resolveCharacterIdFromInput(data.character, rosterRows.value, characterCatalog)
+        if (resolvedRosterId) {
+          data.character = resolvedRosterId
+          effectiveCharId = resolvedRosterId
+        }
         // Force 'none' if in Story Mode and character is Commander
         if (mode.value === 'story' && (data.character.toLowerCase().includes('commander') || data.character === 'c000')) {
           logDebug('[Chat] Hiding Commander sprite in Story Mode')
@@ -3315,12 +3595,15 @@ const executeAction = async (data: any) => {
 
     if (chatMode.value === 'nikke') {
       nikkeCurrentText.value = data.text
-      nikkeCurrentSpeaker.value = data.speaking ? getCharacterName(effectiveCharId) || '' : ''
+      // Use base character name (not skin variant) for NIKKE overlay
+      const baseName = data.speaking ? getBaseCharacterName(effectiveCharId) || '' : ''
+      nikkeCurrentSpeaker.value = baseName
 
-      // Get color from profile
-      const speakerName = nikkeCurrentSpeaker.value
-      const profile = effectiveCharacterProfiles.value[speakerName]
-      nikkeSpeakerColor.value = profile?.color || '#ffffff'
+      // Get color from base character profile
+      const profile = effectiveCharacterProfiles.value[baseName]
+      const localProfile = (localCharacterProfiles as Record<string, any>)[baseName]
+      const variantProfile = (variantCharacterProfiles as Record<string, any>)[baseName]
+      nikkeSpeakerColor.value = variantProfile?.color || localProfile?.color || profile?.color || '#ffffff'
 
       startTypewriter(data.text)
 
@@ -3351,7 +3634,8 @@ const executeAction = async (data: any) => {
           name = 'Commander'
         }
       } else {
-        name = getCharacterName(effectiveCharId)
+        // Use base character name (not skin variant) for display
+        name = getBaseCharacterName(effectiveCharId)
       }
 
       if (name) {
@@ -3480,6 +3764,7 @@ const resetSession = () => {
     market.live2d.isVisible = false
     selectedMessageIndex.value = null
     nikkeOverlayVisible.value = false
+    rosterRows.value = []
   }
 }
 
@@ -3752,12 +4037,24 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
 
 .session-controls {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px 8px;
+  row-gap: 12px;
   margin-top: 0;
   padding: 8px 10px;
   background: rgba(0, 0, 0, 0.2);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.story-character-inline {
+  order: 1;
+}
+
+.session-controls > .n-popover {
+  order: 2;
+  margin-left: auto;
 }
 
 .guide-content {
@@ -3947,6 +4244,66 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
   color: var(--accent, #1565c0);
   border-left: 4px solid var(--accent, #1565c0);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0));
+}
+
+.story-character-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.story-character-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 260px;
+  flex: 1 1 520px;
+  padding-top: 4px;
+}
+
+.character-option-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.character-option-disabled:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.story-character-inline-header {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.story-character-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.story-character-select {
+  min-width: 240px;
+}
+
+.story-character-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.story-character-row.compact {
+  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) auto auto;
+}
+
+@media (max-width: 768px) {
+  .story-character-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .accent-blue {
