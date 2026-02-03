@@ -27,7 +27,9 @@
         width: chatSize.width + 'px',
         height: chatSize.height + 'px',
         bottom: 'auto',
-        maxHeight: 'none'
+        maxHeight: 'none',
+        '--chat-width': chatSize.width + 'px',
+        '--chat-height': chatSize.height + 'px'
       }"
     >
       <!-- Drag Handle -->
@@ -83,20 +85,20 @@
         </n-button>
       </div>
 
-      <div class="session-controls" style="justify-content: flex-start; gap: 8px">
+      <div class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
         <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
           <template #icon
             ><n-icon><Save /></n-icon
           ></template>
           Save
         </n-button>
-        <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+        <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
           <template #icon
             ><n-icon><Upload /></n-icon
           ></template>
           Load
         </n-button>
-        <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ marginLeft: '4px', opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+        <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
           <template #icon
             ><n-icon><Reset /></n-icon
           ></template>
@@ -112,28 +114,27 @@
               <n-select class="story-character-select" :value="entry.selection" :options="availableRosterOptions" filterable placeholder="Character" @update:value="(val) => updateRosterSelection(entry, val as string)" />
               <n-select v-if="parseSelectionValue(entry.selection)?.type === 'base'" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
               <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
-              <n-tag v-else size="small" type="info">User</n-tag>
               <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
             </div>
           </div>
         </div>
         <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
           <template #trigger>
-            <n-button type="info" size="small" :style="{ marginLeft: '4px', opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+            <n-button type="info" size="small" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
               <template #icon>
                 <n-icon><Help /></n-icon>
               </template>
               Problems?
             </n-button>
           </template>
-          <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px; min-width: 150px">
-            <div style="font-weight: 600; font-size: 12px; opacity: 0.7; border-bottom: 1px solid var(--n-border-color); padding-bottom: 4px; margin-bottom: 2px">Inject one or more reminders to the model for the next turn:</div>
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+          <div class="problems-popover-content">
+            <div class="problems-popover-header">Inject one or more reminders to the model for the next turn:</div>
+            <div class="problems-popover-row">
               <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
               <n-checkbox v-model:checked="invalidJsonAuto" size="small">Auto</n-checkbox>
               <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+            <div class="problems-popover-row">
               <n-checkbox v-model:checked="incorrectAnimationsToggle">Incorrect or Lazy Animations</n-checkbox>
               <n-checkbox v-model:checked="incorrectAnimationsPersist" size="small">Persist</n-checkbox>
             </div>
@@ -4040,21 +4041,26 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px 8px;
-  row-gap: 12px;
+  gap: clamp(4px, calc(var(--chat-width, 400px) * 0.015), 8px);
+  row-gap: 8px;
   margin-top: 0;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: rgba(0, 0, 0, 0.2);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .story-character-inline {
   order: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .session-controls > .n-popover {
-  order: 2;
-  margin-left: auto;
+  order: 0;
+  margin-left: 0;
+  flex-shrink: 0;
 }
 
 .guide-content {
@@ -4256,10 +4262,11 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
 .story-character-inline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 260px;
-  flex: 1 1 520px;
+  gap: clamp(4px, calc(var(--chat-height, 600px) * 0.012), 8px);
+  min-width: min(260px, calc(var(--chat-width, 400px) * 0.7));
+  flex: 1 1 min(520px, calc(var(--chat-width, 400px) * 1.3));
   padding-top: 4px;
+  max-width: 100%;
 }
 
 .character-option-disabled {
@@ -4283,26 +4290,97 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
   display: flex;
   flex-direction: column;
   gap: 6px;
+  container-type: inline-size;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .story-character-select {
-  min-width: 240px;
+  min-width: 0;
+  width: 100%;
 }
 
 .story-character-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto auto auto auto;
+  grid-template-columns: 1fr;
   gap: 6px;
   align-items: center;
+  max-width: 100%;
 }
 
 .story-character-row.compact {
-  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) auto auto;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  max-width: 100%;
+}
+
+/* Two-column layout when chat is wide enough */
+@container (min-width: 480px) {
+  .story-character-row.compact {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto minmax(60px, auto);
+    gap: 6px;
+    max-width: 100%;
+  }
+
+  .story-character-row.compact > * {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+.problems-popover-content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, calc(var(--chat-height, 600px) * 0.015), 10px);
+  padding: clamp(4px, calc(var(--chat-width, 400px) * 0.015), 8px);
+  min-width: min(150px, calc(var(--chat-width, 400px) * 0.4));
+  max-width: min(350px, calc(var(--chat-width, 400px) * 0.9));
+}
+
+.problems-popover-header {
+  font-weight: 600;
+  font-size: clamp(10px, calc(var(--chat-width, 400px) * 0.03), 12px);
+  opacity: 0.7;
+  border-bottom: 1px solid var(--n-border-color);
+  padding-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+.problems-popover-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(4px, calc(var(--chat-width, 400px) * 0.02), 8px);
+  flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
   .story-character-row {
     grid-template-columns: 1fr;
+  }
+
+  .story-character-row.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .story-character-select {
+    min-width: 100%;
+  }
+
+  .story-character-inline {
+    min-width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .problems-popover-content {
+    min-width: min(200px, 80vw);
+    max-width: 90vw;
+    gap: 6px;
+  }
+
+  .problems-popover-row {
+    gap: 4px;
   }
 }
 
