@@ -300,7 +300,8 @@
     "wisdomspring",
     "c8004",
     "c8006",
-    "c561"
+    "c561",
+    "c9009"
   ],
-  "_comment": "Characters not in the official playable roster (292 IDs). Includes: story events, bosses, NPCs, ghosts, mass-produced units, favorites, smol variants, alternate forms, and collaboration characters."
+  "_comment": "Characters not in the official playable roster or story animations."
 }
