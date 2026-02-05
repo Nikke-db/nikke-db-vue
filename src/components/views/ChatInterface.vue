@@ -2334,7 +2334,9 @@ const getUserReminders = (): string => {
   let reminders = ''
 
   if (invalidJsonToggle.value) {
-    reminders += '\n\n' + prompts.reminders.invalidJsonReminder
+    // Select appropriate JSON reminder based on current mode
+    const jsonReminder = mode.value === 'game' ? prompts.reminders.invalidJsonReminderGame : prompts.reminders.invalidJsonReminder
+    reminders += '\n\n' + jsonReminder
     if (!invalidJsonPersist.value) invalidJsonToggle.value = false
   }
   if (honorificsToggle.value) {
