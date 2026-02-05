@@ -238,8 +238,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
     const errorData = await response.json().catch(() => ({}))
     console.error('Pollinations Summarization API Error Details:', errorData)
 
-    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens > 4096') && errorData?.error?.message?.includes('stream=true')) {
-      console.warn('Pollinations requires stream=true for max_tokens > 4096, retrying with stream enabled...')
+    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens >') && errorData?.error?.message?.includes('stream=true')) {
+      console.warn('Pollinations requires stream=true for max_tokens > 16000, retrying with stream enabled...')
       requestBody.stream = true
       modelsRequiringStreamForHighTokens.value.add(model)
       sessionStorage.setItem('modelsRequiringStreamForHighTokens', JSON.stringify([...modelsRequiringStreamForHighTokens.value]))
@@ -429,8 +429,8 @@ export const callPollinations = async (
       throw new Error('RATE_LIMITED')
     }
 
-    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens > 4096') && errorData?.error?.message?.includes('stream=true')) {
-      console.warn('Pollinations requires stream=true for max_tokens > 4096, retrying with stream enabled...')
+    if (response.status === 400 && errorData?.error?.message?.includes('max_tokens >') && errorData?.error?.message?.includes('stream=true')) {
+      console.warn('Pollinations requires stream=true for max_tokens > 16000, retrying with stream enabled...')
       requestBody.stream = true
       modelsRequiringStreamForHighTokens.value.add(model)
       sessionStorage.setItem('modelsRequiringStreamForHighTokens', JSON.stringify([...modelsRequiringStreamForHighTokens.value]))
