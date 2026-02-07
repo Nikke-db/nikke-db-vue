@@ -1783,7 +1783,7 @@ const saveSession = () => {
     const content = msg.content
 
     if (content === 'Session restored successfully.') return true
-    if (content.startsWith("Warning: Saved model '") && content.endsWith('Using default.')) return true
+    if (content.startsWith('Warning: Saved model \'') && content.endsWith('Using default.')) return true
 
     return false
   }
@@ -2119,6 +2119,8 @@ const sendMessage = async () => {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+      } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2188,6 +2190,8 @@ const retryLastMessage = async () => {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+      } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2303,6 +2307,8 @@ const continueStory = async () => {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+      } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 

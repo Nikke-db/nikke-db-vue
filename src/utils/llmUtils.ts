@@ -1056,6 +1056,12 @@ export const callGemini = async (messages: any[], opts: { model: string; apiKey:
 
   const data = await response.json()
 
+  // Check for content filtering/safety blocks
+  if (data.promptFeedback?.blockReason === 'PROHIBITED_CONTENT') {
+    console.error('Gemini content blocked:', data)
+    throw new Error('GEMINI_PROHIBITED_CONTENT')
+  }
+
   if (!data.candidates || data.candidates.length === 0) {
     console.error('Gemini returned no candidates:', data)
     throw new Error('Gemini API Error: No candidates in response')
