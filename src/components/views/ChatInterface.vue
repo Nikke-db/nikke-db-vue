@@ -141,7 +141,7 @@
             <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
             <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
             <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
-            <n-checkbox v-if="mode === 'roleplay'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
+            <n-checkbox v-if="mode !== 'story'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
           </div>
         </n-popover>
       </div>
@@ -1783,7 +1783,7 @@ const saveSession = () => {
     const content = msg.content
 
     if (content === 'Session restored successfully.') return true
-    if (content.startsWith('Warning: Saved model \'') && content.endsWith('Using default.')) return true
+    if (content.startsWith("Warning: Saved model '") && content.endsWith('Using default.')) return true
 
     return false
   }
@@ -2120,7 +2120,7 @@ const sendMessage = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
+        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2191,7 +2191,7 @@ const retryLastMessage = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
+        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2308,7 +2308,7 @@ const continueStory = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
+        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2449,6 +2449,26 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const variantNames = Object.keys(variantCharacterProfiles)
     const knownNames = [...localNames, ...variantNames]
     const foundNames = knownNames.filter((name) => isWholeWordPresent(firstPrompt, name))
+
+    // Also load profiles for characters in the roster (both base and variants)
+    for (const entry of rosterRows.value) {
+      const selection = parseSelectionValue(entry.selection)
+      if (!selection) continue
+
+      if (selection.type === 'variant') {
+        // For variants, use the full variant name
+        const variantName = characterCatalog.idToName[selection.variantId]
+        if (variantName && !foundNames.includes(variantName)) {
+          foundNames.push(variantName)
+        }
+      } else if (selection.type === 'base') {
+        // For base characters, use the base name
+        const baseName = selection.baseName
+        if (baseName && !foundNames.includes(baseName)) {
+          foundNames.push(baseName)
+        }
+      }
+    }
 
     if (foundNames.length > 0) {
       logDebug('[callAI] Pre-loading local profiles for:', foundNames)
@@ -2909,8 +2929,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     }
   }
 
-  // Add characters from roster (only BASE names, not skin variants, to avoid confusing the AI)
-  // The AI should only know about base characters; skin resolution happens at display time
+  // Add characters from roster
   for (const entry of rosterRows.value) {
     const selection = parseSelectionValue(entry.selection)
     if (!selection) continue
@@ -2923,14 +2942,13 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
         relevantCharacterNames.push(selection.baseName)
       }
     } else if (selection.type === 'variant') {
-      // For colon variants (e.g., "Rapi: Red Hood"), get the base name from the variant
+      // For colon variants (e.g., "Rapi: Red Hood"), use the variant name and ID directly
       const variantName = characterCatalog.idToName[selection.variantId]
       if (variantName && variantName.includes(':')) {
-        const baseName = variantName.split(':')[0].trim()
-        const baseEntry = characterCatalog.baseMap[baseName]
-        if (baseEntry && !relevantCharacterIds.some((r) => r.includes(baseEntry.baseId))) {
-          relevantCharacterIds.push(`${baseName} = ${baseEntry.baseId}`)
-          relevantCharacterNames.push(baseName)
+        // Use the full variant name and variant ID so the AI knows which specific character to use
+        if (!relevantCharacterIds.some((r) => r.includes(selection.variantId))) {
+          relevantCharacterIds.push(`${variantName} = ${selection.variantId}`)
+          relevantCharacterNames.push(variantName)
         }
       }
     }
@@ -3608,10 +3626,11 @@ const executeAction = async (data: any) => {
       const baseName = data.speaking ? getBaseCharacterName(effectiveCharId) || '' : ''
       nikkeCurrentSpeaker.value = baseName
 
-      // Get color from base character profile
-      const profile = effectiveCharacterProfiles.value[baseName]
-      const localProfile = (localCharacterProfiles as Record<string, any>)[baseName]
-      const variantProfile = (variantCharacterProfiles as Record<string, any>)[baseName]
+      // Get color from character profile (try full name first for variants, then fall back to base name)
+      const fullName = getCharacterName(effectiveCharId) || baseName
+      const profile = effectiveCharacterProfiles.value[fullName] || effectiveCharacterProfiles.value[baseName]
+      const localProfile = (localCharacterProfiles as Record<string, any>)[fullName] || (localCharacterProfiles as Record<string, any>)[baseName]
+      const variantProfile = (variantCharacterProfiles as Record<string, any>)[fullName] || (variantCharacterProfiles as Record<string, any>)[baseName]
       nikkeSpeakerColor.value = variantProfile?.color || localProfile?.color || profile?.color || '#ffffff'
 
       startTypewriter(data.text)

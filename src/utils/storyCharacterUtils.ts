@@ -306,7 +306,25 @@ export const resolveCharacterIdFromInput = (input: string, roster: StoryCharacte
       }
     }
 
-    // No roster match found, return the original ID
+    // No roster match found, but check if this base ID has a variant in the roster
+    // If so, return the variant ID instead (AI might send base ID even when variant is selected)
+    const baseName = inputName.includes(':') ? inputName.split(':')[0].trim() : inputName
+    for (const entry of roster) {
+      const selection = parseSelectionValue(entry.selection)
+      if (!selection || selection.type !== 'variant') continue
+
+      const variantId = selection.variantId
+      const variantName = catalog.idToName[variantId]
+      if (!variantName || !variantName.includes(':')) continue
+
+      const variantBaseName = variantName.split(':')[0].trim()
+      if (toKey(variantBaseName) === toKey(baseName)) {
+        // Found a variant of this base character in the roster
+        return variantId
+      }
+    }
+
+    // Return the original ID
     return trimmed
   }
 
@@ -325,6 +343,23 @@ export const resolveCharacterIdFromInput = (input: string, roster: StoryCharacte
 
     if (toKey(selection.baseName) === key) {
       return getSelectedCharacterId(entry, catalog)
+    }
+  }
+
+  // Check if input name matches a base character name, but a variant of that character is in the roster
+  // If so, return the variant ID instead of the base ID
+  for (const entry of roster) {
+    const selection = parseSelectionValue(entry.selection)
+    if (!selection || selection.type !== 'variant') continue
+
+    const variantId = selection.variantId
+    const variantName = catalog.idToName[variantId]
+    if (!variantName || !variantName.includes(':')) continue
+
+    const variantBaseName = variantName.split(':')[0].trim()
+    if (toKey(variantBaseName) === key) {
+      // Found a variant of this base character name in the roster
+      return variantId
     }
   }
 
