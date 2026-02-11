@@ -228,7 +228,7 @@
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
           <n-alert type="info" style="margin-bottom: 12px" title=""> Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB. </n-alert>
-          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, the API key is optional. Register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key to increase rates and available models. </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title=""> Users are responsible for any possible cost using this functionality. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
@@ -405,7 +405,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Low:</strong> Slightly worse quality and detail, but much better performance on low-end systems.<br /><br />
+                  <strong>Low:</strong> Slightly worse quality and detail, but much better performance on low-end systems. Recommended for most devices.<br /><br />
                   <strong>High:</strong> Best visual quality, but uses more GPU resources and VRAM.
                 </div>
               </n-popover>
@@ -500,8 +500,8 @@
                   </n-icon>
                 </template>
                 <div>
-                  Enables TTS using a local TTS server.<br />
-                  Supports AllTalk (XTTSv2) or GPT-SoVits.<br /><br />
+                  Enables TTS using a local server.<br />
+                  Supports AllTalk (XTTSv2), GPT-SoVits or Chatterbox.<br /><br />
                   Character voices must be in the appropriate voices folder.
                 </div>
               </n-popover>
@@ -561,13 +561,10 @@
           <h3>🆕 What's New?</h3>
           <div class="guide-section">
             <ul>
-              <li>Control reasoning/thinking tokens for supported models</li>
-              <li>Greatly improved fallback parsing for text and animations</li>
-              <li>Improved compatibility with various AI models</li>
-              <li>Reminders improvements, including an 'Auto' mode for the JSON schema enforcement (can be disabled)</li>
-              <li>Ability to reset the active character's zoom and positioning</li>
-              <li>Removed support for the Perplexity API</li>
-              <li>Tons of other improvements and bug fixes</li>
+              <li>Characters menu that includes variants and skins</li>
+              <li>Updated internal DB with backstories and appearances of characters</li>
+              <li>Improved compatibility with certain Pollinations models</li>
+              <li>Other bug fixes and under-the-hood improvements</li>
             </ul>
           </div>
         </div>
