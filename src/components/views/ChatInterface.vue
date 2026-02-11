@@ -2898,6 +2898,30 @@ const wrappedSearchForCharacters = async (characterNames: string[]) => {
 const generateSystemPrompt = (enableWebSearch: boolean) => {
   const knownCharacterNames = Object.keys(effectiveCharacterProfiles.value)
 
+  // Helper to filter out defaultSkin when non-default skin is selected
+  const getFilteredProfilesForAI = (): Record<string, any> => {
+    const filtered: Record<string, any> = {}
+
+    for (const [name, profile] of Object.entries(effectiveCharacterProfiles.value)) {
+      // Check if this character has a non-default skin selected in roster
+      const rosterEntry = rosterRows.value.find((entry) => {
+        const parsed = parseSelectionValue(entry.selection)
+        return parsed?.type === 'base' && parsed.baseName === name
+      })
+
+      if (rosterEntry?.skinId && profile.id && rosterEntry.skinId !== profile.id) {
+        // Non-default skin selected - exclude defaultSkin field
+        const { defaultSkin, ...profileWithoutSkin } = profile
+        filtered[name] = profileWithoutSkin
+      } else {
+        // Default skin or no skin selected - keep all fields
+        filtered[name] = profile
+      }
+    }
+
+    return filtered
+  }
+
   // Build a minimal character ID lookup for characters mentioned in profiles or current character
   // This prevents massive token usage from including all 200+ characters
   const relevantCharacterIds: string[] = []
@@ -2982,7 +3006,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   ${mode.value === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
 
   ${prompts.systemPrompt.knownProfiles}
-  ${knownCharacterNames.length > 0 ? JSON.stringify(effectiveCharacterProfiles.value, null, 2) : prompts.systemPrompt.noProfilesMessage}
+  ${knownCharacterNames.length > 0 ? JSON.stringify(getFilteredProfilesForAI(), null, 2) : prompts.systemPrompt.noProfilesMessage}
 
   ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
