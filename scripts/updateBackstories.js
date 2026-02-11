@@ -39,7 +39,7 @@ const args = process.argv.slice(2)
 const SKIP_EXISTING = !args.includes('--no-skip-existing') // Default: true (skip existing)
 
 // Mode and paths
-let MODE = 'base' // 'base' or 'variants'
+let MODE = 'base' // 'base', 'variants', or 'visual'
 let PROFILES_PATH = PROFILES_BASE_PATH
 
 // API Provider selection
@@ -103,6 +103,9 @@ Return ONLY a JSON object:
 
 If any field cannot be determined from the wiki, use an empty string for that field (or empty object for relationships). Never use null.`
 
+// Prompt template for visual analysis (appearance, defaultSkin, defaultWeapon)
+const VISUAL_PROMPT = `Analyze the image of this videogame character and provide a description in JSON format of her appearance (using the key \`appearance\`) and her clothing in the image (using \`defaultSkin\`). The descriptions MUST be concise and consist of a handful of words (e.g. 'blue eyes, long brown hair' etc.). If the character is shown with a weapon, also describe it using \`defaultWeapon\`).`
+
 // Character name mappings for wiki search (base characters)
 const WIKI_NAME_MAPPINGS_BASE = {
   Ada: 'Ada Wong'
@@ -135,16 +138,88 @@ function cleanWikiContent(wikitext) {
 
 // Convert character name to wiki page name
 function getWikiPageName(characterName) {
-  if (MODE === 'base') {
+  if (MODE === 'base' || MODE === 'visual') {
+    // Apply base mappings for both base mode and visual mode
     const mapped = WIKI_NAME_MAPPINGS_BASE[characterName]
     if (mapped) return mapped
-  } else {
+  }
+  if (MODE === 'variants') {
     const mapped = WIKI_NAME_MAPPINGS_VARIANTS[characterName]
     if (mapped) return mapped
     // For variants, convert "Name: Variant" to "Name:_Variant" format (keep the colon)
     return characterName.replace(': ', ':_')
   }
   return characterName
+}
+
+// Construct image URL for character (wiki page URL)
+function getImageUrl(characterName) {
+  const wikiBaseUrl = 'https://nikke-goddess-of-victory-international.fandom.com/wiki/File:'
+  // Replace spaces and colons with underscores, remove any special characters
+  const formattedName = characterName.replace(/[: ]/g, '_')
+  return `${wikiBaseUrl}${formattedName}_FB.png`
+}
+
+// Fetch direct image URL from wiki API
+async function fetchImageUrl(characterName) {
+  // Apply name mapping for visual mode (same as other modes)
+  const mappedName = getWikiPageName(characterName)
+  const formattedName = mappedName.replace(/[: ]/g, '_')
+  const fileName = `${formattedName}_FB.png`
+  const apiUrl = `https://nikke-goddess-of-victory-international.fandom.com/api.php?action=query&titles=File:${encodeURIComponent(fileName)}&prop=imageinfo&iiprop=url&format=json`
+
+  try {
+    const response = await fetch(apiUrl)
+    if (!response.ok) {
+      console.warn(`  API request failed: ${response.status}`)
+      return null
+    }
+
+    const data = await response.json()
+
+    // Navigate through the response structure
+    const pages = data.query?.pages
+    if (!pages) {
+      console.warn('  No pages found in API response')
+      return null
+    }
+
+    // Get the first page (should be the only one)
+    const page = Object.values(pages)[0]
+    if (page.missing || !page.imageinfo || page.imageinfo.length === 0) {
+      console.warn(`  Image not found: ${fileName}`)
+      return null
+    }
+
+    const directUrl = page.imageinfo[0].url
+    if (!directUrl) {
+      console.warn('  No URL in imageinfo')
+      return null
+    }
+
+    return directUrl
+  } catch (e) {
+    console.error(`  Error fetching image URL for ${characterName}:`, e.message)
+    return null
+  }
+}
+
+// Download image and convert to base64
+async function fetchImageAsBase64(imageUrl) {
+  try {
+    const response = await fetch(imageUrl)
+    if (!response.ok) {
+      console.warn(`  Failed to download image: ${response.status}`)
+      return null
+    }
+
+    const arrayBuffer = await response.arrayBuffer()
+    const base64 = Buffer.from(arrayBuffer).toString('base64')
+    return base64
+  } catch (e) {
+    console.error(`  Error downloading image:`, e.message)
+    return null
+  }
 }
 
 async function fetchWikiContent(characterName) {
@@ -188,7 +263,7 @@ function shouldSkipCharacter(profile) {
   if (MODE === 'base') {
     // Base mode: skip only if backstory exists
     return 'backstory' in profile
-  } else {
+  } else if (MODE === 'variants') {
     // Variants mode: skip only if ALL fields exist and are non-empty
     const hasBackstory = 'backstory' in profile && !isFieldEmpty(profile.backstory)
     const hasPersonality = 'personality' in profile && !isFieldEmpty(profile.personality)
@@ -196,19 +271,54 @@ function shouldSkipCharacter(profile) {
     const hasRelationships = 'relationships' in profile && !isFieldEmpty(profile.relationships)
 
     return hasBackstory && hasPersonality && hasSpeechStyle && hasRelationships
+  } else if (MODE === 'visual') {
+    // Visual mode: skip only if appearance or defaultSkin are filled (ignore defaultWeapon)
+    const hasAppearance = 'appearance' in profile && !isFieldEmpty(profile.appearance)
+    const hasDefaultSkin = 'defaultSkin' in profile && !isFieldEmpty(profile.defaultSkin)
+
+    return hasAppearance || hasDefaultSkin
   }
 }
 
 // Call Gemini API to extract data
-async function extractDataGemini(characterName, wikiContent) {
-  const promptTemplate = MODE === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
-  const prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+async function extractDataGemini(characterName, wikiContent, imageUrl = null) {
+  let prompt
+  let parts
+
+  if (MODE === 'visual' && imageUrl) {
+    // Visual mode: download image and use base64 inline data
+    console.log(`  Downloading image...`)
+    const base64Image = await fetchImageAsBase64(imageUrl)
+
+    if (!base64Image) {
+      console.error(`  Failed to download image for ${characterName}`)
+      return null
+    }
+
+    console.log(`  Image downloaded (${Math.round(base64Image.length / 1024)}KB)`)
+
+    prompt = VISUAL_PROMPT
+    parts = [
+      {
+        inlineData: {
+          mimeType: 'image/png',
+          data: base64Image
+        }
+      },
+      { text: prompt }
+    ]
+  } else {
+    // Text mode: use appropriate prompt
+    const promptTemplate = MODE === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+    parts = [{ text: prompt }]
+  }
 
   const requestBody = {
     contents: [
       {
         role: 'user',
-        parts: [{ text: prompt }]
+        parts: parts
       }
     ],
     generationConfig: {
@@ -268,16 +378,38 @@ async function extractDataGemini(characterName, wikiContent) {
 }
 
 // Call OpenRouter API to extract data
-async function extractDataOpenRouter(characterName, wikiContent) {
-  const promptTemplate = MODE === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
-  const prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null) {
+  let prompt
+  let content
+
+  if (MODE === 'visual' && imageUrl) {
+    // Visual mode: use vision capabilities
+    prompt = VISUAL_PROMPT
+    content = [
+      {
+        type: 'text',
+        text: prompt
+      },
+      {
+        type: 'image_url',
+        image_url: {
+          url: imageUrl
+        }
+      }
+    ]
+  } else {
+    // Text mode: use appropriate prompt
+    const promptTemplate = MODE === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+    content = prompt
+  }
 
   const requestBody = {
     model: OPENROUTER_MODEL,
     messages: [
       {
         role: 'user',
-        content: prompt
+        content: content
       }
     ],
     temperature: 0.3,
@@ -335,7 +467,7 @@ function parseApiResponse(text, characterName) {
       if (result.backstory && result.backstory !== 'Failed to extract backstory') {
         return { backstory: result.backstory }
       }
-    } else {
+    } else if (MODE === 'variants') {
       // Variants mode: return all fields
       const data = {}
 
@@ -350,6 +482,23 @@ function parseApiResponse(text, characterName) {
       }
       if (result.relationships && typeof result.relationships === 'object' && Object.keys(result.relationships).length > 0) {
         data.relationships = result.relationships
+      }
+
+      if (Object.keys(data).length > 0) {
+        return data
+      }
+    } else if (MODE === 'visual') {
+      // Visual mode: return appearance, defaultSkin, defaultWeapon
+      const data = {}
+
+      if (result.appearance && result.appearance.trim() !== '' && result.appearance !== 'Failed to extract appearance') {
+        data.appearance = result.appearance
+      }
+      if (result.defaultSkin && result.defaultSkin.trim() !== '' && result.defaultSkin !== 'Failed to extract defaultSkin') {
+        data.defaultSkin = result.defaultSkin
+      }
+      if (result.defaultWeapon && result.defaultWeapon.trim() !== '' && result.defaultWeapon !== 'Failed to extract defaultWeapon') {
+        data.defaultWeapon = result.defaultWeapon
       }
 
       if (Object.keys(data).length > 0) {
@@ -371,7 +520,7 @@ function parseApiResponse(text, characterName) {
           return { backstory: extracted }
         }
       }
-    } else {
+    } else if (MODE === 'variants') {
       // Variants mode: try to extract all fields with regex
       const data = {}
 
@@ -405,6 +554,29 @@ function parseApiResponse(text, characterName) {
         console.log(`  ✓ Extracted data using regex fallback`)
         return data
       }
+    } else if (MODE === 'visual') {
+      // Visual mode: try to extract appearance, defaultSkin, defaultWeapon with regex
+      const data = {}
+
+      const appearanceMatch = jsonStr.match(/"appearance"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+      if (appearanceMatch) {
+        data.appearance = appearanceMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
+      }
+
+      const defaultSkinMatch = jsonStr.match(/"defaultSkin"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+      if (defaultSkinMatch) {
+        data.defaultSkin = defaultSkinMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
+      }
+
+      const defaultWeaponMatch = jsonStr.match(/"defaultWeapon"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+      if (defaultWeaponMatch) {
+        data.defaultWeapon = defaultWeaponMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
+      }
+
+      if (Object.keys(data).length > 0) {
+        console.log(`  ✓ Extracted data using regex fallback`)
+        return data
+      }
     }
 
     console.error(`  Error extracting data for ${characterName}:`, parseError.message)
@@ -412,7 +584,7 @@ function parseApiResponse(text, characterName) {
   }
 }
 
-// Select mode (base or variants)
+// Select mode (base, variants, or visual)
 async function selectMode() {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -420,11 +592,12 @@ async function selectMode() {
   })
 
   console.log('\nWhich character profiles would you like to update?')
-  console.log('1) Base characters (characterProfiles.json)')
-  console.log('2) Variant characters (characterProfilesVariants.json)')
+  console.log('1) Base characters - backstory only (characterProfiles.json)')
+  console.log('2) Variant characters - full profile (characterProfilesVariants.json)')
+  console.log('3) Visual analysis - appearance, clothing, weapon (both files)')
 
   const answer = await new Promise((resolve) => {
-    rl.question('\nEnter choice (1 or 2): ', (input) => {
+    rl.question('\nEnter choice (1, 2, or 3): ', (input) => {
       resolve(input.trim())
     })
   })
@@ -435,6 +608,10 @@ async function selectMode() {
     MODE = 'variants'
     PROFILES_PATH = PROFILES_VARIANTS_PATH
     console.log('Selected: Variant characters\n')
+  } else if (answer === '3') {
+    MODE = 'visual'
+    PROFILES_PATH = PROFILES_BASE_PATH // Visual mode processes both files
+    console.log('Selected: Visual analysis\n')
   } else {
     MODE = 'base'
     PROFILES_PATH = PROFILES_BASE_PATH
@@ -487,11 +664,11 @@ async function selectProvider() {
 }
 
 // Route to appropriate extraction function
-async function extractData(characterName, wikiContent) {
+async function extractData(characterName, wikiContent, imageUrl = null) {
   if (API_PROVIDER === 'openrouter') {
-    return extractDataOpenRouter(characterName, wikiContent)
+    return extractDataOpenRouter(characterName, wikiContent, imageUrl)
   }
-  return extractDataGemini(characterName, wikiContent)
+  return extractDataGemini(characterName, wikiContent, imageUrl)
 }
 
 // Apply extracted data to profile
@@ -500,54 +677,62 @@ function applyData(profile, data) {
 
   let updated = false
 
-  if (data.backstory && isFieldEmpty(profile.backstory)) {
-    profile.backstory = data.backstory
-    updated = true
-  }
-
-  if (MODE === 'variants') {
-    if (data.personality && isFieldEmpty(profile.personality)) {
-      profile.personality = data.personality
+  if (MODE === 'visual') {
+    // Visual mode: update appearance, defaultSkin, defaultWeapon
+    if (data.appearance && isFieldEmpty(profile.appearance)) {
+      profile.appearance = data.appearance
       updated = true
     }
 
-    if (data.speech_style && isFieldEmpty(profile.speech_style)) {
-      profile.speech_style = data.speech_style
+    if (data.defaultSkin && isFieldEmpty(profile.defaultSkin)) {
+      profile.defaultSkin = data.defaultSkin
       updated = true
     }
 
-    if (data.relationships && isFieldEmpty(profile.relationships)) {
-      profile.relationships = data.relationships
+    if (data.defaultWeapon && isFieldEmpty(profile.defaultWeapon)) {
+      profile.defaultWeapon = data.defaultWeapon
       updated = true
+    }
+  } else {
+    // Text modes: update backstory and other text fields
+    if (data.backstory && isFieldEmpty(profile.backstory)) {
+      profile.backstory = data.backstory
+      updated = true
+    }
+
+    if (MODE === 'variants') {
+      if (data.personality && isFieldEmpty(profile.personality)) {
+        profile.personality = data.personality
+        updated = true
+      }
+
+      if (data.speech_style && isFieldEmpty(profile.speech_style)) {
+        profile.speech_style = data.speech_style
+        updated = true
+      }
+
+      if (data.relationships && isFieldEmpty(profile.relationships)) {
+        profile.relationships = data.relationships
+        updated = true
+      }
     }
   }
 
   return updated
 }
 
-async function main() {
-  await selectMode()
-  await selectProvider()
-
-  console.log('='.repeat(60))
-  console.log('Character Backstory Update Script')
-  console.log('='.repeat(60))
-  console.log(`Mode: ${MODE === 'base' ? 'Base Characters' : 'Variant Characters'}`)
-  console.log(`Provider: ${API_PROVIDER}`)
-  console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
-  console.log(`Profiles file: ${PROFILES_PATH}`)
-  console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)
-  console.log('')
+async function processProfilesFile(filePath, fileLabel) {
+  console.log(`\nProcessing ${fileLabel}...`)
+  console.log('-'.repeat(60))
 
   // Load character profiles
-  console.log('Loading character profiles...')
   let profiles
   try {
-    const data = fs.readFileSync(PROFILES_PATH, 'utf8')
+    const data = fs.readFileSync(filePath, 'utf8')
     profiles = JSON.parse(data)
   } catch (e) {
-    console.error('Error loading profiles file:', e.message)
-    process.exit(1)
+    console.error(`Error loading ${fileLabel}:`, e.message)
+    return { successCount: 0, failCount: 0, skippedCount: 0, total: 0 }
   }
 
   const characters = Object.keys(profiles)
@@ -572,6 +757,8 @@ async function main() {
     if (SKIP_EXISTING && shouldSkipCharacter(profile)) {
       if (MODE === 'base') {
         console.log(`  ✓ Already has backstory key, skipping (use --no-skip-existing to override)`)
+      } else if (MODE === 'visual') {
+        console.log(`  ✓ All visual fields already populated, skipping (use --no-skip-existing to override)`)
       } else {
         console.log(`  ✓ All fields already populated, skipping (use --no-skip-existing to override)`)
       }
@@ -579,36 +766,66 @@ async function main() {
       continue
     }
 
-    // Fetch wiki content
-    console.log(`  Fetching wiki content...`)
-    const wikiContent = await fetchWikiContent(charName)
+    let wikiContent = null
+    let imageUrl = null
 
-    if (!wikiContent) {
-      console.log(`  ✗ No wiki content available, skipping character`)
-      failCount++
-      continue
+    if (MODE === 'visual') {
+      // Visual mode: fetch direct image URL from wiki API
+      console.log(`  Fetching image URL...`)
+      imageUrl = await fetchImageUrl(charName)
+
+      if (!imageUrl) {
+        console.log(`  ✗ No image URL available, skipping character`)
+        failCount++
+        continue
+      }
+
+      console.log(`  Image URL: ${imageUrl}`)
+    } else {
+      // Text modes: fetch wiki content
+      console.log(`  Fetching wiki content...`)
+      wikiContent = await fetchWikiContent(charName)
+
+      if (!wikiContent) {
+        console.log(`  ✗ No wiki content available, skipping character`)
+        failCount++
+        continue
+      }
+
+      console.log(`  Wiki content: ${wikiContent.length} chars`)
     }
 
-    console.log(`  Wiki content: ${wikiContent.length} chars`)
-
     // Extract data using selected provider
-    const extractFields = MODE === 'base' ? 'backstory' : 'personality, speech_style, backstory, relationships'
+    let extractFields
+    if (MODE === 'base') {
+      extractFields = 'backstory'
+    } else if (MODE === 'visual') {
+      extractFields = 'appearance, defaultSkin, defaultWeapon'
+    } else {
+      extractFields = 'personality, speech_style, backstory, relationships'
+    }
     console.log(`  Extracting ${extractFields} with ${API_PROVIDER}...`)
-    const data = await extractData(charName, wikiContent)
+    const data = await extractData(charName, wikiContent, imageUrl)
 
     if (data && applyData(profile, data)) {
       const updatedFields = []
-      if (data.backstory) updatedFields.push('backstory')
-      if (data.personality) updatedFields.push('personality')
-      if (data.speech_style) updatedFields.push('speech_style')
-      if (data.relationships) updatedFields.push('relationships')
+      if (MODE === 'visual') {
+        if (data.appearance) updatedFields.push('appearance')
+        if (data.defaultSkin) updatedFields.push('defaultSkin')
+        if (data.defaultWeapon) updatedFields.push('defaultWeapon')
+      } else {
+        if (data.backstory) updatedFields.push('backstory')
+        if (data.personality) updatedFields.push('personality')
+        if (data.speech_style) updatedFields.push('speech_style')
+        if (data.relationships) updatedFields.push('relationships')
+      }
 
       console.log(`  ✓ Data extracted and applied (${updatedFields.join(', ')})`)
       successCount++
 
       // Save immediately after successful processing
       console.log('  Saving character profile...')
-      fs.writeFileSync(PROFILES_PATH, JSON.stringify(profiles, null, 2))
+      fs.writeFileSync(filePath, JSON.stringify(profiles, null, 2))
     } else if (data) {
       console.log(`  ✓ No new fields to update (all required fields already populated)`)
       skippedCount++
@@ -637,7 +854,68 @@ async function main() {
   console.log(`Failed: ${failCount}`)
   console.log(`Skipped (already had data): ${skippedCount}`)
   console.log('')
-  console.log(`Results saved to ${MODE === 'base' ? 'characterProfiles.json' : 'characterProfilesVariants.json'}`)
+
+  return { successCount, failCount, skippedCount, total }
+}
+
+async function main() {
+  await selectMode()
+  await selectProvider()
+
+  console.log('='.repeat(60))
+  console.log('Character Backstory Update Script')
+  console.log('='.repeat(60))
+
+  let modeLabel
+  if (MODE === 'base') {
+    modeLabel = 'Base Characters'
+  } else if (MODE === 'visual') {
+    modeLabel = 'Visual Analysis'
+  } else {
+    modeLabel = 'Variant Characters'
+  }
+
+  console.log(`Mode: ${modeLabel}`)
+  console.log(`Provider: ${API_PROVIDER}`)
+  console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
+  console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)
+  console.log('')
+
+  let totalStats = { successCount: 0, failCount: 0, skippedCount: 0, total: 0 }
+
+  if (MODE === 'visual') {
+    // Visual mode: process both files
+    const baseStats = await processProfilesFile(PROFILES_BASE_PATH, 'Base Characters')
+    const variantStats = await processProfilesFile(PROFILES_VARIANTS_PATH, 'Variant Characters')
+
+    totalStats.successCount = baseStats.successCount + variantStats.successCount
+    totalStats.failCount = baseStats.failCount + variantStats.failCount
+    totalStats.skippedCount = baseStats.skippedCount + variantStats.skippedCount
+    totalStats.total = baseStats.total + variantStats.total
+  } else {
+    // Text modes: process single file
+    const stats = await processProfilesFile(PROFILES_PATH, modeLabel)
+    totalStats = stats
+  }
+
+  // Summary
+  console.log('')
+  console.log('='.repeat(60))
+  console.log('Update Complete!')
+  console.log('='.repeat(60))
+  console.log(`Total characters: ${totalStats.total}`)
+  console.log(`Successful: ${totalStats.successCount}`)
+  console.log(`Failed: ${totalStats.failCount}`)
+  console.log(`Skipped (already had data): ${totalStats.skippedCount}`)
+  console.log('')
+
+  if (MODE === 'visual') {
+    console.log('Results saved to both characterProfiles.json and characterProfilesVariants.json')
+  } else if (MODE === 'base') {
+    console.log('Results saved to characterProfiles.json')
+  } else {
+    console.log('Results saved to characterProfilesVariants.json')
+  }
 }
 
 main().catch((e) => {
