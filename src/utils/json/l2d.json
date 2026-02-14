@@ -56,6 +56,10 @@
     "id": "c017"
   },
   {
+    "name": "Neon",
+    "id": "c018"
+  },
+  {
     "name": "Delta",
     "id": "c020"
   },
@@ -916,6 +920,10 @@
     "id": "c354"
   },
   {
+    "name": "Mast: Romantic Maid Tea Service",
+    "id": "c354_01"
+  },
+  {
     "name": "Anchor: Innocent Maid",
     "id": "c355"
   },
@@ -958,6 +966,10 @@
   {
     "name": "Zwei First Festa",
     "id": "c390_01"
+  },
+  {
+    "name": "Zwei Spring Stroll",
+    "id": "c390_02"
   },
   {
     "name": "Ein",
@@ -1472,6 +1484,34 @@
     "id": "c853"
   },
   {
+    "name": "Chisato",
+    "id": "c860"
+  },
+  {
+    "name": "Chisato DA Training Wear (First)",
+    "id": "c860_01"
+  },
+  {
+    "name": "Chisato Red Spark Guitar",
+    "id": "c860_02"
+  },
+  {
+    "name": "Takina",
+    "id": "c861"
+  },
+  {
+    "name": "Takina DA Training Wear (Second)",
+    "id": "c861_01"
+  },
+  {
+    "name": "Takina Blue Pulse Bass",
+    "id": "c861_02"
+  },
+  {
+    "name": "Kurumi",
+    "id": "c862"
+  },
+  {
     "name": "Ingrid",
     "id": "c900"
   },
@@ -1873,6 +1913,14 @@
   },
   {
     "name": "NPC: TBA",
+    "id": "c9010"
+  },
+  {
+    "name": "NPC: TBA",
+    "id": "c9011"
+  },
+  {
+    "name": "NPC: TBA",
     "id": "c9014"
   },
   {
@@ -1882,6 +1930,18 @@
   {
     "name": "NPC: TBA",
     "id": "c9016"
+  },
+  {
+    "name": "NPC: TBA",
+    "id": "c9017"
+  },
+  {
+    "name": "NPC: TBA",
+    "id": "c9018"
+  },
+  {
+    "name": "NPC: TBA",
+    "id": "c9019"
   },
   {
     "name": "Blue Water Island",
