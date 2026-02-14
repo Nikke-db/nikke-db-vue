@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
+import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
 import prompts from '@/utils/json/prompts.json'
 import { cleanWikiContent } from '@/utils/chatUtils'
 
@@ -123,13 +124,14 @@ export const searchForCharactersViaWikiFetch = async (characterNames: string[], 
           if (char) {
             profiles[charName].id = char.id
           }
-          // Lookup color from local profiles
+          // Lookup color from local profiles (variant overrides base)
           const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-          if (localKey) {
-            const localProfile = (localCharacterProfiles as any)[localKey]
-            if (localProfile?.color) {
-              profiles[charName].color = localProfile.color
-            }
+          const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+          const localProfile = localKey ? (localCharacterProfiles as any)[localKey] : null
+          const variantProfile = variantKey ? (variantCharacterProfiles as any)[variantKey] : null
+          const colorSource = variantProfile || localProfile
+          if (colorSource?.color) {
+            profiles[charName].color = colorSource.color
           }
         }
 
@@ -199,13 +201,14 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
           if (char) {
             profiles[charName].id = char.id
           }
-          // Lookup color from local profiles
+          // Lookup color from local profiles (variant overrides base)
           const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-          if (localKey) {
-            const localProfile = (localCharacterProfiles as any)[localKey]
-            if (localProfile?.color) {
-              profiles[charName].color = localProfile.color
-            }
+          const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+          const localProfile = localKey ? (localCharacterProfiles as any)[localKey] : null
+          const variantProfile = variantKey ? (variantCharacterProfiles as any)[variantKey] : null
+          const colorSource = variantProfile || localProfile
+          if (colorSource?.color) {
+            profiles[charName].color = colorSource.color
           }
         }
 
@@ -224,7 +227,7 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
   }
 }
 
-export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, useLocalProfiles: boolean, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<void> => {
+export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, useLocalProfiles: boolean, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<boolean> => {
   logDebug('[searchForCharacters] Searching for:', characterNames)
 
   if (useLocalProfiles) {
@@ -242,9 +245,11 @@ export const searchForCharacters = async (characterNames: string[], characterPro
     for (const name of charsToSearch) {
       // Case-insensitive lookup in local profiles
       const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
+      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
+      const resolvedKey = variantKey || localKey
 
-      if (localKey) {
-        const profile = (localCharacterProfiles as any)[localKey]
+      if (resolvedKey) {
+        const profile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
         // Use the name requested by the AI as the key, but the data from the local profile
         characterProfiles[name] = {
           ...profile,
@@ -263,14 +268,14 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   if (charsToSearch.length === 0) {
     logDebug('[searchForCharacters] All characters found locally.')
     setRandomLoadingMessage()
-    return
+    return false // No web search needed
   }
 
   // If fallback is disabled, stop here
   if (useLocalProfiles && !allowWebSearchFallback) {
     logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
     setRandomLoadingMessage()
-    return
+    return false // No web search performed
   }
 
   loadingStatus.value = 'Searching the web for characters...'
@@ -278,7 +283,7 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   // For Gemini, use native search
   if (apiProvider === 'gemini') {
     await searchForCharactersWithNativeSearch(charsToSearch)
-    return
+    return true // Web search was performed
   }
 
   // For OpenRouter, check if model has native search
@@ -291,7 +296,7 @@ export const searchForCharacters = async (characterNames: string[], characterPro
       // Fetch wiki pages directly and have the model summarize
       await searchForCharactersViaWikiFetch(charsToSearch)
     }
-    return
+    return true // Web search was performed
   }
 
   // For Pollinations, check if model has native search
@@ -303,6 +308,8 @@ export const searchForCharacters = async (characterNames: string[], characterPro
       // For models without native search, fetch wiki pages directly
       await searchForCharactersViaWikiFetch(charsToSearch)
     }
-    return
+    return true // Web search was performed
   }
+
+  return false // No web search performed
 }

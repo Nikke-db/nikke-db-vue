@@ -233,7 +233,7 @@ export const parseAIResponse = (responseStr: string): any[] => {
     const openIndex = headerIndex + match[0].length + openIndexRel
     let depth = 0
     let inString = false
-    let stringQuote: '"' | "'" | null = null
+    let stringQuote: '"' | '\'' | null = null
     let escaped = false
     let closeIndex = -1
 
@@ -258,7 +258,7 @@ export const parseAIResponse = (responseStr: string): any[] => {
 
         continue
       }
-      if (ch === '"' || ch === "'") {
+      if (ch === '"' || ch === '\'') {
         inString = true
         stringQuote = ch as any
 
@@ -434,10 +434,10 @@ export const sanitizeActions = (actions: any[]): any[] => {
       if (nextChar === ',') return false
 
       // Possessive narration: "Name's ..." / "Name’s ..."
-      if (nextChar === "'" || nextChar === '’') {
+      if (nextChar === '\'' || nextChar === '’') {
         const poss = after.slice(0, 2)
 
-        if (poss === "'s" || poss === '’s') return true
+        if (poss === '\'s' || poss === '’s') return true
       }
 
       // Strong narration clue: "Name ..., her/his/ ..." early in the sentence.
@@ -1219,7 +1219,7 @@ export const parseFallback = (text: string): any[] => {
     }
 
     // 2. Dialogue (unquoted or quoted) runs until the next speaker label
-    let dialogue = cleanText.substring(curr.end, next ? next.index : cleanText.length).trim()
+    const dialogue = cleanText.substring(curr.end, next ? next.index : cleanText.length).trim()
 
     const splitQuotedSegments = (input: string): { text: string; isDialogue: boolean }[] | null => {
       if (!input) return null
