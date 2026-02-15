@@ -88,6 +88,8 @@ const changeSpine = (character: live2d_interface) => {
 
       .si_img {
         height: 50px;
+        width: 50px;
+        object-fit: contain;
       }
 
       &:hover {
