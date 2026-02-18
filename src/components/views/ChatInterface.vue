@@ -760,6 +760,7 @@ const isLoading = ref(false)
 const isGenerating = ref(false)
 const loadingStatus = ref('')
 const isStopped = ref(false)
+let activeAbortController: AbortController | null = null
 const waitingForNext = ref(false)
 const showRetry = ref(false)
 const lastPrompt = ref('')
@@ -2089,6 +2090,7 @@ const sendMessage = async () => {
   isGenerating.value = true
   setRandomLoadingMessage()
   isStopped.value = false
+  activeAbortController = new AbortController()
   showRetry.value = false
   lastPrompt.value = text
 
@@ -2106,6 +2108,12 @@ const sendMessage = async () => {
         success = true
       }
     } catch (error: any) {
+      // Silently swallow AbortError — the user pressed Stop
+      if (error.name === 'AbortError') {
+        logDebug('[sendMessage] Fetch aborted by user.')
+        break
+      }
+
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
 
@@ -2161,6 +2169,7 @@ const retryLastMessage = async () => {
   isGenerating.value = true
   setRandomLoadingMessage()
   isStopped.value = false
+  activeAbortController = new AbortController()
   showRetry.value = false
 
   let attempts = 0
@@ -2177,6 +2186,12 @@ const retryLastMessage = async () => {
         success = true
       }
     } catch (error: any) {
+      // Silently swallow AbortError — the user pressed Stop
+      if (error.name === 'AbortError') {
+        logDebug('[retryLastMessage] Fetch aborted by user.')
+        break
+      }
+
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
 
@@ -2238,6 +2253,12 @@ const stopGeneration = () => {
   nikkeOverlayVisible.value = false
   selectedMessageIndex.value = null
 
+  // Abort any in-flight HTTP requests
+  if (activeAbortController) {
+    activeAbortController.abort()
+    activeAbortController = null
+  }
+
   if (isTyping.value) {
     stopTypewriter()
   }
@@ -2278,6 +2299,7 @@ const continueStory = async () => {
   setRandomLoadingMessage()
 
   isStopped.value = false
+  activeAbortController = new AbortController()
   showRetry.value = false
   lastPrompt.value = text
 
@@ -2296,6 +2318,12 @@ const continueStory = async () => {
         success = true
       }
     } catch (error: any) {
+      // Silently swallow AbortError — the user pressed Stop
+      if (error.name === 'AbortError') {
+        logDebug('[continueStory] Fetch aborted by user.')
+        break
+      }
+
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
 
@@ -2485,7 +2513,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       }
     }
 
-    if (foundNames.length > 0) {
+    if (foundNames.length > 0 && !isStopped.value) {
       logDebug('[callAI] Pre-loading local profiles for:', foundNames)
       await wrappedSearchForCharacters(foundNames)
     }
@@ -2541,7 +2569,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
     // If summarization previously failed, retry on next user prompt/retry.
     // Also trigger if we have overflow from a loaded session.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+    if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !isStopped.value) {
       // Calculate where to summarize up to
       // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
       let summarizeUpTo = endIndex
@@ -2673,9 +2701,11 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   // Check if the model needs to search for new characters
+  if (isStopped.value) return response
+
   const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
 
-  if (searchRequest && searchRequest.length > 0) {
+  if (searchRequest && searchRequest.length > 0 && !isStopped.value) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
     const webSearchPerformed = await wrappedSearchForCharacters(searchRequest)
@@ -2683,7 +2713,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
     // Only regenerate if web search was actually performed
     // If all characters were found locally, the original response is still valid
-    if (webSearchPerformed) {
+    if (webSearchPerformed && !isStopped.value) {
       logDebug('[callAI] Web search was performed, regenerating response...')
       return await callAIWithoutSearch(isRetry)
     } else {
@@ -2746,7 +2776,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
     // If summarization previously failed, retry on next user prompt/retry.
     // Also trigger if we have overflow from a loaded session.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+    if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !isStopped.value) {
       // Calculate where to summarize up to
       // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
       let summarizeUpTo = endIndex
@@ -3049,7 +3079,8 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     enableWebSearch,
     searchUrl,
     prompts,
-    reasoningEffort: reasoningEffort.value
+    reasoningEffort: reasoningEffort.value,
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3060,7 +3091,8 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
     useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     enableWebSearch,
-    reasoningEffort: reasoningEffort.value
+    reasoningEffort: reasoningEffort.value,
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3073,7 +3105,8 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     modeIsGame: mode.value === 'game',
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
-    enableContextCaching: enableContextCaching.value
+    enableContextCaching: enableContextCaching.value,
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3082,7 +3115,8 @@ const callLocal = async (messages: any[]) => {
     maxTokens: localMaxTokens.value,
     apiKey: apiKey.value,
     localUrl: localUrl.value,
-    modeIsGame: mode.value === 'game'
+    modeIsGame: mode.value === 'game',
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3157,7 +3191,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     console.warn('JSON parse failed, attempting text fallback parsing...', e)
 
     // If Auto mode is enabled and we haven't tried auto-retry yet, retry with the invalidJsonReminder
-    if (invalidJsonAuto.value && !autoRetryAttempted) {
+    if (invalidJsonAuto.value && !autoRetryAttempted && !isStopped.value) {
       console.log('[processAIResponse] Auto mode enabled, retrying with invalidJsonReminder...')
 
       // Temporarily enable the invalidJsonToggle to inject the reminder
@@ -3204,7 +3238,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
           preserveExistingAnimations: true,
           localUrl: localUrl.value,
           rawResponseText: responseStr,
-          characterAnimations: animationCache.value
+          characterAnimations: animationCache.value,
+          signal: activeAbortController?.signal
         })
       } catch (e) {
         console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)
@@ -3247,7 +3282,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
   }
 
   const needsSearch = collectValidatedNeedsSearch(data, lastPrompt.value)
-  if (needsSearch.length > 0) {
+  if (needsSearch.length > 0 && !isStopped.value) {
     if (depth >= 2) {
       logDebug('[processAIResponse] needs_search detected but recursion limit reached:', needsSearch)
     } else {
@@ -3255,7 +3290,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
       const webSearchPerformed = await wrappedSearchForCharacters(needsSearch)
       setRandomLoadingMessage()
       // Only regenerate if web search was actually performed
-      if (webSearchPerformed) {
+      if (webSearchPerformed && !isStopped.value) {
         logDebug('[processAIResponse] Web search performed, regenerating...')
         const followUp = await callAIWithoutSearch(false)
         await processAIResponse(followUp, depth + 1)
@@ -3848,7 +3883,8 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
       localMaxTokens: localMaxTokens.value,
       localUrl: localUrl.value,
       prompts,
-      enableContextCaching: enableContextCaching.value
+      enableContextCaching: enableContextCaching.value,
+      signal: activeAbortController?.signal
     })
 
     if (summary) {

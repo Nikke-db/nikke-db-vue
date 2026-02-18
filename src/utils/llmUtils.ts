@@ -156,7 +156,7 @@ export const fetchPollinationsModels = async (apiKey?: string) => {
   }
 }
 
-export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string) => {
+export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal) => {
   // Use higher max_tokens for summarization to handle long inputs
   const requestBody: any = {
     model: model,
@@ -172,7 +172,8 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
       'X-Title': 'Nikke DB Story Gen',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -191,7 +192,8 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
           'X-Title': 'Nikke DB Story Gen',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal
       })
 
       if (!retryResponse.ok) {
@@ -208,7 +210,7 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
   return data.choices[0].message.content
 }
 
-export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false) => {
+export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false, signal?: AbortSignal) => {
   const requestBody: any = {
     model: model,
     messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
@@ -231,7 +233,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
   const response = await fetch(url, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -246,7 +249,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
       const retryResponse = await fetch(url, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal
       })
 
       if (!retryResponse.ok) {
@@ -262,7 +266,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
       const retryResponse = await fetch(url, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal
       })
 
       if (!retryResponse.ok) {
@@ -283,7 +288,7 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
   return data.choices[0].message.content
 }
 
-export const callGeminiSummarization = async (messages: any[], apiKey: string, model: string) => {
+export const callGeminiSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal) => {
   // Gemini API format is different, need to adapt
 
   // Check if we have a system message (first message with role 'system' or just need to treat first as system)
@@ -330,7 +335,8 @@ export const callGeminiSummarization = async (messages: any[], apiKey: string, m
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -381,13 +387,14 @@ export const callPollinations = async (
     enableWebSearch?: boolean
     reasoningEffort?: string
     enableContextCaching?: boolean
+    signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching } = opts
+  const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching, signal } = opts
 
   if (modelsWithoutJsonSupport.value.has(model)) {
     logDebug(`Model ${model} known to not support json_schema, using text fallback...`)
-    return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching })
+    return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching, signal })
   }
 
   const requestBody: any = {
@@ -418,7 +425,8 @@ export const callPollinations = async (
   const response = await fetch(url, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -437,7 +445,8 @@ export const callPollinations = async (
       const retryResponse = await fetch(url, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal
       })
 
       if (!retryResponse.ok) {
@@ -450,7 +459,7 @@ export const callPollinations = async (
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
       sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
-      return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching })
+      return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
     }
 
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
@@ -464,8 +473,8 @@ export const callPollinations = async (
   return data.choices[0].message.content
 }
 
-export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean }) => {
-  const { model, apiKey, reasoningEffort, enableContextCaching } = opts
+export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
+  const { model, apiKey, reasoningEffort, enableContextCaching, signal } = opts
 
   const requestBody: any = {
     model: model,
@@ -493,7 +502,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
   const response = await fetch(url, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -510,7 +520,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
       const retryResponse = await fetch(url, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal
       })
 
       if (!retryResponse.ok) {
@@ -529,8 +540,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
   return data.choices[0].message.content
 }
 
-export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string }) => {
-  const { model, maxTokens = 16384, apiKey, localUrl } = opts
+export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string; signal?: AbortSignal }) => {
+  const { model, maxTokens = 16384, apiKey, localUrl, signal } = opts
 
   let endpoint = localUrl.replace(/\/$/, '')
   if (!endpoint.endsWith('/chat/completions')) {
@@ -553,7 +564,8 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -572,9 +584,10 @@ export const callLocal = async (
     apiKey?: string
     localUrl: string
     modeIsGame: boolean
+    signal?: AbortSignal
   }
 ) => {
-  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame } = opts
+  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame, signal } = opts
 
   // Ensure URL ends with /chat/completions if not present
   let endpoint = localUrl.replace(/\/$/, '')
@@ -599,7 +612,8 @@ export const callLocal = async (
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal
     })
 
     if (!response.ok) {
@@ -634,7 +648,8 @@ export const callLocal = async (
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: headers,
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -718,6 +733,7 @@ export const summarizeChunk = async (
     localUrl: string
     prompts: any
     enableContextCaching?: boolean
+    signal?: AbortSignal
   }
 ) => {
   if (messages.length === 0) return ''
@@ -731,13 +747,13 @@ export const summarizeChunk = async (
   let summary = ''
 
   if (opts.apiProvider === 'gemini') {
-    summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model)
+    summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'openrouter') {
-    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model)
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'pollinations') {
-    summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching)
+    summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
-    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl })
+    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal })
   }
 
   if (summary && summary.trim().length > 0) {
@@ -762,9 +778,10 @@ export const callOpenRouter = async (
     searchUrl?: string
     prompts: any
     reasoningEffort?: string
+    signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, enableContextCaching, useLocalProfiles, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort } = opts
+  const { model, apiKey, enableContextCaching, useLocalProfiles, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, signal } = opts
 
   let processedMessages = messages
 
@@ -840,7 +857,8 @@ export const callOpenRouter = async (
         'X-Title': 'Nikke DB Story Gen',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal
     })
 
     if (!response.ok) {
@@ -895,7 +913,8 @@ export const callOpenRouter = async (
       'X-Title': 'Nikke DB Story Gen',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -921,8 +940,8 @@ export const callOpenRouter = async (
   return data.choices[0].message.content
 }
 
-export const callGemini = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; reasoningEffort?: string }) => {
-  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, reasoningEffort } = opts
+export const callGemini = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; reasoningEffort?: string; signal?: AbortSignal }) => {
+  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, reasoningEffort, signal } = opts
 
   const hasSystemMessage = messages.length > 1 || messages[0]?.role === 'system'
 
@@ -1042,7 +1061,8 @@ export const callGemini = async (messages: any[], opts: { model: string; apiKey:
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(requestBody),
+    signal
   })
 
   if (!response.ok) {
@@ -1098,11 +1118,12 @@ export const enrichActionsWithAnimations = async (
     localUrl?: string
     rawResponseText?: string
     characterAnimations?: Record<string, string[]>
+    signal?: AbortSignal
   }
 ): Promise<any[]> => {
   logDebug('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations } = opts
+  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal } = opts
 
   const hasMeaningfulAnimation = (anim: any): boolean => {
     if (typeof anim !== 'string') return false
@@ -1163,7 +1184,7 @@ export const enrichActionsWithAnimations = async (
     let response: string
 
     if (apiProvider === 'gemini') {
-      response = await callGemini(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false })
+      response = await callGemini(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false, signal })
     } else if (apiProvider === 'openrouter') {
       response = await callOpenRouter(messages, {
         model: model!,
@@ -1172,7 +1193,8 @@ export const enrichActionsWithAnimations = async (
         useLocalProfiles: false,
         allowWebSearchFallback: false,
         modeIsGame: false,
-        prompts: {} as any // Not needed for this call
+        prompts: {} as any, // Not needed for this call
+        signal
       })
     } else if (apiProvider === 'pollinations') {
       response = await callPollinations(messages, {
@@ -1180,7 +1202,8 @@ export const enrichActionsWithAnimations = async (
         apiKey,
         useLocalProfiles: false,
         allowWebSearchFallback: false,
-        modeIsGame: false
+        modeIsGame: false,
+        signal
       })
     } else if (apiProvider === 'local' && localUrl) {
       response = await callLocal(messages, {
@@ -1188,7 +1211,8 @@ export const enrichActionsWithAnimations = async (
         maxTokens,
         apiKey,
         localUrl,
-        modeIsGame: false
+        modeIsGame: false,
+        signal
       })
     } else {
       console.warn('[enrichActionsWithAnimations] No valid API provider, returning original actions')
