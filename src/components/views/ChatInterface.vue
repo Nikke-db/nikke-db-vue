@@ -142,6 +142,9 @@
             <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
             <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
             <n-checkbox v-if="mode !== 'story'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
+            <n-checkbox v-model:checked="incorrectSpeakerLabelingToggle">Incorrect Speaker Labeling</n-checkbox>
+            <n-checkbox v-model:checked="narrationAsDialogueToggle">Narration presented as dialogue</n-checkbox>
+            <n-checkbox v-model:checked="wrongCharacterOnScreenToggle">Wrong character on screen</n-checkbox>
           </div>
         </n-popover>
       </div>
@@ -973,6 +976,9 @@ const narrationAndDialogueNotSplitToggle = ref(false)
 const wrongSpeechStylesToggle = ref(false)
 const incorrectAnimationsToggle = ref(false)
 const incorrectAnimationsPersist = ref(false)
+const incorrectSpeakerLabelingToggle = ref(false)
+const narrationAsDialogueToggle = ref(false)
+const wrongCharacterOnScreenToggle = ref(false)
 
 watch(invalidJsonPersist, (val) => {
   if (val) {
@@ -2361,6 +2367,18 @@ const getUserReminders = (): string => {
   if (incorrectAnimationsToggle.value) {
     reminders += '\n\n' + prompts.reminders.incorrectAnimationsReminder
     if (!incorrectAnimationsPersist.value) incorrectAnimationsToggle.value = false
+  }
+  if (incorrectSpeakerLabelingToggle.value) {
+    reminders += '\n\n' + prompts.reminders.incorrectSpeakerLabeling
+    incorrectSpeakerLabelingToggle.value = false
+  }
+  if (narrationAsDialogueToggle.value) {
+    reminders += '\n\n' + prompts.reminders.narrationAsDialogue
+    narrationAsDialogueToggle.value = false
+  }
+  if (wrongCharacterOnScreenToggle.value) {
+    reminders += '\n\n' + prompts.reminders.wrongCharacterOnScreen
+    wrongCharacterOnScreenToggle.value = false
   }
 
   return reminders

@@ -50,7 +50,10 @@
     "aiControllingUserReminder": "[CRITICAL INSTRUCTIONS: In the last messages, you were controlling the Commander's actions or speaking in his place. In Roleplay Mode, the AI should NOT control what the Commander (the user) is doing in the story or speak in his place, unless it is something critical for the advancement of the plot (e.g. The Commander's squad is entering a building and the user does not react with any action to that).]",
     "narrationAndDialogueNotSplit": "[CRITICAL INSTRUCTIONS: Your last message did not properly separate dialogue from narration. Remember to use separate actions in the JSON array.]",
     "wrongSpeechStylesReminder": "[CRITICAL INSTRUCTIONS: You are confusing the characters' speech styles. Please ensure that each character is using its own, correct speech style according to each characterProfiles key.]",
-    "incorrectAnimationsReminder": "[CRITICAL INSTRUCTIONS: In your last messages you may have not assigned valid or relevant animations to the characters. You MUST assign valid, relevant animations to any line where a character is active, regardless of whether or not he or she speaks, based on the emotions of that character in the context of the current and recent actions.]"
+    "incorrectAnimationsReminder": "[CRITICAL INSTRUCTIONS: In your last messages you may have not assigned valid or relevant animations to the characters. You MUST assign valid, relevant animations to any line where a character is active, regardless of whether or not he or she speaks, based on the emotions of that character in the context of the current and recent actions.]",
+    "incorrectSpeakerLabeling": "[CRITICAL: You have been labeling speakers incorrectly. Pay attention to the character who is speaking the dialogue, and assign it in the JSON schema accordingly.]",
+    "narrationAsDialogue": "[CRITICAL: In some situations, you have erroneously set `speaking` to `true` for narration lines rather than dialogue. Be careful.]",
+    "wrongCharacterOnScreen": "[CRITICAL: You have been assigning the wrong character on screen as the speaker in one or more occasions recently. Be careful.]"
   },
   "continue": {
     "story": "Continue the story with multiple dialogue exchanges and/or actions. Do not repeat previous events, dialogue or actions.",
