@@ -695,7 +695,7 @@ import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, we
 import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
-import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectedCharacterId, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 const market = useMarket()
 
@@ -779,6 +779,10 @@ const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: st
 const pendingGameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
 const choicesAwaitingReveal = ref(false)
 const animationCache = ref<Record<string, string[]>>({})
+
+// Number of conversational turns (user msg + following assistant/system msgs) to keep as
+// overlap after summarization so the model retains immediate context.
+const OVERLAP_TURNS = 3
 
 // Story/Roleplay character roster
 const characterCatalog = buildCharacterCatalog()
@@ -1787,7 +1791,7 @@ const saveSession = () => {
     const content = msg.content
 
     if (content === 'Session restored successfully.') return true
-    if (content.startsWith("Warning: Saved model '") && content.endsWith('Using default.')) return true
+    if (content.startsWith('Warning: Saved model \'') && content.endsWith('Using default.')) return true
 
     return false
   }
@@ -2111,6 +2115,7 @@ const sendMessage = async () => {
       // Silently swallow AbortError — the user pressed Stop
       if (error.name === 'AbortError') {
         logDebug('[sendMessage] Fetch aborted by user.')
+        
         break
       }
 
@@ -2131,7 +2136,7 @@ const sendMessage = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2209,7 +2214,7 @@ const retryLastMessage = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2339,7 +2344,7 @@ const continueStory = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2584,7 +2589,10 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = summarizeUpTo
+        // Keep the last OVERLAP_TURNS turns before the summary boundary as overlap
+        // so the model retains immediate conversational context (e.g. recent questions/answers)
+        const overlapMessages = getOverlapMessageCount(summarizeUpTo)
+        lastSummarizedIndex.value = summarizeUpTo - overlapMessages
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
         // Clear the loaded session flag after successful summarization
@@ -2791,7 +2799,10 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = summarizeUpTo
+        // Keep the last OVERLAP_TURNS turns before the summary boundary as overlap
+        // so the model retains immediate conversational context (e.g. recent questions/answers)
+        const overlapMessages = getOverlapMessageCount(summarizeUpTo)
+        lastSummarizedIndex.value = summarizeUpTo - overlapMessages
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
         // Clear the loaded session flag after successful summarization
@@ -3870,6 +3881,23 @@ const resetSession = () => {
   }
 }
 
+/**
+ * Count how many messages to keep as overlap after summarization,
+ * based on OVERLAP_TURNS full conversational turns (a turn = one user
+ * message plus all following non-user messages).
+ */
+const getOverlapMessageCount = (summarizeUpTo: number): number => {
+  let count = 0
+  let turns = 0
+  for (let i = summarizeUpTo - 1; i >= lastSummarizedIndex.value && turns < OVERLAP_TURNS; i--) {
+    count++
+    if (chatHistory.value[i].role === 'user') {
+      turns++
+    }
+  }
+  return count
+}
+
 const summarizeChunk = async (messages: { role: string; content: string }[]): Promise<boolean> => {
   if (messages.length === 0) return true
 
@@ -3884,7 +3912,8 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
       localUrl: localUrl.value,
       prompts,
       enableContextCaching: enableContextCaching.value,
-      signal: activeAbortController?.signal
+      signal: activeAbortController?.signal,
+      existingSummary: storySummary.value
     })
 
     if (summary) {

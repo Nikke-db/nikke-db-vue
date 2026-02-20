@@ -734,6 +734,7 @@ export const summarizeChunk = async (
     prompts: any
     enableContextCaching?: boolean
     signal?: AbortSignal
+    existingSummary?: string
   }
 ) => {
   if (messages.length === 0) return ''
@@ -741,7 +742,17 @@ export const summarizeChunk = async (
   const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')
 
   const systemMsg = { role: 'system', content: opts.prompts.summarizeChunk.system }
-  const userMsg = { role: 'user', content: opts.prompts.summarizeChunk.user.replace('${textToSummarize}', textToSummarize) }
+
+  let userContent: string
+  if (opts.existingSummary && opts.existingSummary.trim().length > 0) {
+    // Use continuation prompt that includes the existing summary for context
+    userContent = opts.prompts.summarizeChunk.userContinuation.replace('${existingSummary}', opts.existingSummary).replace('${textToSummarize}', textToSummarize)
+  } else {
+    // First summarization pass - no existing summary
+    userContent = opts.prompts.summarizeChunk.user.replace('${textToSummarize}', textToSummarize)
+  }
+
+  const userMsg = { role: 'user', content: userContent }
   const msgs = [systemMsg, userMsg]
 
   let summary = ''
