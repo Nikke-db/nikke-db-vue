@@ -3319,12 +3319,12 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
   data = stripChoicesWhenNotGameMode(data, mode.value === 'game')
 
   // Truncate extremely long sequences that look like hallucinations
-  if (data.length > 15 && mode.value !== 'story') {
+  if (data.length > 25 && mode.value !== 'story') {
     logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
-    data = data.slice(0, 15)
-  } else if (data.length > 50 && mode.value === 'story') {
+    data = data.slice(0, 25)
+  } else if (data.length > 75 && mode.value === 'story') {
     logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
-    data = data.slice(0, 50)
+    data = data.slice(0, 75)
   }
 
   // Fallback for Game Mode: If no choices were provided, add a default "Continue" choice
