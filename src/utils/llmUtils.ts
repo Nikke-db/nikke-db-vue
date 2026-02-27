@@ -7,6 +7,7 @@ import { logDebug } from '@/utils/chatUtils'
 
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
 export const modelsRequiringStreamForHighTokens = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsRequiringStreamForHighTokens') || '[]')))
+export const modelsWithoutCacheControlSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutCacheControlSupport') || '[]')))
 
 export const providerOptions = [
   { label: 'Gemini', value: 'gemini' },
@@ -21,6 +22,53 @@ export const tokenUsageOptions = [
   { label: 'High (60 turns)', value: 'high' },
   { label: 'Goddess', value: 'goddess' }
 ]
+
+/**
+ * Determines whether to add cache_control to messages for Pollinations requests
+ * and returns the processed messages along with a flag indicating if cache_control was added.
+ * This may no longer be needed, but I am sick and tired of the Pollinations API breaking things
+ * Constantly and then I have to find workarounds for their own insistence on not testing properly
+ * In an actual staging environment... Anyway...
+ */
+const buildPollinationsMessages = (messages: any[], model: string, enableContextCaching?: boolean) => {
+  const shouldAddCacheControl = !!enableContextCaching && !modelsWithoutCacheControlSupport.value.has(model)
+  const processedMessages = shouldAddCacheControl ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages
+  return { processedMessages, shouldAddCacheControl }
+}
+
+/**
+ * Handles the cache_control retry logic for Pollinations requests.
+ * When a model rejects cache_control, remembers the model, strips cache_control,
+ * and re-fetches. Returns the retry Response on success, or throws/returns error data
+ * for the caller to handle secondary errors.
+ *
+ * Returns null if this error is not a cache_control error (caller should continue its own error handling).
+ * Returns { retryResponse, retryErrorData } if it is — retryResponse is set on success, retryErrorData on failure.
+ */
+const handleCacheControlRetry = async (status: number, errorData: any, shouldAddCacheControl: boolean, model: string, messages: any[], requestBody: any, url: string, headers: Record<string, string>, signal?: AbortSignal): Promise<{ retryResponse: Response; retryErrorData?: undefined } | { retryResponse?: undefined; retryErrorData: any } | null> => {
+  if (!(status === 400 && shouldAddCacheControl && errorData?.error?.message?.includes('cache_control'))) {
+    return null
+  }
+
+  console.warn(`Model ${model} does not support cache_control, remembering and retrying without it...`)
+  modelsWithoutCacheControlSupport.value.add(model)
+  sessionStorage.setItem('modelsWithoutCacheControlSupport', JSON.stringify([...modelsWithoutCacheControlSupport.value]))
+
+  requestBody.messages = messages
+  const retryResponse = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody),
+    signal
+  })
+
+  if (!retryResponse.ok) {
+    const retryErrorData = await retryResponse.json().catch(() => ({}))
+    return { retryErrorData }
+  }
+
+  return { retryResponse }
+}
 
 const parsePollinationsStreamResponse = async (response: Response) => {
   if (!response.body) {
@@ -211,9 +259,11 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
 }
 
 export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false, signal?: AbortSignal) => {
+  const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
+
   const requestBody: any = {
     model: model,
-    messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
+    messages: processedMessages,
     max_tokens: 32768 // Double the normal limit for summarization
   }
 
@@ -257,6 +307,35 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
         throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
       }
       return await parsePollinationsStreamResponse(retryResponse)
+    }
+
+    const cacheRetry = await handleCacheControlRetry(response.status, errorData, shouldAddCacheControl, model, messages, requestBody, url, headers, signal)
+    if (cacheRetry) {
+      if (cacheRetry.retryResponse) {
+        if (requestBody.stream) {
+          return await parsePollinationsStreamResponse(cacheRetry.retryResponse)
+        }
+        const retryData = await cacheRetry.retryResponse.json()
+        return retryData.choices[0].message.content
+      }
+      // Retry failed — check if max_tokens is also too high
+      if (cacheRetry.retryErrorData?.error?.message?.includes('max_tokens')) {
+        console.warn(`Model ${model} also doesn't support 32768 max_tokens, falling back to 16384...`)
+        requestBody.max_tokens = 16384
+        const fallbackResponse = await fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(requestBody),
+          signal
+        })
+
+        if (!fallbackResponse.ok) {
+          throw new Error(`Pollinations API Error: ${fallbackResponse.status} ${JSON.stringify(await fallbackResponse.json().catch(() => ({})))}`)
+        }
+        const fallbackData = await fallbackResponse.json()
+        return fallbackData.choices[0].message.content
+      }
+      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
     }
 
     // If max_tokens is too high for this model, try with standard limit
@@ -397,9 +476,11 @@ export const callPollinations = async (
     return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching, signal })
   }
 
+  const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
+
   const requestBody: any = {
     model: model,
-    messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
+    messages: processedMessages,
     max_tokens: 16384,
     response_format: buildStoryResponseSchema(modeIsGame),
     private: true
@@ -455,6 +536,25 @@ export const callPollinations = async (
       return await parsePollinationsStreamResponse(retryResponse)
     }
 
+    const cacheRetry = await handleCacheControlRetry(response.status, errorData, shouldAddCacheControl, model, messages, requestBody, url, headers, signal)
+    if (cacheRetry) {
+      if (cacheRetry.retryResponse) {
+        if (requestBody.stream) {
+          return await parsePollinationsStreamResponse(cacheRetry.retryResponse)
+        }
+        const retryData = await cacheRetry.retryResponse.json()
+        return retryData.choices[0].message.content
+      }
+      // Retry failed — check if this model also doesn't support json_schema
+      if (cacheRetry.retryErrorData?.error?.message?.includes('response_format') || cacheRetry.retryErrorData?.error?.message?.includes('json_schema') || cacheRetry.retryErrorData?.error?.message?.includes('controlled generation')) {
+        console.warn(`Model ${model} also does not support json_schema response format, remembering and retrying without it...`)
+        modelsWithoutJsonSupport.value.add(model)
+        sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
+        return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
+      }
+      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+    }
+
     if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
@@ -476,9 +576,11 @@ export const callPollinations = async (
 export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
   const { model, apiKey, reasoningEffort, enableContextCaching, signal } = opts
 
+  const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
+
   const requestBody: any = {
     model: model,
-    messages: enableContextCaching ? messages.map((m) => ({ ...m, cache_control: { type: 'ephemeral' } })) : messages,
+    messages: processedMessages,
     max_tokens: 16384
   }
 
@@ -528,6 +630,17 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
         throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
       }
       return await parsePollinationsStreamResponse(retryResponse)
+    }
+    const cacheRetry = await handleCacheControlRetry(response.status, errorData, shouldAddCacheControl, model, messages, requestBody, url, headers, signal)
+    if (cacheRetry) {
+      if (cacheRetry.retryResponse) {
+        if (requestBody.stream) {
+          return await parsePollinationsStreamResponse(cacheRetry.retryResponse)
+        }
+        const retryData = await cacheRetry.retryResponse.json()
+        return retryData.choices[0].message.content
+      }
+      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
     }
     throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
