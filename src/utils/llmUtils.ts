@@ -887,6 +887,45 @@ export const summarizeChunk = async (
   throw new Error('Summarization returned empty output.')
 }
 
+export const compactSummary = async (
+  fullSummary: string,
+  opts: {
+    apiProvider: string
+    apiKey: string
+    model: string
+    localMaxTokens: number
+    localUrl: string
+    prompts: any
+    enableContextCaching?: boolean
+    signal?: AbortSignal
+  }
+) => {
+  if (!fullSummary || fullSummary.trim().length === 0) return ''
+
+  const systemMsg = { role: 'system', content: opts.prompts.compactSummary.system }
+  const userContent = opts.prompts.compactSummary.user.replace('${fullSummary}', fullSummary)
+  const userMsg = { role: 'user', content: userContent }
+  const msgs = [systemMsg, userMsg]
+
+  let summary = ''
+
+  if (opts.apiProvider === 'gemini') {
+    summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+  } else if (opts.apiProvider === 'openrouter') {
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+  } else if (opts.apiProvider === 'pollinations') {
+    summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
+  } else if (opts.apiProvider === 'local') {
+    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal })
+  }
+
+  if (summary && summary.trim().length > 0) {
+    return summary
+  }
+
+  throw new Error('Summary compaction returned empty output.')
+}
+
 // --- Exported network helpers moved from ChatInterface.vue ---
 
 export const callOpenRouter = async (

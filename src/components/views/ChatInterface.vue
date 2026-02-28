@@ -86,23 +86,41 @@
       </div>
 
       <div class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
-        <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-          <template #icon
-            ><n-icon><Save /></n-icon
-          ></template>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon
+                ><n-icon><Save /></n-icon
+              ></template>
+            </n-button>
+          </template>
           Save
-        </n-button>
-        <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-          <template #icon
-            ><n-icon><Upload /></n-icon
-          ></template>
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon
+                ><n-icon><Upload /></n-icon
+              ></template>
+            </n-button>
+          </template>
           Load
-        </n-button>
-        <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-          <template #icon
-            ><n-icon><Reset /></n-icon
-          ></template>
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon
+                ><n-icon><Reset /></n-icon
+              ></template>
+            </n-button>
+          </template>
           Reset
+        </n-tooltip>
+        <n-button type="info" size="small" @click="handleCompactSummary" :disabled="isCompactSummaryDisabled" :style="{ opacity: isCompactSummaryDisabled ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+          <template #icon
+            ><n-icon><TextScale /></n-icon
+          ></template>
+          Compaction
         </n-button>
         <div class="story-character-inline">
           <div class="story-character-inline-header">
@@ -313,6 +331,28 @@
               </n-popover>
             </template>
             <n-switch v-model:value="enableContextCaching" />
+          </n-form-item>
+
+          <n-form-item v-if="tokenUsage !== 'goddess'">
+            <template #label>
+              Automatically Compact Summaries
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  When enabled, the story summary is automatically compacted after a set number of summarizations to prevent it from growing too large and consuming tokens.<br /><br />
+                  You can also compact manually using the button in the chat area.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="autoCompactSummaries" />
+          </n-form-item>
+
+          <n-form-item v-if="autoCompactSummaries && tokenUsage !== 'goddess'" label="Compact every N summarizations">
+            <n-select v-model:value="autoCompactFrequency" :options="compactFrequencyOptions" />
           </n-form-item>
           <n-divider />
 
@@ -680,7 +720,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight, TextScale } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox, NTag } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -692,7 +732,7 @@ import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, fo
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
@@ -769,6 +809,17 @@ const lastSummarizedIndex = ref(0)
 const summarizationRetryPending = ref(false)
 const summarizationAttemptCount = ref(0)
 const summarizationLastError = ref<string | null>(null)
+const summarizationSuccessCount = ref(0)
+const summaryJustCompacted = ref(false)
+const autoCompactSummaries = ref(true)
+const autoCompactFrequency = ref(4)
+const COMPACT_MIN_LENGTH = 1500
+const compactFrequencyOptions = [
+  { label: '3', value: 3 },
+  { label: '4 (Default)', value: 4 },
+  { label: '5', value: 5 },
+  { label: '10', value: 10 }
+]
 const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
@@ -1048,6 +1099,10 @@ const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAuto
 
 const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
 
+const isCompactSummaryDisabled = computed(() => {
+  return isLoading.value || tokenUsage.value === 'goddess' || summaryJustCompacted.value || storySummary.value.length < COMPACT_MIN_LENGTH || (summarizationSuccessCount.value === 0 && !storySummary.value)
+})
+
 const assetQuality = computed({
   get: () => (market.live2d.HQassets ? 'high' : 'low'),
   set: (val: string) => {
@@ -1259,6 +1314,14 @@ watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
 })
 
+watch(autoCompactSummaries, (newVal) => {
+  localStorage.setItem('nikke_auto_compact_summaries', String(newVal))
+})
+
+watch(autoCompactFrequency, (newVal) => {
+  localStorage.setItem('nikke_auto_compact_frequency', String(newVal))
+})
+
 watch(model, (newVal) => {
   if (newVal) localStorage.setItem('nikke_model', newVal)
 })
@@ -1383,6 +1446,15 @@ const initializeSettings = async () => {
 
   const savedContextCaching = localStorage.getItem('nikke_enable_context_caching')
   if (savedContextCaching !== null) enableContextCaching.value = savedContextCaching === 'true'
+
+  const savedAutoCompact = localStorage.getItem('nikke_auto_compact_summaries')
+  if (savedAutoCompact !== null) autoCompactSummaries.value = savedAutoCompact !== 'false'
+
+  const savedAutoCompactFreq = localStorage.getItem('nikke_auto_compact_frequency')
+  if (savedAutoCompactFreq !== null) {
+    const parsed = Number(savedAutoCompactFreq)
+    if ([3, 4, 5, 10].includes(parsed)) autoCompactFrequency.value = parsed
+  }
 
   const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
   enableAnimationReplay.value = savedAnimationReplay !== 'false'
@@ -1819,6 +1891,8 @@ const saveSession = () => {
     characterProgression: characterProgression.value,
     storySummary: storySummary.value,
     lastSummarizedIndex: lastSummarizedIndex.value,
+    summarizationSuccessCount: summarizationSuccessCount.value,
+    summaryJustCompacted: summaryJustCompacted.value,
     mode: mode.value,
     timestamp: new Date().toISOString(),
     rosterRows: rosterRows.value,
@@ -1836,7 +1910,9 @@ const saveSession = () => {
       enableContextCaching: enableContextCaching.value,
       useLocalProfiles: useLocalProfiles.value,
       allowWebSearchFallback: allowWebSearchFallback.value,
-      reasoningEffort: reasoningEffort.value
+      reasoningEffort: reasoningEffort.value,
+      autoCompactSummaries: autoCompactSummaries.value,
+      autoCompactFrequency: autoCompactFrequency.value
     }
   }
 
@@ -1910,6 +1986,12 @@ const handleFileUpload = (event: Event) => {
         if (data.lastSummarizedIndex !== undefined) {
           lastSummarizedIndex.value = data.lastSummarizedIndex
         }
+        if (typeof data.summarizationSuccessCount === 'number') {
+          summarizationSuccessCount.value = data.summarizationSuccessCount
+        }
+        if (typeof data.summaryJustCompacted === 'boolean') {
+          summaryJustCompacted.value = data.summaryJustCompacted
+        }
         if (data.mode) {
           mode.value = data.mode
         }
@@ -1963,6 +2045,14 @@ const handleFileUpload = (event: Event) => {
 
           if (data.settings.reasoningEffort) {
             reasoningEffort.value = data.settings.reasoningEffort
+          }
+
+          if (typeof data.settings.autoCompactSummaries === 'boolean') {
+            autoCompactSummaries.value = data.settings.autoCompactSummaries
+          }
+
+          if (typeof data.settings.autoCompactFrequency === 'number' && [3, 4, 5, 10].includes(data.settings.autoCompactFrequency)) {
+            autoCompactFrequency.value = data.settings.autoCompactFrequency
           }
 
           // Restore Provider and Model
@@ -2115,7 +2205,7 @@ const sendMessage = async () => {
       // Silently swallow AbortError — the user pressed Stop
       if (error.name === 'AbortError') {
         logDebug('[sendMessage] Fetch aborted by user.')
-        
+
         break
       }
 
@@ -2595,9 +2685,17 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
         lastSummarizedIndex.value = summarizeUpTo - overlapMessages
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        summarizationSuccessCount.value++
+        summaryJustCompacted.value = false
         // Clear the loaded session flag after successful summarization
         if (shouldSummarizeDueToOverflow) {
           isLoadedSession.value = false
+        }
+        // Auto-compact summary if enabled and threshold reached
+        if (autoCompactSummaries.value && summarizationSuccessCount.value > 0 && summarizationSuccessCount.value % autoCompactFrequency.value === 0 && storySummary.value.length >= COMPACT_MIN_LENGTH && !isStopped.value) {
+          logDebug(`[callAI] Auto-compacting summary (after ${summarizationSuccessCount.value} summarizations)...`)
+          await performCompaction()
+          setRandomLoadingMessage()
         }
       } else {
         summarizationRetryPending.value = true
@@ -2805,9 +2903,17 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
         lastSummarizedIndex.value = summarizeUpTo - overlapMessages
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        summarizationSuccessCount.value++
+        summaryJustCompacted.value = false
         // Clear the loaded session flag after successful summarization
         if (shouldSummarizeDueToOverflow) {
           isLoadedSession.value = false
+        }
+        // Auto-compact summary if enabled and threshold reached
+        if (autoCompactSummaries.value && summarizationSuccessCount.value > 0 && summarizationSuccessCount.value % autoCompactFrequency.value === 0 && storySummary.value.length >= COMPACT_MIN_LENGTH && !isStopped.value) {
+          logDebug(`[callAIWithoutSearch] Auto-compacting summary (after ${summarizationSuccessCount.value} summarizations)...`)
+          await performCompaction()
+          setRandomLoadingMessage()
         }
       } else {
         summarizationRetryPending.value = true
@@ -3872,6 +3978,8 @@ const resetSession = () => {
     summarizationRetryPending.value = false
     summarizationAttemptCount.value = 0
     summarizationLastError.value = null
+    summarizationSuccessCount.value = 0
+    summaryJustCompacted.value = false
     isLoadedSession.value = false
     lastPrompt.value = ''
     market.live2d.isVisible = false
@@ -3931,6 +4039,57 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
     console.error('Failed to summarize chunk:', e)
     summarizationLastError.value = e instanceof Error ? e.message : String(e)
     return false
+  }
+}
+
+const performCompaction = async (): Promise<boolean> => {
+  if (!storySummary.value || storySummary.value.length < COMPACT_MIN_LENGTH) return false
+
+  loadingStatus.value = 'Compacting story summary...'
+
+  try {
+    const compacted = await compactSummaryImpl(storySummary.value, {
+      apiProvider: apiProvider.value,
+      apiKey: apiKey.value,
+      model: model.value,
+      localMaxTokens: localMaxTokens.value,
+      localUrl: localUrl.value,
+      prompts,
+      enableContextCaching: enableContextCaching.value,
+      signal: activeAbortController?.signal
+    })
+
+    if (compacted && compacted.trim().length > 0) {
+      storySummary.value = compacted
+      summaryJustCompacted.value = true
+      return true
+    }
+    return false
+  } catch (e) {
+    console.error('Failed to compact summary:', e)
+    return false
+  }
+}
+
+const handleCompactSummary = async () => {
+  if (isCompactSummaryDisabled.value) return
+
+  isLoading.value = true
+  activeAbortController = new AbortController()
+
+  try {
+    const ok = await performCompaction()
+    if (ok) {
+      loadingStatus.value = 'Summary compacted successfully.'
+    } else {
+      loadingStatus.value = 'Failed to compact summary.'
+    }
+  } finally {
+    isLoading.value = false
+    activeAbortController = null
+    setTimeout(() => {
+      loadingStatus.value = ''
+    }, 2000)
   }
 }
 </script>

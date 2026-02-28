@@ -64,5 +64,9 @@
     "system": "You are a specialized summarization assistant. Your task is to summarize the story events provided by the user. You must NOT continue the story, roleplay, or generate new dialogue. Output ONLY the summary text.",
     "user": "Summarize the following story events concisely, focusing on key plot points and character developments. Do not lose important details.\n\n[STORY_CONTENT]\n${textToSummarize}\n[/STORY_CONTENT]\n\nSummary:",
     "userContinuation": "Here is the existing summary of the story so far:\n\n[EXISTING_SUMMARY]\n${existingSummary}\n[/EXISTING_SUMMARY]\n\nNow summarize ONLY the following NEW story events that occurred after the above summary. Focus on key plot points and character developments. Do not repeat information already covered in the existing summary. Do not lose important details.\n\n[STORY_CONTENT]\n${textToSummarize}\n[/STORY_CONTENT]\n\nSummary of ONLY the new events:"
+  },
+  "compactSummary": {
+    "system": "You are a specialized summarization assistant. Your task is to condense an existing story summary into a shorter, more compact version. You must NOT continue the story, roleplay, or generate new dialogue. Output ONLY the condensed summary text.",
+    "user": "The following is an accumulated summary of a story so far. It has grown large over multiple summarization passes. Condense it into a shorter, more compact summary that preserves all KEY plot points, character developments, important relationships, and significant events, but removes redundancy, excessive detail, and minor events.\n\nMaintain chronological order and ensure no critical story beats are lost.\n\n[FULL_SUMMARY]\n${fullSummary}\n[/FULL_SUMMARY]\n\nCompact summary:"
   }
 }
