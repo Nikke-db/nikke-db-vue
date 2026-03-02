@@ -2608,9 +2608,15 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       }
     }
 
-    if (foundNames.length > 0 && !isStopped.value) {
-      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
-      await wrappedSearchForCharacters(foundNames)
+    // Colon variants (e.g., "Anis: Sparkling Summer") are mutually exclusive with their
+    // base characters. If a variant is matched, drop the base name to avoid injecting both
+    // profiles into the system prompt and confusing the AI about which character to use.
+    const matchedVariantBases = new Set(foundNames.filter((n) => n.includes(':')).map((n) => n.split(':')[0].trim()))
+    const deduplicatedNames = foundNames.filter((name) => !(name.includes(':') === false && matchedVariantBases.has(name)))
+
+    if (deduplicatedNames.length > 0 && !isStopped.value) {
+      logDebug('[callAI] Pre-loading local profiles for:', deduplicatedNames)
+      await wrappedSearchForCharacters(deduplicatedNames)
     }
   }
 
@@ -2972,11 +2978,12 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
     }
 
     if (parsed.type === 'variant') {
-      // It's a colon variant (e.g., "Rapi: Red Hood") - get base from variant name
+      // Colon variants (e.g., "Anis: Sparkling Summer") are distinct, mutually exclusive
+      // characters with their own profiles. Only skip search if the variant itself is already
+      // loaded in the reactive profiles - NOT if the base character is known.
       const variantName = characterCatalog.idToName[parsed.variantId]
-      if (variantName && variantName.includes(':')) {
-        const baseName = variantName.split(':')[0].trim()
-        return !!(knownBaseNames.has(baseName.toLowerCase()) || baseName.toLowerCase() === 'commander')
+      if (variantName) {
+        return !!Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === variantName.toLowerCase())
       }
     }
 
@@ -3590,7 +3597,8 @@ const executeAction = async (data: any) => {
           cleanedProfile.id = char.id
         }
 
-        // Lookup color from local profiles even if full profile isn't used
+        // Lookup color from local profiles even if full profile isn't used.
+        // Variant color takes priority over base character color.
         const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         const localProfile = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
@@ -3598,15 +3606,6 @@ const executeAction = async (data: any) => {
         const colorSource = variantProfile || localProfile
         if (colorSource?.color) {
           cleanedProfile.color = colorSource.color
-        }
-
-        // Lookup color from local profiles even if full profile isn't used
-        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        if (localKey) {
-          const localProfile = (localCharacterProfiles as any)[localKey]
-          if (localProfile?.color) {
-            cleanedProfile.color = localProfile.color
-          }
         }
 
         newProfiles[charName] = cleanedProfile
