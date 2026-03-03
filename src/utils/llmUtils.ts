@@ -1184,7 +1184,7 @@ export const callGemini = async (messages: any[], opts: { model: string; apiKey:
             level = 'LOW'
         }
       } else {
-        // Pro supports LOW, HIGH
+        // Pro 3.1 supports LOW, MEDIUM, HIGH
         switch (reasoningEffort) {
           case 'minimal':
             level = 'LOW'
@@ -1193,8 +1193,8 @@ export const callGemini = async (messages: any[], opts: { model: string; apiKey:
             level = 'LOW'
             break
           case 'medium':
-            level = 'HIGH'
-            break // Map medium to high for Pro
+            level = 'MEDIUM'
+            break
           case 'high':
             level = 'HIGH'
             break
