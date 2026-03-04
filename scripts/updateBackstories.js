@@ -39,8 +39,12 @@ const args = process.argv.slice(2)
 const SKIP_EXISTING = !args.includes('--no-skip-existing') // Default: true (skip existing)
 
 // Mode and paths
-let MODE = 'base' // 'base', 'variants', or 'visual'
+let MODE = 'base' // 'base', 'variants', 'visual', or 'create'
 let PROFILES_PATH = PROFILES_BASE_PATH
+
+// Create mode state
+let CREATE_CHAR_NAME = null
+let CREATE_PROFILES_PATH = null
 
 // API Provider selection
 let API_PROVIDER = null
@@ -148,6 +152,11 @@ function getWikiPageName(characterName) {
     if (mapped) return mapped
     // For variants, convert "Name: Variant" to "Name:_Variant" format (keep the colon)
     return characterName.replace(': ', ':_')
+  }
+  if (MODE === 'create') {
+    // For create mode, replace spaces with underscores (preserving colons for variant names)
+    // e.g. "Eunhwa: Tactical Upgrade" -> "Eunhwa:_Tactical_Upgrade"
+    return characterName.replace(/: /g, ':_').replace(/ /g, '_')
   }
   return characterName
 }
@@ -281,11 +290,12 @@ function shouldSkipCharacter(profile) {
 }
 
 // Call Gemini API to extract data
-async function extractDataGemini(characterName, wikiContent, imageUrl = null) {
+async function extractDataGemini(characterName, wikiContent, imageUrl = null, modeOverride = null) {
+  const effectiveMode = modeOverride || MODE
   let prompt
   let parts
 
-  if (MODE === 'visual' && imageUrl) {
+  if (effectiveMode === 'visual' && imageUrl) {
     // Visual mode: download image and use base64 inline data
     console.log(`  Downloading image...`)
     const base64Image = await fetchImageAsBase64(imageUrl)
@@ -309,7 +319,7 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null) {
     ]
   } else {
     // Text mode: use appropriate prompt
-    const promptTemplate = MODE === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    const promptTemplate = effectiveMode === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
     prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
     parts = [{ text: prompt }]
   }
@@ -370,7 +380,7 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null) {
       throw new Error('No content in API response parts')
     }
 
-    return parseApiResponse(text, characterName)
+    return parseApiResponse(text, characterName, modeOverride)
   } catch (e) {
     console.error(`  Error extracting data for ${characterName}:`, e.message)
     return null
@@ -378,11 +388,12 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null) {
 }
 
 // Call OpenRouter API to extract data
-async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null) {
+async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null, modeOverride = null) {
+  const effectiveMode = modeOverride || MODE
   let prompt
   let content
 
-  if (MODE === 'visual' && imageUrl) {
+  if (effectiveMode === 'visual' && imageUrl) {
     // Visual mode: use vision capabilities
     prompt = VISUAL_PROMPT
     content = [
@@ -399,7 +410,7 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
     ]
   } else {
     // Text mode: use appropriate prompt
-    const promptTemplate = MODE === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    const promptTemplate = effectiveMode === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
     prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
     content = prompt
   }
@@ -441,7 +452,7 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
       throw new Error('No content in API response')
     }
 
-    return parseApiResponse(text, characterName)
+    return parseApiResponse(text, characterName, modeOverride)
   } catch (e) {
     console.error(`  Error extracting data for ${characterName}:`, e.message)
     return null
@@ -449,7 +460,8 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
 }
 
 // Parse API response and extract fields
-function parseApiResponse(text, characterName) {
+function parseApiResponse(text, characterName, modeOverride = null) {
+  const effectiveMode = modeOverride || MODE
   // Extract JSON from response
   let jsonStr = text.replace(/```json\n?|\n?```/g, '').trim()
   const start = jsonStr.indexOf('{')
@@ -462,13 +474,13 @@ function parseApiResponse(text, characterName) {
   try {
     const result = JSON.parse(jsonStr)
 
-    if (MODE === 'base') {
+    if (effectiveMode === 'base') {
       // Base mode: only return backstory
       if (result.backstory && result.backstory !== 'Failed to extract backstory') {
         return { backstory: result.backstory }
       }
-    } else if (MODE === 'variants') {
-      // Variants mode: return all fields
+    } else if (effectiveMode === 'variants' || effectiveMode === 'create') {
+      // Variants/create mode: return all fields
       const data = {}
 
       if (result.personality && result.personality.trim() !== '' && result.personality !== 'Failed to extract personality') {
@@ -487,7 +499,7 @@ function parseApiResponse(text, characterName) {
       if (Object.keys(data).length > 0) {
         return data
       }
-    } else if (MODE === 'visual') {
+    } else if (effectiveMode === 'visual') {
       // Visual mode: return appearance, defaultSkin, defaultWeapon
       const data = {}
 
@@ -510,7 +522,7 @@ function parseApiResponse(text, characterName) {
   } catch (parseError) {
     console.log(`  JSON parse failed, trying regex extraction...`)
 
-    if (MODE === 'base') {
+    if (effectiveMode === 'base') {
       // Try to extract backstory with regex
       const backstoryMatch = jsonStr.match(/"backstory"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
       if (backstoryMatch) {
@@ -520,8 +532,8 @@ function parseApiResponse(text, characterName) {
           return { backstory: extracted }
         }
       }
-    } else if (MODE === 'variants') {
-      // Variants mode: try to extract all fields with regex
+    } else if (effectiveMode === 'variants' || effectiveMode === 'create') {
+      // Variants/create mode: try to extract all fields with regex
       const data = {}
 
       const personalityMatch = jsonStr.match(/"personality"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
@@ -554,7 +566,7 @@ function parseApiResponse(text, characterName) {
         console.log(`  ✓ Extracted data using regex fallback`)
         return data
       }
-    } else if (MODE === 'visual') {
+    } else if (effectiveMode === 'visual') {
       // Visual mode: try to extract appearance, defaultSkin, defaultWeapon with regex
       const data = {}
 
@@ -595,9 +607,10 @@ async function selectMode() {
   console.log('1) Base characters - backstory only (characterProfiles.json)')
   console.log('2) Variant characters - full profile (characterProfilesVariants.json)')
   console.log('3) Visual analysis - appearance, clothing, weapon (both files)')
+  console.log('4) Create new character entry - all fields for a single character')
 
   const answer = await new Promise((resolve) => {
-    rl.question('\nEnter choice (1, 2, or 3): ', (input) => {
+    rl.question('\nEnter choice (1, 2, 3, or 4): ', (input) => {
       resolve(input.trim())
     })
   })
@@ -612,10 +625,55 @@ async function selectMode() {
     MODE = 'visual'
     PROFILES_PATH = PROFILES_BASE_PATH // Visual mode processes both files
     console.log('Selected: Visual analysis\n')
+  } else if (answer === '4') {
+    MODE = 'create'
+    console.log('Selected: Create new character entry\n')
   } else {
     MODE = 'base'
     PROFILES_PATH = PROFILES_BASE_PATH
     console.log('Selected: Base characters\n')
+  }
+}
+
+// Prompt for new character name and target file (create mode only)
+async function selectNewCharacter() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  const charName = await new Promise((resolve) => {
+    rl.question('Enter the character name to create (e.g. "Eunhwa: Tactical Upgrade"): ', (input) => {
+      resolve(input.trim())
+    })
+  })
+
+  if (!charName) {
+    rl.close()
+    console.error('Error: No character name provided.')
+    process.exit(1)
+  }
+
+  console.log('')
+  console.log('Which file should this entry be saved to?')
+  console.log('1) characterProfiles.json (base characters)')
+  console.log('2) characterProfilesVariants.json (variant characters)')
+
+  const fileChoice = await new Promise((resolve) => {
+    rl.question('\nEnter choice (1 or 2): ', (input) => {
+      resolve(input.trim())
+    })
+  })
+
+  rl.close()
+
+  CREATE_CHAR_NAME = charName
+  if (fileChoice === '2') {
+    CREATE_PROFILES_PATH = PROFILES_VARIANTS_PATH
+    console.log(`\nWill create "${charName}" in characterProfilesVariants.json\n`)
+  } else {
+    CREATE_PROFILES_PATH = PROFILES_BASE_PATH
+    console.log(`\nWill create "${charName}" in characterProfiles.json\n`)
   }
 }
 
@@ -664,11 +722,11 @@ async function selectProvider() {
 }
 
 // Route to appropriate extraction function
-async function extractData(characterName, wikiContent, imageUrl = null) {
+async function extractData(characterName, wikiContent, imageUrl = null, modeOverride = null) {
   if (API_PROVIDER === 'openrouter') {
-    return extractDataOpenRouter(characterName, wikiContent, imageUrl)
+    return extractDataOpenRouter(characterName, wikiContent, imageUrl, modeOverride)
   }
-  return extractDataGemini(characterName, wikiContent, imageUrl)
+  return extractDataGemini(characterName, wikiContent, imageUrl, modeOverride)
 }
 
 // Apply extracted data to profile
@@ -719,6 +777,121 @@ function applyData(profile, data) {
   }
 
   return updated
+}
+
+async function createNewEntry() {
+  const charName = CREATE_CHAR_NAME
+  const filePath = CREATE_PROFILES_PATH
+  const fileLabel = filePath === PROFILES_BASE_PATH ? 'characterProfiles.json' : 'characterProfilesVariants.json'
+
+  console.log(`\nCreating new entry for: ${charName}`)
+  console.log(`Target file: ${fileLabel}`)
+  console.log('-'.repeat(60))
+
+  // Load profiles file
+  let profiles
+  try {
+    const data = fs.readFileSync(filePath, 'utf8')
+    profiles = JSON.parse(data)
+  } catch (e) {
+    console.error(`Error loading ${fileLabel}:`, e.message)
+    return
+  }
+
+  // Check for duplicate
+  if (charName in profiles) {
+    console.warn(`\nWarning: "${charName}" already exists in ${fileLabel}.`)
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+
+    const answer = await new Promise((resolve) => {
+      rl.question('Overwrite the existing entry? (y/N): ', (input) => {
+        resolve(input.trim().toLowerCase())
+      })
+    })
+
+    rl.close()
+
+    if (answer !== 'y' && answer !== 'yes') {
+      console.log('Aborted. No changes made.')
+      return
+    }
+
+    console.log('Proceeding to overwrite...\n')
+  }
+
+  // --- Text pass (variants prompt: personality, speech_style, backstory, relationships) ---
+  console.log(`  Fetching wiki content...`)
+  const wikiContent = await fetchWikiContent(charName)
+
+  let textData = null
+  if (!wikiContent) {
+    console.log(`  ✗ No wiki content found. Text fields will be empty.`)
+  } else {
+    console.log(`  Wiki content: ${wikiContent.length} chars`)
+    console.log(`  Extracting personality, speech_style, backstory, relationships with ${API_PROVIDER}...`)
+    textData = await extractData(charName, wikiContent, null, 'variants')
+    if (textData) {
+      const fields = Object.keys(textData).join(', ')
+      console.log(`  ✓ Text data extracted (${fields})`)
+    } else {
+      console.log(`  ✗ Text extraction failed. Text fields will be empty.`)
+    }
+  }
+
+  // --- Visual pass (appearance, defaultSkin, defaultWeapon) ---
+  console.log(`  Fetching image URL...`)
+  const imageUrl = await fetchImageUrl(charName)
+
+  let visualData = null
+  if (!imageUrl) {
+    console.log(`  ✗ No image URL found. Visual fields will be empty.`)
+  } else {
+    console.log(`  Image URL: ${imageUrl}`)
+    console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${API_PROVIDER}...`)
+    visualData = await extractData(charName, null, imageUrl, 'visual')
+    if (visualData) {
+      const fields = Object.keys(visualData).join(', ')
+      console.log(`  ✓ Visual data extracted (${fields})`)
+    } else {
+      console.log(`  ✗ Visual extraction failed. Visual fields will be empty.`)
+    }
+  }
+
+  // --- Build new profile entry ---
+  const newProfile = {
+    appearance: visualData?.appearance || '',
+    defaultSkin: visualData?.defaultSkin || '',
+    defaultWeapon: visualData?.defaultWeapon || '',
+    personality: textData?.personality || '',
+    speech_style: textData?.speech_style || '',
+    backstory: textData?.backstory || '',
+    relationships: textData?.relationships || {}
+  }
+
+  // Preserve any existing non-extracted fields (e.g. id, color) if overwriting
+  if (charName in profiles) {
+    const existing = profiles[charName]
+    if (existing.id) newProfile.id = existing.id
+    if (existing.color) newProfile.color = existing.color
+  }
+
+  profiles[charName] = newProfile
+
+  // Save
+  fs.writeFileSync(filePath, JSON.stringify(profiles, null, 2))
+  console.log(`\n  ✓ Entry saved to ${fileLabel}`)
+  console.log('')
+  console.log('='.repeat(60))
+  console.log(`Created: ${charName}`)
+  Object.entries(newProfile).forEach(([k, v]) => {
+    const display = typeof v === 'object' ? JSON.stringify(v) : v
+    console.log(`  ${k}: ${display ? display.substring(0, 80) : '(empty)'}${display && display.length > 80 ? '...' : ''}`)
+  })
+  console.log('='.repeat(60))
 }
 
 async function processProfilesFile(filePath, fileLabel) {
@@ -860,6 +1033,12 @@ async function processProfilesFile(filePath, fileLabel) {
 
 async function main() {
   await selectMode()
+
+  // Create mode: gather character name and target file before selecting provider
+  if (MODE === 'create') {
+    await selectNewCharacter()
+  }
+
   await selectProvider()
 
   console.log('='.repeat(60))
@@ -871,15 +1050,25 @@ async function main() {
     modeLabel = 'Base Characters'
   } else if (MODE === 'visual') {
     modeLabel = 'Visual Analysis'
+  } else if (MODE === 'create') {
+    modeLabel = `Create New Entry: ${CREATE_CHAR_NAME}`
   } else {
     modeLabel = 'Variant Characters'
   }
 
   console.log(`Mode: ${modeLabel}`)
   console.log(`Provider: ${API_PROVIDER}`)
-  console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
-  console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)
+  if (MODE !== 'create') {
+    console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
+    console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)
+  }
   console.log('')
+
+  if (MODE === 'create') {
+    // Create mode: single character, all fields
+    await createNewEntry()
+    return
+  }
 
   let totalStats = { successCount: 0, failCount: 0, skippedCount: 0, total: 0 }
 

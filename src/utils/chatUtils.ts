@@ -15,7 +15,8 @@ export const getEffectiveCharacterProfiles = (base: Record<string, any>, progres
 
     if (outProfile && typeof outProfile === 'object' && !Array.isArray(outProfile) && update && typeof update === 'object') {
       if ((update as any).personality) {
-        ;(outProfile as any).personality = (update as any).personality
+        // Store progression as a separate field so the AI always sees the original personality alongside the evolution.
+        ;(outProfile as any).characterProgression = (update as any).personality
       }
 
       if ((update as any).relationships && typeof (update as any).relationships === 'object') {

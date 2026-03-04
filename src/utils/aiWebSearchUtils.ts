@@ -268,14 +268,14 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   if (charsToSearch.length === 0) {
     logDebug('[searchForCharacters] All characters found locally.')
     setRandomLoadingMessage()
-    return false // No web search needed
+    return false
   }
 
   // If fallback is disabled, stop here
   if (useLocalProfiles && !allowWebSearchFallback) {
     logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
     setRandomLoadingMessage()
-    return false // No web search performed
+    return false 
   }
 
   loadingStatus.value = 'Searching the web for characters...'
@@ -283,33 +283,29 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   // For Gemini, use native search
   if (apiProvider === 'gemini') {
     await searchForCharactersWithNativeSearch(charsToSearch)
-    return true // Web search was performed
+    return true
   }
 
   // For OpenRouter, check if model has native search
   if (apiProvider === 'openrouter') {
     if (hasNativeSearch(model)) {
-      // Use native web search for OpenAI, Anthropic, Perplexity, xAI models
       await searchForCharactersWithNativeSearch(charsToSearch)
     } else {
-      // For models without native search (e.g., Claude via OpenRouter, DeepSeek, etc.)
-      // Fetch wiki pages directly and have the model summarize
+      // For models without native search, fetch wiki pages directly and have the model summarize
       await searchForCharactersViaWikiFetch(charsToSearch)
     }
-    return true // Web search was performed
+    return true
   }
 
-  // For Pollinations, check if model has native search
+  // Same thing for Pollinations
   if (apiProvider === 'pollinations') {
     if (POLLINATIONS_NATIVE_SEARCH_MODELS.includes(model)) {
-      // Use native web search for these models
       await searchForCharactersWithNativeSearch(charsToSearch)
     } else {
-      // For models without native search, fetch wiki pages directly
       await searchForCharactersViaWikiFetch(charsToSearch)
     }
-    return true // Web search was performed
+    return true
   }
 
-  return false // No web search performed
+  return false
 }

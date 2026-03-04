@@ -86,23 +86,41 @@
       </div>
 
       <div class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
-        <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-          <template #icon
-            ><n-icon><Save /></n-icon
-          ></template>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon
+                ><n-icon><Save /></n-icon
+              ></template>
+            </n-button>
+          </template>
           Save
-        </n-button>
-        <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-          <template #icon
-            ><n-icon><Upload /></n-icon
-          ></template>
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button type="warning" size="small" @click="triggerRestore" :disabled="isLoading" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon
+                ><n-icon><Upload /></n-icon
+              ></template>
+            </n-button>
+          </template>
           Load
-        </n-button>
-        <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-          <template #icon
-            ><n-icon><Reset /></n-icon
-          ></template>
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button type="error" size="small" @click="resetSession" :disabled="isLoading || chatHistory.length === 0" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon
+                ><n-icon><Reset /></n-icon
+              ></template>
+            </n-button>
+          </template>
           Reset
+        </n-tooltip>
+        <n-button type="info" size="small" @click="handleCompactSummary" :disabled="isCompactSummaryDisabled" :style="{ opacity: isCompactSummaryDisabled ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+          <template #icon
+            ><n-icon><TextScale /></n-icon
+          ></template>
+          Compaction
         </n-button>
         <div class="story-character-inline">
           <div class="story-character-inline-header">
@@ -142,6 +160,9 @@
             <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
             <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
             <n-checkbox v-if="mode !== 'story'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
+            <n-checkbox v-model:checked="incorrectSpeakerLabelingToggle">Incorrect Speaker Labeling</n-checkbox>
+            <n-checkbox v-model:checked="narrationAsDialogueToggle">Narration presented as dialogue</n-checkbox>
+            <n-checkbox v-model:checked="wrongCharacterOnScreenToggle">Wrong character on screen</n-checkbox>
           </div>
         </n-popover>
       </div>
@@ -310,6 +331,28 @@
               </n-popover>
             </template>
             <n-switch v-model:value="enableContextCaching" />
+          </n-form-item>
+
+          <n-form-item v-if="tokenUsage !== 'goddess'">
+            <template #label>
+              Automatically Compact Summaries
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  When enabled, the story summary is automatically compacted after a set number of summarizations to prevent it from growing too large and consuming tokens.<br /><br />
+                  You can also compact manually using the button in the chat area.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="autoCompactSummaries" />
+          </n-form-item>
+
+          <n-form-item v-if="autoCompactSummaries && tokenUsage !== 'goddess'" label="Compact every N summarizations">
+            <n-select v-model:value="autoCompactFrequency" :options="compactFrequencyOptions" />
           </n-form-item>
           <n-divider />
 
@@ -561,10 +604,10 @@
           <h3>🆕 What's New?</h3>
           <div class="guide-section">
             <ul>
-              <li>Characters menu that includes variants and skins</li>
-              <li>Updated internal DB with backstories and appearances of characters</li>
-              <li>Improved compatibility with certain Pollinations models</li>
-              <li>Other bug fixes and under-the-hood improvements</li>
+              <li>Added support for Gemini 3.1 Pro and Gemini 3.1 Flash-Lite</li>
+              <li>Added ability to compact story summmaries</li>
+              <li>More options in the Problems? button</li>
+              <li>Several under-the-hood fixes and improvements</li>
             </ul>
           </div>
         </div>
@@ -677,7 +720,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight, TextScale } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox, NTag } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -689,10 +732,10 @@ import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, fo
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
-import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectedCharacterId, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 const market = useMarket()
 
@@ -757,6 +800,7 @@ const isLoading = ref(false)
 const isGenerating = ref(false)
 const loadingStatus = ref('')
 const isStopped = ref(false)
+let activeAbortController: AbortController | null = null
 const waitingForNext = ref(false)
 const showRetry = ref(false)
 const lastPrompt = ref('')
@@ -765,6 +809,17 @@ const lastSummarizedIndex = ref(0)
 const summarizationRetryPending = ref(false)
 const summarizationAttemptCount = ref(0)
 const summarizationLastError = ref<string | null>(null)
+const summarizationSuccessCount = ref(0)
+const summaryJustCompacted = ref(false)
+const autoCompactSummaries = ref(true)
+const autoCompactFrequency = ref(4)
+const COMPACT_MIN_LENGTH = 1500
+const compactFrequencyOptions = [
+  { label: '3', value: 3 },
+  { label: '4 (Default)', value: 4 },
+  { label: '5', value: 5 },
+  { label: '10', value: 10 }
+]
 const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
@@ -775,6 +830,10 @@ const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: st
 const pendingGameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
 const choicesAwaitingReveal = ref(false)
 const animationCache = ref<Record<string, string[]>>({})
+
+// Number of conversational turns (user msg + following assistant/system msgs) to keep as
+// overlap after summarization so the model retains immediate context.
+const OVERLAP_TURNS = 3
 
 // Story/Roleplay character roster
 const characterCatalog = buildCharacterCatalog()
@@ -973,6 +1032,9 @@ const narrationAndDialogueNotSplitToggle = ref(false)
 const wrongSpeechStylesToggle = ref(false)
 const incorrectAnimationsToggle = ref(false)
 const incorrectAnimationsPersist = ref(false)
+const incorrectSpeakerLabelingToggle = ref(false)
+const narrationAsDialogueToggle = ref(false)
+const wrongCharacterOnScreenToggle = ref(false)
 
 watch(invalidJsonPersist, (val) => {
   if (val) {
@@ -1017,8 +1079,9 @@ const modelOptions = computed(() => {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
+      { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite-preview' },
       { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
-      { label: 'Gemini 3 Pro', value: 'gemini-3-pro-preview' }
+      { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro-preview' }
     ]
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
@@ -1036,6 +1099,10 @@ const computedUsesWikiFetch = computed(() => usesWikiFetch(apiProvider.value, mo
 const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAutoFallback(apiProvider.value, model.value))
 
 const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
+
+const isCompactSummaryDisabled = computed(() => {
+  return isLoading.value || tokenUsage.value === 'goddess' || summaryJustCompacted.value || storySummary.value.length < COMPACT_MIN_LENGTH || (summarizationSuccessCount.value === 0 && !storySummary.value)
+})
 
 const assetQuality = computed({
   get: () => (market.live2d.HQassets ? 'high' : 'low'),
@@ -1248,6 +1315,14 @@ watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
 })
 
+watch(autoCompactSummaries, (newVal) => {
+  localStorage.setItem('nikke_auto_compact_summaries', String(newVal))
+})
+
+watch(autoCompactFrequency, (newVal) => {
+  localStorage.setItem('nikke_auto_compact_frequency', String(newVal))
+})
+
 watch(model, (newVal) => {
   if (newVal) localStorage.setItem('nikke_model', newVal)
 })
@@ -1372,6 +1447,15 @@ const initializeSettings = async () => {
 
   const savedContextCaching = localStorage.getItem('nikke_enable_context_caching')
   if (savedContextCaching !== null) enableContextCaching.value = savedContextCaching === 'true'
+
+  const savedAutoCompact = localStorage.getItem('nikke_auto_compact_summaries')
+  if (savedAutoCompact !== null) autoCompactSummaries.value = savedAutoCompact !== 'false'
+
+  const savedAutoCompactFreq = localStorage.getItem('nikke_auto_compact_frequency')
+  if (savedAutoCompactFreq !== null) {
+    const parsed = Number(savedAutoCompactFreq)
+    if ([3, 4, 5, 10].includes(parsed)) autoCompactFrequency.value = parsed
+  }
 
   const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
   enableAnimationReplay.value = savedAnimationReplay !== 'false'
@@ -1780,7 +1864,7 @@ const saveSession = () => {
     const content = msg.content
 
     if (content === 'Session restored successfully.') return true
-    if (content.startsWith("Warning: Saved model '") && content.endsWith('Using default.')) return true
+    if (content.startsWith('Warning: Saved model \'') && content.endsWith('Using default.')) return true
 
     return false
   }
@@ -1808,6 +1892,8 @@ const saveSession = () => {
     characterProgression: characterProgression.value,
     storySummary: storySummary.value,
     lastSummarizedIndex: lastSummarizedIndex.value,
+    summarizationSuccessCount: summarizationSuccessCount.value,
+    summaryJustCompacted: summaryJustCompacted.value,
     mode: mode.value,
     timestamp: new Date().toISOString(),
     rosterRows: rosterRows.value,
@@ -1825,7 +1911,9 @@ const saveSession = () => {
       enableContextCaching: enableContextCaching.value,
       useLocalProfiles: useLocalProfiles.value,
       allowWebSearchFallback: allowWebSearchFallback.value,
-      reasoningEffort: reasoningEffort.value
+      reasoningEffort: reasoningEffort.value,
+      autoCompactSummaries: autoCompactSummaries.value,
+      autoCompactFrequency: autoCompactFrequency.value
     }
   }
 
@@ -1899,6 +1987,12 @@ const handleFileUpload = (event: Event) => {
         if (data.lastSummarizedIndex !== undefined) {
           lastSummarizedIndex.value = data.lastSummarizedIndex
         }
+        if (typeof data.summarizationSuccessCount === 'number') {
+          summarizationSuccessCount.value = data.summarizationSuccessCount
+        }
+        if (typeof data.summaryJustCompacted === 'boolean') {
+          summaryJustCompacted.value = data.summaryJustCompacted
+        }
         if (data.mode) {
           mode.value = data.mode
         }
@@ -1952,6 +2046,14 @@ const handleFileUpload = (event: Event) => {
 
           if (data.settings.reasoningEffort) {
             reasoningEffort.value = data.settings.reasoningEffort
+          }
+
+          if (typeof data.settings.autoCompactSummaries === 'boolean') {
+            autoCompactSummaries.value = data.settings.autoCompactSummaries
+          }
+
+          if (typeof data.settings.autoCompactFrequency === 'number' && [3, 4, 5, 10].includes(data.settings.autoCompactFrequency)) {
+            autoCompactFrequency.value = data.settings.autoCompactFrequency
           }
 
           // Restore Provider and Model
@@ -2083,6 +2185,7 @@ const sendMessage = async () => {
   isGenerating.value = true
   setRandomLoadingMessage()
   isStopped.value = false
+  activeAbortController = new AbortController()
   showRetry.value = false
   lastPrompt.value = text
 
@@ -2100,6 +2203,13 @@ const sendMessage = async () => {
         success = true
       }
     } catch (error: any) {
+      // Silently swallow AbortError — the user pressed Stop
+      if (error.name === 'AbortError') {
+        logDebug('[sendMessage] Fetch aborted by user.')
+
+        break
+      }
+
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
 
@@ -2117,7 +2227,7 @@ const sendMessage = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2155,6 +2265,7 @@ const retryLastMessage = async () => {
   isGenerating.value = true
   setRandomLoadingMessage()
   isStopped.value = false
+  activeAbortController = new AbortController()
   showRetry.value = false
 
   let attempts = 0
@@ -2171,6 +2282,12 @@ const retryLastMessage = async () => {
         success = true
       }
     } catch (error: any) {
+      // Silently swallow AbortError — the user pressed Stop
+      if (error.name === 'AbortError') {
+        logDebug('[retryLastMessage] Fetch aborted by user.')
+        break
+      }
+
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
 
@@ -2188,7 +2305,7 @@ const retryLastMessage = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2232,6 +2349,12 @@ const stopGeneration = () => {
   nikkeOverlayVisible.value = false
   selectedMessageIndex.value = null
 
+  // Abort any in-flight HTTP requests
+  if (activeAbortController) {
+    activeAbortController.abort()
+    activeAbortController = null
+  }
+
   if (isTyping.value) {
     stopTypewriter()
   }
@@ -2272,6 +2395,7 @@ const continueStory = async () => {
   setRandomLoadingMessage()
 
   isStopped.value = false
+  activeAbortController = new AbortController()
   showRetry.value = false
   lastPrompt.value = text
 
@@ -2290,6 +2414,12 @@ const continueStory = async () => {
         success = true
       }
     } catch (error: any) {
+      // Silently swallow AbortError — the user pressed Stop
+      if (error.name === 'AbortError') {
+        logDebug('[continueStory] Fetch aborted by user.')
+        break
+      }
+
       if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
         console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
 
@@ -2305,7 +2435,7 @@ const continueStory = async () => {
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
       } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
       }
       chatHistory.value.push({ role: 'system', content: errorMessage })
 
@@ -2361,6 +2491,18 @@ const getUserReminders = (): string => {
   if (incorrectAnimationsToggle.value) {
     reminders += '\n\n' + prompts.reminders.incorrectAnimationsReminder
     if (!incorrectAnimationsPersist.value) incorrectAnimationsToggle.value = false
+  }
+  if (incorrectSpeakerLabelingToggle.value) {
+    reminders += '\n\n' + prompts.reminders.incorrectSpeakerLabeling
+    incorrectSpeakerLabelingToggle.value = false
+  }
+  if (narrationAsDialogueToggle.value) {
+    reminders += '\n\n' + prompts.reminders.narrationAsDialogue
+    narrationAsDialogueToggle.value = false
+  }
+  if (wrongCharacterOnScreenToggle.value) {
+    reminders += '\n\n' + prompts.reminders.wrongCharacterOnScreen
+    wrongCharacterOnScreenToggle.value = false
   }
 
   return reminders
@@ -2467,9 +2609,15 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       }
     }
 
-    if (foundNames.length > 0) {
-      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
-      await wrappedSearchForCharacters(foundNames)
+    // Colon variants (e.g., "Anis: Sparkling Summer") are mutually exclusive with their
+    // base characters. If a variant is matched, drop the base name to avoid injecting both
+    // profiles into the system prompt and confusing the AI about which character to use.
+    const matchedVariantBases = new Set(foundNames.filter((n) => n.includes(':')).map((n) => n.split(':')[0].trim()))
+    const deduplicatedNames = foundNames.filter((name) => !(name.includes(':') === false && matchedVariantBases.has(name)))
+
+    if (deduplicatedNames.length > 0 && !isStopped.value) {
+      logDebug('[callAI] Pre-loading local profiles for:', deduplicatedNames)
+      await wrappedSearchForCharacters(deduplicatedNames)
     }
   }
 
@@ -2523,7 +2671,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
     // If summarization previously failed, retry on next user prompt/retry.
     // Also trigger if we have overflow from a loaded session.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+    if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !isStopped.value) {
       // Calculate where to summarize up to
       // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
       let summarizeUpTo = endIndex
@@ -2538,12 +2686,23 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = summarizeUpTo
+        // Keep the last OVERLAP_TURNS turns before the summary boundary as overlap
+        // so the model retains immediate conversational context (e.g. recent questions/answers)
+        const overlapMessages = getOverlapMessageCount(summarizeUpTo)
+        lastSummarizedIndex.value = summarizeUpTo - overlapMessages
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        summarizationSuccessCount.value++
+        summaryJustCompacted.value = false
         // Clear the loaded session flag after successful summarization
         if (shouldSummarizeDueToOverflow) {
           isLoadedSession.value = false
+        }
+        // Auto-compact summary if enabled and threshold reached
+        if (autoCompactSummaries.value && summarizationSuccessCount.value > 0 && summarizationSuccessCount.value % autoCompactFrequency.value === 0 && storySummary.value.length >= COMPACT_MIN_LENGTH && !isStopped.value) {
+          logDebug(`[callAI] Auto-compacting summary (after ${summarizationSuccessCount.value} summarizations)...`)
+          await performCompaction()
+          setRandomLoadingMessage()
         }
       } else {
         summarizationRetryPending.value = true
@@ -2655,9 +2814,11 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   // Check if the model needs to search for new characters
+  if (isStopped.value) return response
+
   const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
 
-  if (searchRequest && searchRequest.length > 0) {
+  if (searchRequest && searchRequest.length > 0 && !isStopped.value) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
     // Perform search for unknown characters
     const webSearchPerformed = await wrappedSearchForCharacters(searchRequest)
@@ -2665,7 +2826,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
     // Only regenerate if web search was actually performed
     // If all characters were found locally, the original response is still valid
-    if (webSearchPerformed) {
+    if (webSearchPerformed && !isStopped.value) {
       logDebug('[callAI] Web search was performed, regenerating response...')
       return await callAIWithoutSearch(isRetry)
     } else {
@@ -2728,7 +2889,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
     // If summarization previously failed, retry on next user prompt/retry.
     // Also trigger if we have overflow from a loaded session.
-    if (shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) {
+    if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !isStopped.value) {
       // Calculate where to summarize up to
       // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
       let summarizeUpTo = endIndex
@@ -2743,12 +2904,23 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
       setRandomLoadingMessage()
 
       if (ok) {
-        lastSummarizedIndex.value = summarizeUpTo
+        // Keep the last OVERLAP_TURNS turns before the summary boundary as overlap
+        // so the model retains immediate conversational context (e.g. recent questions/answers)
+        const overlapMessages = getOverlapMessageCount(summarizeUpTo)
+        lastSummarizedIndex.value = summarizeUpTo - overlapMessages
         summarizationRetryPending.value = false
         summarizationAttemptCount.value = 0
+        summarizationSuccessCount.value++
+        summaryJustCompacted.value = false
         // Clear the loaded session flag after successful summarization
         if (shouldSummarizeDueToOverflow) {
           isLoadedSession.value = false
+        }
+        // Auto-compact summary if enabled and threshold reached
+        if (autoCompactSummaries.value && summarizationSuccessCount.value > 0 && summarizationSuccessCount.value % autoCompactFrequency.value === 0 && storySummary.value.length >= COMPACT_MIN_LENGTH && !isStopped.value) {
+          logDebug(`[callAIWithoutSearch] Auto-compacting summary (after ${summarizationSuccessCount.value} summarizations)...`)
+          await performCompaction()
+          setRandomLoadingMessage()
         }
       } else {
         summarizationRetryPending.value = true
@@ -2807,11 +2979,12 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
     }
 
     if (parsed.type === 'variant') {
-      // It's a colon variant (e.g., "Rapi: Red Hood") - get base from variant name
+      // Colon variants (e.g., "Anis: Sparkling Summer") are distinct, mutually exclusive
+      // characters with their own profiles. Only skip search if the variant itself is already
+      // loaded in the reactive profiles - NOT if the base character is known.
       const variantName = characterCatalog.idToName[parsed.variantId]
-      if (variantName && variantName.includes(':')) {
-        const baseName = variantName.split(':')[0].trim()
-        return !!(knownBaseNames.has(baseName.toLowerCase()) || baseName.toLowerCase() === 'commander')
+      if (variantName) {
+        return !!Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === variantName.toLowerCase())
       }
     }
 
@@ -3031,7 +3204,8 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     enableWebSearch,
     searchUrl,
     prompts,
-    reasoningEffort: reasoningEffort.value
+    reasoningEffort: reasoningEffort.value,
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3042,7 +3216,8 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
     useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     enableWebSearch,
-    reasoningEffort: reasoningEffort.value
+    reasoningEffort: reasoningEffort.value,
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3055,7 +3230,8 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     modeIsGame: mode.value === 'game',
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
-    enableContextCaching: enableContextCaching.value
+    enableContextCaching: enableContextCaching.value,
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3064,7 +3240,8 @@ const callLocal = async (messages: any[]) => {
     maxTokens: localMaxTokens.value,
     apiKey: apiKey.value,
     localUrl: localUrl.value,
-    modeIsGame: mode.value === 'game'
+    modeIsGame: mode.value === 'game',
+    signal: activeAbortController?.signal
   })
 }
 
@@ -3139,7 +3316,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     console.warn('JSON parse failed, attempting text fallback parsing...', e)
 
     // If Auto mode is enabled and we haven't tried auto-retry yet, retry with the invalidJsonReminder
-    if (invalidJsonAuto.value && !autoRetryAttempted) {
+    if (invalidJsonAuto.value && !autoRetryAttempted && !isStopped.value) {
       console.log('[processAIResponse] Auto mode enabled, retrying with invalidJsonReminder...')
 
       // Temporarily enable the invalidJsonToggle to inject the reminder
@@ -3186,7 +3363,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
           preserveExistingAnimations: true,
           localUrl: localUrl.value,
           rawResponseText: responseStr,
-          characterAnimations: animationCache.value
+          characterAnimations: animationCache.value,
+          signal: activeAbortController?.signal
         })
       } catch (e) {
         console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)
@@ -3229,7 +3407,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
   }
 
   const needsSearch = collectValidatedNeedsSearch(data, lastPrompt.value)
-  if (needsSearch.length > 0) {
+  if (needsSearch.length > 0 && !isStopped.value) {
     if (depth >= 2) {
       logDebug('[processAIResponse] needs_search detected but recursion limit reached:', needsSearch)
     } else {
@@ -3237,7 +3415,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
       const webSearchPerformed = await wrappedSearchForCharacters(needsSearch)
       setRandomLoadingMessage()
       // Only regenerate if web search was actually performed
-      if (webSearchPerformed) {
+      if (webSearchPerformed && !isStopped.value) {
         logDebug('[processAIResponse] Web search performed, regenerating...')
         const followUp = await callAIWithoutSearch(false)
         await processAIResponse(followUp, depth + 1)
@@ -3255,12 +3433,12 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
   data = stripChoicesWhenNotGameMode(data, mode.value === 'game')
 
   // Truncate extremely long sequences that look like hallucinations
-  if (data.length > 15 && mode.value !== 'story') {
+  if (data.length > 25 && mode.value !== 'story') {
     logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
-    data = data.slice(0, 15)
-  } else if (data.length > 50 && mode.value === 'story') {
+    data = data.slice(0, 25)
+  } else if (data.length > 75 && mode.value === 'story') {
     logDebug('[processAIResponse] Sequence too long, likely hallucination. Truncating.')
-    data = data.slice(0, 50)
+    data = data.slice(0, 75)
   }
 
   // Fallback for Game Mode: If no choices were provided, add a default "Continue" choice
@@ -3420,7 +3598,8 @@ const executeAction = async (data: any) => {
           cleanedProfile.id = char.id
         }
 
-        // Lookup color from local profiles even if full profile isn't used
+        // Lookup color from local profiles even if full profile isn't used.
+        // Variant color takes priority over base character color.
         const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
         const localProfile = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
@@ -3428,15 +3607,6 @@ const executeAction = async (data: any) => {
         const colorSource = variantProfile || localProfile
         if (colorSource?.color) {
           cleanedProfile.color = colorSource.color
-        }
-
-        // Lookup color from local profiles even if full profile isn't used
-        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        if (localKey) {
-          const localProfile = (localCharacterProfiles as any)[localKey]
-          if (localProfile?.color) {
-            cleanedProfile.color = localProfile.color
-          }
         }
 
         newProfiles[charName] = cleanedProfile
@@ -3808,6 +3978,8 @@ const resetSession = () => {
     summarizationRetryPending.value = false
     summarizationAttemptCount.value = 0
     summarizationLastError.value = null
+    summarizationSuccessCount.value = 0
+    summaryJustCompacted.value = false
     isLoadedSession.value = false
     lastPrompt.value = ''
     market.live2d.isVisible = false
@@ -3815,6 +3987,23 @@ const resetSession = () => {
     nikkeOverlayVisible.value = false
     rosterRows.value = []
   }
+}
+
+/**
+ * Count how many messages to keep as overlap after summarization,
+ * based on OVERLAP_TURNS full conversational turns (a turn = one user
+ * message plus all following non-user messages).
+ */
+const getOverlapMessageCount = (summarizeUpTo: number): number => {
+  let count = 0
+  let turns = 0
+  for (let i = summarizeUpTo - 1; i >= lastSummarizedIndex.value && turns < OVERLAP_TURNS; i--) {
+    count++
+    if (chatHistory.value[i].role === 'user') {
+      turns++
+    }
+  }
+  return count
 }
 
 const summarizeChunk = async (messages: { role: string; content: string }[]): Promise<boolean> => {
@@ -3830,7 +4019,9 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
       localMaxTokens: localMaxTokens.value,
       localUrl: localUrl.value,
       prompts,
-      enableContextCaching: enableContextCaching.value
+      enableContextCaching: enableContextCaching.value,
+      signal: activeAbortController?.signal,
+      existingSummary: storySummary.value
     })
 
     if (summary) {
@@ -3848,6 +4039,57 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
     console.error('Failed to summarize chunk:', e)
     summarizationLastError.value = e instanceof Error ? e.message : String(e)
     return false
+  }
+}
+
+const performCompaction = async (): Promise<boolean> => {
+  if (!storySummary.value || storySummary.value.length < COMPACT_MIN_LENGTH) return false
+
+  loadingStatus.value = 'Compacting story summary...'
+
+  try {
+    const compacted = await compactSummaryImpl(storySummary.value, {
+      apiProvider: apiProvider.value,
+      apiKey: apiKey.value,
+      model: model.value,
+      localMaxTokens: localMaxTokens.value,
+      localUrl: localUrl.value,
+      prompts,
+      enableContextCaching: enableContextCaching.value,
+      signal: activeAbortController?.signal
+    })
+
+    if (compacted && compacted.trim().length > 0) {
+      storySummary.value = compacted
+      summaryJustCompacted.value = true
+      return true
+    }
+    return false
+  } catch (e) {
+    console.error('Failed to compact summary:', e)
+    return false
+  }
+}
+
+const handleCompactSummary = async () => {
+  if (isCompactSummaryDisabled.value) return
+
+  isLoading.value = true
+  activeAbortController = new AbortController()
+
+  try {
+    const ok = await performCompaction()
+    if (ok) {
+      loadingStatus.value = 'Summary compacted successfully.'
+    } else {
+      loadingStatus.value = 'Failed to compact summary.'
+    }
+  } finally {
+    isLoading.value = false
+    activeAbortController = null
+    setTimeout(() => {
+      loadingStatus.value = ''
+    }, 2000)
   }
 }
 </script>
