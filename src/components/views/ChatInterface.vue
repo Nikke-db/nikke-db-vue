@@ -604,10 +604,10 @@
           <h3>🆕 What's New?</h3>
           <div class="guide-section">
             <ul>
-              <li>Characters menu that includes variants and skins</li>
-              <li>Updated internal DB with backstories and appearances of characters</li>
-              <li>Improved compatibility with certain Pollinations models</li>
-              <li>Other bug fixes and under-the-hood improvements</li>
+              <li>Added support for Gemini 3.1 Pro and Gemini 3.1 Flash-Lite</li>
+              <li>Added ability to compact story summmaries</li>
+              <li>More options in the Problems? button</li>
+              <li>Several under-the-hood fixes and improvements</li>
             </ul>
           </div>
         </div>
