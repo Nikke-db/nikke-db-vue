@@ -312,6 +312,10 @@
     "id": "c112_02"
   },
   {
+    "name": "E.H.",
+    "id": "c113"
+  },
+  {
     "name": "N102",
     "id": "c120"
   },
@@ -1916,7 +1920,7 @@
     "id": "c9010"
   },
   {
-    "name": "HIDDEN NPC: TBA",
+    "name": "Rain",
     "id": "c9011"
   },
   {
@@ -2237,6 +2241,16 @@
     "name": "Fatal Maid",
     "id": "fatalmaid",
     "f": "EventScene_fatalmaid_01"
+  },
+  {
+    "name": "Lie Cause Recoil",
+    "id": "liecauserecoil",
+    "f": "EventTitle_ce008_01"
+  },
+  {
+    "name": "Enter Heaven",
+    "id": "enterheaven",
+    "f": "EventScene_enterheaven_01"
   },
   {
     "name": "Smol Ade",
