@@ -39,7 +39,7 @@ const args = process.argv.slice(2)
 const SKIP_EXISTING = !args.includes('--no-skip-existing') // Default: true (skip existing)
 
 // Mode and paths
-let MODE = 'base' // 'base', 'variants', 'visual', or 'create'
+let MODE = 'base' // 'base', 'variants', 'visual', 'create', or 'commander'
 let PROFILES_PATH = PROFILES_BASE_PATH
 
 // Create mode state
@@ -108,7 +108,27 @@ Return ONLY a JSON object:
 If any field cannot be determined from the wiki, use an empty string for that field (or empty object for relationships). Never use null.`
 
 // Prompt template for visual analysis (appearance, defaultSkin, defaultWeapon)
-const VISUAL_PROMPT = `Analyze the image of this videogame character and provide a description in JSON format of her appearance (using the key \`appearance\`) and her clothing in the image (using \`defaultSkin\`). The descriptions MUST be concise and consist of a handful of words (e.g. 'blue eyes, long brown hair' etc.). If the character is shown with a weapon, also describe it using \`defaultWeapon\`).`
+const VISUAL_PROMPT = 'Analyze the image of this videogame character and provide a description in JSON format of her appearance (using the key `appearance`) and her clothing in the image (using `defaultSkin`). The descriptions MUST be concise and consist of a handful of words (e.g. \'blue eyes, long brown hair\' etc.). If the character is shown with a weapon, also describe it using `defaultWeapon`).'
+
+// Prompt template for extracting Commander/Protagonist relationship only
+const COMMANDER_RELATIONSHIP_PROMPT = `Based on the following wiki content about the NIKKE character "{name}", extract ONLY information about this character's relationship with the Commander (also known as the Protagonist, Master, or Servant depending on the character).
+
+WIKI CONTENT:
+{content}
+
+The Commander/Protagonist is the player character who leads Nikke squads. Different characters refer to him differently (e.g. "Commander", "Protagonist", "Master", etc.).
+
+Extract the character's relationship with the Commander/Protagonist. Describe the relationship dynamic, how they interact, and any significant events between them.
+
+Return ONLY a JSON object:
+{
+  "relationship": "Description of the relationship dynamic with the Commander/Protagonist..."
+}
+
+If no relationship with the Commander/Protagonist can be determined from the wiki content, return:
+{
+  "relationship": ""
+}`
 
 // Character name mappings for wiki search (base characters)
 const WIKI_NAME_MAPPINGS_BASE = {
@@ -226,7 +246,7 @@ async function fetchImageAsBase64(imageUrl) {
     const base64 = Buffer.from(arrayBuffer).toString('base64')
     return base64
   } catch (e) {
-    console.error(`  Error downloading image:`, e.message)
+    console.error('  Error downloading image:', e.message)
     return null
   }
 }
@@ -267,6 +287,12 @@ function isFieldEmpty(value) {
   return false
 }
 
+// Check if character has a Commander/Protagonist relationship key
+function hasCommanderRelationship(profile) {
+  if (!profile.relationships || typeof profile.relationships !== 'object') return false
+  return Object.keys(profile.relationships).some((key) => key.includes('Commander') || key.includes('Protagonist'))
+}
+
 // Check if character should be skipped (variants mode checks all fields)
 function shouldSkipCharacter(profile) {
   if (MODE === 'base') {
@@ -297,7 +323,7 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null, mo
 
   if (effectiveMode === 'visual' && imageUrl) {
     // Visual mode: download image and use base64 inline data
-    console.log(`  Downloading image...`)
+    console.log('  Downloading image...')
     const base64Image = await fetchImageAsBase64(imageUrl)
 
     if (!base64Image) {
@@ -319,7 +345,14 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null, mo
     ]
   } else {
     // Text mode: use appropriate prompt
-    const promptTemplate = effectiveMode === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    let promptTemplate
+    if (effectiveMode === 'base') {
+      promptTemplate = BASE_PROMPT
+    } else if (effectiveMode === 'commander') {
+      promptTemplate = COMMANDER_RELATIONSHIP_PROMPT
+    } else {
+      promptTemplate = VARIANTS_PROMPT
+    }
     prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
     parts = [{ text: prompt }]
   }
@@ -410,7 +443,14 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
     ]
   } else {
     // Text mode: use appropriate prompt
-    const promptTemplate = effectiveMode === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    let promptTemplate
+    if (effectiveMode === 'base') {
+      promptTemplate = BASE_PROMPT
+    } else if (effectiveMode === 'commander') {
+      promptTemplate = COMMANDER_RELATIONSHIP_PROMPT
+    } else {
+      promptTemplate = VARIANTS_PROMPT
+    }
     prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
     content = prompt
   }
@@ -516,11 +556,16 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       if (Object.keys(data).length > 0) {
         return data
       }
+    } else if (effectiveMode === 'commander') {
+      // Commander mode: return relationship with fixed key
+      if (result.relationship && result.relationship.trim() !== '') {
+        return { commanderRelationship: result.relationship }
+      }
     }
 
     return null
   } catch (parseError) {
-    console.log(`  JSON parse failed, trying regex extraction...`)
+    console.log('  JSON parse failed, trying regex extraction...')
 
     if (effectiveMode === 'base') {
       // Try to extract backstory with regex
@@ -528,7 +573,7 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       if (backstoryMatch) {
         const extracted = backstoryMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
         if (extracted && extracted.length > 10) {
-          console.log(`  ✓ Extracted backstory using regex fallback`)
+          console.log('  ✓ Extracted backstory using regex fallback')
           return { backstory: extracted }
         }
       }
@@ -563,7 +608,7 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       }
 
       if (Object.keys(data).length > 0) {
-        console.log(`  ✓ Extracted data using regex fallback`)
+        console.log('  ✓ Extracted data using regex fallback')
         return data
       }
     } else if (effectiveMode === 'visual') {
@@ -586,8 +631,18 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       }
 
       if (Object.keys(data).length > 0) {
-        console.log(`  ✓ Extracted data using regex fallback`)
+        console.log('  ✓ Extracted data using regex fallback')
         return data
+      }
+    } else if (effectiveMode === 'commander') {
+      // Commander mode: try to extract relationship with regex
+      const relationshipMatch = jsonStr.match(/"relationship"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+      if (relationshipMatch) {
+        const extracted = relationshipMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
+        if (extracted && extracted.trim() !== '') {
+          console.log('  ✓ Extracted Commander relationship using regex fallback')
+          return { commanderRelationship: extracted }
+        }
       }
     }
 
@@ -596,7 +651,7 @@ function parseApiResponse(text, characterName, modeOverride = null) {
   }
 }
 
-// Select mode (base, variants, or visual)
+// Select mode (base, variants, visual, create, or commander)
 async function selectMode() {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -608,9 +663,10 @@ async function selectMode() {
   console.log('2) Variant characters - full profile (characterProfilesVariants.json)')
   console.log('3) Visual analysis - appearance, clothing, weapon (both files)')
   console.log('4) Create new character entry - all fields for a single character')
+  console.log('5) Fill missing Commander relationships (both files)')
 
   const answer = await new Promise((resolve) => {
-    rl.question('\nEnter choice (1, 2, 3, or 4): ', (input) => {
+    rl.question('\nEnter choice (1, 2, 3, 4, or 5): ', (input) => {
       resolve(input.trim())
     })
   })
@@ -628,6 +684,9 @@ async function selectMode() {
   } else if (answer === '4') {
     MODE = 'create'
     console.log('Selected: Create new character entry\n')
+  } else if (answer === '5') {
+    MODE = 'commander'
+    console.log('Selected: Fill missing Commander relationships\n')
   } else {
     MODE = 'base'
     PROFILES_PATH = PROFILES_BASE_PATH
@@ -824,12 +883,12 @@ async function createNewEntry() {
   }
 
   // --- Text pass (variants prompt: personality, speech_style, backstory, relationships) ---
-  console.log(`  Fetching wiki content...`)
+  console.log('  Fetching wiki content...')
   const wikiContent = await fetchWikiContent(charName)
 
   let textData = null
   if (!wikiContent) {
-    console.log(`  ✗ No wiki content found. Text fields will be empty.`)
+    console.log('  ✗ No wiki content found. Text fields will be empty.')
   } else {
     console.log(`  Wiki content: ${wikiContent.length} chars`)
     console.log(`  Extracting personality, speech_style, backstory, relationships with ${API_PROVIDER}...`)
@@ -838,17 +897,17 @@ async function createNewEntry() {
       const fields = Object.keys(textData).join(', ')
       console.log(`  ✓ Text data extracted (${fields})`)
     } else {
-      console.log(`  ✗ Text extraction failed. Text fields will be empty.`)
+      console.log('  ✗ Text extraction failed. Text fields will be empty.')
     }
   }
 
   // --- Visual pass (appearance, defaultSkin, defaultWeapon) ---
-  console.log(`  Fetching image URL...`)
+  console.log('  Fetching image URL...')
   const imageUrl = await fetchImageUrl(charName)
 
   let visualData = null
   if (!imageUrl) {
-    console.log(`  ✗ No image URL found. Visual fields will be empty.`)
+    console.log('  ✗ No image URL found. Visual fields will be empty.')
   } else {
     console.log(`  Image URL: ${imageUrl}`)
     console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${API_PROVIDER}...`)
@@ -857,7 +916,7 @@ async function createNewEntry() {
       const fields = Object.keys(visualData).join(', ')
       console.log(`  ✓ Visual data extracted (${fields})`)
     } else {
-      console.log(`  ✗ Visual extraction failed. Visual fields will be empty.`)
+      console.log('  ✗ Visual extraction failed. Visual fields will be empty.')
     }
   }
 
@@ -929,11 +988,11 @@ async function processProfilesFile(filePath, fileLabel) {
     // Skip if already has required data
     if (SKIP_EXISTING && shouldSkipCharacter(profile)) {
       if (MODE === 'base') {
-        console.log(`  ✓ Already has backstory key, skipping (use --no-skip-existing to override)`)
+        console.log('  ✓ Already has backstory key, skipping (use --no-skip-existing to override)')
       } else if (MODE === 'visual') {
-        console.log(`  ✓ All visual fields already populated, skipping (use --no-skip-existing to override)`)
+        console.log('  ✓ All visual fields already populated, skipping (use --no-skip-existing to override)')
       } else {
-        console.log(`  ✓ All fields already populated, skipping (use --no-skip-existing to override)`)
+        console.log('  ✓ All fields already populated, skipping (use --no-skip-existing to override)')
       }
       skippedCount++
       continue
@@ -944,11 +1003,11 @@ async function processProfilesFile(filePath, fileLabel) {
 
     if (MODE === 'visual') {
       // Visual mode: fetch direct image URL from wiki API
-      console.log(`  Fetching image URL...`)
+      console.log('  Fetching image URL...')
       imageUrl = await fetchImageUrl(charName)
 
       if (!imageUrl) {
-        console.log(`  ✗ No image URL available, skipping character`)
+        console.log('  ✗ No image URL available, skipping character')
         failCount++
         continue
       }
@@ -956,11 +1015,11 @@ async function processProfilesFile(filePath, fileLabel) {
       console.log(`  Image URL: ${imageUrl}`)
     } else {
       // Text modes: fetch wiki content
-      console.log(`  Fetching wiki content...`)
+      console.log('  Fetching wiki content...')
       wikiContent = await fetchWikiContent(charName)
 
       if (!wikiContent) {
-        console.log(`  ✗ No wiki content available, skipping character`)
+        console.log('  ✗ No wiki content available, skipping character')
         failCount++
         continue
       }
@@ -1000,10 +1059,10 @@ async function processProfilesFile(filePath, fileLabel) {
       console.log('  Saving character profile...')
       fs.writeFileSync(filePath, JSON.stringify(profiles, null, 2))
     } else if (data) {
-      console.log(`  ✓ No new fields to update (all required fields already populated)`)
+      console.log('  ✓ No new fields to update (all required fields already populated)')
       skippedCount++
     } else {
-      console.log(`  ✗ Failed to extract data, skipping save`)
+      console.log('  ✗ Failed to extract data, skipping save')
       failCount++
     }
 
@@ -1031,6 +1090,113 @@ async function processProfilesFile(filePath, fileLabel) {
   return { successCount, failCount, skippedCount, total }
 }
 
+async function processCommanderRelationships() {
+  const COMMANDER_KEY = 'Commander (Protagonist)'
+
+  const filesToProcess = [
+    { path: PROFILES_BASE_PATH, label: 'Base Characters', nameMode: 'base' },
+    { path: PROFILES_VARIANTS_PATH, label: 'Variant Characters', nameMode: 'variants' }
+  ]
+
+  let totalStats = { successCount: 0, failCount: 0, skippedCount: 0, total: 0 }
+
+  for (const fileInfo of filesToProcess) {
+    console.log(`\nProcessing ${fileInfo.label}...`)
+    console.log('-'.repeat(60))
+
+    let profiles
+    try {
+      const data = fs.readFileSync(fileInfo.path, 'utf8')
+      profiles = JSON.parse(data)
+    } catch (e) {
+      console.error(`Error loading ${fileInfo.label}:`, e.message)
+      continue
+    }
+
+    const characters = Object.keys(profiles)
+    const total = characters.length
+    totalStats.total += total
+
+    console.log(`Found ${total} characters to scan`)
+    console.log('')
+
+    let successCount = 0
+    let failCount = 0
+    let skippedCount = 0
+
+    for (let i = 0; i < characters.length; i++) {
+      const charName = characters[i]
+      const profile = profiles[charName]
+
+      console.log(`[${i + 1}/${total}] Scanning: ${charName}`)
+
+      // Check if Commander/Protagonist relationship already exists
+      if (hasCommanderRelationship(profile)) {
+        const matchingKey = Object.keys(profile.relationships).find((key) => key.includes('Commander') || key.includes('Protagonist'))
+        console.log(`  ✓ Already has "${matchingKey}" relationship, skipping`)
+        skippedCount++
+        continue
+      }
+
+      // Fetch wiki content using the appropriate name mode
+      // Temporarily set MODE for getWikiPageName() resolution
+      const savedMode = MODE
+      MODE = fileInfo.nameMode
+      console.log('  Fetching wiki content...')
+      const wikiContent = await fetchWikiContent(charName)
+      MODE = savedMode
+
+      if (!wikiContent) {
+        console.log('  ✗ No wiki content available, skipping character')
+        failCount++
+        continue
+      }
+
+      console.log(`  Wiki content: ${wikiContent.length} chars`)
+      console.log(`  Extracting Commander relationship with ${API_PROVIDER}...`)
+
+      const data = await extractData(charName, wikiContent, null, 'commander')
+
+      if (data && data.commanderRelationship) {
+        // Ensure the relationships object exists
+        if (!profile.relationships || typeof profile.relationships !== 'object') {
+          profile.relationships = {}
+        }
+
+        profile.relationships[COMMANDER_KEY] = data.commanderRelationship
+        console.log(`  ✓ Added "${COMMANDER_KEY}" relationship`)
+        successCount++
+
+        // Save immediately after successful update
+        console.log('  Saving character profile...')
+        fs.writeFileSync(fileInfo.path, JSON.stringify(profiles, null, 2))
+      } else {
+        console.log('  ✗ Failed to extract Commander relationship')
+        failCount++
+      }
+
+      // Rate limiting
+      if (i < characters.length - 1) {
+        process.stdout.write(`  Waiting ${RATE_LIMIT_MS}ms...`)
+        await delay(RATE_LIMIT_MS)
+        console.log(' done')
+      }
+
+      console.log('')
+    }
+
+    totalStats.successCount += successCount
+    totalStats.failCount += failCount
+    totalStats.skippedCount += skippedCount
+
+    console.log('')
+    console.log(`${fileInfo.label} summary:`)
+    console.log(`  Total: ${total} | Added: ${successCount} | Failed: ${failCount} | Skipped: ${skippedCount}`)
+  }
+
+  return totalStats
+}
+
 async function main() {
   await selectMode()
 
@@ -1052,21 +1218,42 @@ async function main() {
     modeLabel = 'Visual Analysis'
   } else if (MODE === 'create') {
     modeLabel = `Create New Entry: ${CREATE_CHAR_NAME}`
+  } else if (MODE === 'commander') {
+    modeLabel = 'Fill Missing Commander Relationships'
   } else {
     modeLabel = 'Variant Characters'
   }
 
   console.log(`Mode: ${modeLabel}`)
   console.log(`Provider: ${API_PROVIDER}`)
-  if (MODE !== 'create') {
+  if (MODE !== 'create' && MODE !== 'commander') {
     console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
     console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)
+  } else if (MODE === 'commander') {
+    console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
   }
   console.log('')
 
   if (MODE === 'create') {
     // Create mode: single character, all fields
     await createNewEntry()
+    return
+  }
+
+  if (MODE === 'commander') {
+    // Commander mode: scan both files and fill missing Commander relationships
+    const totalStats = await processCommanderRelationships()
+
+    console.log('')
+    console.log('='.repeat(60))
+    console.log('Update Complete!')
+    console.log('='.repeat(60))
+    console.log(`Total characters scanned: ${totalStats.total}`)
+    console.log(`Relationships added: ${totalStats.successCount}`)
+    console.log(`Failed: ${totalStats.failCount}`)
+    console.log(`Skipped (already had Commander relationship): ${totalStats.skippedCount}`)
+    console.log('')
+    console.log('Results saved to both characterProfiles.json and characterProfilesVariants.json')
     return
   }
 
@@ -1102,7 +1289,7 @@ async function main() {
     console.log('Results saved to both characterProfiles.json and characterProfilesVariants.json')
   } else if (MODE === 'base') {
     console.log('Results saved to characterProfiles.json')
-  } else {
+  } else if (MODE === 'variants') {
     console.log('Results saved to characterProfilesVariants.json')
   }
 }

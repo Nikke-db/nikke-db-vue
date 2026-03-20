@@ -3482,6 +3482,7 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
 const getCharacterName = (id: string): string | null => {
   if (!id || id === 'none') return null
   if (id === 'current') return getCharacterName(market.live2d.current_id)
+  if (id.toLowerCase() === 'commander') return 'Commander'
 
   const rosterMatch = resolveCharacterIdFromInput(id, rosterRows.value, characterCatalog)
   if (rosterMatch) {
@@ -3497,6 +3498,7 @@ const getCharacterName = (id: string): string | null => {
 // Get the base character name (e.g., "Neon" from "Neon Bling Bullet")
 const getBaseCharacterName = (id: string): string | null => {
   if (!id || id === 'none') return null
+  if (id.toLowerCase() === 'commander') return 'Commander'
 
   // Get the full name (which might be a skin variant)
   const fullName = getCharacterName(id)
@@ -3847,10 +3849,19 @@ const executeAction = async (data: any) => {
     if (data.speaking) {
       let name = null
 
-      if (effectiveCharId === 'none') {
-        // If character is explicitly none, it's likely the Commander in Story Mode
+      if (effectiveCharId === 'commander') {
+        // Commander speaking - use properly capitalized name
+        name = 'Commander'
+      } else if (effectiveCharId === 'none') {
+        // In Story Mode, 'none' with speaking means a non-roster NPC is speaking.
+        // Try to extract the speaker name from the text itself (e.g. "Guard: Halt!" or "**Guard:** Halt!").
         if (mode.value === 'story') {
-          name = 'Commander'
+          const speakerLabelMatch = content.match(/^\s*(?:\*\*\s*)?([^*:]+?)(?:\s*\*\*)?\s*:\s*/)
+          if (speakerLabelMatch) {
+            // The text already has a speaker label — use it as the name and don't prepend another
+            name = speakerLabelMatch[1].trim()
+          }
+          // If no speaker label found, name stays null — no label will be prepended
         }
       } else {
         // Use base character name (not skin variant) for display
