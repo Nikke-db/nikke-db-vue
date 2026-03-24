@@ -417,6 +417,25 @@
             </n-radio-group>
           </n-form-item>
 
+          <n-form-item v-if="mode !== 'story'">
+            <template #label>
+              Realistic Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Prevents the user from forcing unrealistic actions or outcomes in the story, such as dictating NPC behaviour, specifying guaranteed outcomes, or performing physically impossible gestures.<br /><br />
+                  Note that the user can still delete individual messages from the chatbox, and this mode can be disabled at any time.<br /><br />
+                  Unavailable in Story Mode.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="realisticModeEnabled" />
+          </n-form-item>
+
           <n-form-item>
             <template #label>
               God Mode
@@ -426,7 +445,11 @@
                     <Help />
                   </n-icon>
                 </template>
-                <div>
+                <div v-if="realisticModeEnabled">
+                  In Realistic Mode, God Mode prevents the Commander from dying but does <strong>NOT</strong> prevent bad outcomes. The Commander can still lose fights, get injured, get captured, or fail — death is simply replaced with the nearest non-lethal outcome (e.g., captured, knocked unconscious, rescued).<br /><br />
+                  Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
+                </div>
+                <div v-else>
                   Prevents any action in the story from causing the Commander's death.<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
@@ -795,6 +818,7 @@ const reasoningEffortOptions = computed(() => {
 const enableContextCaching = ref(true)
 const playbackMode = ref('manual')
 const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
+const realisticModeEnabled = ref(localStorage.getItem('nikke_realistic_mode_enabled') === 'true')
 const userInput = ref('')
 const isLoading = ref(false)
 const isGenerating = ref(false)
@@ -1269,6 +1293,10 @@ watch(mode, (newVal) => {
   if (newVal === 'game' && chatMode.value === 'classic') {
     chatMode.value = 'nikke'
   }
+  // If switching to Story mode, disable Realistic Mode
+  if (newVal === 'story') {
+    realisticModeEnabled.value = false
+  }
 })
 
 watch(tokenUsage, (newVal) => {
@@ -1313,6 +1341,10 @@ watch(chatterboxEndpoint, (newVal) => {
 
 watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
+})
+
+watch(realisticModeEnabled, (newVal) => {
+  localStorage.setItem('nikke_realistic_mode_enabled', String(newVal))
 })
 
 watch(autoCompactSummaries, (newVal) => {
@@ -3187,7 +3219,8 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
   ${prompts.systemPrompt.instructions.base}
   ${modeInstructions}
   ${prompts.systemPrompt.instructions.closing}
-  ${godModeEnabled.value ? prompts.systemPrompt.godMode : ''}
+  ${godModeEnabled.value ? (realisticModeEnabled.value && mode.value !== 'story' ? (prompts.systemPrompt as any).godModeRealistic : prompts.systemPrompt.godMode) : ''}
+  ${realisticModeEnabled.value && mode.value !== 'story' ? (prompts.systemPrompt as any).realisticMode : ''}
   `
 
   return prompt

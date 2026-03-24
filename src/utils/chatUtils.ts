@@ -511,10 +511,21 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
     if (parts.length <= 1) return [action]
 
+    // If the original action was speaking:true and its text contained dialogue quotes,
+    // any split fragment that does NOT itself contain quotes is narration, not dialogue.
+    // This fixes models (e.g. GLM-5) that produce a single speaking:true action mixing
+    // quoted dialogue and unquoted narration separated by double newlines.
+    const dialogueQuotePattern = /("[\s\S]*?"|"\s*[\s\S]*?\s*")/
+    const originalHadQuotes = action.speaking === true && dialogueQuotePattern.test(rawText)
+
     const out: any[] = []
 
     for (let i = 0; i < parts.length; i++) {
       const partAction: any = { ...action, text: parts[i] }
+
+      if (originalHadQuotes && !dialogueQuotePattern.test(parts[i])) {
+        partAction.speaking = false
+      }
 
       if (i > 0) {
         for (const key of Object.keys(partAction)) {
