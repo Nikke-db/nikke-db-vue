@@ -244,6 +244,10 @@
     "id": "c094"
   },
   {
+    "name": "Vesti: Tactical Upgrade Pure Beginner",
+    "id": "c094_01"
+  },
+  {
     "name": "Eunhwa: Tactical Upgrade",
     "id": "c095"
   },
@@ -310,6 +314,10 @@
   {
     "name": "Viper Shine of Love",
     "id": "c112_02"
+  },
+  {
+    "name": "Viper Punky Street",
+    "id": "c112_03"
   },
   {
     "name": "E.H.",
@@ -422,6 +430,10 @@
   {
     "name": "Privaty Destined in Blue",
     "id": "c170_03"
+  },
+  {
+    "name": "Privaty Sharp Lesson",
+    "id": "c170_04"
   },
   {
     "name": "Yulha",
@@ -1192,6 +1204,10 @@
     "id": "c532"
   },
   {
+    "name": "Sora Spring Flight",
+    "id": "c532_01"
+  },
+  {
     "name": "Bay",
     "id": "c550"
   },
@@ -1202,6 +1218,10 @@
   {
     "name": "Clay",
     "id": "c551"
+  },
+  {
+    "name": "Clay Cheer Up Training",
+    "id": "c551_01"
   },
   {
     "name": "Behemoth",
@@ -1234,6 +1254,10 @@
   {
     "name": "Label",
     "id": "c582"
+  },
+  {
+    "name": "Arcana: Fortune Mate",
+    "id": "c583"
   },
   {
     "name": "Mori",
