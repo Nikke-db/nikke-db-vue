@@ -251,6 +251,14 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
       return retryData.choices[0].message.content
     }
 
+    if (response.status === 429 && errorData?.error?.message?.includes('Free-models-per-day')) {
+      throw new Error('FREE_MODEL_RATE_LIMITED')
+    }
+
+    if (response.status === 404 && errorData?.error?.message?.includes('No endpoints available matching your guardrail restrictions')) {
+      throw new Error('GUARDRAIL_RESTRICTION')
+    }
+
     throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
   }
   const data = await response.json()
@@ -1032,6 +1040,14 @@ export const callOpenRouter = async (
         throw new Error('RATE_LIMITED')
       }
 
+      if (response.status === 429 && errorData?.error?.message?.includes('Free-models-per-day')) {
+        throw new Error('FREE_MODEL_RATE_LIMITED')
+      }
+
+      if (response.status === 404 && errorData?.error?.message?.includes('No endpoints available matching your guardrail restrictions')) {
+        throw new Error('GUARDRAIL_RESTRICTION')
+      }
+
       throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
     }
 
@@ -1086,6 +1102,14 @@ export const callOpenRouter = async (
 
     if (response.status === 429 && errorData?.error?.message?.includes('is temporarily rate-limited upstream')) {
       throw new Error('RATE_LIMITED')
+    }
+
+    if (response.status === 429 && errorData?.error?.message?.includes('Free-models-per-day')) {
+      throw new Error('FREE_MODEL_RATE_LIMITED')
+    }
+
+    if (response.status === 404 && errorData?.error?.message?.includes('No endpoints available matching your guardrail restrictions')) {
+      throw new Error('GUARDRAIL_RESTRICTION')
     }
 
     if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {

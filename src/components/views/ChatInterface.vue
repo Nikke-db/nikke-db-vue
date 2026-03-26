@@ -627,9 +627,9 @@
           <h3>🆕 What's New?</h3>
           <div class="guide-section">
             <ul>
-              <li>Added support for Gemini 3.1 Pro and Gemini 3.1 Flash-Lite</li>
+              <li>Added Realistic Mode for Roleplay and Game modes</li>
               <li>Added ability to compact story summmaries</li>
-              <li>More options in the Problems? button</li>
+              <li>Improved built-in character profiles</li>
               <li>Several under-the-hood fixes and improvements</li>
             </ul>
           </div>
@@ -2254,6 +2254,10 @@ const sendMessage = async () => {
 
       if (error.message === 'RATE_LIMITED') {
         errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
+      } else if (error.message === 'FREE_MODEL_RATE_LIMITED') {
+        errorMessage = 'Error: OpenRouter is restricting your ability to use free models due to anti-spam, rate-limiting policies. To remove this restriction, you must add at least $10 of credits to your OpenRouter account. This operation needs to be performed only once.'
+      } else if (error.message === 'GUARDRAIL_RESTRICTION') {
+        errorMessage = 'Error: The only available endpoints for the requested model are incompatible with your OpenRouter privacy settings (train on your prompts or publish them). To continue, either change your restrictions on your OpenRouter account to allow endpoints for free (or paid) models to train on your prompts, or use a different model that does not require these changes.'
       } else if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
@@ -2332,6 +2336,10 @@ const retryLastMessage = async () => {
 
       if (error.message === 'RATE_LIMITED') {
         errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
+      } else if (error.message === 'FREE_MODEL_RATE_LIMITED') {
+        errorMessage = 'Error: OpenRouter is restricting your ability to use free models due to anti-spam, rate-limiting policies. To remove this restriction, you must add at least $10 of credits to your OpenRouter account. This operation needs to be performed only once.'
+      } else if (error.message === 'GUARDRAIL_RESTRICTION') {
+        errorMessage = 'Error: The only available endpoints for the requested model are incompatible with your OpenRouter privacy settings (train on your prompts or publish them). To continue, either change your restrictions on your OpenRouter account to allow endpoints for free (or paid) models to train on your prompts, or use a different model that does not require these changes.'
       } else if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
@@ -2462,7 +2470,13 @@ const continueStory = async () => {
       let errorMessage = 'Error: Failed to get response from AI.'
       showRetry.value = true
 
-      if (error.message && error.message.includes('503')) {
+      if (error.message === 'RATE_LIMITED') {
+        errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
+      } else if (error.message === 'FREE_MODEL_RATE_LIMITED') {
+        errorMessage = 'Error: OpenRouter is restricting your ability to use free models due to anti-spam, rate-limiting policies. To remove this restriction, you must add at least $10 of credits to your OpenRouter account. This operation needs to be performed only once.'
+      } else if (error.message === 'GUARDRAIL_RESTRICTION') {
+        errorMessage = 'Error: The only available endpoints for the requested model are incompatible with your OpenRouter privacy settings (train on your prompts or publish them). To continue, either change your restrictions on your OpenRouter account to allow endpoints for free (or paid) models to train on your prompts, or use a different model that does not require these changes.'
+      } else if (error.message && error.message.includes('503')) {
         errorMessage = 'Error 503: Model Overloaded. Please try again.'
       } else if (error.message === 'JSON_PARSE_ERROR') {
         errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
