@@ -419,7 +419,7 @@
 
           <n-form-item v-if="mode !== 'story'">
             <template #label>
-              Realistic Mode
+              Realistic Mode <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">

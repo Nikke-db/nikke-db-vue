@@ -68,6 +68,23 @@
     "id": "c015",
     "color": "#fdb356"
   },
+  "Arcana: Fortune Mate": {
+    "appearance": "Cyan eyes, long cyan twintails",
+    "defaultSkin": "Navy blue sailor top, black pleated skirt, white socks, black loafers",
+    "defaultWeapon": "",
+    "personality": "Arcana: Fortune Mate is a mysterious, pretty, and nostalgic transfer student who prioritizes reliving her youth through romantic fantasies and playful role-playing. She is deeply affectionate, seductive, and teasing towards her beloved Commander, often reminiscing about their shared school memories as if they are a long-married couple approaching their 20th anniversary with grown children. Despite her self-described 'cold, ruthless, femme fatale' nature, she reveals a soft, vulnerable side—caring and maternal with children, certified kindergarten teacher, regular volunteer who enjoys baking, knitting, and storytelling. She is photogenic, experienced with kids, micromanages dates playfully, gets emotional when plans fail, and shows child-like demeanor privately. This variant uniquely emphasizes her youthful exuberance, destiny-bound romance, and post-school personal growth inspired by the Commander, blending maturity with seductive playfulness.",
+    "speech_style": "Playful, teasing, and secretive with a seductive, nostalgic tone; uses rhetorical questions and ellipses for dramatic effect (e.g., 'she misses him?', 'a secret?'). Euphemistic about intimacy (e.g., 'get hot and heavy', 'full, natural, feminine appeal', 'keep [him] awake while they get \"busy\"', 'got it messy'). Romantic and affectionate, referencing fate and destiny (e.g., 'destined mate', 'Wheel of Fortune'). No distinct accent or quirks noted, but narrative style suggests confident, femme fatale flair mixed with whimsical fantasy.",
+    "backstory": "A mysterious transfer student at M.M.R. Vocational School tasked with organizing library files, but focused on savoring her youth. In her Bond Story (set after 2x2 Love), she dons a schoolgirl uniform to relive memories with the Commander—walking to school under cherry trees, first kiss at a festival—fantasizing about their 20th wedding anniversary. They volunteer at Big Dreams Kindergarten (where she's certified and a regular, befriending the owner post-school life change inspired by Commander); handle kids like Katie and Eric, make picture diaries, tell fairy tales. Date plans fail (closed restaurants), leading to emotional vulnerability, pizza at home, and intimate night. She reveals volunteering started after wearing the outfit (kids disliked her street clothes), gifts a preserved Wheel of Fortune card and intimate school photo. Emphasizes destiny, pinky promises safe return, vows to preserve his legacy if he dies; grew via school romance to pursue meaningful activities beyond Forbidden Library.",
+    "relationships": {
+      "Commander (Protagonist)": "Deeply cherished long-term boyfriend/husband in fantasy; destined soulmate bound by fate (Wheel of Fortune); playful, seductive lover who teases and role-plays school romance; emotionally vulnerable only with him; inspires her personal growth.",
+      "Katie": "Kindergarten student who admires her, learns romantic techniques (e.g., approaching crushes); close bond, Katie urges Commander to care for Arcana and wants them to return.",
+      "Eric": "Kindergarten student, bookworm; observed positively, Katie's crush; Arcana notes his habits to teacher.",
+      "Amy": "Friend who accompanied her first visit to kindergarten in school outfit.",
+      "Kindergarten Teacher": "Colleague; relies on Arcana to sub during monthly training due to understaffing; grateful for help and journal."
+    },
+    "id": "c583",
+    "color": "#9fa5ef"
+  },
   "Brid: Silent Track": {
     "appearance": "Long silver hair, blue eyes, curvy physique, pale skin",
     "defaultSkin": "White button-up shirt, black underbust corset, tight white pants, white high-heeled boots, black jacket draped over shoulders, black gloves",
