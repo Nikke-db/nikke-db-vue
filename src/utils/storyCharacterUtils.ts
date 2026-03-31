@@ -371,6 +371,52 @@ export const resolveCharacterIdFromInput = (input: string, roster: StoryCharacte
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+/**
+ * Resolve a character id/name to its display name.
+ * Accepts the lookup dependencies explicitly so it stays free of Vue reactivity.
+ */
+export const getCharacterDisplayName = (id: string, currentLive2dId: string, rosterRows: StoryCharacterEntry[], catalog: CharacterCatalog): string | null => {
+  if (!id || id === 'none') return null
+  if (id === 'current') return getCharacterDisplayName(currentLive2dId, currentLive2dId, rosterRows, catalog)
+  if (id.toLowerCase() === 'commander') return 'Commander'
+
+  const rosterMatch = resolveCharacterIdFromInput(id, rosterRows, catalog)
+  if (rosterMatch) {
+    const rosterName = catalog.idToName[rosterMatch]
+    if (rosterName) return rosterName
+  }
+
+  const char = (l2d as CharacterItem[]).find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
+
+  return char ? char.name : id
+}
+
+/**
+ * Resolve the *base* character name (e.g. "Neon" from "Neon Bling Bullet", or "Rapi" from "Rapi: Red Hood").
+ */
+export const getBaseCharacterDisplayName = (id: string, currentLive2dId: string, rosterRows: StoryCharacterEntry[], catalog: CharacterCatalog): string | null => {
+  if (!id || id === 'none') return null
+  if (id.toLowerCase() === 'commander') return 'Commander'
+
+  const fullName = getCharacterDisplayName(id, currentLive2dId, rosterRows, catalog)
+  if (!fullName) return null
+
+  // Check if this is a skin variant (contains space and starts with a base character name)
+  for (const baseName of catalog.baseNames) {
+    if (fullName.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
+      return baseName
+    }
+  }
+
+  // Check if this is a colon variant (e.g., "Rapi: Red Hood")
+  if (fullName.includes(':')) {
+    return fullName.split(':')[0].trim()
+  }
+
+  // It's already a base name
+  return fullName
+}
+
 export const resolveRosterIdsFromPrompt = (prompt: string, catalog: CharacterCatalog): string[] => {
   if (!prompt) return []
   const ids = new Set<string>()

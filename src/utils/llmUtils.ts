@@ -4,6 +4,8 @@
 import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
 import { logDebug } from '@/utils/chatUtils'
+import { getRosterIdPairs, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
+import l2d from '@/utils/json/l2d.json'
 
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
 export const modelsRequiringStreamForHighTokens = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsRequiringStreamForHighTokens') || '[]')))
@@ -22,6 +24,43 @@ export const tokenUsageOptions = [
   { label: 'High (60 turns)', value: 'high' },
   { label: 'Goddess', value: 'goddess' }
 ]
+
+/**
+ * Returns the reasoning effort dropdown options for the given API provider.
+ * In production, restricts options to 'medium' and below.
+ */
+export const getReasoningEffortOptions = (provider: string): { label: string; value: string }[] => {
+  let options: { label: string; value: string }[] = []
+
+  if (provider === 'openrouter' || provider === 'pollinations') {
+    options = [
+      { label: 'Default', value: 'default' },
+      { label: 'None', value: 'none' },
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Low', value: 'low' },
+      { label: 'Medium', value: 'medium' },
+      { label: 'High', value: 'high' },
+      { label: 'Extra High', value: 'xhigh' }
+    ]
+  } else if (provider === 'gemini') {
+    options = [
+      { label: 'Default', value: 'default' },
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Low', value: 'low' },
+      { label: 'Medium', value: 'medium' },
+      { label: 'High', value: 'high' },
+      { label: 'Extra High', value: 'xhigh' }
+    ]
+  }
+
+  // Restrict options in production since anything beyond 'medium' is silly
+  if (!import.meta.env.DEV) {
+    const allowedValues = ['default', 'none', 'minimal', 'low', 'medium']
+    options = options.filter((o) => allowedValues.includes(o.value))
+  }
+
+  return options
+}
 
 /**
  * Determines whether to add cache_control to messages for Pollinations requests
@@ -266,7 +305,7 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
   return data.choices[0].message.content
 }
 
-export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false, signal?: AbortSignal) => {
+export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching?: boolean, signal?: AbortSignal) => {
   const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
 
   const requestBody: any = {
@@ -827,16 +866,16 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
         // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
         choices: isGameMode
           ? {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  text: { type: 'string' },
-                  type: { type: 'string', enum: ['dialogue', 'action'] }
-                },
-                required: ['text', 'type']
-              }
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' },
+                type: { type: 'string', enum: ['dialogue', 'action'] }
+              },
+              required: ['text', 'type']
             }
+          }
           : undefined
       },
       required: isGameMode ? ['actions', 'choices'] : ['actions']
@@ -1513,4 +1552,231 @@ export const enrichActionsWithAnimations = async (
   })
 
   return mergedActions
+}
+
+/**
+ * Build a formatted string listing available animations for each character in context.
+ * Used to give the AI model awareness of which animations are available.
+ */
+export const formatAnimationsForContext = (opts: { characterProfiles: Record<string, any>; rosterRows: StoryCharacterEntry[]; characterCatalog: CharacterCatalog; currentLive2dId: string; currentLive2dAnimations: string[]; animationCache: Record<string, string[]> }): string => {
+  const placeholderAnimations = ['angry', 'angry_02', 'angry_03', 'cry', 'delight', 'idle', 'pain', 'sad', 'sad_02', 'shy', 'smile', 'surprise', 'void']
+
+  const getCharacterInfo = (id: string) => {
+    const charData = (l2d as any[]).find((c) => c.id === id)
+    return {
+      name: charData?.name || id,
+      id: id
+    }
+  }
+
+  const getCachedAnimations = (id: string): string[] | null => {
+    let anims = opts.animationCache[id]
+    if (!anims && id === opts.currentLive2dId) {
+      anims = opts.currentLive2dAnimations
+    }
+    if (anims && anims.length > 0) {
+      return getFilteredAnimations(anims)
+    }
+    return null
+  }
+
+  const formatAnimsForChar = (info: { name: string; id: string }, animations: string[]): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(animations)}`
+  }
+
+  const formatPlaceholderForChar = (info: { name: string; id: string }): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(placeholderAnimations)}`
+  }
+
+  const allCharacterIds = new Set<string>()
+
+  for (const profileKey of Object.keys(opts.characterProfiles)) {
+    if (profileKey.toLowerCase() !== 'commander') {
+      const profile = opts.characterProfiles[profileKey]
+      const id = profile.id || profileKey
+      allCharacterIds.add(id)
+    }
+  }
+
+  for (const pair of getRosterIdPairs(opts.rosterRows, opts.characterCatalog)) {
+    allCharacterIds.add(pair.id)
+  }
+
+  if (opts.currentLive2dId) {
+    allCharacterIds.add(opts.currentLive2dId)
+  }
+
+  const animsList = Array.from(allCharacterIds).map((id) => {
+    const cached = getCachedAnimations(id)
+    const info = getCharacterInfo(id)
+    if (cached) {
+      logDebug(`[AnimationContext] Using cached animations for ${id} (${info.name}): ${cached.length} animations`)
+      return formatAnimsForChar(info, cached)
+    }
+    logDebug(`[AnimationContext] No cached animations for ${id} (${info.name}), using placeholder array`)
+    return formatPlaceholderForChar(info)
+  })
+
+  if (animsList.length === 0) return 'No characters available yet.'
+  return animsList.join('\n')
+}
+
+// --- Tumbling Window Summarization ---
+
+/** Immutable snapshot of the state needed by the tumbling-window logic. */
+export interface TumblingWindowState {
+  tokenUsage: string
+  chatHistory: { role: string; content: string }[]
+  lastSummarizedIndex: number
+  isLoadedSession: boolean
+  summarizationRetryPending: boolean
+  summarizationAttemptCount: number
+  summarizationSuccessCount: number
+  summaryJustCompacted: boolean
+  autoCompactSummaries: boolean
+  autoCompactFrequency: number
+  storySummary: string
+  isStopped: boolean
+  compactMinLength: number
+}
+
+/** Callbacks the component must supply so the pure logic can delegate side-effects. */
+export interface TumblingWindowCallbacks {
+  summarizeChunk: (messages: { role: string; content: string }[]) => Promise<boolean>
+  performCompaction: () => Promise<boolean>
+  getOverlapMessageCount: (summarizeUpTo: number) => number
+  setRandomLoadingMessage: () => void
+}
+
+/** Describes every ref mutation + contextMsg / historyToSend the caller should apply. */
+export interface TumblingWindowResult {
+  /** New value for lastSummarizedIndex (undefined = no change) */
+  lastSummarizedIndex?: number
+  /** New value for isLoadedSession (undefined = no change) */
+  isLoadedSession?: boolean
+  /** New value for summarizationRetryPending (undefined = no change) */
+  summarizationRetryPending?: boolean
+  /** New value for summarizationAttemptCount (undefined = no change) */
+  summarizationAttemptCount?: number
+  /** New value for summarizationSuccessCount (undefined = no change) */
+  summarizationSuccessCount?: number
+  /** New value for summaryJustCompacted (undefined = no change) */
+  summaryJustCompacted?: boolean
+  /** The contextMsg suffix to append (story summary line, or empty) */
+  contextSuffix: string
+  /** The sliced history to send to the provider */
+  historyToSend: { role: string; content: string }[]
+}
+
+/**
+ * Shared tumbling-window summarization logic used by both `callAI` and
+ * `callAIWithoutSearch`.  The function is *almost* pure: it reads the
+ * supplied state snapshot and delegates all async side-effects through
+ * callbacks.  It returns a result object that tells the caller which
+ * refs to update.
+ *
+ * @param state   Snapshot of every reactive value the logic reads.
+ * @param cbs     Async callbacks for side-effects (summarize, compact, …).
+ * @param logTag  Label used in logDebug messages (e.g. "[callAI]").
+ */
+export async function handleTumblingWindowSummarization(state: TumblingWindowState, cbs: TumblingWindowCallbacks, logTag: string): Promise<TumblingWindowResult> {
+  const result: TumblingWindowResult = {
+    contextSuffix: '',
+    historyToSend: state.chatHistory
+  }
+
+  if (state.tokenUsage === 'goddess') {
+    // Goddess mode: send everything, no summarization
+    return result
+  }
+
+  let historyLimit = 30
+  if (state.tokenUsage === 'low') historyLimit = 10
+  else if (state.tokenUsage === 'medium') historyLimit = 30
+  else if (state.tokenUsage === 'high') historyLimit = 60
+  else if (state.tokenUsage === 'goddess') historyLimit = 99999
+
+  // --- working copies of mutable indices (will be written back via result) ---
+  let lastSumIdx = state.lastSummarizedIndex
+  let retryPending = state.summarizationRetryPending
+  let attemptCount = state.summarizationAttemptCount
+  let successCount = state.summarizationSuccessCount
+  let justCompacted = state.summaryJustCompacted
+  let loadedSession = state.isLoadedSession
+  let changed = false // track whether any ref-level mutation is needed
+
+  const endIndex = state.chatHistory.length - 1
+  const unsummarizedCount = endIndex - lastSumIdx
+  const maxContextMessages = historyLimit * 2
+
+  const overflowThreshold = Math.floor(maxContextMessages * 1.5)
+  const shouldSummarizeDueToOverflow = loadedSession && unsummarizedCount > overflowThreshold
+
+  let userMsgCount = 0
+  for (let i = lastSumIdx; i < endIndex; i++) {
+    if (state.chatHistory[i].role === 'user') {
+      userMsgCount++
+    }
+  }
+
+  const shouldRetryFailedSummarization = retryPending && endIndex > lastSumIdx
+  const shouldSummarizeByLimit = userMsgCount >= historyLimit
+
+  if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !state.isStopped) {
+    let summarizeUpTo = endIndex
+    if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
+      summarizeUpTo = endIndex - maxContextMessages
+    }
+
+    const chunkToSummarize = state.chatHistory.slice(lastSumIdx, summarizeUpTo)
+    logDebug(`${logTag} Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
+    const ok = await cbs.summarizeChunk(chunkToSummarize)
+    cbs.setRandomLoadingMessage()
+
+    if (ok) {
+      const overlapMessages = cbs.getOverlapMessageCount(summarizeUpTo)
+      lastSumIdx = summarizeUpTo - overlapMessages
+      retryPending = false
+      attemptCount = 0
+      successCount++
+      justCompacted = false
+      if (shouldSummarizeDueToOverflow) {
+        loadedSession = false
+      }
+      // Auto-compact summary if enabled and threshold reached
+      // NOTE: we read storySummary from state — the value may have been updated by summarizeChunk,
+      // but the caller will re-read the ref after applying the result.  The length check here uses
+      // the *pre-call* value which is conservative (the summary only grows).
+      if (state.autoCompactSummaries && successCount > 0 && successCount % state.autoCompactFrequency === 0 && state.storySummary.length >= state.compactMinLength && !state.isStopped) {
+        logDebug(`${logTag} Auto-compacting summary (after ${successCount} summarizations)...`)
+        await cbs.performCompaction()
+        cbs.setRandomLoadingMessage()
+      }
+      changed = true
+    } else {
+      retryPending = true
+      attemptCount++
+      changed = true
+    }
+  }
+
+  if (changed) {
+    result.lastSummarizedIndex = lastSumIdx
+    result.isLoadedSession = loadedSession
+    result.summarizationRetryPending = retryPending
+    result.summarizationAttemptCount = attemptCount
+    result.summarizationSuccessCount = successCount
+    result.summaryJustCompacted = justCompacted
+  }
+
+  // Append story summary to context if available
+  if (state.storySummary) {
+    result.contextSuffix = `\n\nPREVIOUS STORY SUMMARY:\n${state.storySummary}`
+  }
+
+  // Slice history from the (possibly updated) lastSummarizedIndex
+  const effectiveIdx = changed ? lastSumIdx : state.lastSummarizedIndex
+  result.historyToSend = state.chatHistory.slice(effectiveIdx)
+
+  return result
 }
