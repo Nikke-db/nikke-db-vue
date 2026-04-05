@@ -220,6 +220,10 @@ import azxservicetime from '@/utils/json/Gallery/azxservicetime.json'
 import arkguardian from '@/utils/json/Gallery/arkguardian.json'
 import sineditor from '@/utils/json/Gallery/sineditor.json'
 import liecauserecoil from '@/utils/json/Gallery/liecauserecoil.json'
+import twoxtwolove from '@/utils/json/Gallery/2x2love.json'
+import foolmetalpanic from '@/utils/json/Gallery/foolmetalpanic.json'
+import chocolateplease from '@/utils/json/Gallery/chocolateplease.json'
+
 
 const market = useMarket()
 
@@ -300,7 +304,10 @@ const buttonListEvents = [
   { data: terminusticket },
   { data: arkguardian },
   { data: sineditor },
-  { data: liecauserecoil }
+  { data: liecauserecoil },
+  { data: twoxtwolove },
+  { data: foolmetalpanic },
+  { data: chocolateplease }
 ] as buttonInterface[]
 
 const buttonListOther = [
