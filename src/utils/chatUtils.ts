@@ -99,6 +99,19 @@ export const buildUserReminders = (toggles: ReminderToggleState, mode: string, r
   return { text, togglesToClear }
 }
 
+// Custom error class for AI API errors, preserving structured code and message from the response.
+export class AIError extends Error {
+  code: number | string
+  apiMessage: string
+
+  constructor(code: number | string, apiMessage: string) {
+    super(`${code}: ${apiMessage}`)
+    this.name = 'AIError'
+    this.code = code
+    this.apiMessage = apiMessage
+  }
+}
+
 // Maps known AI error codes/messages to user-friendly error strings.
 export const getAIErrorMessage = (error: any): string => {
   if (error.message === 'RATE_LIMITED') {
@@ -112,7 +125,10 @@ export const getAIErrorMessage = (error: any): string => {
   } else if (error.message === 'JSON_PARSE_ERROR') {
     return 'Error: Failed to parse AI response after multiple attempts. Please try again.'
   } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-    return 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
+    return "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+  }
+  if (error instanceof AIError) {
+    return `Error ${error.code}: ${error.apiMessage}`
   }
   return 'Error: Failed to get response from AI.'
 }

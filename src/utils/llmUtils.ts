@@ -3,7 +3,7 @@
 
 import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
-import { logDebug } from '@/utils/chatUtils'
+import { logDebug, AIError } from '@/utils/chatUtils'
 import { getRosterIdPairs, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
 import l2d from '@/utils/json/l2d.json'
 
@@ -284,7 +284,8 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`OpenRouter API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       const retryData = await retryResponse.json()
       return retryData.choices[0].message.content
@@ -298,7 +299,7 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
       throw new Error('GUARDRAIL_RESTRICTION')
     }
 
-    throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
   const data = await response.json()
 
@@ -351,7 +352,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       return await parsePollinationsStreamResponse(retryResponse)
     }
@@ -377,12 +379,13 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
         })
 
         if (!fallbackResponse.ok) {
-          throw new Error(`Pollinations API Error: ${fallbackResponse.status} ${JSON.stringify(await fallbackResponse.json().catch(() => ({})))}`)
+          const fallbackErrorData = await fallbackResponse.json().catch(() => ({}))
+          throw new AIError(fallbackErrorData?.error?.code ?? fallbackResponse.status, fallbackErrorData?.error?.message ?? fallbackResponse.statusText ?? 'Unknown error')
         }
         const fallbackData = await fallbackResponse.json()
         return fallbackData.choices[0].message.content
       }
-      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+      throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
 
     // If max_tokens is too high for this model, try with standard limit
@@ -397,13 +400,14 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       const retryData = await retryResponse.json()
       return retryData.choices[0].message.content
     }
 
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
@@ -466,12 +470,12 @@ export const callGeminiSummarization = async (messages: any[], apiKey: string, m
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
+    const errorData = await response.json().catch(() => ({}))
     console.error('Gemini Summarization Error Details:', errorData)
     if (response.status === 503) {
       throw new Error('Gemini API Error: 503 Service Unavailable')
     }
-    throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
   const data = await response.json()
 
@@ -578,7 +582,8 @@ export const callPollinations = async (
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       return await parsePollinationsStreamResponse(retryResponse)
     }
@@ -599,7 +604,7 @@ export const callPollinations = async (
         sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
         return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
       }
-      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+      throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
 
     if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
@@ -609,7 +614,7 @@ export const callPollinations = async (
       return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
     }
 
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
@@ -674,7 +679,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       return await parsePollinationsStreamResponse(retryResponse)
     }
@@ -687,9 +693,9 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
         const retryData = await cacheRetry.retryResponse.json()
         return retryData.choices[0].message.content
       }
-      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+      throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
@@ -730,7 +736,7 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(`Local Summarization API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
   const data = await response.json()
   return data.choices[0].message.content
@@ -778,7 +784,7 @@ export const callLocal = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(`Local API Error: ${response.status} ${JSON.stringify(errorData)}`)
+      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
     }
     const data = await response.json()
     return data.choices[0].message.content
@@ -826,7 +832,7 @@ export const callLocal = async (
       return callWithoutJsonFormat()
     }
 
-    throw new Error(`Local API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
@@ -1087,7 +1093,7 @@ export const callOpenRouter = async (
         throw new Error('GUARDRAIL_RESTRICTION')
       }
 
-      throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
     }
 
     const data = await response.json()
@@ -1158,7 +1164,7 @@ export const callOpenRouter = async (
       return callWithoutJsonFormat()
     }
 
-    throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
@@ -1292,12 +1298,12 @@ export const callGemini = async (messages: any[], opts: { model: string; apiKey:
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
+    const errorData = await response.json().catch(() => ({}))
     console.error('Gemini API Error Details:', errorData)
     if (response.status === 503) {
       throw new Error('Gemini API Error: 503 Service Unavailable')
     }
-    throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
