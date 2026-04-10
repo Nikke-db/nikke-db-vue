@@ -1272,6 +1272,10 @@
     "id": "c601"
   },
   {
+    "name": "Mekami Shifty",
+    "id": "c610"
+  },
+  {
     "name": "Makima",
     "id": "c800"
   },
@@ -2275,6 +2279,16 @@
     "name": "Enter Heaven",
     "id": "enterheaven",
     "f": "EventScene_enterheaven_01"
+  },
+  {
+    "name": "2x2 LOVE 1",
+    "id": "twoxtwo1",
+    "f": "EventScene_twoxtwolove_01"
+  },
+  {
+    "name": "2x2 LOVE 2",
+    "id": "twoxtwo2",
+    "f": "EventScene_twoxtwolove2_hidden_01_2"
   },
   {
     "name": "Smol Ade",
