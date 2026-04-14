@@ -1276,6 +1276,10 @@
     "id": "c610"
   },
   {
+    "name": "Snow Crane",
+    "id": "c620"
+  },
+  {
     "name": "Makima",
     "id": "c800"
   },
@@ -1748,6 +1752,10 @@
     "id": "c961"
   },
   {
+    "name": "Oswald",
+    "id": "c961_01"
+  },
+  {
     "name": "Product 12: B-0006",
     "id": "c962"
   },
@@ -1974,6 +1982,34 @@
   {
     "name": "Stall III",
     "id": "c9019"
+  },
+  {
+    "name": "Freesia",
+    "id": "c9020"
+  },
+  {
+    "name": "Freesia",
+    "id": "c9020_01"
+  },
+  {
+    "name": "Anis",
+    "id": "c9021"
+  },
+  {
+    "name": "Anis",
+    "id": "c9021_01"
+  },
+  {
+    "name": "Mustang",
+    "id": "c9022"
+  },
+  {
+    "name": "Hanson",
+    "id": "c9023"
+  },
+  {
+    "name": "Amy",
+    "id": "c9026"
   },
   {
     "name": "Blue Water Island",
@@ -2289,6 +2325,11 @@
     "name": "2x2 LOVE 2",
     "id": "twoxtwo2",
     "f": "EventScene_twoxtwolove2_hidden_01_2"
+  },
+  {
+    "name": "Good World",
+    "id": "goodworld",
+    "f": "EventScene_goodworld_01"
   },
   {
     "name": "Smol Ade",

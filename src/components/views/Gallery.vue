@@ -186,6 +186,7 @@ import side01 from '@/utils/json/Gallery/side01.json'
 import side02 from '@/utils/json/Gallery/side02.json'
 import side03 from '@/utils/json/Gallery/side03.json'
 import side04 from '@/utils/json/Gallery/side04.json'
+import side05 from '@/utils/json/Gallery/side05.json'
 import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
 import darkhero from '@/utils/json/Gallery/darkhero.json'
 import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
@@ -254,7 +255,8 @@ const buttonListSideStory = [
   { data: side01 },
   { data: side02 },
   { data: side03 },
-  { data: side04 }
+  { data: side04 },
+  { data: side05 }
 ] as buttonInterface[]
 
 const buttonListEvents = [
