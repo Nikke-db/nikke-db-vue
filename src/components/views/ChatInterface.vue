@@ -2543,6 +2543,38 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     }
   }
 
+  // Structural auto-retry: the JSON parsed successfully but the result is semantically
+  // empty or broken (empty actions array, choices-only response in Game mode, or both empty).
+  // Trigger the same auto-retry mechanism used for invalid JSON parse failures.
+  if (invalidJsonAuto.value && !autoRetryAttempted && !isStopped.value) {
+    const isEmpty = data.length === 0
+
+    // Game mode: response was choices-only (no actual narrative actions)
+    const isChoicesOnlyInGameMode = mode.value === 'game' &&
+     data.length > 0 && data.every((a: any) => !a ||
+      typeof a !== 'object' ||
+       (typeof a.text !== 'string' && typeof a.character !== 'string')) 
+     && data.some((a: any) => a && typeof a === 'object' && Array.isArray(a.choices) && a.choices.length > 0)
+
+    if (isEmpty || isChoicesOnlyInGameMode) {
+      console.warn('[processAIResponse] Auto mode: structural issue detected (empty actions / choices-only), retrying with invalidJsonReminder...')
+
+      const previousToggleValue = invalidJsonToggle.value
+      invalidJsonToggle.value = true
+
+      try {
+        setRandomLoadingMessage()
+        const retryResponse = await callAI(true)
+        invalidJsonToggle.value = previousToggleValue
+        await processAIResponse(retryResponse, depth, true)
+        return
+      } catch (retryError) {
+        invalidJsonToggle.value = previousToggleValue
+        console.warn('[processAIResponse] Auto-retry (structural) failed, continuing with current data...', retryError)
+      }
+    }
+  }
+
   logDebug('Parsed Action Sequence:', data)
 
   // Fallback: handle needs_search directives here (in case the earlier callAI() detection
