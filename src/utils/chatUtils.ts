@@ -39,6 +39,7 @@ export const getEffectiveCharacterProfiles = (base: Record<string, any>, progres
 export type ReminderToggleState = {
   invalidJson: boolean
   invalidJsonPersist: boolean
+  emptyActionsRetry: boolean
   honorifics: boolean
   narrationAndDialogueNotSplit: boolean
   aiControllingUser: boolean
@@ -59,9 +60,15 @@ export const buildUserReminders = (toggles: ReminderToggleState, mode: string, r
   const togglesToClear: (keyof ReminderToggleState)[] = []
 
   if (toggles.invalidJson) {
-    const jsonReminder = mode === 'game' ? reminders.invalidJsonReminderGame : reminders.invalidJsonReminder
+    let jsonReminder: string
+    if (toggles.emptyActionsRetry && mode === 'game' && reminders.emptyActionsReminderGame) {
+      jsonReminder = reminders.emptyActionsReminderGame
+    } else {
+      jsonReminder = mode === 'game' ? reminders.invalidJsonReminderGame : reminders.invalidJsonReminder
+    }
     text += '\n\n' + jsonReminder
     if (!toggles.invalidJsonPersist) togglesToClear.push('invalidJson')
+    if (toggles.emptyActionsRetry) togglesToClear.push('emptyActionsRetry')
   }
   if (toggles.honorifics) {
     text += '\n\n' + reminders.honorificsReminder
@@ -125,7 +132,7 @@ export const getAIErrorMessage = (error: any): string => {
   } else if (error.message === 'JSON_PARSE_ERROR') {
     return 'Error: Failed to parse AI response after multiple attempts. Please try again.'
   } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-    return "Error: response filtered by Gemini's built-in, irremovable safety filters (false positives are possible)."
+    return 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
   }
   if (error instanceof AIError) {
     return `Error ${error.code}: ${error.apiMessage}`

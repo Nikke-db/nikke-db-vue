@@ -1022,6 +1022,7 @@ const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
 const invalidJsonPersist = ref(false)
 const invalidJsonAuto = ref(true)
+const emptyActionsRetry = ref(false)
 const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
@@ -2002,6 +2003,7 @@ const getUserReminders = (): string => {
   const toggleMap: Record<string, { ref: any; persist?: any }> = {
     invalidJson: { ref: invalidJsonToggle, persist: invalidJsonPersist },
     invalidJsonPersist: { ref: invalidJsonPersist },
+    emptyActionsRetry: { ref: emptyActionsRetry },
     honorifics: { ref: honorificsToggle },
     narrationAndDialogueNotSplit: { ref: narrationAndDialogueNotSplitToggle },
     aiControllingUser: { ref: aiControllingUserToggle },
@@ -2016,6 +2018,7 @@ const getUserReminders = (): string => {
   const snapshot: ReminderToggleState = {
     invalidJson: invalidJsonToggle.value,
     invalidJsonPersist: invalidJsonPersist.value,
+    emptyActionsRetry: emptyActionsRetry.value,
     honorifics: honorificsToggle.value,
     narrationAndDialogueNotSplit: narrationAndDialogueNotSplitToggle.value,
     aiControllingUser: aiControllingUserToggle.value,
@@ -2553,26 +2556,41 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     const isChoicesOnlyInGameMode = mode.value === 'game' &&
      data.length > 0 && data.every((a: any) => !a ||
       typeof a !== 'object' ||
-       (typeof a.text !== 'string' && typeof a.character !== 'string')) 
+       (typeof a.text !== 'string' && typeof a.character !== 'string'))
      && data.some((a: any) => a && typeof a === 'object' && Array.isArray(a.choices) && a.choices.length > 0)
 
     if (isEmpty || isChoicesOnlyInGameMode) {
-      console.warn('[processAIResponse] Auto mode: structural issue detected (empty actions / choices-only), retrying with invalidJsonReminder...')
+      console.warn('[processAIResponse] Auto mode: structural issue detected (empty actions / choices-only), retrying with targeted reminder...')
 
       const previousToggleValue = invalidJsonToggle.value
       invalidJsonToggle.value = true
+      // Use the targeted empty-actions reminder in Game mode instead of the generic one
+      if (mode.value === 'game') {
+        emptyActionsRetry.value = true
+      }
 
       try {
         setRandomLoadingMessage()
         const retryResponse = await callAI(true)
         invalidJsonToggle.value = previousToggleValue
+        emptyActionsRetry.value = false
         await processAIResponse(retryResponse, depth, true)
         return
       } catch (retryError) {
         invalidJsonToggle.value = previousToggleValue
-        console.warn('[processAIResponse] Auto-retry (structural) failed, continuing with current data...', retryError)
+        emptyActionsRetry.value = false
+        console.warn('[processAIResponse] Auto-retry (structural) failed, escalating to outer retry loop...', retryError)
+        throw new Error('JSON_PARSE_ERROR')
       }
     }
+  }
+
+  // If we got through all retry logic but still have no actions, escalate to the outer
+  // retry loop. This prevents silently showing a blank result when the model returns
+  // empty arrays.
+  if (data.length === 0) {
+    console.warn('[processAIResponse] No actions after all processing/retries, escalating to outer retry loop...')
+    throw new Error('JSON_PARSE_ERROR')
   }
 
   logDebug('Parsed Action Sequence:', data)

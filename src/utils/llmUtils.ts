@@ -854,6 +854,7 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
       properties: {
         actions: {
           type: 'array',
+          minItems: 1,
           items: {
             type: 'object',
             properties: {
