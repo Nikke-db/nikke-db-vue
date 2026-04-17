@@ -39,7 +39,7 @@
           <span class="drag-title">Chat</span>
         </div>
         <div class="window-controls">
-          <n-button size="tiny" circle quaternary @click="() => initChatLayout(chatSize, chatPosition)" title="Reset Position">
+          <n-button size="tiny" circle quaternary @click="resetChatLayout" title="Reset Position">
             <template #icon
               ><n-icon><Reset /></n-icon
             ></template>
@@ -983,6 +983,10 @@ const isResizing = ref(false)
 const resizeDirection = ref('')
 const dragOffset = ref({ x: 0, y: 0 })
 const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY: 0 })
+
+// Wrapper so the template doesn't need to pass Refs directly (auto-unwrap in templates
+// would pass plain objects instead of Ref<WindowSize> / Ref<WindowPosition>).
+const resetChatLayout = () => initChatLayout(chatSize, chatPosition)
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
