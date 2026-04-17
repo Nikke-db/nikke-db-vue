@@ -32,7 +32,7 @@ export const tokenUsageOptions = [
 export const getReasoningEffortOptions = (provider: string): { label: string; value: string }[] => {
   let options: { label: string; value: string }[] = []
 
-  if (provider === 'openrouter' || provider === 'pollinations') {
+  if (provider === 'openrouter' || provider === 'pollinations' || provider === 'local') {
     options = [
       { label: 'Default', value: 'default' },
       { label: 'None', value: 'none' },
@@ -706,8 +706,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
   return data.choices[0].message.content
 }
 
-export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string; signal?: AbortSignal }) => {
-  const { model, maxTokens = 16384, apiKey, localUrl, signal } = opts
+export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string; reasoningEffort?: string; signal?: AbortSignal }) => {
+  const { model, maxTokens = 16384, apiKey, localUrl, reasoningEffort, signal } = opts
 
   let endpoint = localUrl.replace(/\/$/, '')
   if (!endpoint.endsWith('/chat/completions')) {
@@ -719,6 +719,12 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
     max_tokens: maxTokens
   }
   if (model) requestBody.model = model
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: reasoningEffort,
+      exclude: false
+    }
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -750,10 +756,11 @@ export const callLocal = async (
     apiKey?: string
     localUrl: string
     modeIsGame: boolean
+    reasoningEffort?: string
     signal?: AbortSignal
   }
 ) => {
-  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame, signal } = opts
+  const { model, maxTokens = 16384, apiKey, localUrl, modeIsGame, reasoningEffort, signal } = opts
 
   // Ensure URL ends with /chat/completions if not present
   let endpoint = localUrl.replace(/\/$/, '')
@@ -767,6 +774,12 @@ export const callLocal = async (
       max_tokens: maxTokens
     }
     if (model) requestBody.model = model
+    if (reasoningEffort && reasoningEffort !== 'default') {
+      requestBody.reasoning = {
+        effort: reasoningEffort,
+        exclude: false
+      }
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
@@ -803,6 +816,12 @@ export const callLocal = async (
     response_format: responseSchema
   }
   if (model) requestBody.model = model
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: reasoningEffort,
+      exclude: false
+    }
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -896,10 +915,10 @@ export const summarizeChunk = async (
     apiProvider: string
     apiKey: string
     model: string
-    localMaxTokens: number
     localUrl: string
     prompts: any
     enableContextCaching?: boolean
+    reasoningEffort?: string
     signal?: AbortSignal
     existingSummary?: string
   }
@@ -931,7 +950,7 @@ export const summarizeChunk = async (
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
-    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal })
+    summary = await callLocalSummarization(msgs, { apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal, reasoningEffort: opts.reasoningEffort })
   }
 
   if (summary && summary.trim().length > 0) {
@@ -947,10 +966,10 @@ export const compactSummary = async (
     apiProvider: string
     apiKey: string
     model: string
-    localMaxTokens: number
     localUrl: string
     prompts: any
     enableContextCaching?: boolean
+    reasoningEffort?: string
     signal?: AbortSignal
   }
 ) => {
@@ -970,7 +989,7 @@ export const compactSummary = async (
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
-    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal })
+    summary = await callLocalSummarization(msgs, { apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal, reasoningEffort: opts.reasoningEffort })
   }
 
   if (summary && summary.trim().length > 0) {
@@ -1343,7 +1362,6 @@ export const enrichActionsWithAnimations = async (
     apiProvider: string
     apiKey: string
     model?: string
-    maxTokens?: number
     currentCharacterId: string
     filteredAnimations: string[]
     animationEnrichmentPrompt: string
@@ -1356,7 +1374,7 @@ export const enrichActionsWithAnimations = async (
 ): Promise<any[]> => {
   logDebug('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal } = opts
+  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal } = opts
 
   const hasMeaningfulAnimation = (anim: any): boolean => {
     if (typeof anim !== 'string') return false
@@ -1441,7 +1459,6 @@ export const enrichActionsWithAnimations = async (
     } else if (apiProvider === 'local' && localUrl) {
       response = await callLocal(messages, {
         model,
-        maxTokens,
         apiKey,
         localUrl,
         modeIsGame: false,

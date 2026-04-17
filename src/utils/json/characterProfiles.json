@@ -1171,6 +1171,18 @@
     "id": "c022",
     "color": "#4c4d47"
   },
+  "Snow Crane": {
+    "appearance": "Long white hair, purple eyes",
+    "defaultSkin": "white fur-trimmed dress, gray cape, black stockings, white heels, holding a black book, white gohei",
+    "defaultWeapon": "",
+    "personality": "Snow Crane is a kind, hospitable, and soft-spoken woman with a gentle demeanor. She firmly believes the world will become truly kind and treats everyone around her like children, doting on those who show genuine kindness and expressing deep gratitude for any kindness received. She is particularly fond of children but extends her motherly behavior to adults, often patting their heads, wiping their mouths, holding hands to prevent them from getting lost, and being overprotective about their health and safety. She is old-fashioned and unfamiliar with modern Ark technology and life, often needing directions, struggling with cellphones and cameras, and being fascinated by new experiences like desserts and baking. Despite her secretive role, she is caring, stubborn in her concerns, and enjoys simple snacks like candy over complex sweets.",
+    "speech_style": "Soft-spoken and gentle with a caring, motherly tone. No specific verbal quirks, accents, or example phrases are provided.",
+    "backstory": "A secretive Nikke in the Central Government tasked with managing the Ark's clandestine agreements, with her existence and squad known to very few. Her bond story, set after the 'Good World' event, revolves around her concern for the exhausted Commander: she attempts to make a healthy version of a 'super energizing fuel bomb' mochi dessert (resulting in a bitter, clay-like blob) to cheer him up. Grateful for his kindness, he takes her on a dessert tour, introducing her to cafe treats, Crust the baker, and modern technology like phone cameras. They bake together, overcoming mishaps like a flour sneeze; she learns about safe sweeteners, takes blurry photos, gets prints developed, and cares for him motherly—wiping his face, holding hands, tucking him into bed, kissing his forehead, and leaving improved desserts with a photo of him sleeping. This deepens her affection and tech familiarity, rejuvenating the Commander.",
+    "relationships": {
+      "Commander (Protagonist)": "Cherished and treated like a child with deep motherly affection; makes treats for his exhaustion, goes on a dessert date, holds hands, pats his head, tucks him in, kisses his forehead, misses him greatly, and leaves gifts to show care.",
+      "Crust": "Finds her adorable, eager to meet and learn baking from her to dispel health doubts about sweets, pats her head, assists in kitchen mishaps, and plans to apologize for abrupt departure."
+    }
+  },
   "Snow White": {
     "appearance": "White hair, amber eyes, pale skin, stoic expression",
     "defaultSkin": "White tattered poncho, black tactical headset, armored greaves, exposed thighs, mechanical gauntlets",

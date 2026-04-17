@@ -227,24 +227,6 @@
             <n-input v-model:value="localUrl" placeholder="http://localhost:5001/v1" />
           </n-form-item>
 
-          <n-form-item v-if="apiProvider === 'local'">
-            <template #label>
-              Maximum Tokens
-              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  <p>This value should be equal to or lower than the context limit set in your local model runner (e.g., LM Studio, Ollama). Using higher values may result in errors.</p>
-                  <p>Acceptable values are between 8192 and 98304. The lower the number, the worse your experience will be. Note that higher values will require much higher system requirements.</p>
-                </div>
-              </n-popover>
-            </template>
-            <n-input-number v-model:value="localMaxTokens" :min="8192" :max="98304" :step="1024" placeholder="8192" style="width: 100%" />
-          </n-form-item>
-
           <n-form-item label="API Key" v-if="apiProvider !== 'local'">
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
@@ -776,9 +758,8 @@ const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !=
 const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
-const localMaxTokens = ref(Number(localStorage.getItem('nikke_local_max_tokens')) || 8192)
 const model = ref('')
-const mode = ref('roleplay')
+const mode = ref('game')
 const tokenUsage = ref('medium')
 const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
 
@@ -1230,10 +1211,6 @@ watch(apiKey, async (newVal) => {
 
 watch(localUrl, (newVal) => {
   localStorage.setItem('nikke_local_url', newVal)
-})
-
-watch(localMaxTokens, (newVal) => {
-  localStorage.setItem('nikke_local_max_tokens', String(newVal))
 })
 
 watch(useLocalProfiles, (newVal) => {
@@ -2404,10 +2381,10 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
 
 const callLocal = async (messages: any[]) => {
   return await callLocalImpl(messages, {
-    maxTokens: localMaxTokens.value,
     apiKey: apiKey.value,
     localUrl: localUrl.value,
     modeIsGame: mode.value === 'game',
+    reasoningEffort: reasoningEffort.value,
     signal: activeAbortController?.signal
   })
 }
@@ -2523,7 +2500,6 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
           apiProvider: apiProvider.value,
           apiKey: apiKey.value,
           model: apiProvider.value === 'local' ? undefined : model.value,
-          maxTokens: localMaxTokens.value,
           currentCharacterId: market.live2d.current_id,
           filteredAnimations: getFilteredAnimations(market.live2d.animations),
           animationEnrichmentPrompt: prompts.animationEnrichment,
@@ -2553,11 +2529,9 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     const isEmpty = data.length === 0
 
     // Game mode: response was choices-only (no actual narrative actions)
-    const isChoicesOnlyInGameMode = mode.value === 'game' &&
-     data.length > 0 && data.every((a: any) => !a ||
-      typeof a !== 'object' ||
-       (typeof a.text !== 'string' && typeof a.character !== 'string'))
-     && data.some((a: any) => a && typeof a === 'object' && Array.isArray(a.choices) && a.choices.length > 0)
+    const isChoicesOnlyInGameMode = mode.value === 'game' && data.length > 0 &&
+     data.every((a: any) => !a || typeof a !== 'object' || (typeof a.text !== 'string' && typeof a.character !== 'string'))
+      && data.some((a: any) => a && typeof a === 'object' && Array.isArray(a.choices) && a.choices.length > 0)
 
     if (isEmpty || isChoicesOnlyInGameMode) {
       console.warn('[processAIResponse] Auto mode: structural issue detected (empty actions / choices-only), retrying with targeted reminder...')
@@ -3209,10 +3183,10 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
       apiProvider: apiProvider.value,
       apiKey: apiKey.value,
       model: model.value,
-      localMaxTokens: localMaxTokens.value,
       localUrl: localUrl.value,
       prompts,
       enableContextCaching: enableContextCaching.value,
+      reasoningEffort: reasoningEffort.value,
       signal: activeAbortController?.signal,
       existingSummary: storySummary.value
     })
@@ -3245,10 +3219,10 @@ const performCompaction = async (): Promise<boolean> => {
       apiProvider: apiProvider.value,
       apiKey: apiKey.value,
       model: model.value,
-      localMaxTokens: localMaxTokens.value,
       localUrl: localUrl.value,
       prompts,
       enableContextCaching: enableContextCaching.value,
+      reasoningEffort: reasoningEffort.value,
       signal: activeAbortController?.signal
     })
 
