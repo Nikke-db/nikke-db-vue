@@ -610,9 +610,9 @@
           <div class="guide-section">
             <ul>
               <li>Added Realistic Mode for Roleplay and Game modes</li>
-              <li>Added ability to compact story summmaries</li>
-              <li>Improved built-in character profiles</li>
-              <li>Several under-the-hood fixes and improvements</li>
+              <li>Added Commander relationships with characters in the database, plus new characters</li>
+              <li>Improvements on almost all APIs, including Local</li>
+              <li>Significant under-the-hood fixes and improvements</li>
             </ul>
           </div>
         </div>
