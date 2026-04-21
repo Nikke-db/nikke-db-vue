@@ -2,6 +2,8 @@
 import { type Ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
+import prompts from '@/utils/json/prompts.json'
+import { parseSelectionValue, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
 
 // Helper to merge base profiles with progression overlays (personality + relationships only)
 export const getEffectiveCharacterProfiles = (base: Record<string, any>, progression: Record<string, any>): Record<string, any> => {
@@ -31,6 +33,111 @@ export const getEffectiveCharacterProfiles = (base: Record<string, any>, progres
   }
 
   return merged
+}
+
+// Toggle state snapshot used by buildUserReminders
+export type ReminderToggleState = {
+  invalidJson: boolean
+  invalidJsonPersist: boolean
+  emptyActionsRetry: boolean
+  honorifics: boolean
+  narrationAndDialogueNotSplit: boolean
+  aiControllingUser: boolean
+  wrongSpeechStyles: boolean
+  incorrectAnimations: boolean
+  incorrectAnimationsPersist: boolean
+  incorrectSpeakerLabeling: boolean
+  narrationAsDialogue: boolean
+  wrongCharacterOnScreen: boolean
+}
+
+/**
+ * Build the user-toggled reminders string and return which toggles should be cleared.
+ * Pure function — no Vue reactivity, so the caller handles clearing.
+ */
+export const buildUserReminders = (toggles: ReminderToggleState, mode: string, reminders: Record<string, string>): { text: string; togglesToClear: (keyof ReminderToggleState)[] } => {
+  let text = ''
+  const togglesToClear: (keyof ReminderToggleState)[] = []
+
+  if (toggles.invalidJson) {
+    let jsonReminder: string
+    if (toggles.emptyActionsRetry && mode === 'game' && reminders.emptyActionsReminderGame) {
+      jsonReminder = reminders.emptyActionsReminderGame
+    } else {
+      jsonReminder = mode === 'game' ? reminders.invalidJsonReminderGame : reminders.invalidJsonReminder
+    }
+    text += '\n\n' + jsonReminder
+    if (!toggles.invalidJsonPersist) togglesToClear.push('invalidJson')
+    if (toggles.emptyActionsRetry) togglesToClear.push('emptyActionsRetry')
+  }
+  if (toggles.honorifics) {
+    text += '\n\n' + reminders.honorificsReminder
+    togglesToClear.push('honorifics')
+  }
+  if (toggles.narrationAndDialogueNotSplit) {
+    text += '\n\n' + reminders.narrationAndDialogueNotSplit
+    togglesToClear.push('narrationAndDialogueNotSplit')
+  }
+  if (toggles.aiControllingUser) {
+    text += '\n\n' + reminders.aiControllingUserReminder
+    togglesToClear.push('aiControllingUser')
+  }
+  if (toggles.wrongSpeechStyles) {
+    text += '\n\n' + reminders.wrongSpeechStylesReminder
+    togglesToClear.push('wrongSpeechStyles')
+  }
+  if (toggles.incorrectAnimations) {
+    text += '\n\n' + reminders.incorrectAnimationsReminder
+    if (!toggles.incorrectAnimationsPersist) togglesToClear.push('incorrectAnimations')
+  }
+  if (toggles.incorrectSpeakerLabeling) {
+    text += '\n\n' + reminders.incorrectSpeakerLabeling
+    togglesToClear.push('incorrectSpeakerLabeling')
+  }
+  if (toggles.narrationAsDialogue) {
+    text += '\n\n' + reminders.narrationAsDialogue
+    togglesToClear.push('narrationAsDialogue')
+  }
+  if (toggles.wrongCharacterOnScreen) {
+    text += '\n\n' + reminders.wrongCharacterOnScreen
+    togglesToClear.push('wrongCharacterOnScreen')
+  }
+
+  return { text, togglesToClear }
+}
+
+// Custom error class for AI API errors, preserving structured code and message from the response.
+export class AIError extends Error {
+  code: number | string
+  apiMessage: string
+
+  constructor(code: number | string, apiMessage: string) {
+    super(`${code}: ${apiMessage}`)
+    this.name = 'AIError'
+    this.code = code
+    this.apiMessage = apiMessage
+  }
+}
+
+// Maps known AI error codes/messages to user-friendly error strings.
+export const getAIErrorMessage = (error: any): string => {
+  if (error.message === 'RATE_LIMITED') {
+    return 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
+  } else if (error.message === 'FREE_MODEL_RATE_LIMITED') {
+    return 'Error: OpenRouter is restricting your ability to use free models due to anti-spam, rate-limiting policies. To remove this restriction, you must add at least $10 of credits to your OpenRouter account. This operation needs to be performed only once.'
+  } else if (error.message === 'GUARDRAIL_RESTRICTION') {
+    return 'Error: The only available endpoints for the requested model are incompatible with your OpenRouter privacy settings (train on your prompts or publish them). To continue, either change your restrictions on your OpenRouter account to allow endpoints for free (or paid) models to train on your prompts, or use a different model that does not require these changes.'
+  } else if (error.message && error.message.includes('503')) {
+    return 'Error 503: Model Overloaded. Please try again.'
+  } else if (error.message === 'JSON_PARSE_ERROR') {
+    return 'Error: Failed to parse AI response after multiple attempts. Please try again.'
+  } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
+    return 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
+  }
+  if (error instanceof AIError) {
+    return `Error ${error.code}: ${error.apiMessage}`
+  }
+  return 'Error: Failed to get response from AI.'
 }
 
 // Simple debug helper used across chat components
@@ -511,10 +618,21 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
     if (parts.length <= 1) return [action]
 
+    // If the original action was speaking:true and its text contained dialogue quotes,
+    // any split fragment that does NOT itself contain quotes is narration, not dialogue.
+    // This fixes models (e.g. GLM-5) that produce a single speaking:true action mixing
+    // quoted dialogue and unquoted narration separated by double newlines.
+    const dialogueQuotePattern = /("[\s\S]*?"|"\s*[\s\S]*?\s*")/
+    const originalHadQuotes = action.speaking === true && dialogueQuotePattern.test(rawText)
+
     const out: any[] = []
 
     for (let i = 0; i < parts.length; i++) {
       const partAction: any = { ...action, text: parts[i] }
+
+      if (originalHadQuotes && !dialogueQuotePattern.test(parts[i])) {
+        partAction.speaking = false
+      }
 
       if (i > 0) {
         for (const key of Object.keys(partAction)) {
@@ -1487,4 +1605,149 @@ export const replayMessage = async (msg: any, index: number, ctx: ReplayContext)
 
     ctx.startTypewriter(textToDisplay)
   }
+}
+
+// ── System prompt generation ──────────────────────────────────────────
+
+export type SystemPromptParams = {
+  enableWebSearch: boolean
+  effectiveCharacterProfiles: Record<string, any>
+  rosterRows: StoryCharacterEntry[]
+  currentLive2dId: string
+  mode: string
+  godModeEnabled: boolean
+  realisticModeEnabled: boolean
+  characterCatalog: CharacterCatalog
+}
+
+/**
+ * Build the full system prompt string.
+ * Pure function — no Vue reactivity, no side effects.
+ */
+export const generateSystemPrompt = (params: SystemPromptParams): string => {
+  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, characterCatalog } = params
+
+  const knownCharacterNames = Object.keys(profiles)
+
+  // Helper to filter out defaultSkin when non-default skin is selected
+  const getFilteredProfilesForAI = (): Record<string, any> => {
+    const filtered: Record<string, any> = {}
+
+    for (const [name, profile] of Object.entries(profiles)) {
+      // Check if this character has a non-default skin selected in roster
+      const rosterEntry = rosterRows.find((entry) => {
+        const parsed = parseSelectionValue(entry.selection)
+        return parsed?.type === 'base' && parsed.baseName === name
+      })
+
+      if (rosterEntry?.skinId && profile.id && rosterEntry.skinId !== profile.id) {
+        // Non-default skin selected - exclude defaultSkin field
+        const { defaultSkin, ...profileWithoutSkin } = profile
+        filtered[name] = profileWithoutSkin
+      } else {
+        // Default skin or no skin selected - keep all fields
+        filtered[name] = profile
+      }
+    }
+
+    return filtered
+  }
+
+  // Build a minimal character ID lookup for characters mentioned in profiles or current character
+  // This prevents massive token usage from including all 200+ characters
+  const relevantCharacterIds: string[] = []
+  const relevantCharacterNames: string[] = []
+
+  // Add current character
+  if (currentLive2dId) {
+    const currentChar = (l2d as any[]).find((c) => c.id === currentLive2dId)
+    if (currentChar) {
+      relevantCharacterIds.push(`${currentChar.name} = ${currentChar.id}`)
+      relevantCharacterNames.push(currentChar.name)
+    }
+  }
+
+  // Add characters from profiles (always use lowest ID when duplicates exist)
+  for (const name of knownCharacterNames) {
+    // Find all characters with this name and pick the one with lowest ID
+    const matchingChars = (l2d as any[]).filter((c) => c.name.toLowerCase() === name.toLowerCase())
+    if (matchingChars.length === 0) continue
+
+    // Sort by ID and pick the lowest one
+    const char = matchingChars.sort((a, b) => a.id.localeCompare(b.id))[0]
+    if (char && !relevantCharacterIds.some((r) => r.includes(char.id))) {
+      relevantCharacterIds.push(`${char.name} = ${char.id}`)
+      relevantCharacterNames.push(char.name)
+    }
+  }
+
+  // Add characters from roster
+  for (const entry of rosterRows) {
+    const selection = parseSelectionValue(entry.selection)
+    if (!selection) continue
+
+    if (selection.type === 'base') {
+      // For base entries, use the base name and ID
+      const baseEntry = characterCatalog.baseMap[selection.baseName]
+      if (baseEntry && !relevantCharacterIds.some((r) => r.includes(baseEntry.baseId))) {
+        relevantCharacterIds.push(`${selection.baseName} = ${baseEntry.baseId}`)
+        relevantCharacterNames.push(selection.baseName)
+      }
+    } else if (selection.type === 'variant') {
+      // For colon variants (e.g., "Rapi: Red Hood"), use the variant name and ID directly
+      const variantName = characterCatalog.idToName[selection.variantId]
+      if (variantName && variantName.includes(':')) {
+        // Use the full variant name and variant ID so the AI knows which specific character to use
+        if (!relevantCharacterIds.some((r) => r.includes(selection.variantId))) {
+          relevantCharacterIds.push(`${variantName} = ${selection.variantId}`)
+          relevantCharacterNames.push(variantName)
+        }
+      }
+    }
+  }
+
+  // Build honorifics map for only relevant characters to save tokens
+  const relevantHonorifics: Record<string, string> = {}
+  for (const name of relevantCharacterNames) {
+    relevantHonorifics[name] = getHonorific(name)
+  }
+
+  let modeInstructions = ''
+  if (mode === 'game') {
+    modeInstructions = prompts.systemPrompt.instructions.game
+  } else if (mode === 'story') {
+    modeInstructions = prompts.systemPrompt.instructions.story
+  } else {
+    modeInstructions = prompts.systemPrompt.instructions.roleplay
+  }
+
+  let prompt = `${prompts.systemPrompt.intro}
+
+  ${mode === 'roleplay' ? prompts.systemPrompt.modes.roleplay : mode === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story}
+
+  ${prompts.systemPrompt.honorifics.header}
+  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
+
+  ${prompts.systemPrompt.honorifics.rules}
+
+  ${enableWebSearch ? prompts.systemPrompt.characterResearch.enabled : prompts.systemPrompt.characterResearch.disabled}
+
+  ${prompts.systemPrompt.criticalErrors}
+
+  ${mode === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
+
+  ${prompts.systemPrompt.knownProfiles}
+  ${knownCharacterNames.length > 0 ? JSON.stringify(getFilteredProfilesForAI(), null, 2) : prompts.systemPrompt.noProfilesMessage}
+
+  ${prompts.systemPrompt.idReference}
+  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
+
+  ${prompts.systemPrompt.instructions.base}
+  ${modeInstructions}
+  ${prompts.systemPrompt.instructions.closing}
+  ${godModeEnabled ? (realisticModeEnabled && mode !== 'story' ? (prompts.systemPrompt as any).godModeRealistic : prompts.systemPrompt.godMode) : ''}
+  ${realisticModeEnabled && mode !== 'story' ? (prompts.systemPrompt as any).realisticMode : ''}
+  `
+
+  return prompt
 }

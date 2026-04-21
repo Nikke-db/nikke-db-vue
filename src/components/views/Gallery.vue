@@ -186,6 +186,7 @@ import side01 from '@/utils/json/Gallery/side01.json'
 import side02 from '@/utils/json/Gallery/side02.json'
 import side03 from '@/utils/json/Gallery/side03.json'
 import side04 from '@/utils/json/Gallery/side04.json'
+import side05 from '@/utils/json/Gallery/side05.json'
 import lastkingdom from '@/utils/json/Gallery/lastkingdom.json'
 import darkhero from '@/utils/json/Gallery/darkhero.json'
 import goldencoinrush from '@/utils/json/Gallery/goldencoinrush.json'
@@ -220,6 +221,10 @@ import azxservicetime from '@/utils/json/Gallery/azxservicetime.json'
 import arkguardian from '@/utils/json/Gallery/arkguardian.json'
 import sineditor from '@/utils/json/Gallery/sineditor.json'
 import liecauserecoil from '@/utils/json/Gallery/liecauserecoil.json'
+import twoxtwolove from '@/utils/json/Gallery/2x2love.json'
+import foolmetalpanic from '@/utils/json/Gallery/foolmetalpanic.json'
+import chocolateplease from '@/utils/json/Gallery/chocolateplease.json'
+
 
 const market = useMarket()
 
@@ -250,7 +255,8 @@ const buttonListSideStory = [
   { data: side01 },
   { data: side02 },
   { data: side03 },
-  { data: side04 }
+  { data: side04 },
+  { data: side05 }
 ] as buttonInterface[]
 
 const buttonListEvents = [
@@ -300,7 +306,10 @@ const buttonListEvents = [
   { data: terminusticket },
   { data: arkguardian },
   { data: sineditor },
-  { data: liecauserecoil }
+  { data: liecauserecoil },
+  { data: twoxtwolove },
+  { data: foolmetalpanic },
+  { data: chocolateplease }
 ] as buttonInterface[]
 
 const buttonListOther = [

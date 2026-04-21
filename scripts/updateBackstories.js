@@ -9,9 +9,12 @@
  * Usage:
  *   node scripts/updateBackstories.js
  *   node scripts/updateBackstories.js --no-skip-existing    # Re-process all characters
+ *   node scripts/updateBackstories.js --skip-preview         # In update mode, save without confirmation
  *
  * Options:
  *   --no-skip-existing    Process characters even if they already have data (default: skip existing)
+ *   --skip-preview        In "Update characters' backstories" mode, save changes immediately without
+ *                         showing a preview and asking for confirmation (default: show preview)
  *
  * Environment Variables:
  *   GEMINI_API_KEY - Your Gemini API key
@@ -37,14 +40,19 @@ const PROFILES_VARIANTS_PATH = path.join(__dirname, '..', 'src', 'utils', 'json'
 
 const args = process.argv.slice(2)
 const SKIP_EXISTING = !args.includes('--no-skip-existing') // Default: true (skip existing)
+const SKIP_PREVIEW = args.includes('--skip-preview') // For update mode: save without confirmation
 
 // Mode and paths
-let MODE = 'base' // 'base', 'variants', 'visual', or 'create'
+let MODE = 'base' // 'base', 'variants', 'visual', 'create', 'commander', or 'update'
 let PROFILES_PATH = PROFILES_BASE_PATH
 
 // Create mode state
 let CREATE_CHAR_NAME = null
 let CREATE_PROFILES_PATH = null
+
+// Update mode state
+let UPDATE_CHAR_NAME = null // single character name, or null for all
+let UPDATE_SCOPE = 'all' // 'single' or 'all'
 
 // API Provider selection
 let API_PROVIDER = null
@@ -108,7 +116,61 @@ Return ONLY a JSON object:
 If any field cannot be determined from the wiki, use an empty string for that field (or empty object for relationships). Never use null.`
 
 // Prompt template for visual analysis (appearance, defaultSkin, defaultWeapon)
-const VISUAL_PROMPT = `Analyze the image of this videogame character and provide a description in JSON format of her appearance (using the key \`appearance\`) and her clothing in the image (using \`defaultSkin\`). The descriptions MUST be concise and consist of a handful of words (e.g. 'blue eyes, long brown hair' etc.). If the character is shown with a weapon, also describe it using \`defaultWeapon\`).`
+const VISUAL_PROMPT = 'Analyze the image of this videogame character and provide a description in JSON format of her appearance (using the key `appearance`) and her clothing in the image (using `defaultSkin`). The descriptions MUST be concise and consist of a handful of words (e.g. \'blue eyes, long brown hair\' etc.). If the character is shown with a weapon, also describe it using `defaultWeapon`).'
+
+// Prompt template for extracting Commander/Protagonist relationship only
+const COMMANDER_RELATIONSHIP_PROMPT = `Based on the following wiki content about the NIKKE character "{name}", extract ONLY information about this character's relationship with the Commander (also known as the Protagonist, Master, or Servant depending on the character).
+
+WIKI CONTENT:
+{content}
+
+The Commander/Protagonist is the player character who leads Nikke squads. Different characters refer to him differently (e.g. "Commander", "Protagonist", "Master", etc.).
+
+Extract the character's relationship with the Commander/Protagonist. Describe the relationship dynamic, how they interact, and any significant events between them.
+
+Return ONLY a JSON object:
+{
+  "relationship": "Description of the relationship dynamic with the Commander/Protagonist..."
+}
+
+If no relationship with the Commander/Protagonist can be determined from the wiki content, return:
+{
+  "relationship": ""
+}`
+
+// Prompt template for updating existing backstories by comparing with wiki content
+const UPDATE_BACKSTORY_PROMPT = `You are comparing the existing backstory of the NIKKE character "{name}" with fresh wiki content to identify any notable missing or conflicting information.
+
+EXISTING BACKSTORY (from our database):
+{existing_backstory}
+
+FRESH WIKI CONTENT (from the wiki):
+{content}
+
+Your task:
+1. Treat the EXISTING BACKSTORY as the authoritative base. Preserve its writing style, phrasing, and level of detail.
+2. Carefully compare the two sources and identify:
+   a) Notable events, character arcs, or plot points present in the wiki content but MISSING from the existing backstory.
+   b) Information in the existing backstory that CONFLICTS with important new information from the wiki (e.g. new game content that changes or expands on previous events).
+3. If you find missing or conflicting content, produce an updated backstory that:
+   - Keeps the existing text as intact as possible (same style, same structure)
+   - Seamlessly integrates the new information where it fits naturally
+   - Only modifies existing sentences if they directly conflict with important new canon
+4. If the existing backstory is already comprehensive and nothing notable is missing, return it unchanged.
+
+Return ONLY a JSON object:
+{
+  "backstory": "The full updated backstory text (or the unchanged existing backstory if no updates needed)...",
+  "changed": true,
+  "changes_summary": "Brief description of what was added or modified, e.g. 'Added details about Chapter 35 events and new relationship with X'"
+}
+
+If no changes are needed, return:
+{
+  "backstory": "The existing backstory text unchanged...",
+  "changed": false,
+  "changes_summary": "No notable new information found in wiki content."
+}`
 
 // Character name mappings for wiki search (base characters)
 const WIKI_NAME_MAPPINGS_BASE = {
@@ -121,6 +183,79 @@ const WIKI_NAME_MAPPINGS_VARIANTS = {}
 
 // Utility: Delay function for rate limiting
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// ANSI color codes for terminal output
+const ANSI_GREEN = '\x1b[32m'
+const ANSI_RESET = '\x1b[0m'
+
+// Utility: Word-level diff that highlights new/changed parts in green
+// Uses Longest Common Subsequence (LCS) to find what was added
+function highlightDiff(oldText, newText) {
+  const oldWords = oldText.split(/(\s+)/)
+  const newWords = newText.split(/(\s+)/)
+
+  // Build LCS table
+  const m = oldWords.length
+  const n = newWords.length
+  const dp = Array.from({ length: m + 1 }, () => new Uint16Array(n + 1))
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (oldWords[i - 1] === newWords[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])
+      }
+    }
+  }
+
+  // Backtrack to find which new words are additions
+  const isNew = new Array(n).fill(true)
+  let i = m
+  let j = n
+  while (i > 0 && j > 0) {
+    if (oldWords[i - 1] === newWords[j - 1]) {
+      isNew[j - 1] = false
+      i--
+      j--
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--
+    } else {
+      j--
+    }
+  }
+
+  // Build output with green highlighting for new segments
+  let result = ''
+  let inGreen = false
+
+  for (let k = 0; k < n; k++) {
+    if (isNew[k]) {
+      // Skip coloring pure whitespace tokens on their own
+      if (newWords[k].trim() === '') {
+        result += newWords[k]
+        continue
+      }
+      if (!inGreen) {
+        result += ANSI_GREEN
+        inGreen = true
+      }
+      result += newWords[k]
+    } else {
+      if (inGreen) {
+        result += ANSI_RESET
+        inGreen = false
+      }
+      result += newWords[k]
+    }
+  }
+
+  if (inGreen) {
+    result += ANSI_RESET
+  }
+
+  return result
+}
 
 // Utility: Clean wiki content
 function cleanWikiContent(wikitext) {
@@ -226,7 +361,7 @@ async function fetchImageAsBase64(imageUrl) {
     const base64 = Buffer.from(arrayBuffer).toString('base64')
     return base64
   } catch (e) {
-    console.error(`  Error downloading image:`, e.message)
+    console.error('  Error downloading image:', e.message)
     return null
   }
 }
@@ -267,6 +402,12 @@ function isFieldEmpty(value) {
   return false
 }
 
+// Check if character has a Commander/Protagonist relationship key
+function hasCommanderRelationship(profile) {
+  if (!profile.relationships || typeof profile.relationships !== 'object') return false
+  return Object.keys(profile.relationships).some((key) => key.includes('Commander') || key.includes('Protagonist'))
+}
+
 // Check if character should be skipped (variants mode checks all fields)
 function shouldSkipCharacter(profile) {
   if (MODE === 'base') {
@@ -290,14 +431,14 @@ function shouldSkipCharacter(profile) {
 }
 
 // Call Gemini API to extract data
-async function extractDataGemini(characterName, wikiContent, imageUrl = null, modeOverride = null) {
+async function extractDataGemini(characterName, wikiContent, imageUrl = null, modeOverride = null, extraContext = null) {
   const effectiveMode = modeOverride || MODE
   let prompt
   let parts
 
   if (effectiveMode === 'visual' && imageUrl) {
     // Visual mode: download image and use base64 inline data
-    console.log(`  Downloading image...`)
+    console.log('  Downloading image...')
     const base64Image = await fetchImageAsBase64(imageUrl)
 
     if (!base64Image) {
@@ -319,8 +460,20 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null, mo
     ]
   } else {
     // Text mode: use appropriate prompt
-    const promptTemplate = effectiveMode === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    let promptTemplate
+    if (effectiveMode === 'base') {
+      promptTemplate = BASE_PROMPT
+    } else if (effectiveMode === 'commander') {
+      promptTemplate = COMMANDER_RELATIONSHIP_PROMPT
+    } else if (effectiveMode === 'update') {
+      promptTemplate = UPDATE_BACKSTORY_PROMPT
+    } else {
+      promptTemplate = VARIANTS_PROMPT
+    }
     prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+    if (effectiveMode === 'update' && extraContext?.existingBackstory) {
+      prompt = prompt.replace('{existing_backstory}', extraContext.existingBackstory)
+    }
     parts = [{ text: prompt }]
   }
 
@@ -388,7 +541,7 @@ async function extractDataGemini(characterName, wikiContent, imageUrl = null, mo
 }
 
 // Call OpenRouter API to extract data
-async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null, modeOverride = null) {
+async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null, modeOverride = null, extraContext = null) {
   const effectiveMode = modeOverride || MODE
   let prompt
   let content
@@ -410,8 +563,20 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
     ]
   } else {
     // Text mode: use appropriate prompt
-    const promptTemplate = effectiveMode === 'base' ? BASE_PROMPT : VARIANTS_PROMPT
+    let promptTemplate
+    if (effectiveMode === 'base') {
+      promptTemplate = BASE_PROMPT
+    } else if (effectiveMode === 'commander') {
+      promptTemplate = COMMANDER_RELATIONSHIP_PROMPT
+    } else if (effectiveMode === 'update') {
+      promptTemplate = UPDATE_BACKSTORY_PROMPT
+    } else {
+      promptTemplate = VARIANTS_PROMPT
+    }
     prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+    if (effectiveMode === 'update' && extraContext?.existingBackstory) {
+      prompt = prompt.replace('{existing_backstory}', extraContext.existingBackstory)
+    }
     content = prompt
   }
 
@@ -516,11 +681,25 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       if (Object.keys(data).length > 0) {
         return data
       }
+    } else if (effectiveMode === 'commander') {
+      // Commander mode: return relationship with fixed key
+      if (result.relationship && result.relationship.trim() !== '') {
+        return { commanderRelationship: result.relationship }
+      }
+    } else if (effectiveMode === 'update') {
+      // Update mode: return backstory with change metadata
+      if (result.backstory && result.backstory.trim() !== '') {
+        return {
+          backstory: result.backstory,
+          changed: result.changed !== false, // default to true if missing
+          changes_summary: result.changes_summary || 'No summary provided.'
+        }
+      }
     }
 
     return null
   } catch (parseError) {
-    console.log(`  JSON parse failed, trying regex extraction...`)
+    console.log('  JSON parse failed, trying regex extraction...')
 
     if (effectiveMode === 'base') {
       // Try to extract backstory with regex
@@ -528,7 +707,7 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       if (backstoryMatch) {
         const extracted = backstoryMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
         if (extracted && extracted.length > 10) {
-          console.log(`  ✓ Extracted backstory using regex fallback`)
+          console.log('  ✓ Extracted backstory using regex fallback')
           return { backstory: extracted }
         }
       }
@@ -563,7 +742,7 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       }
 
       if (Object.keys(data).length > 0) {
-        console.log(`  ✓ Extracted data using regex fallback`)
+        console.log('  ✓ Extracted data using regex fallback')
         return data
       }
     } else if (effectiveMode === 'visual') {
@@ -586,8 +765,34 @@ function parseApiResponse(text, characterName, modeOverride = null) {
       }
 
       if (Object.keys(data).length > 0) {
-        console.log(`  ✓ Extracted data using regex fallback`)
+        console.log('  ✓ Extracted data using regex fallback')
         return data
+      }
+    } else if (effectiveMode === 'commander') {
+      // Commander mode: try to extract relationship with regex
+      const relationshipMatch = jsonStr.match(/"relationship"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+      if (relationshipMatch) {
+        const extracted = relationshipMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
+        if (extracted && extracted.trim() !== '') {
+          console.log('  ✓ Extracted Commander relationship using regex fallback')
+          return { commanderRelationship: extracted }
+        }
+      }
+    } else if (effectiveMode === 'update') {
+      // Update mode: try to extract backstory and changed flag with regex
+      const backstoryMatch = jsonStr.match(/"backstory"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+      if (backstoryMatch) {
+        const extracted = backstoryMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '')
+        if (extracted && extracted.length > 10) {
+          const changedMatch = jsonStr.match(/"changed"\s*:\s*(true|false)/)
+          const summaryMatch = jsonStr.match(/"changes_summary"\s*:\s*"([^"]+(?:\\.[^"]*)*)"/)
+          console.log('  ✓ Extracted update data using regex fallback')
+          return {
+            backstory: extracted,
+            changed: changedMatch ? changedMatch[1] === 'true' : true,
+            changes_summary: summaryMatch ? summaryMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\/g, '') : 'No summary provided.'
+          }
+        }
       }
     }
 
@@ -596,7 +801,7 @@ function parseApiResponse(text, characterName, modeOverride = null) {
   }
 }
 
-// Select mode (base, variants, or visual)
+// Select mode (base, variants, visual, create, commander, or update)
 async function selectMode() {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -608,9 +813,11 @@ async function selectMode() {
   console.log('2) Variant characters - full profile (characterProfilesVariants.json)')
   console.log('3) Visual analysis - appearance, clothing, weapon (both files)')
   console.log('4) Create new character entry - all fields for a single character')
+  console.log('5) Fill missing Commander relationships (both files)')
+  console.log('6) Update characters\' backstories - compare & merge with wiki (both files)')
 
   const answer = await new Promise((resolve) => {
-    rl.question('\nEnter choice (1, 2, 3, or 4): ', (input) => {
+    rl.question('\nEnter choice (1, 2, 3, 4, 5, or 6): ', (input) => {
       resolve(input.trim())
     })
   })
@@ -628,6 +835,12 @@ async function selectMode() {
   } else if (answer === '4') {
     MODE = 'create'
     console.log('Selected: Create new character entry\n')
+  } else if (answer === '5') {
+    MODE = 'commander'
+    console.log('Selected: Fill missing Commander relationships\n')
+  } else if (answer === '6') {
+    MODE = 'update'
+    console.log('Selected: Update characters\' backstories\n')
   } else {
     MODE = 'base'
     PROFILES_PATH = PROFILES_BASE_PATH
@@ -677,6 +890,73 @@ async function selectNewCharacter() {
   }
 }
 
+// Prompt for update target: single character or all characters (update mode only)
+async function selectUpdateTarget() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  console.log('How would you like to update backstories?')
+  console.log('1) Update a single character (type exact name)')
+  console.log('2) Update all characters in both JSON files')
+
+  const scopeChoice = await new Promise((resolve) => {
+    rl.question('\nEnter choice (1 or 2): ', (input) => {
+      resolve(input.trim())
+    })
+  })
+
+  if (scopeChoice === '1') {
+    UPDATE_SCOPE = 'single'
+
+    const charName = await new Promise((resolve) => {
+      rl.question('\nEnter the exact character name (e.g. "Rapi" or "Anis: Sparkling Summer"): ', (input) => {
+        resolve(input.trim())
+      })
+    })
+
+    rl.close()
+
+    if (!charName) {
+      console.error('Error: No character name provided.')
+      process.exit(1)
+    }
+
+    // Validate the character exists in one of the two JSON files
+    let foundInBase = false
+    let foundInVariants = false
+
+    try {
+      const baseData = JSON.parse(fs.readFileSync(PROFILES_BASE_PATH, 'utf8'))
+      foundInBase = charName in baseData
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const variantsData = JSON.parse(fs.readFileSync(PROFILES_VARIANTS_PATH, 'utf8'))
+      foundInVariants = charName in variantsData
+    } catch (e) {
+      // ignore
+    }
+
+    if (!foundInBase && !foundInVariants) {
+      console.error(`\nError: "${charName}" was not found in either characterProfiles.json or characterProfilesVariants.json.`)
+      console.error('Please check the spelling and try again.')
+      process.exit(1)
+    }
+
+    UPDATE_CHAR_NAME = charName
+    const fileLabel = foundInBase ? 'characterProfiles.json' : 'characterProfilesVariants.json'
+    console.log(`\nWill update backstory for "${charName}" (found in ${fileLabel})\n`)
+  } else {
+    UPDATE_SCOPE = 'all'
+    rl.close()
+    console.log('\nWill update backstories for all characters in both JSON files\n')
+  }
+}
+
 // Select API provider
 async function selectProvider() {
   const rl = readline.createInterface({
@@ -722,11 +1002,11 @@ async function selectProvider() {
 }
 
 // Route to appropriate extraction function
-async function extractData(characterName, wikiContent, imageUrl = null, modeOverride = null) {
+async function extractData(characterName, wikiContent, imageUrl = null, modeOverride = null, extraContext = null) {
   if (API_PROVIDER === 'openrouter') {
-    return extractDataOpenRouter(characterName, wikiContent, imageUrl, modeOverride)
+    return extractDataOpenRouter(characterName, wikiContent, imageUrl, modeOverride, extraContext)
   }
-  return extractDataGemini(characterName, wikiContent, imageUrl, modeOverride)
+  return extractDataGemini(characterName, wikiContent, imageUrl, modeOverride, extraContext)
 }
 
 // Apply extracted data to profile
@@ -824,12 +1104,12 @@ async function createNewEntry() {
   }
 
   // --- Text pass (variants prompt: personality, speech_style, backstory, relationships) ---
-  console.log(`  Fetching wiki content...`)
+  console.log('  Fetching wiki content...')
   const wikiContent = await fetchWikiContent(charName)
 
   let textData = null
   if (!wikiContent) {
-    console.log(`  ✗ No wiki content found. Text fields will be empty.`)
+    console.log('  ✗ No wiki content found. Text fields will be empty.')
   } else {
     console.log(`  Wiki content: ${wikiContent.length} chars`)
     console.log(`  Extracting personality, speech_style, backstory, relationships with ${API_PROVIDER}...`)
@@ -838,17 +1118,17 @@ async function createNewEntry() {
       const fields = Object.keys(textData).join(', ')
       console.log(`  ✓ Text data extracted (${fields})`)
     } else {
-      console.log(`  ✗ Text extraction failed. Text fields will be empty.`)
+      console.log('  ✗ Text extraction failed. Text fields will be empty.')
     }
   }
 
   // --- Visual pass (appearance, defaultSkin, defaultWeapon) ---
-  console.log(`  Fetching image URL...`)
+  console.log('  Fetching image URL...')
   const imageUrl = await fetchImageUrl(charName)
 
   let visualData = null
   if (!imageUrl) {
-    console.log(`  ✗ No image URL found. Visual fields will be empty.`)
+    console.log('  ✗ No image URL found. Visual fields will be empty.')
   } else {
     console.log(`  Image URL: ${imageUrl}`)
     console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${API_PROVIDER}...`)
@@ -857,7 +1137,7 @@ async function createNewEntry() {
       const fields = Object.keys(visualData).join(', ')
       console.log(`  ✓ Visual data extracted (${fields})`)
     } else {
-      console.log(`  ✗ Visual extraction failed. Visual fields will be empty.`)
+      console.log('  ✗ Visual extraction failed. Visual fields will be empty.')
     }
   }
 
@@ -929,11 +1209,11 @@ async function processProfilesFile(filePath, fileLabel) {
     // Skip if already has required data
     if (SKIP_EXISTING && shouldSkipCharacter(profile)) {
       if (MODE === 'base') {
-        console.log(`  ✓ Already has backstory key, skipping (use --no-skip-existing to override)`)
+        console.log('  ✓ Already has backstory key, skipping (use --no-skip-existing to override)')
       } else if (MODE === 'visual') {
-        console.log(`  ✓ All visual fields already populated, skipping (use --no-skip-existing to override)`)
+        console.log('  ✓ All visual fields already populated, skipping (use --no-skip-existing to override)')
       } else {
-        console.log(`  ✓ All fields already populated, skipping (use --no-skip-existing to override)`)
+        console.log('  ✓ All fields already populated, skipping (use --no-skip-existing to override)')
       }
       skippedCount++
       continue
@@ -944,11 +1224,11 @@ async function processProfilesFile(filePath, fileLabel) {
 
     if (MODE === 'visual') {
       // Visual mode: fetch direct image URL from wiki API
-      console.log(`  Fetching image URL...`)
+      console.log('  Fetching image URL...')
       imageUrl = await fetchImageUrl(charName)
 
       if (!imageUrl) {
-        console.log(`  ✗ No image URL available, skipping character`)
+        console.log('  ✗ No image URL available, skipping character')
         failCount++
         continue
       }
@@ -956,11 +1236,11 @@ async function processProfilesFile(filePath, fileLabel) {
       console.log(`  Image URL: ${imageUrl}`)
     } else {
       // Text modes: fetch wiki content
-      console.log(`  Fetching wiki content...`)
+      console.log('  Fetching wiki content...')
       wikiContent = await fetchWikiContent(charName)
 
       if (!wikiContent) {
-        console.log(`  ✗ No wiki content available, skipping character`)
+        console.log('  ✗ No wiki content available, skipping character')
         failCount++
         continue
       }
@@ -1000,10 +1280,10 @@ async function processProfilesFile(filePath, fileLabel) {
       console.log('  Saving character profile...')
       fs.writeFileSync(filePath, JSON.stringify(profiles, null, 2))
     } else if (data) {
-      console.log(`  ✓ No new fields to update (all required fields already populated)`)
+      console.log('  ✓ No new fields to update (all required fields already populated)')
       skippedCount++
     } else {
-      console.log(`  ✗ Failed to extract data, skipping save`)
+      console.log('  ✗ Failed to extract data, skipping save')
       failCount++
     }
 
@@ -1031,12 +1311,346 @@ async function processProfilesFile(filePath, fileLabel) {
   return { successCount, failCount, skippedCount, total }
 }
 
+async function processCommanderRelationships() {
+  const COMMANDER_KEY = 'Commander (Protagonist)'
+
+  const filesToProcess = [
+    { path: PROFILES_BASE_PATH, label: 'Base Characters', nameMode: 'base' },
+    { path: PROFILES_VARIANTS_PATH, label: 'Variant Characters', nameMode: 'variants' }
+  ]
+
+  let totalStats = { successCount: 0, failCount: 0, skippedCount: 0, total: 0 }
+
+  for (const fileInfo of filesToProcess) {
+    console.log(`\nProcessing ${fileInfo.label}...`)
+    console.log('-'.repeat(60))
+
+    let profiles
+    try {
+      const data = fs.readFileSync(fileInfo.path, 'utf8')
+      profiles = JSON.parse(data)
+    } catch (e) {
+      console.error(`Error loading ${fileInfo.label}:`, e.message)
+      continue
+    }
+
+    const characters = Object.keys(profiles)
+    const total = characters.length
+    totalStats.total += total
+
+    console.log(`Found ${total} characters to scan`)
+    console.log('')
+
+    let successCount = 0
+    let failCount = 0
+    let skippedCount = 0
+
+    for (let i = 0; i < characters.length; i++) {
+      const charName = characters[i]
+      const profile = profiles[charName]
+
+      console.log(`[${i + 1}/${total}] Scanning: ${charName}`)
+
+      // Check if Commander/Protagonist relationship already exists
+      if (hasCommanderRelationship(profile)) {
+        const matchingKey = Object.keys(profile.relationships).find((key) => key.includes('Commander') || key.includes('Protagonist'))
+        console.log(`  ✓ Already has "${matchingKey}" relationship, skipping`)
+        skippedCount++
+        continue
+      }
+
+      // Fetch wiki content using the appropriate name mode
+      // Temporarily set MODE for getWikiPageName() resolution
+      const savedMode = MODE
+      MODE = fileInfo.nameMode
+      console.log('  Fetching wiki content...')
+      const wikiContent = await fetchWikiContent(charName)
+      MODE = savedMode
+
+      if (!wikiContent) {
+        console.log('  ✗ No wiki content available, skipping character')
+        failCount++
+        continue
+      }
+
+      console.log(`  Wiki content: ${wikiContent.length} chars`)
+      console.log(`  Extracting Commander relationship with ${API_PROVIDER}...`)
+
+      const data = await extractData(charName, wikiContent, null, 'commander')
+
+      if (data && data.commanderRelationship) {
+        // Ensure the relationships object exists
+        if (!profile.relationships || typeof profile.relationships !== 'object') {
+          profile.relationships = {}
+        }
+
+        profile.relationships[COMMANDER_KEY] = data.commanderRelationship
+        console.log(`  ✓ Added "${COMMANDER_KEY}" relationship`)
+        successCount++
+
+        // Save immediately after successful update
+        console.log('  Saving character profile...')
+        fs.writeFileSync(fileInfo.path, JSON.stringify(profiles, null, 2))
+      } else {
+        console.log('  ✗ Failed to extract Commander relationship')
+        failCount++
+      }
+
+      // Rate limiting
+      if (i < characters.length - 1) {
+        process.stdout.write(`  Waiting ${RATE_LIMIT_MS}ms...`)
+        await delay(RATE_LIMIT_MS)
+        console.log(' done')
+      }
+
+      console.log('')
+    }
+
+    totalStats.successCount += successCount
+    totalStats.failCount += failCount
+    totalStats.skippedCount += skippedCount
+
+    console.log('')
+    console.log(`${fileInfo.label} summary:`)
+    console.log(`  Total: ${total} | Added: ${successCount} | Failed: ${failCount} | Skipped: ${skippedCount}`)
+  }
+
+  return totalStats
+}
+
+async function processBackstoryUpdates() {
+  const filesToProcess = []
+
+  if (UPDATE_SCOPE === 'single') {
+    // Single character: find which file it's in
+    try {
+      const baseData = JSON.parse(fs.readFileSync(PROFILES_BASE_PATH, 'utf8'))
+      if (UPDATE_CHAR_NAME in baseData) {
+        filesToProcess.push({ path: PROFILES_BASE_PATH, label: 'Base Characters', nameMode: 'base', characters: [UPDATE_CHAR_NAME] })
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const variantsData = JSON.parse(fs.readFileSync(PROFILES_VARIANTS_PATH, 'utf8'))
+      if (UPDATE_CHAR_NAME in variantsData) {
+        filesToProcess.push({ path: PROFILES_VARIANTS_PATH, label: 'Variant Characters', nameMode: 'variants', characters: [UPDATE_CHAR_NAME] })
+      }
+    } catch (e) {
+      // ignore
+    }
+  } else {
+    // All characters: process both files
+    filesToProcess.push({ path: PROFILES_BASE_PATH, label: 'Base Characters', nameMode: 'base', characters: null })
+    filesToProcess.push({ path: PROFILES_VARIANTS_PATH, label: 'Variant Characters', nameMode: 'variants', characters: null })
+  }
+
+  let totalStats = { successCount: 0, failCount: 0, skippedCount: 0, unchangedCount: 0, generatedCount: 0, total: 0 }
+
+  for (const fileInfo of filesToProcess) {
+    console.log(`\nProcessing ${fileInfo.label}...`)
+    console.log('-'.repeat(60))
+
+    let profiles
+    try {
+      const data = fs.readFileSync(fileInfo.path, 'utf8')
+      profiles = JSON.parse(data)
+    } catch (e) {
+      console.error(`Error loading ${fileInfo.label}:`, e.message)
+      continue
+    }
+
+    const characters = fileInfo.characters || Object.keys(profiles)
+    const total = characters.length
+    totalStats.total += total
+
+    console.log(`Found ${total} characters to process`)
+    console.log('')
+
+    let successCount = 0
+    let failCount = 0
+    let skippedCount = 0
+    let unchangedCount = 0
+    let generatedCount = 0
+
+    for (let i = 0; i < characters.length; i++) {
+      const charName = characters[i]
+      const profile = profiles[charName]
+
+      if (!profile) {
+        console.log(`[${i + 1}/${total}] Character not found: ${charName}`)
+        failCount++
+        continue
+      }
+
+      console.log(`[${i + 1}/${total}] Processing: ${charName}`)
+
+      const existingBackstory = profile.backstory
+      const hasExistingBackstory = existingBackstory && typeof existingBackstory === 'string' && existingBackstory.trim() !== ''
+
+      // Temporarily set MODE for correct wiki name resolution
+      const savedMode = MODE
+      MODE = fileInfo.nameMode
+      console.log('  Fetching wiki content...')
+      const wikiContent = await fetchWikiContent(charName)
+      MODE = savedMode
+
+      if (!wikiContent) {
+        console.log('  ✗ No wiki content available, skipping character')
+        failCount++
+        continue
+      }
+
+      console.log(`  Wiki content: ${wikiContent.length} chars`)
+
+      let data
+      if (hasExistingBackstory) {
+        // Has existing backstory: use update mode to compare and merge
+        console.log(`  Existing backstory: ${existingBackstory.length} chars`)
+        console.log(`  Comparing & merging with ${API_PROVIDER}...`)
+        data = await extractData(charName, wikiContent, null, 'update', { existingBackstory })
+      } else {
+        // No existing backstory: generate from scratch using base prompt
+        console.log('  No existing backstory found, generating from scratch...')
+        console.log(`  Extracting backstory with ${API_PROVIDER}...`)
+        data = await extractData(charName, wikiContent, null, 'base')
+      }
+
+      if (!data) {
+        console.log('  ✗ Failed to extract data')
+        failCount++
+      } else if (hasExistingBackstory) {
+        // Update mode result
+        if (!data.changed) {
+          console.log('  ✓ No notable changes needed')
+          console.log(`    Summary: ${data.changes_summary}`)
+          unchangedCount++
+        } else {
+          console.log('  ✓ Changes detected!')
+          console.log(`    Summary: ${data.changes_summary}`)
+
+          let shouldSave = true
+
+          if (!SKIP_PREVIEW) {
+            // Show preview and ask for confirmation
+            console.log('')
+            console.log('  --- EXISTING BACKSTORY ---')
+            console.log(`  ${existingBackstory}`)
+            console.log('')
+            console.log('  --- UPDATED BACKSTORY (new parts in green) ---')
+            console.log(`  ${highlightDiff(existingBackstory, data.backstory)}`)
+            console.log('')
+
+            const rl = readline.createInterface({
+              input: process.stdin,
+              output: process.stdout
+            })
+
+            const answer = await new Promise((resolve) => {
+              rl.question('  Apply this update? (y/N): ', (input) => {
+                resolve(input.trim().toLowerCase())
+              })
+            })
+
+            rl.close()
+
+            shouldSave = answer === 'y' || answer === 'yes'
+          }
+
+          if (shouldSave) {
+            profile.backstory = data.backstory
+            console.log('  Saving updated backstory...')
+            fs.writeFileSync(fileInfo.path, JSON.stringify(profiles, null, 2))
+            console.log('  ✓ Backstory updated and saved')
+            successCount++
+          } else {
+            console.log('  ✗ Update rejected by user')
+            skippedCount++
+          }
+        }
+      } else {
+        // Generated from scratch
+        if (data.backstory) {
+          profile.backstory = data.backstory
+          console.log('  ✓ Backstory generated from scratch')
+
+          let shouldSave = true
+
+          if (!SKIP_PREVIEW) {
+            console.log('')
+            console.log('  --- GENERATED BACKSTORY ---')
+            console.log(`  ${data.backstory}`)
+            console.log('')
+
+            const rl = readline.createInterface({
+              input: process.stdin,
+              output: process.stdout
+            })
+
+            const answer = await new Promise((resolve) => {
+              rl.question('  Save this backstory? (y/N): ', (input) => {
+                resolve(input.trim().toLowerCase())
+              })
+            })
+
+            rl.close()
+
+            shouldSave = answer === 'y' || answer === 'yes'
+          }
+
+          if (shouldSave) {
+            console.log('  Saving generated backstory...')
+            fs.writeFileSync(fileInfo.path, JSON.stringify(profiles, null, 2))
+            console.log('  ✓ Backstory saved')
+            generatedCount++
+          } else {
+            console.log('  ✗ Generation rejected by user')
+            // Revert the in-memory change
+            profile.backstory = existingBackstory || ''
+            skippedCount++
+          }
+        } else {
+          console.log('  ✗ Failed to generate backstory')
+          failCount++
+        }
+      }
+
+      // Rate limiting
+      if (i < characters.length - 1) {
+        process.stdout.write(`  Waiting ${RATE_LIMIT_MS}ms...`)
+        await delay(RATE_LIMIT_MS)
+        console.log(' done')
+      }
+
+      console.log('')
+    }
+
+    totalStats.successCount += successCount
+    totalStats.failCount += failCount
+    totalStats.skippedCount += skippedCount
+    totalStats.unchangedCount += unchangedCount
+    totalStats.generatedCount += generatedCount
+
+    console.log('')
+    console.log(`${fileInfo.label} summary:`)
+    console.log(`  Total: ${total} | Updated: ${successCount} | Generated: ${generatedCount} | Unchanged: ${unchangedCount} | Failed: ${failCount} | Skipped: ${skippedCount}`)
+  }
+
+  return totalStats
+}
+
 async function main() {
   await selectMode()
 
   // Create mode: gather character name and target file before selecting provider
   if (MODE === 'create') {
     await selectNewCharacter()
+  }
+
+  // Update mode: gather target scope before selecting provider
+  if (MODE === 'update') {
+    await selectUpdateTarget()
   }
 
   await selectProvider()
@@ -1052,21 +1666,66 @@ async function main() {
     modeLabel = 'Visual Analysis'
   } else if (MODE === 'create') {
     modeLabel = `Create New Entry: ${CREATE_CHAR_NAME}`
+  } else if (MODE === 'commander') {
+    modeLabel = 'Fill Missing Commander Relationships'
+  } else if (MODE === 'update') {
+    modeLabel = UPDATE_SCOPE === 'single' ? `Update Backstory: ${UPDATE_CHAR_NAME}` : 'Update Characters\' Backstories'
   } else {
     modeLabel = 'Variant Characters'
   }
 
   console.log(`Mode: ${modeLabel}`)
   console.log(`Provider: ${API_PROVIDER}`)
-  if (MODE !== 'create') {
+  if (MODE !== 'create' && MODE !== 'commander' && MODE !== 'update') {
     console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
     console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)
+  } else if (MODE === 'commander' || MODE === 'update') {
+    console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
+    if (MODE === 'update') {
+      console.log(`Preview changes: ${SKIP_PREVIEW ? 'no (--skip-preview)' : 'yes'}`)
+    }
   }
   console.log('')
 
   if (MODE === 'create') {
     // Create mode: single character, all fields
     await createNewEntry()
+    return
+  }
+
+  if (MODE === 'commander') {
+    // Commander mode: scan both files and fill missing Commander relationships
+    const totalStats = await processCommanderRelationships()
+
+    console.log('')
+    console.log('='.repeat(60))
+    console.log('Update Complete!')
+    console.log('='.repeat(60))
+    console.log(`Total characters scanned: ${totalStats.total}`)
+    console.log(`Relationships added: ${totalStats.successCount}`)
+    console.log(`Failed: ${totalStats.failCount}`)
+    console.log(`Skipped (already had Commander relationship): ${totalStats.skippedCount}`)
+    console.log('')
+    console.log('Results saved to both characterProfiles.json and characterProfilesVariants.json')
+    return
+  }
+
+  if (MODE === 'update') {
+    // Update mode: compare and merge backstories with wiki content
+    const totalStats = await processBackstoryUpdates()
+
+    console.log('')
+    console.log('='.repeat(60))
+    console.log('Update Complete!')
+    console.log('='.repeat(60))
+    console.log(`Total characters processed: ${totalStats.total}`)
+    console.log(`Backstories updated: ${totalStats.successCount}`)
+    console.log(`Backstories generated from scratch: ${totalStats.generatedCount}`)
+    console.log(`Unchanged (no new info): ${totalStats.unchangedCount}`)
+    console.log(`Failed: ${totalStats.failCount}`)
+    console.log(`Skipped (rejected by user): ${totalStats.skippedCount}`)
+    console.log('')
+    console.log('Results saved to characterProfiles.json and/or characterProfilesVariants.json')
     return
   }
 
@@ -1102,7 +1761,7 @@ async function main() {
     console.log('Results saved to both characterProfiles.json and characterProfilesVariants.json')
   } else if (MODE === 'base') {
     console.log('Results saved to characterProfiles.json')
-  } else {
+  } else if (MODE === 'variants') {
     console.log('Results saved to characterProfilesVariants.json')
   }
 }
