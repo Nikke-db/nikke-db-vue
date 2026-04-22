@@ -15,7 +15,7 @@ export const providerOptions = [
   { label: 'Gemini', value: 'gemini' },
   { label: 'OpenRouter', value: 'openrouter' },
   { label: 'Pollinations', value: 'pollinations' },
-  { label: 'Local (Beta, OpenAI)', value: 'local' }
+  { label: 'Local (OpenAI-compatible API)', value: 'local' }
 ]
 
 export const tokenUsageOptions = [

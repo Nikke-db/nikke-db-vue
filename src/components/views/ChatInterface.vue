@@ -217,6 +217,20 @@
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
         <n-form>
+          <n-form-item>
+            <template #label>
+              Advanced Settings
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>Toggle to show/hide advanced settings.</div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="showAdvancedSettings" />
+          </n-form-item>
           <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
           <n-divider />
           <n-form-item label="API Provider">
@@ -253,7 +267,7 @@
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
 
-          <n-form-item v-if="reasoningEffortOptions.length > 0">
+          <n-form-item v-if="showAdvancedSettings && reasoningEffortOptions.length > 0">
             <template #label>
               Reasoning Effort
               <n-popover trigger="hover" placement="bottom">
@@ -275,7 +289,24 @@
 
           <h4 class="settings-section-header accent-green">AI Settings</h4>
           <n-divider />
-          <n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
+            <template #label>
+              Low-Context Mode <span style="font-size: smaller">(Not Recommended)</span>
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  This mode severely limits the AI's context by stripping backstory information and forcing aggressive summarization. It is <strong>only intended and recommended</strong> when using a model with a <strong>very small context window</strong> (e.g., 8K or 16K tokens), where even basic conversations may exceed the limit.<br /><br />
+                  For models with larger context windows (32K+), this mode will unnecessarily degrade response quality.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="lowContextMode" />
+          </n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Tokens Usage
               <n-popover trigger="hover" placement="bottom">
@@ -288,15 +319,15 @@
                   Controls how often the story is summarized to save tokens. Will affect costs and speed.<br /><br />Does not affect the Save and Load functionality.<br /><br />
                   <strong>Low:</strong> Summarizes every 10 turns. Cost-efficient.<br />
                   <strong>Medium:</strong> Summarizes every 30 turns. Balanced.<br />
-                  <strong>High:</strong> Summarizes every 60 turns. Uses more tokens.<br />
-                  <strong>Goddess:</strong> Disables summarization and sends the full history to the model on every turn. This may result in higher costs and slower responses in time, but provides the best context for the AI.
+                  <strong>High:</strong> Summarizes every 60 turns. Not recommended.<br />
+                  <strong>Goddess:</strong> Disables summarization and sends the full history to the model on every turn. This may result in higher costs and slower responses in time, but with certain models it may provide the best context for the AI.
                 </div>
               </n-popover>
             </template>
-            <n-select v-model:value="tokenUsage" :options="tokenUsageOptions" />
+            <n-select v-model:value="tokenUsage" :options="tokenUsageOptions" :disabled="lowContextMode" :style="{ opacity: lowContextMode ? 0.5 : 1 }" />
           </n-form-item>
 
-          <n-form-item v-if="isDev">
+          <n-form-item v-if="showAdvancedSettings && isDev">
             <template #label>
               Context Caching <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -315,7 +346,7 @@
             <n-switch v-model:value="enableContextCaching" />
           </n-form-item>
 
-          <n-form-item v-if="tokenUsage !== 'goddess'">
+          <n-form-item v-if="showAdvancedSettings && tokenUsage !== 'goddess'">
             <template #label>
               Automatically Compact Summaries
               <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
@@ -330,17 +361,17 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="autoCompactSummaries" />
+            <n-switch v-model:value="autoCompactSummaries" :disabled="lowContextMode" :style="{ opacity: lowContextMode ? 0.5 : 1 }" />
           </n-form-item>
 
-          <n-form-item v-if="autoCompactSummaries && tokenUsage !== 'goddess'" label="Compact every N summarizations">
-            <n-select v-model:value="autoCompactFrequency" :options="compactFrequencyOptions" />
+          <n-form-item v-if="showAdvancedSettings && autoCompactSummaries && tokenUsage !== 'goddess'" label="Compact every N summarizations">
+            <n-select v-model:value="autoCompactFrequency" :options="compactFrequencyOptions" :disabled="lowContextMode" :style="{ opacity: lowContextMode ? 0.5 : 1 }" />
           </n-form-item>
           <n-divider />
 
           <h4 class="settings-section-header accent-light-blue">Knowledge & Search</h4>
           <n-divider />
-          <n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Use Nikke-DB Knowledge <span style="font-size: smaller">(Recommended)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -358,7 +389,7 @@
             <n-switch v-model:value="useLocalProfiles" :disabled="!isDev" />
           </n-form-item>
 
-          <n-form-item v-if="useLocalProfiles">
+          <n-form-item v-if="showAdvancedSettings && useLocalProfiles">
             <template #label>
               Allow Web Search Fallback <span style="font-size: smaller">(Recommended)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -443,7 +474,7 @@
 
           <h4 class="settings-section-header accent-red">Interface & Audio</h4>
           <n-divider />
-          <n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Asset Quality
               <n-popover trigger="hover" placement="bottom">
@@ -792,10 +823,11 @@ const autoCompactSummaries = ref(true)
 const autoCompactFrequency = ref(4)
 const COMPACT_MIN_LENGTH = 1500
 const compactFrequencyOptions = [
+  { label: '2', value: 2 },
   { label: '3', value: 3 },
   { label: '4 (Default)', value: 4 },
   { label: '5', value: 5 },
-  { label: '10', value: 10 }
+  { label: '6', value: 6 }
 ]
 const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
@@ -830,6 +862,9 @@ const availableRosterOptions = computed(() => {
 })
 
 // Settings
+const showAdvancedSettings = ref(true)
+const lowContextMode = ref(false)
+const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
 const enableAnimationReplay = ref(false)
 const selectedMessageIndex = ref<number | null>(null)
 const originalHQAssets = ref(true)
@@ -1259,6 +1294,23 @@ watch(tokenUsage, (newVal) => {
 
 watch(enableContextCaching, (newVal) => {
   localStorage.setItem('nikke_enable_context_caching', String(newVal))
+})
+
+watch(lowContextMode, (val) => {
+  if (val) {
+    lowContextModePrev.value = {
+      tokenUsage: tokenUsage.value,
+      autoCompactSummaries: autoCompactSummaries.value,
+      autoCompactFrequency: autoCompactFrequency.value
+    }
+    tokenUsage.value = 'low'
+    autoCompactSummaries.value = true
+    autoCompactFrequency.value = 2
+  } else {
+    tokenUsage.value = lowContextModePrev.value.tokenUsage
+    autoCompactSummaries.value = lowContextModePrev.value.autoCompactSummaries
+    autoCompactFrequency.value = lowContextModePrev.value.autoCompactFrequency
+  }
 })
 
 watch(enableAnimationReplay, (newVal) => {
@@ -2337,6 +2389,7 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     mode: mode.value,
     godModeEnabled: godModeEnabled.value,
     realisticModeEnabled: realisticModeEnabled.value,
+    lowContextMode: lowContextMode.value,
     characterCatalog
   })
 }

@@ -1617,6 +1617,7 @@ export type SystemPromptParams = {
   mode: string
   godModeEnabled: boolean
   realisticModeEnabled: boolean
+  lowContextMode: boolean
   characterCatalog: CharacterCatalog
 }
 
@@ -1625,11 +1626,11 @@ export type SystemPromptParams = {
  * Pure function — no Vue reactivity, no side effects.
  */
 export const generateSystemPrompt = (params: SystemPromptParams): string => {
-  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, characterCatalog } = params
+  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog } = params
 
   const knownCharacterNames = Object.keys(profiles)
 
-  // Helper to filter out defaultSkin when non-default skin is selected
+  // Helper to filter out defaultSkin and optionally backstory from profiles
   const getFilteredProfilesForAI = (): Record<string, any> => {
     const filtered: Record<string, any> = {}
 
@@ -1640,14 +1641,19 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
         return parsed?.type === 'base' && parsed.baseName === name
       })
 
+      let filteredProfile: Record<string, any> = { ...(profile as any) }
+
       if (rosterEntry?.skinId && profile.id && rosterEntry.skinId !== profile.id) {
         // Non-default skin selected - exclude defaultSkin field
-        const { defaultSkin, ...profileWithoutSkin } = profile
-        filtered[name] = profileWithoutSkin
-      } else {
-        // Default skin or no skin selected - keep all fields
-        filtered[name] = profile
+        delete filteredProfile.defaultSkin
       }
+
+      if (lowContextMode) {
+        // Low-Context Mode - exclude backstory to save tokens
+        delete filteredProfile.backstory
+      }
+
+      filtered[name] = filteredProfile
     }
 
     return filtered

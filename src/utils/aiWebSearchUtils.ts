@@ -7,7 +7,7 @@ import { cleanWikiContent, parseAIResponse, isWholeWordPresent } from '@/utils/c
 import { getSelectionForName, parseSelectionValue, type CharacterCatalog } from '@/utils/storyCharacterUtils'
 
 // Web search state
-export const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') === 'true')
+export const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') !== 'false')
 
 // Constants
 export const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
