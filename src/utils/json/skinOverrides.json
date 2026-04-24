@@ -1,0 +1,9 @@
+{
+  "_comment": "IDs that should appear as skins under a specific base character in the Story/Roleplaying Generator instead of being treated as separate entries. Each key is the character ID to override, 'baseName' is the parent character it belongs under, and 'displayName' is the label shown in the skin dropdown.",
+  "overrides": {
+    "c9021": { "baseName": "Anis", "displayName": "Anis (Human)" },
+    "c9021_01": { "baseName": "Anis", "displayName": "Anis (Human, Performance)" },
+    "c017": { "baseName": "Anis", "displayName": "Anis (New)" },
+    "c018": { "baseName": "Neon", "displayName": "Neon (New)" }
+  }
+}

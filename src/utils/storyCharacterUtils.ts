@@ -1,5 +1,6 @@
 import l2d from '@/utils/json/l2d.json'
 import filteredIdsJson from '@/utils/json/filteredCharacterIds.json'
+import skinOverridesJson from '@/utils/json/skinOverrides.json'
 
 export type StoryCharacterSource = 'user' | 'ai'
 
@@ -40,12 +41,22 @@ const isIdFiltered = (id: string) => filteredIds.has(id)
 
 const toKey = (value: string) => (value || '').trim().toLowerCase()
 
+// Override map: IDs that should appear as skins under a specific base character
+// in the Story/Roleplaying Generator instead of being treated as separate entries.
+// These entries bypass the normal name/ID pattern matching and are injected directly
+// into their parent character's skin list with custom display names.
+// Defined in src/utils/json/skinOverrides.json
+const skinOverrides = (skinOverridesJson as any).overrides as Record<string, { baseName: string; displayName: string }>
+
+const isOverrideId = (id: string) => id in skinOverrides
+
 const buildBaseMap = (items: CharacterItem[]) => {
   const baseMap: Record<string, CharacterCatalogEntry> = {}
 
   for (const item of items) {
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
+    if (isOverrideId(item.id)) continue
     if (isVariantName(item.name)) continue
     if (item.id.includes('_')) continue
 
@@ -83,6 +94,7 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
   for (const item of items) {
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
+    if (isOverrideId(item.id)) continue
     idToName[item.id] = item.name
 
     // For nameToId, keep the lowest ID when there are duplicates
@@ -99,6 +111,7 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
   for (const item of items) {
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
+    if (isOverrideId(item.id)) continue
 
     if (isVariantName(item.name)) {
       const baseName = item.name.split(':')[0].trim()
@@ -118,6 +131,17 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
   for (const baseName of baseNames) {
     baseMap[baseName].skins = baseMap[baseName].skins.filter((skin) => !isIdFiltered(skin.id))
     baseMap[baseName].skins.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  // Process skin overrides: inject override entries as skins under their target base character
+  for (const [id, override] of Object.entries(skinOverrides)) {
+    if (!baseMap[override.baseName]) continue
+    baseMap[override.baseName].skins.push({ id, name: override.displayName })
+    idToName[id] = override.displayName
+    const key = toKey(override.displayName)
+    if (!nameToId[key] || id.localeCompare(nameToId[key]) < 0) {
+      nameToId[key] = id
+    }
   }
 
   variants.sort((a, b) => a.name.localeCompare(b.name))
@@ -370,6 +394,52 @@ export const resolveCharacterIdFromInput = (input: string, roster: StoryCharacte
 }
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * Resolve a character id/name to its display name.
+ * Accepts the lookup dependencies explicitly so it stays free of Vue reactivity.
+ */
+export const getCharacterDisplayName = (id: string, currentLive2dId: string, rosterRows: StoryCharacterEntry[], catalog: CharacterCatalog): string | null => {
+  if (!id || id === 'none') return null
+  if (id === 'current') return getCharacterDisplayName(currentLive2dId, currentLive2dId, rosterRows, catalog)
+  if (id.toLowerCase() === 'commander') return 'Commander'
+
+  const rosterMatch = resolveCharacterIdFromInput(id, rosterRows, catalog)
+  if (rosterMatch) {
+    const rosterName = catalog.idToName[rosterMatch]
+    if (rosterName) return rosterName
+  }
+
+  const char = (l2d as CharacterItem[]).find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
+
+  return char ? char.name : id
+}
+
+/**
+ * Resolve the *base* character name (e.g. "Neon" from "Neon Bling Bullet", or "Rapi" from "Rapi: Red Hood").
+ */
+export const getBaseCharacterDisplayName = (id: string, currentLive2dId: string, rosterRows: StoryCharacterEntry[], catalog: CharacterCatalog): string | null => {
+  if (!id || id === 'none') return null
+  if (id.toLowerCase() === 'commander') return 'Commander'
+
+  const fullName = getCharacterDisplayName(id, currentLive2dId, rosterRows, catalog)
+  if (!fullName) return null
+
+  // Check if this is a skin variant (contains space and starts with a base character name)
+  for (const baseName of catalog.baseNames) {
+    if (fullName.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
+      return baseName
+    }
+  }
+
+  // Check if this is a colon variant (e.g., "Rapi: Red Hood")
+  if (fullName.includes(':')) {
+    return fullName.split(':')[0].trim()
+  }
+
+  // It's already a base name
+  return fullName
+}
 
 export const resolveRosterIdsFromPrompt = (prompt: string, catalog: CharacterCatalog): string[] => {
   if (!prompt) return []

@@ -3,7 +3,8 @@ import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
 import prompts from '@/utils/json/prompts.json'
-import { cleanWikiContent } from '@/utils/chatUtils'
+import { cleanWikiContent, parseAIResponse, isWholeWordPresent } from '@/utils/chatUtils'
+import { getSelectionForName, parseSelectionValue, type CharacterCatalog } from '@/utils/storyCharacterUtils'
 
 // Web search state
 export const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') === 'true')
@@ -275,7 +276,7 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   if (useLocalProfiles && !allowWebSearchFallback) {
     logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
     setRandomLoadingMessage()
-    return false 
+    return false
   }
 
   loadingStatus.value = 'Searching the web for characters...'
@@ -308,4 +309,109 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   }
 
   return false
+}
+
+// ── Search request detection ──────────────────────────────────────────
+
+export type CheckSearchRequestParams = {
+  characterProfiles: Record<string, any>
+  characterCatalog: CharacterCatalog
+  apiProvider: string
+  allowWebSearchFallback: boolean
+}
+
+/**
+ * Check whether an AI response contains a `needs_search` array requesting info
+ * about characters we don't yet know. Returns the list of character names to
+ * search, or `null` if no search is needed.
+ *
+ * Pure function — pass reactive values as plain params.
+ */
+export const checkForSearchRequest = async (response: string, userPrompt: string, params: CheckSearchRequestParams): Promise<string[] | null> => {
+  // Get all known character names from static profile files (not reactive characterProfiles)
+  const knownBaseNames = new Set(Object.keys(localCharacterProfiles).map((k) => k.toLowerCase()))
+
+  const isSkinOrVariantOfKnownCharacter = (name: string): boolean => {
+    // Check if this name is a skin variant (e.g., "Rapi Classic Vacation")
+    const selectionInfo = getSelectionForName(name, params.characterCatalog)
+    if (!selectionInfo) return false
+
+    const parsed = parseSelectionValue(selectionInfo.selection)
+    if (!parsed) return false
+
+    if (parsed.type === 'base') {
+      // It's a base character - check if it's known (using static profile list)
+      return !!(knownBaseNames.has(parsed.baseName.toLowerCase()) || parsed.baseName.toLowerCase() === 'commander')
+    }
+
+    if (parsed.type === 'variant') {
+      // Colon variants (e.g., "Anis: Sparkling Summer") are distinct, mutually exclusive
+      // characters with their own profiles. Only skip search if the variant itself is already
+      // loaded in the reactive profiles - NOT if the base character is known.
+      const variantName = params.characterCatalog.idToName[parsed.variantId]
+      if (variantName) {
+        return !!Object.keys(params.characterProfiles).find((k) => k.toLowerCase() === variantName.toLowerCase())
+      }
+    }
+
+    // For skin names like "Rapi Classic Vacation", check if it starts with a known base name
+    for (const baseName of params.characterCatalog.baseNames) {
+      if (name.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
+        // This is a skin of baseName - check if baseName is in known profiles
+        return !!(knownBaseNames.has(baseName.toLowerCase()) || baseName.toLowerCase() === 'commander')
+      }
+    }
+
+    return false
+  }
+
+  const validateNames = (names: string[], textForValidation: string): string[] => {
+    const unique = Array.from(new Set(names.map((n) => (typeof n === 'string' ? n.trim() : '')).filter(Boolean)))
+    return unique.filter((name) => {
+      // Check against reactive profiles (already loaded) AND static profile list
+      const isKnown = params.characterProfiles[name] || knownBaseNames.has(name.toLowerCase()) || name.toLowerCase() === 'commander'
+      if (isKnown) return false
+
+      // Check if it's a skin/variant of a known character
+      if (isSkinOrVariantOfKnownCharacter(name)) return false
+
+      const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
+      const inGeneratedText = textForValidation && isWholeWordPresent(textForValidation, name)
+      return !!(inUserPrompt || inGeneratedText)
+    })
+  }
+
+  // Preferred path: shared robust parser
+  try {
+    const actions = parseAIResponse(response)
+    const allGeneratedText = actions.map((a: any) => a?.text || '').join(' ')
+
+    for (const action of actions) {
+      if (action?.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
+        const validated = validateNames(action.needs_search, allGeneratedText)
+        if (validated.length > 0) return validated
+      }
+    }
+  } catch {
+    // Fall back to regex extraction
+  }
+
+  // Fallback: extract needs_search even when JSON is truncated/malformed
+  try {
+    const m = response.match(/"needs_search"\s*:\s*\[([\s\S]*?)\]/)
+    if (m && m[1]) {
+      const names = Array.from(m[1].matchAll(/"([^"]+)"/g)).map((x) => x[1])
+      const validated = validateNames(names, response)
+      if (validated.length > 0) return validated
+    }
+  } catch {
+    // Ignore
+  }
+
+  // For Pollinations, only allow search if web search fallback is enabled
+  if (params.apiProvider === 'pollinations' && !params.allowWebSearchFallback) {
+    return null
+  }
+
+  return null
 }

@@ -3,7 +3,9 @@
 
 import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
-import { logDebug } from '@/utils/chatUtils'
+import { logDebug, AIError } from '@/utils/chatUtils'
+import { getRosterIdPairs, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
+import l2d from '@/utils/json/l2d.json'
 
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
 export const modelsRequiringStreamForHighTokens = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsRequiringStreamForHighTokens') || '[]')))
@@ -22,6 +24,43 @@ export const tokenUsageOptions = [
   { label: 'High (60 turns)', value: 'high' },
   { label: 'Goddess', value: 'goddess' }
 ]
+
+/**
+ * Returns the reasoning effort dropdown options for the given API provider.
+ * In production, restricts options to 'medium' and below.
+ */
+export const getReasoningEffortOptions = (provider: string): { label: string; value: string }[] => {
+  let options: { label: string; value: string }[] = []
+
+  if (provider === 'openrouter' || provider === 'pollinations' || provider === 'local') {
+    options = [
+      { label: 'Default', value: 'default' },
+      { label: 'None', value: 'none' },
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Low', value: 'low' },
+      { label: 'Medium', value: 'medium' },
+      { label: 'High', value: 'high' },
+      { label: 'Extra High', value: 'xhigh' }
+    ]
+  } else if (provider === 'gemini') {
+    options = [
+      { label: 'Default', value: 'default' },
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Low', value: 'low' },
+      { label: 'Medium', value: 'medium' },
+      { label: 'High', value: 'high' },
+      { label: 'Extra High', value: 'xhigh' }
+    ]
+  }
+
+  // Restrict options in production since anything beyond 'medium' is silly
+  if (!import.meta.env.DEV) {
+    const allowedValues = ['default', 'none', 'minimal', 'low', 'medium']
+    options = options.filter((o) => allowedValues.includes(o.value))
+  }
+
+  return options
+}
 
 /**
  * Determines whether to add cache_control to messages for Pollinations requests
@@ -245,20 +284,29 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`OpenRouter API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       const retryData = await retryResponse.json()
       return retryData.choices[0].message.content
     }
 
-    throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    if (response.status === 429 && errorData?.error?.message?.includes('Free-models-per-day')) {
+      throw new Error('FREE_MODEL_RATE_LIMITED')
+    }
+
+    if (response.status === 404 && errorData?.error?.message?.includes('No endpoints available matching your guardrail restrictions')) {
+      throw new Error('GUARDRAIL_RESTRICTION')
+    }
+
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
   const data = await response.json()
 
   return data.choices[0].message.content
 }
 
-export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching: boolean = false, signal?: AbortSignal) => {
+export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching?: boolean, signal?: AbortSignal) => {
   const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
 
   const requestBody: any = {
@@ -304,7 +352,8 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       return await parsePollinationsStreamResponse(retryResponse)
     }
@@ -330,12 +379,13 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
         })
 
         if (!fallbackResponse.ok) {
-          throw new Error(`Pollinations API Error: ${fallbackResponse.status} ${JSON.stringify(await fallbackResponse.json().catch(() => ({})))}`)
+          const fallbackErrorData = await fallbackResponse.json().catch(() => ({}))
+          throw new AIError(fallbackErrorData?.error?.code ?? fallbackResponse.status, fallbackErrorData?.error?.message ?? fallbackResponse.statusText ?? 'Unknown error')
         }
         const fallbackData = await fallbackResponse.json()
         return fallbackData.choices[0].message.content
       }
-      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+      throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
 
     // If max_tokens is too high for this model, try with standard limit
@@ -350,13 +400,14 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       const retryData = await retryResponse.json()
       return retryData.choices[0].message.content
     }
 
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
@@ -419,12 +470,12 @@ export const callGeminiSummarization = async (messages: any[], apiKey: string, m
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
+    const errorData = await response.json().catch(() => ({}))
     console.error('Gemini Summarization Error Details:', errorData)
     if (response.status === 503) {
       throw new Error('Gemini API Error: 503 Service Unavailable')
     }
-    throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
   const data = await response.json()
 
@@ -531,7 +582,8 @@ export const callPollinations = async (
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       return await parsePollinationsStreamResponse(retryResponse)
     }
@@ -552,7 +604,7 @@ export const callPollinations = async (
         sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
         return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
       }
-      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+      throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
 
     if (response.status === 400 && (errorData?.error?.message?.includes('response_format') || errorData?.error?.message?.includes('json_schema') || errorData?.error?.message?.includes('controlled generation'))) {
@@ -562,7 +614,7 @@ export const callPollinations = async (
       return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
     }
 
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
@@ -627,7 +679,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
       })
 
       if (!retryResponse.ok) {
-        throw new Error(`Pollinations API Error: ${retryResponse.status} ${JSON.stringify(await retryResponse.json().catch(() => ({})))}`)
+        const retryErrorData = await retryResponse.json().catch(() => ({}))
+        throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
       return await parsePollinationsStreamResponse(retryResponse)
     }
@@ -640,9 +693,9 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
         const retryData = await cacheRetry.retryResponse.json()
         return retryData.choices[0].message.content
       }
-      throw new Error(`Pollinations API Error: ${JSON.stringify(cacheRetry.retryErrorData)}`)
+      throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
-    throw new Error(`Pollinations API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
@@ -653,8 +706,8 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
   return data.choices[0].message.content
 }
 
-export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string; signal?: AbortSignal }) => {
-  const { model, maxTokens = 16384, apiKey, localUrl, signal } = opts
+export const callLocalSummarization = async (messages: any[], opts: { model?: string; maxTokens?: number; apiKey?: string; localUrl: string; reasoningEffort?: string; signal?: AbortSignal }) => {
+  const { model, maxTokens = 16384, apiKey, localUrl, reasoningEffort, signal } = opts
 
   let endpoint = localUrl.replace(/\/$/, '')
   if (!endpoint.endsWith('/chat/completions')) {
@@ -666,6 +719,12 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
     max_tokens: maxTokens
   }
   if (model) requestBody.model = model
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: reasoningEffort,
+      exclude: false
+    }
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -683,7 +742,7 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(`Local Summarization API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
   const data = await response.json()
   return data.choices[0].message.content
@@ -697,10 +756,11 @@ export const callLocal = async (
     apiKey?: string
     localUrl: string
     modeIsGame: boolean
+    reasoningEffort?: string
     signal?: AbortSignal
   }
 ) => {
-  const { model, maxTokens = 8192, apiKey, localUrl, modeIsGame, signal } = opts
+  const { model, maxTokens = 16384, apiKey, localUrl, modeIsGame, reasoningEffort, signal } = opts
 
   // Ensure URL ends with /chat/completions if not present
   let endpoint = localUrl.replace(/\/$/, '')
@@ -714,6 +774,12 @@ export const callLocal = async (
       max_tokens: maxTokens
     }
     if (model) requestBody.model = model
+    if (reasoningEffort && reasoningEffort !== 'default') {
+      requestBody.reasoning = {
+        effort: reasoningEffort,
+        exclude: false
+      }
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
@@ -731,7 +797,7 @@ export const callLocal = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(`Local API Error: ${response.status} ${JSON.stringify(errorData)}`)
+      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
     }
     const data = await response.json()
     return data.choices[0].message.content
@@ -750,6 +816,12 @@ export const callLocal = async (
     response_format: responseSchema
   }
   if (model) requestBody.model = model
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: reasoningEffort,
+      exclude: false
+    }
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -779,7 +851,7 @@ export const callLocal = async (
       return callWithoutJsonFormat()
     }
 
-    throw new Error(`Local API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
@@ -801,6 +873,7 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
       properties: {
         actions: {
           type: 'array',
+          minItems: 1,
           items: {
             type: 'object',
             properties: {
@@ -819,16 +892,16 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
         // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
         choices: isGameMode
           ? {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  text: { type: 'string' },
-                  type: { type: 'string', enum: ['dialogue', 'action'] }
-                },
-                required: ['text', 'type']
-              }
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' },
+                type: { type: 'string', enum: ['dialogue', 'action'] }
+              },
+              required: ['text', 'type']
             }
+          }
           : undefined
       },
       required: isGameMode ? ['actions', 'choices'] : ['actions']
@@ -842,10 +915,10 @@ export const summarizeChunk = async (
     apiProvider: string
     apiKey: string
     model: string
-    localMaxTokens: number
     localUrl: string
     prompts: any
     enableContextCaching?: boolean
+    reasoningEffort?: string
     signal?: AbortSignal
     existingSummary?: string
   }
@@ -877,7 +950,7 @@ export const summarizeChunk = async (
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
-    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal })
+    summary = await callLocalSummarization(msgs, { apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal, reasoningEffort: opts.reasoningEffort })
   }
 
   if (summary && summary.trim().length > 0) {
@@ -893,10 +966,10 @@ export const compactSummary = async (
     apiProvider: string
     apiKey: string
     model: string
-    localMaxTokens: number
     localUrl: string
     prompts: any
     enableContextCaching?: boolean
+    reasoningEffort?: string
     signal?: AbortSignal
   }
 ) => {
@@ -916,7 +989,7 @@ export const compactSummary = async (
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
-    summary = await callLocalSummarization(msgs, { maxTokens: opts.localMaxTokens, apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal })
+    summary = await callLocalSummarization(msgs, { apiKey: opts.apiKey, localUrl: opts.localUrl, signal: opts.signal, reasoningEffort: opts.reasoningEffort })
   }
 
   if (summary && summary.trim().length > 0) {
@@ -1032,7 +1105,15 @@ export const callOpenRouter = async (
         throw new Error('RATE_LIMITED')
       }
 
-      throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+      if (response.status === 429 && errorData?.error?.message?.includes('Free-models-per-day')) {
+        throw new Error('FREE_MODEL_RATE_LIMITED')
+      }
+
+      if (response.status === 404 && errorData?.error?.message?.includes('No endpoints available matching your guardrail restrictions')) {
+        throw new Error('GUARDRAIL_RESTRICTION')
+      }
+
+      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
     }
 
     const data = await response.json()
@@ -1088,6 +1169,14 @@ export const callOpenRouter = async (
       throw new Error('RATE_LIMITED')
     }
 
+    if (response.status === 429 && errorData?.error?.message?.includes('Free-models-per-day')) {
+      throw new Error('FREE_MODEL_RATE_LIMITED')
+    }
+
+    if (response.status === 404 && errorData?.error?.message?.includes('No endpoints available matching your guardrail restrictions')) {
+      throw new Error('GUARDRAIL_RESTRICTION')
+    }
+
     if (response.status === 404 && errorData?.error?.message?.includes('No endpoints found that can handle the requested parameters.')) {
       console.warn(`Model ${model} does not support json_object response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
@@ -1095,7 +1184,7 @@ export const callOpenRouter = async (
       return callWithoutJsonFormat()
     }
 
-    throw new Error(`OpenRouter API Error: ${response.status} ${JSON.stringify(errorData)}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
@@ -1229,12 +1318,12 @@ export const callGemini = async (messages: any[], opts: { model: string; apiKey:
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
+    const errorData = await response.json().catch(() => ({}))
     console.error('Gemini API Error Details:', errorData)
     if (response.status === 503) {
       throw new Error('Gemini API Error: 503 Service Unavailable')
     }
-    throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`)
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
@@ -1273,7 +1362,6 @@ export const enrichActionsWithAnimations = async (
     apiProvider: string
     apiKey: string
     model?: string
-    maxTokens?: number
     currentCharacterId: string
     filteredAnimations: string[]
     animationEnrichmentPrompt: string
@@ -1286,7 +1374,7 @@ export const enrichActionsWithAnimations = async (
 ): Promise<any[]> => {
   logDebug('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, maxTokens, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal } = opts
+  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal } = opts
 
   const hasMeaningfulAnimation = (anim: any): boolean => {
     if (typeof anim !== 'string') return false
@@ -1371,7 +1459,6 @@ export const enrichActionsWithAnimations = async (
     } else if (apiProvider === 'local' && localUrl) {
       response = await callLocal(messages, {
         model,
-        maxTokens,
         apiKey,
         localUrl,
         modeIsGame: false,
@@ -1489,4 +1576,231 @@ export const enrichActionsWithAnimations = async (
   })
 
   return mergedActions
+}
+
+/**
+ * Build a formatted string listing available animations for each character in context.
+ * Used to give the AI model awareness of which animations are available.
+ */
+export const formatAnimationsForContext = (opts: { characterProfiles: Record<string, any>; rosterRows: StoryCharacterEntry[]; characterCatalog: CharacterCatalog; currentLive2dId: string; currentLive2dAnimations: string[]; animationCache: Record<string, string[]> }): string => {
+  const placeholderAnimations = ['angry', 'angry_02', 'angry_03', 'cry', 'delight', 'idle', 'pain', 'sad', 'sad_02', 'shy', 'smile', 'surprise', 'void']
+
+  const getCharacterInfo = (id: string) => {
+    const charData = (l2d as any[]).find((c) => c.id === id)
+    return {
+      name: charData?.name || id,
+      id: id
+    }
+  }
+
+  const getCachedAnimations = (id: string): string[] | null => {
+    let anims = opts.animationCache[id]
+    if (!anims && id === opts.currentLive2dId) {
+      anims = opts.currentLive2dAnimations
+    }
+    if (anims && anims.length > 0) {
+      return getFilteredAnimations(anims)
+    }
+    return null
+  }
+
+  const formatAnimsForChar = (info: { name: string; id: string }, animations: string[]): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(animations)}`
+  }
+
+  const formatPlaceholderForChar = (info: { name: string; id: string }): string => {
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(placeholderAnimations)}`
+  }
+
+  const allCharacterIds = new Set<string>()
+
+  for (const profileKey of Object.keys(opts.characterProfiles)) {
+    if (profileKey.toLowerCase() !== 'commander') {
+      const profile = opts.characterProfiles[profileKey]
+      const id = profile.id || profileKey
+      allCharacterIds.add(id)
+    }
+  }
+
+  for (const pair of getRosterIdPairs(opts.rosterRows, opts.characterCatalog)) {
+    allCharacterIds.add(pair.id)
+  }
+
+  if (opts.currentLive2dId) {
+    allCharacterIds.add(opts.currentLive2dId)
+  }
+
+  const animsList = Array.from(allCharacterIds).map((id) => {
+    const cached = getCachedAnimations(id)
+    const info = getCharacterInfo(id)
+    if (cached) {
+      logDebug(`[AnimationContext] Using cached animations for ${id} (${info.name}): ${cached.length} animations`)
+      return formatAnimsForChar(info, cached)
+    }
+    logDebug(`[AnimationContext] No cached animations for ${id} (${info.name}), using placeholder array`)
+    return formatPlaceholderForChar(info)
+  })
+
+  if (animsList.length === 0) return 'No characters available yet.'
+  return animsList.join('\n')
+}
+
+// --- Tumbling Window Summarization ---
+
+/** Immutable snapshot of the state needed by the tumbling-window logic. */
+export interface TumblingWindowState {
+  tokenUsage: string
+  chatHistory: { role: string; content: string }[]
+  lastSummarizedIndex: number
+  isLoadedSession: boolean
+  summarizationRetryPending: boolean
+  summarizationAttemptCount: number
+  summarizationSuccessCount: number
+  summaryJustCompacted: boolean
+  autoCompactSummaries: boolean
+  autoCompactFrequency: number
+  storySummary: string
+  isStopped: boolean
+  compactMinLength: number
+}
+
+/** Callbacks the component must supply so the pure logic can delegate side-effects. */
+export interface TumblingWindowCallbacks {
+  summarizeChunk: (messages: { role: string; content: string }[]) => Promise<boolean>
+  performCompaction: () => Promise<boolean>
+  getOverlapMessageCount: (summarizeUpTo: number) => number
+  setRandomLoadingMessage: () => void
+}
+
+/** Describes every ref mutation + contextMsg / historyToSend the caller should apply. */
+export interface TumblingWindowResult {
+  /** New value for lastSummarizedIndex (undefined = no change) */
+  lastSummarizedIndex?: number
+  /** New value for isLoadedSession (undefined = no change) */
+  isLoadedSession?: boolean
+  /** New value for summarizationRetryPending (undefined = no change) */
+  summarizationRetryPending?: boolean
+  /** New value for summarizationAttemptCount (undefined = no change) */
+  summarizationAttemptCount?: number
+  /** New value for summarizationSuccessCount (undefined = no change) */
+  summarizationSuccessCount?: number
+  /** New value for summaryJustCompacted (undefined = no change) */
+  summaryJustCompacted?: boolean
+  /** The contextMsg suffix to append (story summary line, or empty) */
+  contextSuffix: string
+  /** The sliced history to send to the provider */
+  historyToSend: { role: string; content: string }[]
+}
+
+/**
+ * Shared tumbling-window summarization logic used by both `callAI` and
+ * `callAIWithoutSearch`.  The function is *almost* pure: it reads the
+ * supplied state snapshot and delegates all async side-effects through
+ * callbacks.  It returns a result object that tells the caller which
+ * refs to update.
+ *
+ * @param state   Snapshot of every reactive value the logic reads.
+ * @param cbs     Async callbacks for side-effects (summarize, compact, …).
+ * @param logTag  Label used in logDebug messages (e.g. "[callAI]").
+ */
+export async function handleTumblingWindowSummarization(state: TumblingWindowState, cbs: TumblingWindowCallbacks, logTag: string): Promise<TumblingWindowResult> {
+  const result: TumblingWindowResult = {
+    contextSuffix: '',
+    historyToSend: state.chatHistory
+  }
+
+  if (state.tokenUsage === 'goddess') {
+    // Goddess mode: send everything, no summarization
+    return result
+  }
+
+  let historyLimit = 30
+  if (state.tokenUsage === 'low') historyLimit = 10
+  else if (state.tokenUsage === 'medium') historyLimit = 30
+  else if (state.tokenUsage === 'high') historyLimit = 60
+  else if (state.tokenUsage === 'goddess') historyLimit = 99999
+
+  // --- working copies of mutable indices (will be written back via result) ---
+  let lastSumIdx = state.lastSummarizedIndex
+  let retryPending = state.summarizationRetryPending
+  let attemptCount = state.summarizationAttemptCount
+  let successCount = state.summarizationSuccessCount
+  let justCompacted = state.summaryJustCompacted
+  let loadedSession = state.isLoadedSession
+  let changed = false // track whether any ref-level mutation is needed
+
+  const endIndex = state.chatHistory.length - 1
+  const unsummarizedCount = endIndex - lastSumIdx
+  const maxContextMessages = historyLimit * 2
+
+  const overflowThreshold = Math.floor(maxContextMessages * 1.5)
+  const shouldSummarizeDueToOverflow = loadedSession && unsummarizedCount > overflowThreshold
+
+  let userMsgCount = 0
+  for (let i = lastSumIdx; i < endIndex; i++) {
+    if (state.chatHistory[i].role === 'user') {
+      userMsgCount++
+    }
+  }
+
+  const shouldRetryFailedSummarization = retryPending && endIndex > lastSumIdx
+  const shouldSummarizeByLimit = userMsgCount >= historyLimit
+
+  if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !state.isStopped) {
+    let summarizeUpTo = endIndex
+    if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
+      summarizeUpTo = endIndex - maxContextMessages
+    }
+
+    const chunkToSummarize = state.chatHistory.slice(lastSumIdx, summarizeUpTo)
+    logDebug(`${logTag} Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
+    const ok = await cbs.summarizeChunk(chunkToSummarize)
+    cbs.setRandomLoadingMessage()
+
+    if (ok) {
+      const overlapMessages = cbs.getOverlapMessageCount(summarizeUpTo)
+      lastSumIdx = summarizeUpTo - overlapMessages
+      retryPending = false
+      attemptCount = 0
+      successCount++
+      justCompacted = false
+      if (shouldSummarizeDueToOverflow) {
+        loadedSession = false
+      }
+      // Auto-compact summary if enabled and threshold reached
+      // NOTE: we read storySummary from state — the value may have been updated by summarizeChunk,
+      // but the caller will re-read the ref after applying the result.  The length check here uses
+      // the *pre-call* value which is conservative (the summary only grows).
+      if (state.autoCompactSummaries && successCount > 0 && successCount % state.autoCompactFrequency === 0 && state.storySummary.length >= state.compactMinLength && !state.isStopped) {
+        logDebug(`${logTag} Auto-compacting summary (after ${successCount} summarizations)...`)
+        await cbs.performCompaction()
+        cbs.setRandomLoadingMessage()
+      }
+      changed = true
+    } else {
+      retryPending = true
+      attemptCount++
+      changed = true
+    }
+  }
+
+  if (changed) {
+    result.lastSummarizedIndex = lastSumIdx
+    result.isLoadedSession = loadedSession
+    result.summarizationRetryPending = retryPending
+    result.summarizationAttemptCount = attemptCount
+    result.summarizationSuccessCount = successCount
+    result.summaryJustCompacted = justCompacted
+  }
+
+  // Append story summary to context if available
+  if (state.storySummary) {
+    result.contextSuffix = `\n\nPREVIOUS STORY SUMMARY:\n${state.storySummary}`
+  }
+
+  // Slice history from the (possibly updated) lastSummarizedIndex
+  const effectiveIdx = changed ? lastSumIdx : state.lastSummarizedIndex
+  result.historyToSend = state.chatHistory.slice(effectiveIdx)
+
+  return result
 }

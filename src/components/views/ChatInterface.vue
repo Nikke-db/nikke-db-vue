@@ -39,7 +39,7 @@
           <span class="drag-title">Chat</span>
         </div>
         <div class="window-controls">
-          <n-button size="tiny" circle quaternary @click="initChatLayout" title="Reset Position">
+          <n-button size="tiny" circle quaternary @click="resetChatLayout" title="Reset Position">
             <template #icon
               ><n-icon><Reset /></n-icon
             ></template>
@@ -227,24 +227,6 @@
             <n-input v-model:value="localUrl" placeholder="http://localhost:5001/v1" />
           </n-form-item>
 
-          <n-form-item v-if="apiProvider === 'local'">
-            <template #label>
-              Maximum Tokens
-              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  <p>This value should be equal to or lower than the context limit set in your local model runner (e.g., LM Studio, Ollama). Using higher values may result in errors.</p>
-                  <p>Acceptable values are between 8192 and 98304. The lower the number, the worse your experience will be. Note that higher values will require much higher system requirements.</p>
-                </div>
-              </n-popover>
-            </template>
-            <n-input-number v-model:value="localMaxTokens" :min="8192" :max="98304" :step="1024" placeholder="8192" style="width: 100%" />
-          </n-form-item>
-
           <n-form-item label="API Key" v-if="apiProvider !== 'local'">
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
@@ -417,6 +399,25 @@
             </n-radio-group>
           </n-form-item>
 
+          <n-form-item v-if="mode !== 'story'">
+            <template #label>
+              Realistic Mode <span style="font-size: smaller">(Experimental)</span>
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Prevents the user from forcing unrealistic actions or outcomes in the story, such as dictating NPC behaviour, specifying guaranteed outcomes, or performing physically impossible gestures.<br /><br />
+                  Note that the user can still delete individual messages from the chatbox, and this mode can be disabled at any time.<br /><br />
+                  Unavailable in Story Mode.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="realisticModeEnabled" />
+          </n-form-item>
+
           <n-form-item>
             <template #label>
               God Mode
@@ -426,7 +427,11 @@
                     <Help />
                   </n-icon>
                 </template>
-                <div>
+                <div v-if="realisticModeEnabled">
+                  In Realistic Mode, God Mode prevents the Commander from dying but does <strong>NOT</strong> prevent bad outcomes. The Commander can still lose fights, get injured, get captured, or fail — death is simply replaced with the nearest non-lethal outcome (e.g., captured, knocked unconscious, rescued).<br /><br />
+                  Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
+                </div>
+                <div v-else>
                   Prevents any action in the story from causing the Commander's death.<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
@@ -604,10 +609,10 @@
           <h3>🆕 What's New?</h3>
           <div class="guide-section">
             <ul>
-              <li>Added support for Gemini 3.1 Pro and Gemini 3.1 Flash-Lite</li>
-              <li>Added ability to compact story summmaries</li>
-              <li>More options in the Problems? button</li>
-              <li>Several under-the-hood fixes and improvements</li>
+              <li>Added Realistic Mode for Roleplay and Game modes</li>
+              <li>Added Commander relationships with characters in the database, plus new characters</li>
+              <li>Improvements on almost all APIs, including Local</li>
+              <li>Significant under-the-hood fixes and improvements</li>
             </ul>
           </div>
         </div>
@@ -728,14 +733,17 @@ import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.jso
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug } from '@/utils/chatUtils'
+import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, getAIErrorMessage, buildUserReminders, generateSystemPrompt as generateSystemPromptUtil, type ReminderToggleState } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
-import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels } from '@/utils/llmUtils'
+import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch, checkForSearchRequest as checkForSearchRequestUtil } from '@/utils/aiWebSearchUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
-import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, getRosterIdPairs, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex } from '@/utils/sessionUtils'
+import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
 const market = useMarket()
 
@@ -750,9 +758,8 @@ const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !=
 const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
-const localMaxTokens = ref(Number(localStorage.getItem('nikke_local_max_tokens')) || 8192)
 const model = ref('')
-const mode = ref('roleplay')
+const mode = ref('game')
 const tokenUsage = ref('medium')
 const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
 
@@ -760,41 +767,11 @@ watch(reasoningEffort, (val) => {
   localStorage.setItem('nikke_reasoning_effort', val)
 })
 
-const reasoningEffortOptions = computed(() => {
-  let options: { label: string; value: string }[] = []
-
-  if (apiProvider.value === 'openrouter' || apiProvider.value === 'pollinations') {
-    options = [
-      { label: 'Default', value: 'default' },
-      { label: 'None', value: 'none' },
-      { label: 'Minimal', value: 'minimal' },
-      { label: 'Low', value: 'low' },
-      { label: 'Medium', value: 'medium' },
-      { label: 'High', value: 'high' },
-      { label: 'Extra High', value: 'xhigh' }
-    ]
-  } else if (apiProvider.value === 'gemini') {
-    options = [
-      { label: 'Default', value: 'default' },
-      { label: 'Minimal', value: 'minimal' },
-      { label: 'Low', value: 'low' },
-      { label: 'Medium', value: 'medium' },
-      { label: 'High', value: 'high' },
-      { label: 'Extra High', value: 'xhigh' }
-    ]
-  }
-
-  // Restrict options in production since anything beyond 'medium' is silly
-  if (!import.meta.env.DEV) {
-    const allowedValues = ['default', 'none', 'minimal', 'low', 'medium']
-    options = options.filter((o) => allowedValues.includes(o.value))
-  }
-
-  return options
-})
+const reasoningEffortOptions = computed(() => getReasoningEffortOptions(apiProvider.value))
 const enableContextCaching = ref(true)
 const playbackMode = ref('manual')
 const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
+const realisticModeEnabled = ref(localStorage.getItem('nikke_realistic_mode_enabled') === 'true')
 const userInput = ref('')
 const isLoading = ref(false)
 const isGenerating = ref(false)
@@ -1007,6 +984,10 @@ const resizeDirection = ref('')
 const dragOffset = ref({ x: 0, y: 0 })
 const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY: 0 })
 
+// Wrapper so the template doesn't need to pass Refs directly (auto-unwrap in templates
+// would pass plain objects instead of Ref<WindowSize> / Ref<WindowPosition>).
+const resetChatLayout = () => initChatLayout(chatSize, chatPosition)
+
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
   return getEffectiveCharacterProfiles(characterProfiles.value, characterProgression.value)
@@ -1026,6 +1007,7 @@ const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
 const invalidJsonPersist = ref(false)
 const invalidJsonAuto = ref(true)
+const emptyActionsRetry = ref(false)
 const honorificsToggle = ref(false)
 const aiControllingUserToggle = ref(false)
 const narrationAndDialogueNotSplitToggle = ref(false)
@@ -1235,10 +1217,6 @@ watch(localUrl, (newVal) => {
   localStorage.setItem('nikke_local_url', newVal)
 })
 
-watch(localMaxTokens, (newVal) => {
-  localStorage.setItem('nikke_local_max_tokens', String(newVal))
-})
-
 watch(useLocalProfiles, (newVal) => {
   if (isDev || newVal) {
     localStorage.setItem('nikke_use_local_profiles', String(newVal))
@@ -1268,6 +1246,10 @@ watch(mode, (newVal) => {
   // If switching to Game mode, ensure chatMode is not 'classic'
   if (newVal === 'game' && chatMode.value === 'classic') {
     chatMode.value = 'nikke'
+  }
+  // If switching to Story mode, disable Realistic Mode
+  if (newVal === 'story') {
+    realisticModeEnabled.value = false
   }
 })
 
@@ -1313,6 +1295,10 @@ watch(chatterboxEndpoint, (newVal) => {
 
 watch(godModeEnabled, (newVal) => {
   localStorage.setItem('nikke_god_mode_enabled', String(newVal))
+})
+
+watch(realisticModeEnabled, (newVal) => {
+  localStorage.setItem('nikke_realistic_mode_enabled', String(newVal))
 })
 
 watch(autoCompactSummaries, (newVal) => {
@@ -1407,94 +1393,47 @@ const closeGuide = () => {
 const initializeSettings = async () => {
   isRestoring.value = true
 
-  // Load simple settings
-  const savedMode = localStorage.getItem('nikke_mode')
-  if (savedMode && (savedMode === 'roleplay' || savedMode === 'story' || savedMode === 'game')) mode.value = savedMode
+  // Load all simple settings from localStorage
+  const stored = loadSettingsFromStorage()
 
-  const savedPlayback = localStorage.getItem('nikke_playback_mode')
-  if (savedPlayback && (savedPlayback === 'auto' || savedPlayback === 'manual')) playbackMode.value = savedPlayback
+  if (stored.mode !== undefined) mode.value = stored.mode
+  if (stored.playbackMode !== undefined) playbackMode.value = stored.playbackMode
+  if (stored.yapEnabled !== undefined) market.live2d.yapEnabled = stored.yapEnabled
+  if (stored.hqAssets !== undefined) market.live2d.HQassets = stored.hqAssets
+  if (stored.ttsEnabled !== undefined) ttsEnabled.value = stored.ttsEnabled
+  if (stored.ttsEndpoint !== undefined) ttsEndpoint.value = stored.ttsEndpoint
+  if (stored.ttsProvider !== undefined) ttsProvider.value = stored.ttsProvider
+  if (stored.gptSovitsEndpoint !== undefined) gptSovitsEndpoint.value = stored.gptSovitsEndpoint
+  if (stored.gptSovitsBasePath !== undefined) gptSovitsBasePath.value = stored.gptSovitsBasePath
+  if (stored.chatterboxEndpoint !== undefined) chatterboxEndpoint.value = stored.chatterboxEndpoint
+  if (stored.tokenUsage !== undefined) tokenUsage.value = stored.tokenUsage
+  if (stored.enableContextCaching !== undefined) enableContextCaching.value = stored.enableContextCaching
+  if (stored.autoCompactSummaries !== undefined) autoCompactSummaries.value = stored.autoCompactSummaries
+  if (stored.autoCompactFrequency !== undefined) autoCompactFrequency.value = stored.autoCompactFrequency
+  if (stored.enableAnimationReplay !== undefined) enableAnimationReplay.value = stored.enableAnimationReplay
 
-  const savedYap = localStorage.getItem('nikke_yap_enabled')
-  if (savedYap !== null) market.live2d.yapEnabled = savedYap === 'true'
+  // Provider + model (needs async model fetching)
+  if (stored.apiProvider) {
+    apiProvider.value = stored.apiProvider
 
-  const savedHQAssets = localStorage.getItem('nikke_hq_assets')
-  if (savedHQAssets !== null) {
-    market.live2d.HQassets = savedHQAssets === 'true'
-  } else {
-    market.live2d.HQassets = false
-  }
-
-  const savedTts = localStorage.getItem('nikke_tts_enabled')
-  if (savedTts !== null) ttsEnabled.value = savedTts === 'true'
-
-  const savedTtsEndpoint = localStorage.getItem('nikke_tts_endpoint')
-  if (savedTtsEndpoint) ttsEndpoint.value = savedTtsEndpoint
-
-  const savedTtsProvider = localStorage.getItem('nikke_tts_provider')
-  if (savedTtsProvider === 'alltalk' || savedTtsProvider === 'gptsovits' || savedTtsProvider === 'chatterbox') ttsProvider.value = savedTtsProvider
-
-  const savedGptSovitsEndpoint = localStorage.getItem('nikke_gptsovits_endpoint')
-  if (savedGptSovitsEndpoint) gptSovitsEndpoint.value = savedGptSovitsEndpoint
-
-  const savedGptSovitsBasePath = localStorage.getItem('nikke_gptsovits_basepath')
-  if (savedGptSovitsBasePath) gptSovitsBasePath.value = savedGptSovitsBasePath
-
-  const savedChatterboxEndpoint = localStorage.getItem('nikke_chatterbox_endpoint')
-  if (savedChatterboxEndpoint) chatterboxEndpoint.value = savedChatterboxEndpoint
-
-  const savedTokenUsage = localStorage.getItem('nikke_token_usage')
-  if (savedTokenUsage && tokenUsageOptions.some((t) => t.value === savedTokenUsage)) tokenUsage.value = savedTokenUsage
-
-  const savedContextCaching = localStorage.getItem('nikke_enable_context_caching')
-  if (savedContextCaching !== null) enableContextCaching.value = savedContextCaching === 'true'
-
-  const savedAutoCompact = localStorage.getItem('nikke_auto_compact_summaries')
-  if (savedAutoCompact !== null) autoCompactSummaries.value = savedAutoCompact !== 'false'
-
-  const savedAutoCompactFreq = localStorage.getItem('nikke_auto_compact_frequency')
-  if (savedAutoCompactFreq !== null) {
-    const parsed = Number(savedAutoCompactFreq)
-    if ([3, 4, 5, 10].includes(parsed)) autoCompactFrequency.value = parsed
-  }
-
-  const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
-  enableAnimationReplay.value = savedAnimationReplay !== 'false'
-
-  // Load Provider and Model
-  const savedProvider = localStorage.getItem('nikke_api_provider')
-  const savedModel = localStorage.getItem('nikke_model')
-
-  if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
-    apiProvider.value = savedProvider
-
-    if (savedProvider === 'openrouter') {
+    if (stored.apiProvider === 'openrouter') {
       openRouterModels.value = await fetchOpenRouterModels()
-    } else if (savedProvider === 'pollinations') {
+    } else if (stored.apiProvider === 'pollinations') {
       pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
     }
 
-    // Validate and set model
     let validModels: string[] = []
-
-    if (savedProvider === 'gemini') {
+    if (stored.apiProvider === 'gemini') {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
-    } else if (savedProvider === 'openrouter') {
+    } else if (stored.apiProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
-    } else if (savedProvider === 'pollinations') {
+    } else if (stored.apiProvider === 'pollinations') {
       validModels = pollinationsModels.value.map((m) => m.value)
     }
 
-    if (savedModel && validModels.includes(savedModel)) {
-      model.value = savedModel
-    } else {
-      // Fallback to default if saved model is invalid
-      if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
-      else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
-
-      if (savedModel) {
-        console.warn(`Saved model '${savedModel}' is invalid or unavailable. Using default.`)
-      }
-    }
+    const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, openRouterModels.value.length > 0 ? openRouterModels.value[0].value : undefined)
+    if (validModel) model.value = validModel
+    if (warning) console.warn(warning)
   }
 
   // Ensure models are loaded for the current provider
@@ -1520,283 +1459,15 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
   }
 }
 
-const initChatLayout = () => {
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-
-  if (viewportWidth <= 768) {
-    // Mobile default: Bottom sheet style
-    const width = Math.min(viewportWidth - 20, 400)
-    const height = viewportHeight * 0.5
-    chatSize.value = { width, height }
-    chatPosition.value = {
-      x: (viewportWidth - width) / 2,
-      y: viewportHeight - height - 20
-    }
-  } else {
-    // Desktop default
-    chatSize.value = { width: 400, height: 600 }
-    chatPosition.value = { x: 300, y: viewportHeight - 620 }
-  }
-}
-
-// Dragging Logic
-const startDrag = (e: MouseEvent | TouchEvent) => {
-  // Only allow dragging from the handle
-  if ((e.target as HTMLElement).closest('.window-controls') || (e.target as HTMLElement).closest('.n-button')) return
-
-  // Prevent default to avoid text selection which can interfere with mouseup events
-  if (e instanceof MouseEvent) {
-    e.preventDefault()
-  }
-
-  isDragging.value = true
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-
-  dragOffset.value = {
-    x: clientX - chatPosition.value.x,
-    y: clientY - chatPosition.value.y
-  }
-
-  window.addEventListener('mousemove', onDrag)
-  window.addEventListener('touchmove', onDrag, { passive: false })
-  window.addEventListener('mouseup', stopDrag)
-  window.addEventListener('touchend', stopDrag)
-}
-
-const onDrag = (e: MouseEvent | TouchEvent) => {
-  if (!isDragging.value) return
-
-  // Safety check: if mouse button is not pressed, stop dragging
-  if (e instanceof MouseEvent && e.buttons === 0) {
-    stopDrag()
-    return
-  }
-
-  e.preventDefault()
-
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-
-  let newX = clientX - dragOffset.value.x
-  let newY = clientY - dragOffset.value.y
-
-  // Boundaries
-  const maxX = window.innerWidth - 50 // Keep at least 50px visible
-  const maxY = window.innerHeight - 50
-
-  newX = Math.max(-chatSize.value.width + 50, Math.min(newX, maxX))
-  newY = Math.max(0, Math.min(newY, maxY))
-
-  chatPosition.value = { x: newX, y: newY }
-}
-
-const stopDrag = () => {
-  isDragging.value = false
-  window.removeEventListener('mousemove', onDrag)
-  window.removeEventListener('touchmove', onDrag)
-  window.removeEventListener('mouseup', stopDrag)
-  window.removeEventListener('touchend', stopDrag)
-}
-
-// Resizing Logic
-const startResize = (e: MouseEvent | TouchEvent, direction: string) => {
-  e.stopPropagation()
-  e.preventDefault()
-  isResizing.value = true
-  resizeDirection.value = direction
-
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-
-  resizeStart.value = {
-    x: clientX,
-    y: clientY,
-    width: chatSize.value.width,
-    height: chatSize.value.height,
-    initialX: chatPosition.value.x,
-    initialY: chatPosition.value.y
-  }
-
-  window.addEventListener('mousemove', onResize)
-  window.addEventListener('touchmove', onResize, { passive: false })
-  window.addEventListener('mouseup', stopResize)
-  window.addEventListener('touchend', stopResize)
-}
-
-const onResize = (e: MouseEvent | TouchEvent) => {
-  if (!isResizing.value) return
-
-  if (e instanceof MouseEvent && e.buttons === 0) {
-    stopResize()
-    return
-  }
-
-  e.preventDefault()
-
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
-
-  const deltaX = clientX - resizeStart.value.x
-  const deltaY = clientY - resizeStart.value.y
-
-  let newWidth = resizeStart.value.width
-  let newHeight = resizeStart.value.height
-  let newX = resizeStart.value.initialX
-  let newY = resizeStart.value.initialY
-
-  const dir = resizeDirection.value
-
-  // Horizontal
-  if (dir.includes('e')) {
-    newWidth += deltaX
-  } else if (dir.includes('w')) {
-    newWidth -= deltaX
-    newX += deltaX
-  }
-
-  // Vertical
-  if (dir.includes('s')) {
-    newHeight += deltaY
-  } else if (dir.includes('n')) {
-    newHeight -= deltaY
-    newY += deltaY
-  }
-
-  // Min dimensions
-  const minWidth = 300
-  const minHeight = 200
-
-  if (newWidth < minWidth) {
-    if (dir.includes('w')) newX = resizeStart.value.initialX + (resizeStart.value.width - minWidth)
-    newWidth = minWidth
-  }
-
-  if (newHeight < minHeight) {
-    if (dir.includes('n')) newY = resizeStart.value.initialY + (resizeStart.value.height - minHeight)
-    newHeight = minHeight
-  }
-
-  chatSize.value = { width: newWidth, height: newHeight }
-  chatPosition.value = { x: newX, y: newY }
-}
-
-const stopResize = () => {
-  isResizing.value = false
-  window.removeEventListener('mousemove', onResize)
-  window.removeEventListener('touchmove', onResize)
-  window.removeEventListener('mouseup', stopResize)
-  window.removeEventListener('touchend', stopResize)
-}
-
-let originalViewportMetaContent: string | null = null
-let viewportMetaWasModified = false
-
-let originalBodyStyle: Partial<CSSStyleDeclaration> | null = null
-let originalHtmlOverflow: string | null = null
-let scrollLockY = 0
-
-const isMobileViewport = () => window.matchMedia('(max-width: 768px)').matches
-
-const restoreViewportZoom = () => {
-  if (typeof document === 'undefined') return
-  if (!viewportMetaWasModified) return
-
-  const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
-  if (!meta) return
-
-  if (originalViewportMetaContent !== null) {
-    meta.setAttribute('content', originalViewportMetaContent)
-  }
-
-  viewportMetaWasModified = false
-}
-
-const preventMobileZoomOnThisView = () => {
-  if (typeof document === 'undefined') return
-  const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
-  if (!meta) return
-
-  if (originalViewportMetaContent === null) {
-    originalViewportMetaContent = meta.getAttribute('content') || ''
-  }
-
-  if (!isMobileViewport()) return
-
-  // Prevent browser page zoom so Spine's custom pinch-zoom can work reliably.
-  meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
-  viewportMetaWasModified = true
-}
-
-const lockMobilePageScroll = () => {
-  if (typeof document === 'undefined') return
-  if (!isMobileViewport()) return
-
-  const html = document.documentElement
-  const body = document.body
-  if (!body) return
-
-  scrollLockY = window.scrollY || window.pageYOffset || 0
-
-  if (originalBodyStyle === null) {
-    originalBodyStyle = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      width: body.style.width,
-      overflow: body.style.overflow,
-      overscrollBehavior: (body.style as any).overscrollBehavior
-    }
-  }
-  if (originalHtmlOverflow === null) {
-    originalHtmlOverflow = html.style.overflow
-  }
-
-  html.style.overflow = 'hidden'
-  body.style.overflow = 'hidden'
-  ;(body.style as any).overscrollBehavior = 'none'
-  body.style.position = 'fixed'
-  body.style.top = `-${scrollLockY}px`
-  body.style.left = '0'
-  body.style.right = '0'
-  body.style.width = '100%'
-}
-
-const unlockMobilePageScroll = () => {
-  if (typeof document === 'undefined') return
-  const html = document.documentElement
-  const body = document.body
-  if (!body) return
-
-  if (originalHtmlOverflow !== null) {
-    html.style.overflow = originalHtmlOverflow
-    originalHtmlOverflow = null
-  }
-
-  if (originalBodyStyle) {
-    body.style.position = originalBodyStyle.position || ''
-    body.style.top = originalBodyStyle.top || ''
-    body.style.left = originalBodyStyle.left || ''
-    body.style.right = originalBodyStyle.right || ''
-    body.style.width = originalBodyStyle.width || ''
-    body.style.overflow = originalBodyStyle.overflow || ''
-    ;(body.style as any).overscrollBehavior = (originalBodyStyle as any).overscrollBehavior || ''
-    originalBodyStyle = null
-  }
-
-  if (scrollLockY) {
-    window.scrollTo(0, scrollLockY)
-  }
-  scrollLockY = 0
-}
+const { startDrag } = createDragHandlers({ chatPosition, chatSize, isDragging, dragOffset })
+const { startResize } = createResizeHandlers({ chatPosition, chatSize, isResizing, resizeDirection, resizeStart })
+const { restoreViewportZoom, preventMobileZoomOnThisView, lockMobilePageScroll, unlockMobilePageScroll } = createViewportHandlers()
 
 onMounted(() => {
   originalHQAssets.value = market.live2d.HQassets
   checkGuide()
   initializeSettings()
-  initChatLayout()
+  initChatLayout(chatSize, chatPosition)
   window.addEventListener('beforeunload', handleBeforeUnload)
 
   preventMobileZoomOnThisView()
@@ -1857,37 +1528,8 @@ const deleteLastMessage = () => {
 }
 
 const saveSession = () => {
-  // Filter chat history based on animation replay setting
-  const shouldExcludeFromExport = (msg: any): boolean => {
-    if (msg?.role !== 'system' || typeof msg?.content !== 'string') return false
-
-    const content = msg.content
-
-    if (content === 'Session restored successfully.') return true
-    if (content.startsWith('Warning: Saved model \'') && content.endsWith('Using default.')) return true
-
-    return false
-  }
-
-  const exportedChatHistory = chatHistory.value
-    .filter((msg) => !shouldExcludeFromExport(msg))
-    .map((msg) => {
-      if (!enableAnimationReplay.value) {
-        // Old format: just role and content
-        return { role: msg.role, content: msg.content }
-      } else {
-        // New format: remove content if text is present to save space
-        if (msg.role === 'assistant' && msg.text) {
-          const rest = { ...msg }
-          delete (rest as any).content
-          return rest
-        }
-        return msg
-      }
-    })
-
-  const sessionData = {
-    chatHistory: exportedChatHistory,
+  const sessionData = buildSessionExportData({
+    chatHistory: chatHistory.value,
     characterProfiles: characterProfiles.value,
     characterProgression: characterProgression.value,
     storySummary: storySummary.value,
@@ -1895,39 +1537,27 @@ const saveSession = () => {
     summarizationSuccessCount: summarizationSuccessCount.value,
     summaryJustCompacted: summaryJustCompacted.value,
     mode: mode.value,
-    timestamp: new Date().toISOString(),
     rosterRows: rosterRows.value,
-    settings: {
-      apiProvider: apiProvider.value,
-      model: model.value,
-      playbackMode: playbackMode.value,
-      yapEnabled: market.live2d.yapEnabled,
-      ttsEnabled: ttsEnabled.value,
-      ttsEndpoint: ttsEndpoint.value,
-      ttsProvider: ttsProvider.value,
-      gptSovitsEndpoint: gptSovitsEndpoint.value,
-      gptSovitsBasePath: gptSovitsBasePath.value,
-      tokenUsage: tokenUsage.value,
-      enableContextCaching: enableContextCaching.value,
-      useLocalProfiles: useLocalProfiles.value,
-      allowWebSearchFallback: allowWebSearchFallback.value,
-      reasoningEffort: reasoningEffort.value,
-      autoCompactSummaries: autoCompactSummaries.value,
-      autoCompactFrequency: autoCompactFrequency.value
-    }
-  }
+    enableAnimationReplay: enableAnimationReplay.value,
+    apiProvider: apiProvider.value,
+    model: model.value,
+    playbackMode: playbackMode.value,
+    yapEnabled: market.live2d.yapEnabled,
+    ttsEnabled: ttsEnabled.value,
+    ttsEndpoint: ttsEndpoint.value,
+    ttsProvider: ttsProvider.value,
+    gptSovitsEndpoint: gptSovitsEndpoint.value,
+    gptSovitsBasePath: gptSovitsBasePath.value,
+    tokenUsage: tokenUsage.value,
+    enableContextCaching: enableContextCaching.value,
+    useLocalProfiles: useLocalProfiles.value,
+    allowWebSearchFallback: allowWebSearchFallback.value,
+    reasoningEffort: reasoningEffort.value,
+    autoCompactSummaries: autoCompactSummaries.value,
+    autoCompactFrequency: autoCompactFrequency.value
+  })
 
-  const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  const now = new Date()
-  const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`
-  a.download = `nikke-session-${timestamp}.json`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  downloadSessionFile(sessionData)
 }
 
 const triggerRestore = () => {
@@ -1949,27 +1579,7 @@ const handleFileUpload = (event: Event) => {
         isRestoring.value = true
 
         if (data.chatHistory && Array.isArray(data.chatHistory)) {
-          chatHistory.value = data.chatHistory.map((msg: any) => {
-            if (!msg.content && msg.text) {
-              // Reconstruct content
-              let reconstructedContent = msg.text
-              if (msg.speaking && msg.character && msg.character !== 'none') {
-                const name = getCharacterName(msg.character)
-                if (name) {
-                  // Check if the text already starts with the name to avoid duplication
-                  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                  const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
-                  const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
-
-                  if (!namePattern.test(reconstructedContent) && !anyNamePattern.test(reconstructedContent)) {
-                    reconstructedContent = `**${name}:** ${reconstructedContent}`
-                  }
-                }
-              }
-              return { ...msg, content: reconstructedContent }
-            }
-            return msg
-          })
+          chatHistory.value = reconstructChatHistory(data.chatHistory, getCharacterName)
           selectedMessageIndex.value = null
         }
         if (data.characterProfiles) {
@@ -1997,109 +1607,47 @@ const handleFileUpload = (event: Event) => {
           mode.value = data.mode
         }
 
-        // Restore Settings
+        // Restore Settings — build valid model list, then validate
         if (data.settings) {
-          // Restore simple settings
-          if (data.settings.playbackMode && (data.settings.playbackMode === 'auto' || data.settings.playbackMode === 'manual')) {
-            playbackMode.value = data.settings.playbackMode
-          }
-
-          if (typeof data.settings.yapEnabled === 'boolean') {
-            market.live2d.yapEnabled = data.settings.yapEnabled
-          }
-
-          if (typeof data.settings.ttsEnabled === 'boolean') {
-            ttsEnabled.value = data.settings.ttsEnabled
-          }
-
-          if (data.settings.ttsEndpoint) {
-            ttsEndpoint.value = data.settings.ttsEndpoint
-          }
-
-          if (data.settings.ttsProvider === 'alltalk' || data.settings.ttsProvider === 'gptsovits') {
-            ttsProvider.value = data.settings.ttsProvider
-          }
-
-          if (data.settings.gptSovitsEndpoint) {
-            gptSovitsEndpoint.value = data.settings.gptSovitsEndpoint
-          }
-
-          if (data.settings.gptSovitsBasePath) {
-            gptSovitsBasePath.value = data.settings.gptSovitsBasePath
-          }
-
-          if (data.settings.tokenUsage && tokenUsageOptions.some((t) => t.value === data.settings.tokenUsage)) {
-            tokenUsage.value = data.settings.tokenUsage
-          }
-
-          if (typeof data.settings.enableContextCaching === 'boolean') {
-            enableContextCaching.value = data.settings.enableContextCaching
-          }
-
-          if (typeof data.settings.useLocalProfiles === 'boolean') {
-            useLocalProfiles.value = data.settings.useLocalProfiles
-          }
-
-          if (typeof data.settings.allowWebSearchFallback === 'boolean') {
-            allowWebSearchFallback.value = data.settings.allowWebSearchFallback
-          }
-
-          if (data.settings.reasoningEffort) {
-            reasoningEffort.value = data.settings.reasoningEffort
-          }
-
-          if (typeof data.settings.autoCompactSummaries === 'boolean') {
-            autoCompactSummaries.value = data.settings.autoCompactSummaries
-          }
-
-          if (typeof data.settings.autoCompactFrequency === 'number' && [3, 4, 5, 10].includes(data.settings.autoCompactFrequency)) {
-            autoCompactFrequency.value = data.settings.autoCompactFrequency
-          }
-
-          // Restore Provider and Model
+          // If the saved provider is openrouter, fetch models first
           const savedProvider = data.settings.apiProvider
-          const savedModel = data.settings.model
+          if (savedProvider === 'openrouter') {
+            openRouterModels.value = await fetchOpenRouterModels()
+          }
 
-          if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
-            apiProvider.value = savedProvider
+          let validModels: string[] = []
+          if (savedProvider === 'gemini') {
+            validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
+          } else if (savedProvider === 'openrouter') {
+            validModels = openRouterModels.value.map((m) => m.value)
+          }
 
-            if (savedProvider === 'openrouter') {
-              openRouterModels.value = await fetchOpenRouterModels()
-            }
+          const validated = validateSessionSettings(data.settings, validModels)
 
-            // Validate and set model
-            let validModels: string[] = []
-
-            if (savedProvider === 'gemini') {
-              validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
-            } else if (savedProvider === 'openrouter') {
-              validModels = openRouterModels.value.map((m) => m.value)
-            }
-
-            if (savedModel && validModels.includes(savedModel)) {
-              model.value = savedModel
-            } else {
-              // Fallback to default if saved model is invalid
-              if (savedProvider === 'gemini') model.value = 'gemini-2.5-flash'
-              else if (savedProvider === 'openrouter' && openRouterModels.value.length > 0) model.value = openRouterModels.value[0].value
-
-              if (savedModel) {
-                chatHistory.value.push({ role: 'system', content: `Warning: Saved model '${savedModel}' is invalid or unavailable. Using default.` })
-              }
-            }
+          // Apply validated settings to refs
+          if (validated.playbackMode !== undefined) playbackMode.value = validated.playbackMode
+          if (validated.yapEnabled !== undefined) market.live2d.yapEnabled = validated.yapEnabled
+          if (validated.ttsEnabled !== undefined) ttsEnabled.value = validated.ttsEnabled
+          if (validated.ttsEndpoint !== undefined) ttsEndpoint.value = validated.ttsEndpoint
+          if (validated.ttsProvider !== undefined) ttsProvider.value = validated.ttsProvider
+          if (validated.gptSovitsEndpoint !== undefined) gptSovitsEndpoint.value = validated.gptSovitsEndpoint
+          if (validated.gptSovitsBasePath !== undefined) gptSovitsBasePath.value = validated.gptSovitsBasePath
+          if (validated.tokenUsage !== undefined) tokenUsage.value = validated.tokenUsage
+          if (validated.enableContextCaching !== undefined) enableContextCaching.value = validated.enableContextCaching
+          if (validated.useLocalProfiles !== undefined) useLocalProfiles.value = validated.useLocalProfiles
+          if (validated.allowWebSearchFallback !== undefined) allowWebSearchFallback.value = validated.allowWebSearchFallback
+          if (validated.reasoningEffort !== undefined) reasoningEffort.value = validated.reasoningEffort
+          if (validated.autoCompactSummaries !== undefined) autoCompactSummaries.value = validated.autoCompactSummaries
+          if (validated.autoCompactFrequency !== undefined) autoCompactFrequency.value = validated.autoCompactFrequency
+          if (validated.apiProvider !== undefined) apiProvider.value = validated.apiProvider
+          if (validated.model !== undefined) model.value = validated.model
+          if (validated.modelWarning) {
+            chatHistory.value.push({ role: 'system', content: validated.modelWarning })
           }
         }
 
-        // FIX: Ensure we have a context window of at least 10 messages upon restore
-        // This prevents the AI from relying solely on potentially outdated summaries
-        if (tokenUsage.value !== 'goddess' && chatHistory.value.length > 0) {
-          const safeBuffer = 10
-          // If the current summarized index leaves less than safeBuffer messages, pull it back
-          if (chatHistory.value.length - lastSummarizedIndex.value < safeBuffer) {
-            lastSummarizedIndex.value = Math.max(0, chatHistory.value.length - safeBuffer)
-            console.log(`[Restore] Adjusted lastSummarizedIndex to ${lastSummarizedIndex.value} to ensure context buffer`)
-          }
-        }
+        // Ensure a minimum context window upon restore
+        lastSummarizedIndex.value = adjustLastSummarizedIndex(chatHistory.value.length, lastSummarizedIndex.value, tokenUsage.value)
 
         isRestoring.value = false
 
@@ -2217,19 +1765,8 @@ const sendMessage = async () => {
       }
 
       console.error('AI Error:', error)
-      let errorMessage = 'Error: Failed to get response from AI.'
       showRetry.value = true
-
-      if (error.message === 'RATE_LIMITED') {
-        errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
-      } else if (error.message && error.message.includes('503')) {
-        errorMessage = 'Error 503: Model Overloaded. Please try again.'
-      } else if (error.message === 'JSON_PARSE_ERROR') {
-        errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
-      } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
-      }
-      chatHistory.value.push({ role: 'system', content: errorMessage })
+      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
 
       break
     }
@@ -2295,19 +1832,8 @@ const retryLastMessage = async () => {
       }
 
       console.error('AI Error:', error)
-      let errorMessage = 'Error: Failed to get response from AI.'
       showRetry.value = true
-
-      if (error.message === 'RATE_LIMITED') {
-        errorMessage = 'Error 429: Model is temporarily rate-limited. Please wait a moment and click Retry.'
-      } else if (error.message && error.message.includes('503')) {
-        errorMessage = 'Error 503: Model Overloaded. Please try again.'
-      } else if (error.message === 'JSON_PARSE_ERROR') {
-        errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
-      } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
-      }
-      chatHistory.value.push({ role: 'system', content: errorMessage })
+      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
 
       break
     }
@@ -2427,17 +1953,8 @@ const continueStory = async () => {
       }
 
       console.error('AI Error:', error)
-      let errorMessage = 'Error: Failed to get response from AI.'
       showRetry.value = true
-
-      if (error.message && error.message.includes('503')) {
-        errorMessage = 'Error 503: Model Overloaded. Please try again.'
-      } else if (error.message === 'JSON_PARSE_ERROR') {
-        errorMessage = 'Error: Failed to parse AI response after multiple attempts. Please try again.'
-      } else if (error.message === 'GEMINI_PROHIBITED_CONTENT') {
-        errorMessage = 'Error: response filtered by Gemini\'s built-in, irremovable safety filters (false positives are possible).'
-      }
-      chatHistory.value.push({ role: 'system', content: errorMessage })
+      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
 
       break
     }
@@ -2464,111 +1981,100 @@ const continueStory = async () => {
 
 // Helper to get user-toggled reminders string
 const getUserReminders = (): string => {
-  let reminders = ''
-
-  if (invalidJsonToggle.value) {
-    // Select appropriate JSON reminder based on current mode
-    const jsonReminder = mode.value === 'game' ? prompts.reminders.invalidJsonReminderGame : prompts.reminders.invalidJsonReminder
-    reminders += '\n\n' + jsonReminder
-    if (!invalidJsonPersist.value) invalidJsonToggle.value = false
-  }
-  if (honorificsToggle.value) {
-    reminders += '\n\n' + prompts.reminders.honorificsReminder
-    honorificsToggle.value = false // No persist for honorifics
-  }
-  if (narrationAndDialogueNotSplitToggle.value) {
-    reminders += '\n\n' + prompts.reminders.narrationAndDialogueNotSplit
-    narrationAndDialogueNotSplitToggle.value = false // No persist
-  }
-  if (aiControllingUserToggle.value) {
-    reminders += '\n\n' + prompts.reminders.aiControllingUserReminder
-    aiControllingUserToggle.value = false // No persist
-  }
-  if (wrongSpeechStylesToggle.value) {
-    reminders += '\n\n' + prompts.reminders.wrongSpeechStylesReminder
-    wrongSpeechStylesToggle.value = false // No persist
-  }
-  if (incorrectAnimationsToggle.value) {
-    reminders += '\n\n' + prompts.reminders.incorrectAnimationsReminder
-    if (!incorrectAnimationsPersist.value) incorrectAnimationsToggle.value = false
-  }
-  if (incorrectSpeakerLabelingToggle.value) {
-    reminders += '\n\n' + prompts.reminders.incorrectSpeakerLabeling
-    incorrectSpeakerLabelingToggle.value = false
-  }
-  if (narrationAsDialogueToggle.value) {
-    reminders += '\n\n' + prompts.reminders.narrationAsDialogue
-    narrationAsDialogueToggle.value = false
-  }
-  if (wrongCharacterOnScreenToggle.value) {
-    reminders += '\n\n' + prompts.reminders.wrongCharacterOnScreen
-    wrongCharacterOnScreenToggle.value = false
+  const toggleMap: Record<string, { ref: any; persist?: any }> = {
+    invalidJson: { ref: invalidJsonToggle, persist: invalidJsonPersist },
+    invalidJsonPersist: { ref: invalidJsonPersist },
+    emptyActionsRetry: { ref: emptyActionsRetry },
+    honorifics: { ref: honorificsToggle },
+    narrationAndDialogueNotSplit: { ref: narrationAndDialogueNotSplitToggle },
+    aiControllingUser: { ref: aiControllingUserToggle },
+    wrongSpeechStyles: { ref: wrongSpeechStylesToggle },
+    incorrectAnimations: { ref: incorrectAnimationsToggle, persist: incorrectAnimationsPersist },
+    incorrectAnimationsPersist: { ref: incorrectAnimationsPersist },
+    incorrectSpeakerLabeling: { ref: incorrectSpeakerLabelingToggle },
+    narrationAsDialogue: { ref: narrationAsDialogueToggle },
+    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle }
   }
 
-  return reminders
+  const snapshot: ReminderToggleState = {
+    invalidJson: invalidJsonToggle.value,
+    invalidJsonPersist: invalidJsonPersist.value,
+    emptyActionsRetry: emptyActionsRetry.value,
+    honorifics: honorificsToggle.value,
+    narrationAndDialogueNotSplit: narrationAndDialogueNotSplitToggle.value,
+    aiControllingUser: aiControllingUserToggle.value,
+    wrongSpeechStyles: wrongSpeechStylesToggle.value,
+    incorrectAnimations: incorrectAnimationsToggle.value,
+    incorrectAnimationsPersist: incorrectAnimationsPersist.value,
+    incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle.value,
+    narrationAsDialogue: narrationAsDialogueToggle.value,
+    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value
+  }
+
+  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>)
+
+  for (const key of togglesToClear) {
+    const entry = toggleMap[key]
+    if (entry?.ref) entry.ref.value = false
+  }
+
+  return text
 }
 
 const getFormattedAnimationsForContext = () => {
-  const placeholderAnimations = ['angry', 'angry_02', 'angry_03', 'cry', 'delight', 'idle', 'pain', 'sad', 'sad_02', 'shy', 'smile', 'surprise', 'void']
-
-  const getCharacterInfo = (id: string) => {
-    const charData = (l2d as any[]).find((c) => c.id === id)
-    return {
-      name: charData?.name || id,
-      id: id
-    }
-  }
-
-  const getCachedAnimations = (id: string): string[] | null => {
-    let anims = animationCache.value[id]
-    if (!anims && id === market.live2d.current_id) {
-      anims = market.live2d.animations
-    }
-    if (anims && anims.length > 0) {
-      return getFilteredAnimations(anims)
-    }
-    return null
-  }
-
-  const formatAnimationsForCharacter = (info: { name: string; id: string }, animations: string[]): string => {
-    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(animations)}`
-  }
-
-  const formatPlaceholderForCharacter = (info: { name: string; id: string }): string => {
-    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(placeholderAnimations)}`
-  }
-
-  const allCharacterIds = new Set<string>()
-
-  for (const profileKey of Object.keys(characterProfiles.value)) {
-    if (profileKey.toLowerCase() !== 'commander') {
-      const profile = characterProfiles.value[profileKey]
-      const id = profile.id || profileKey
-      allCharacterIds.add(id)
-    }
-  }
-
-  for (const pair of getRosterIdPairs(rosterRows.value, characterCatalog)) {
-    allCharacterIds.add(pair.id)
-  }
-
-  if (market.live2d.current_id) {
-    allCharacterIds.add(market.live2d.current_id)
-  }
-
-  const animsList = Array.from(allCharacterIds).map((id) => {
-    const cached = getCachedAnimations(id)
-    const info = getCharacterInfo(id)
-    if (cached) {
-      logDebug(`[AnimationContext] Using cached animations for ${id} (${info.name}): ${cached.length} animations`)
-      return formatAnimationsForCharacter(info, cached)
-    }
-    logDebug(`[AnimationContext] No cached animations for ${id} (${info.name}), using placeholder array`)
-    return formatPlaceholderForCharacter(info)
+  return formatAnimationsForContext({
+    characterProfiles: characterProfiles.value,
+    rosterRows: rosterRows.value,
+    characterCatalog,
+    currentLive2dId: market.live2d.current_id,
+    currentLive2dAnimations: market.live2d.animations,
+    animationCache: animationCache.value
   })
+}
 
-  if (animsList.length === 0) return 'No characters available yet.'
-  return animsList.join('\n')
+/**
+ * Runs the shared tumbling-window summarization logic and applies the
+ * returned state mutations to the component refs.  Returns the context
+ * suffix (story summary text) and the sliced history to send to the provider.
+ */
+const runTumblingWindowSummarization = async (contextMsg: string, logTag: string): Promise<{ contextMsg: string; historyToSend: { role: string; content: string }[] }> => {
+  const twResult = await handleTumblingWindowSummarization(
+    {
+      tokenUsage: tokenUsage.value,
+      chatHistory: chatHistory.value,
+      lastSummarizedIndex: lastSummarizedIndex.value,
+      isLoadedSession: isLoadedSession.value,
+      summarizationRetryPending: summarizationRetryPending.value,
+      summarizationAttemptCount: summarizationAttemptCount.value,
+      summarizationSuccessCount: summarizationSuccessCount.value,
+      summaryJustCompacted: summaryJustCompacted.value,
+      autoCompactSummaries: autoCompactSummaries.value,
+      autoCompactFrequency: autoCompactFrequency.value,
+      storySummary: storySummary.value,
+      isStopped: isStopped.value,
+      compactMinLength: COMPACT_MIN_LENGTH
+    },
+    {
+      summarizeChunk,
+      performCompaction,
+      getOverlapMessageCount,
+      setRandomLoadingMessage
+    },
+    logTag
+  )
+
+  // Apply ref mutations from the result
+  if (twResult.lastSummarizedIndex !== undefined) lastSummarizedIndex.value = twResult.lastSummarizedIndex
+  if (twResult.isLoadedSession !== undefined) isLoadedSession.value = twResult.isLoadedSession
+  if (twResult.summarizationRetryPending !== undefined) summarizationRetryPending.value = twResult.summarizationRetryPending
+  if (twResult.summarizationAttemptCount !== undefined) summarizationAttemptCount.value = twResult.summarizationAttemptCount
+  if (twResult.summarizationSuccessCount !== undefined) summarizationSuccessCount.value = twResult.summarizationSuccessCount
+  if (twResult.summaryJustCompacted !== undefined) summaryJustCompacted.value = twResult.summaryJustCompacted
+
+  return {
+    contextMsg: contextMsg + twResult.contextSuffix,
+    historyToSend: twResult.historyToSend
+  }
 }
 
 const callAI = async (isRetry: boolean = false): Promise<string> => {
@@ -2634,92 +2140,9 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Add current context
   let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
 
-  // Optimization: Limit history to prevent token overflow
-  // Tumbling window: Summarize every X turns
-
-  let historyLimit = 30
-
-  if (tokenUsage.value === 'low') historyLimit = 10
-  else if (tokenUsage.value === 'medium') historyLimit = 30
-  else if (tokenUsage.value === 'high') historyLimit = 60
-  else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
-
-  if (tokenUsage.value !== 'goddess') {
-    const endIndex = chatHistory.value.length - 1
-    const unsummarizedCount = endIndex - lastSummarizedIndex.value
-
-    // Calculate the maximum messages we want in context (user + assistant)
-    // historyLimit is the number of user turns, so double it for total messages
-    const maxContextMessages = historyLimit * 2
-
-    // Check if we need to summarize due to having too many unsummarized messages
-    // This ONLY applies to loaded sessions to handle large unsummarized portions from restored files
-    // For normal sessions, we rely solely on userMsgCount to trigger summarization
-    const overflowThreshold = Math.floor(maxContextMessages * 1.5)
-    const shouldSummarizeDueToOverflow = isLoadedSession.value && unsummarizedCount > overflowThreshold
-
-    let userMsgCount = 0
-    // Count user messages in the unsummarized portion, excluding the current pending prompt
-    for (let i = lastSummarizedIndex.value; i < endIndex; i++) {
-      if (chatHistory.value[i].role === 'user') {
-        userMsgCount++
-      }
-    }
-
-    const shouldRetryFailedSummarization = summarizationRetryPending.value && endIndex > lastSummarizedIndex.value
-    const shouldSummarizeByLimit = userMsgCount >= historyLimit
-
-    // If summarization previously failed, retry on next user prompt/retry.
-    // Also trigger if we have overflow from a loaded session.
-    if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !isStopped.value) {
-      // Calculate where to summarize up to
-      // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
-      let summarizeUpTo = endIndex
-      if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
-        // Only summarize the overflow, keeping maxContextMessages in context
-        summarizeUpTo = endIndex - maxContextMessages
-      }
-
-      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, summarizeUpTo)
-      logDebug(`[callAI] Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
-      const ok = await summarizeChunk(chunkToSummarize)
-      setRandomLoadingMessage()
-
-      if (ok) {
-        // Keep the last OVERLAP_TURNS turns before the summary boundary as overlap
-        // so the model retains immediate conversational context (e.g. recent questions/answers)
-        const overlapMessages = getOverlapMessageCount(summarizeUpTo)
-        lastSummarizedIndex.value = summarizeUpTo - overlapMessages
-        summarizationRetryPending.value = false
-        summarizationAttemptCount.value = 0
-        summarizationSuccessCount.value++
-        summaryJustCompacted.value = false
-        // Clear the loaded session flag after successful summarization
-        if (shouldSummarizeDueToOverflow) {
-          isLoadedSession.value = false
-        }
-        // Auto-compact summary if enabled and threshold reached
-        if (autoCompactSummaries.value && summarizationSuccessCount.value > 0 && summarizationSuccessCount.value % autoCompactFrequency.value === 0 && storySummary.value.length >= COMPACT_MIN_LENGTH && !isStopped.value) {
-          logDebug(`[callAI] Auto-compacting summary (after ${summarizationSuccessCount.value} summarizations)...`)
-          await performCompaction()
-          setRandomLoadingMessage()
-        }
-      } else {
-        summarizationRetryPending.value = true
-        summarizationAttemptCount.value++
-      }
-    }
-  }
-
-  if (storySummary.value && tokenUsage.value !== 'goddess') {
-    contextMsg += `\n\nPREVIOUS STORY SUMMARY:\n${storySummary.value}`
-  }
-
-  let historyToSend = chatHistory.value
-
-  if (tokenUsage.value !== 'goddess') {
-    historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
-  }
+  // Tumbling window summarization + context/history preparation
+  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAI]')
+  contextMsg = updatedContextMsg
 
   // Build hidden honorifics instruction for first turn only
   // This is injected into the first user message but NOT saved to history
@@ -2852,92 +2275,9 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   // Get user toggled reminders
   const reminders = getUserReminders()
 
-  // Optimization: Limit history to prevent token overflow
-  // Tumbling window: Summarize every X turns
-
-  let historyLimit = 30
-
-  if (tokenUsage.value === 'low') historyLimit = 10
-  else if (tokenUsage.value === 'medium') historyLimit = 30
-  else if (tokenUsage.value === 'high') historyLimit = 60
-  else if (tokenUsage.value === 'goddess') historyLimit = 99999 // Effectively infinite
-
-  if (tokenUsage.value !== 'goddess') {
-    const endIndex = chatHistory.value.length - 1
-    const unsummarizedCount = endIndex - lastSummarizedIndex.value
-
-    // Calculate the maximum messages we want in context (user + assistant)
-    // historyLimit is the number of user turns, so double it for total messages
-    const maxContextMessages = historyLimit * 2
-
-    // Check if we need to summarize due to having too many unsummarized messages
-    // This ONLY applies to loaded sessions to handle large unsummarized portions from restored files
-    // For normal sessions, we rely solely on userMsgCount to trigger summarization
-    const overflowThreshold = Math.floor(maxContextMessages * 1.5)
-    const shouldSummarizeDueToOverflow = isLoadedSession.value && unsummarizedCount > overflowThreshold
-
-    let userMsgCount = 0
-    // Count user messages in the unsummarized portion, excluding the current pending prompt
-    for (let i = lastSummarizedIndex.value; i < endIndex; i++) {
-      if (chatHistory.value[i].role === 'user') {
-        userMsgCount++
-      }
-    }
-
-    const shouldRetryFailedSummarization = summarizationRetryPending.value && endIndex > lastSummarizedIndex.value
-    const shouldSummarizeByLimit = userMsgCount >= historyLimit
-
-    // If summarization previously failed, retry on next user prompt/retry.
-    // Also trigger if we have overflow from a loaded session.
-    if ((shouldRetryFailedSummarization || shouldSummarizeByLimit || shouldSummarizeDueToOverflow) && !isStopped.value) {
-      // Calculate where to summarize up to
-      // For overflow case (without hitting userMsgCount limit), we want to keep maxContextMessages at the end
-      let summarizeUpTo = endIndex
-      if (shouldSummarizeDueToOverflow && !shouldSummarizeByLimit && !shouldRetryFailedSummarization) {
-        // Only summarize the overflow, keeping maxContextMessages in context
-        summarizeUpTo = endIndex - maxContextMessages
-      }
-
-      const chunkToSummarize = chatHistory.value.slice(lastSummarizedIndex.value, summarizeUpTo)
-      logDebug(`[callAIWithoutSearch] Summarizing ${chunkToSummarize.length} messages (Tumbling Window, overflow: ${shouldSummarizeDueToOverflow})...`)
-      const ok = await summarizeChunk(chunkToSummarize)
-      setRandomLoadingMessage()
-
-      if (ok) {
-        // Keep the last OVERLAP_TURNS turns before the summary boundary as overlap
-        // so the model retains immediate conversational context (e.g. recent questions/answers)
-        const overlapMessages = getOverlapMessageCount(summarizeUpTo)
-        lastSummarizedIndex.value = summarizeUpTo - overlapMessages
-        summarizationRetryPending.value = false
-        summarizationAttemptCount.value = 0
-        summarizationSuccessCount.value++
-        summaryJustCompacted.value = false
-        // Clear the loaded session flag after successful summarization
-        if (shouldSummarizeDueToOverflow) {
-          isLoadedSession.value = false
-        }
-        // Auto-compact summary if enabled and threshold reached
-        if (autoCompactSummaries.value && summarizationSuccessCount.value > 0 && summarizationSuccessCount.value % autoCompactFrequency.value === 0 && storySummary.value.length >= COMPACT_MIN_LENGTH && !isStopped.value) {
-          logDebug(`[callAIWithoutSearch] Auto-compacting summary (after ${summarizationSuccessCount.value} summarizations)...`)
-          await performCompaction()
-          setRandomLoadingMessage()
-        }
-      } else {
-        summarizationRetryPending.value = true
-        summarizationAttemptCount.value++
-      }
-    }
-  }
-
-  if (storySummary.value && tokenUsage.value !== 'goddess') {
-    contextMsg += `\n\nPREVIOUS STORY SUMMARY:\n${storySummary.value}`
-  }
-
-  let historyToSend = chatHistory.value
-
-  if (tokenUsage.value !== 'goddess') {
-    historyToSend = chatHistory.value.slice(lastSummarizedIndex.value)
-  }
+  // Tumbling window summarization + context/history preparation
+  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAIWithoutSearch]')
+  contextMsg = updatedContextMsg
 
   if (apiProvider.value === 'gemini') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
@@ -2962,92 +2302,12 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 
 // Check if the AI response contains a search request for unknown characters
 const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
-  // Get all known character names from static profile files (not reactive characterProfiles)
-  const knownBaseNames = new Set(Object.keys(localCharacterProfiles).map((k) => k.toLowerCase()))
-
-  const isSkinOrVariantOfKnownCharacter = (name: string): boolean => {
-    // Check if this name is a skin variant (e.g., "Rapi Classic Vacation")
-    const selectionInfo = getSelectionForName(name, characterCatalog)
-    if (!selectionInfo) return false
-
-    const parsed = parseSelectionValue(selectionInfo.selection)
-    if (!parsed) return false
-
-    if (parsed.type === 'base') {
-      // It's a base character - check if it's known (using static profile list)
-      return !!(knownBaseNames.has(parsed.baseName.toLowerCase()) || parsed.baseName.toLowerCase() === 'commander')
-    }
-
-    if (parsed.type === 'variant') {
-      // Colon variants (e.g., "Anis: Sparkling Summer") are distinct, mutually exclusive
-      // characters with their own profiles. Only skip search if the variant itself is already
-      // loaded in the reactive profiles - NOT if the base character is known.
-      const variantName = characterCatalog.idToName[parsed.variantId]
-      if (variantName) {
-        return !!Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === variantName.toLowerCase())
-      }
-    }
-
-    // For skin names like "Rapi Classic Vacation", check if it starts with a known base name
-    for (const baseName of characterCatalog.baseNames) {
-      if (name.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
-        // This is a skin of baseName - check if baseName is in known profiles
-        return !!(knownBaseNames.has(baseName.toLowerCase()) || baseName.toLowerCase() === 'commander')
-      }
-    }
-
-    return false
-  }
-
-  const validateNames = (names: string[], textForValidation: string): string[] => {
-    const unique = Array.from(new Set(names.map((n) => (typeof n === 'string' ? n.trim() : '')).filter(Boolean)))
-    return unique.filter((name) => {
-      // Check against reactive profiles (already loaded) AND static profile list
-      const isKnown = characterProfiles.value[name] || knownBaseNames.has(name.toLowerCase()) || name.toLowerCase() === 'commander'
-      if (isKnown) return false
-
-      // Check if it's a skin/variant of a known character
-      if (isSkinOrVariantOfKnownCharacter(name)) return false
-
-      const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
-      const inGeneratedText = textForValidation && isWholeWordPresent(textForValidation, name)
-      return !!(inUserPrompt || inGeneratedText)
-    })
-  }
-
-  // Preferred path: shared robust parser
-  try {
-    const actions = parseAIResponse(response)
-    const allGeneratedText = actions.map((a: any) => a?.text || '').join(' ')
-
-    for (const action of actions) {
-      if (action?.needs_search && Array.isArray(action.needs_search) && action.needs_search.length > 0) {
-        const validated = validateNames(action.needs_search, allGeneratedText)
-        if (validated.length > 0) return validated
-      }
-    }
-  } catch {
-    // Fall back to regex extraction
-  }
-
-  // Fallback: extract needs_search even when JSON is truncated/malformed
-  try {
-    const m = response.match(/"needs_search"\s*:\s*\[([\s\S]*?)\]/)
-    if (m && m[1]) {
-      const names = Array.from(m[1].matchAll(/"([^"]+)"/g)).map((x) => x[1])
-      const validated = validateNames(names, response)
-      if (validated.length > 0) return validated
-    }
-  } catch {
-    // Ignore
-  }
-
-  // For Pollinations, only allow search if web search fallback is enabled
-  if (apiProvider.value === 'pollinations' && !allowWebSearchFallback.value) {
-    return null
-  }
-
-  return null
+  return checkForSearchRequestUtil(response, userPrompt, {
+    characterProfiles: characterProfiles.value,
+    characterCatalog,
+    apiProvider: apiProvider.value,
+    allowWebSearchFallback: allowWebSearchFallback.value
+  })
 }
 
 // Fetch wiki page content directly and have the model summarize it
@@ -3069,128 +2329,16 @@ const wrappedSearchForCharacters = async (characterNames: string[]) => {
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
-  const knownCharacterNames = Object.keys(effectiveCharacterProfiles.value)
-
-  // Helper to filter out defaultSkin when non-default skin is selected
-  const getFilteredProfilesForAI = (): Record<string, any> => {
-    const filtered: Record<string, any> = {}
-
-    for (const [name, profile] of Object.entries(effectiveCharacterProfiles.value)) {
-      // Check if this character has a non-default skin selected in roster
-      const rosterEntry = rosterRows.value.find((entry) => {
-        const parsed = parseSelectionValue(entry.selection)
-        return parsed?.type === 'base' && parsed.baseName === name
-      })
-
-      if (rosterEntry?.skinId && profile.id && rosterEntry.skinId !== profile.id) {
-        // Non-default skin selected - exclude defaultSkin field
-        const { defaultSkin, ...profileWithoutSkin } = profile
-        filtered[name] = profileWithoutSkin
-      } else {
-        // Default skin or no skin selected - keep all fields
-        filtered[name] = profile
-      }
-    }
-
-    return filtered
-  }
-
-  // Build a minimal character ID lookup for characters mentioned in profiles or current character
-  // This prevents massive token usage from including all 200+ characters
-  const relevantCharacterIds: string[] = []
-  const relevantCharacterNames: string[] = []
-
-  // Add current character
-  if (market.live2d.current_id) {
-    const currentChar = l2d.find((c) => c.id === market.live2d.current_id)
-    if (currentChar) {
-      relevantCharacterIds.push(`${currentChar.name} = ${currentChar.id}`)
-      relevantCharacterNames.push(currentChar.name)
-    }
-  }
-
-  // Add characters from profiles (always use lowest ID when duplicates exist)
-  for (const name of knownCharacterNames) {
-    // Find all characters with this name and pick the one with lowest ID
-    const matchingChars = (l2d as any[]).filter((c) => c.name.toLowerCase() === name.toLowerCase())
-    if (matchingChars.length === 0) continue
-
-    // Sort by ID and pick the lowest one
-    const char = matchingChars.sort((a, b) => a.id.localeCompare(b.id))[0]
-    if (char && !relevantCharacterIds.some((r) => r.includes(char.id))) {
-      relevantCharacterIds.push(`${char.name} = ${char.id}`)
-      relevantCharacterNames.push(char.name)
-    }
-  }
-
-  // Add characters from roster
-  for (const entry of rosterRows.value) {
-    const selection = parseSelectionValue(entry.selection)
-    if (!selection) continue
-
-    if (selection.type === 'base') {
-      // For base entries, use the base name and ID
-      const baseEntry = characterCatalog.baseMap[selection.baseName]
-      if (baseEntry && !relevantCharacterIds.some((r) => r.includes(baseEntry.baseId))) {
-        relevantCharacterIds.push(`${selection.baseName} = ${baseEntry.baseId}`)
-        relevantCharacterNames.push(selection.baseName)
-      }
-    } else if (selection.type === 'variant') {
-      // For colon variants (e.g., "Rapi: Red Hood"), use the variant name and ID directly
-      const variantName = characterCatalog.idToName[selection.variantId]
-      if (variantName && variantName.includes(':')) {
-        // Use the full variant name and variant ID so the AI knows which specific character to use
-        if (!relevantCharacterIds.some((r) => r.includes(selection.variantId))) {
-          relevantCharacterIds.push(`${variantName} = ${selection.variantId}`)
-          relevantCharacterNames.push(variantName)
-        }
-      }
-    }
-  }
-
-  // Build honorifics map for only relevant characters to save tokens
-  const relevantHonorifics: Record<string, string> = {}
-  for (const name of relevantCharacterNames) {
-    relevantHonorifics[name] = getHonorific(name)
-  }
-
-  let modeInstructions = ''
-  if (mode.value === 'game') {
-    modeInstructions = prompts.systemPrompt.instructions.game
-  } else if (mode.value === 'story') {
-    modeInstructions = prompts.systemPrompt.instructions.story
-  } else {
-    modeInstructions = prompts.systemPrompt.instructions.roleplay
-  }
-
-  let prompt = `${prompts.systemPrompt.intro}
-
-  ${mode.value === 'roleplay' ? prompts.systemPrompt.modes.roleplay : mode.value === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story}
-
-  ${prompts.systemPrompt.honorifics.header}
-  ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
-
-  ${prompts.systemPrompt.honorifics.rules}
-
-  ${enableWebSearch ? prompts.systemPrompt.characterResearch.enabled : prompts.systemPrompt.characterResearch.disabled}
-
-  ${prompts.systemPrompt.criticalErrors}
-
-  ${mode.value === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
-
-  ${prompts.systemPrompt.knownProfiles}
-  ${knownCharacterNames.length > 0 ? JSON.stringify(getFilteredProfilesForAI(), null, 2) : prompts.systemPrompt.noProfilesMessage}
-
-  ${prompts.systemPrompt.idReference}
-  ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}
-
-  ${prompts.systemPrompt.instructions.base}
-  ${modeInstructions}
-  ${prompts.systemPrompt.instructions.closing}
-  ${godModeEnabled.value ? prompts.systemPrompt.godMode : ''}
-  `
-
-  return prompt
+  return generateSystemPromptUtil({
+    enableWebSearch,
+    effectiveCharacterProfiles: effectiveCharacterProfiles.value,
+    rosterRows: rosterRows.value,
+    currentLive2dId: market.live2d.current_id,
+    mode: mode.value,
+    godModeEnabled: godModeEnabled.value,
+    realisticModeEnabled: realisticModeEnabled.value,
+    characterCatalog
+  })
 }
 
 const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSearch: boolean = false) => {
@@ -3237,10 +2385,10 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
 
 const callLocal = async (messages: any[]) => {
   return await callLocalImpl(messages, {
-    maxTokens: localMaxTokens.value,
     apiKey: apiKey.value,
     localUrl: localUrl.value,
     modeIsGame: mode.value === 'game',
+    reasoningEffort: reasoningEffort.value,
     signal: activeAbortController?.signal
   })
 }
@@ -3356,7 +2504,6 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
           apiProvider: apiProvider.value,
           apiKey: apiKey.value,
           model: apiProvider.value === 'local' ? undefined : model.value,
-          maxTokens: localMaxTokens.value,
           currentCharacterId: market.live2d.current_id,
           filteredAnimations: getFilteredAnimations(market.live2d.animations),
           animationEnrichmentPrompt: prompts.animationEnrichment,
@@ -3377,6 +2524,51 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
 
       throw new Error('JSON_PARSE_ERROR')
     }
+  }
+
+  // Structural auto-retry: the JSON parsed successfully but the result is semantically
+  // empty or broken (empty actions array, choices-only response in Game mode, or both empty).
+  // Trigger the same auto-retry mechanism used for invalid JSON parse failures.
+  if (invalidJsonAuto.value && !autoRetryAttempted && !isStopped.value) {
+    const isEmpty = data.length === 0
+
+    // Game mode: response was choices-only (no actual narrative actions)
+    const isChoicesOnlyInGameMode = mode.value === 'game' && data.length > 0 &&
+     data.every((a: any) => !a || typeof a !== 'object' || (typeof a.text !== 'string' && typeof a.character !== 'string'))
+      && data.some((a: any) => a && typeof a === 'object' && Array.isArray(a.choices) && a.choices.length > 0)
+
+    if (isEmpty || isChoicesOnlyInGameMode) {
+      console.warn('[processAIResponse] Auto mode: structural issue detected (empty actions / choices-only), retrying with targeted reminder...')
+
+      const previousToggleValue = invalidJsonToggle.value
+      invalidJsonToggle.value = true
+      // Use the targeted empty-actions reminder in Game mode instead of the generic one
+      if (mode.value === 'game') {
+        emptyActionsRetry.value = true
+      }
+
+      try {
+        setRandomLoadingMessage()
+        const retryResponse = await callAI(true)
+        invalidJsonToggle.value = previousToggleValue
+        emptyActionsRetry.value = false
+        await processAIResponse(retryResponse, depth, true)
+        return
+      } catch (retryError) {
+        invalidJsonToggle.value = previousToggleValue
+        emptyActionsRetry.value = false
+        console.warn('[processAIResponse] Auto-retry (structural) failed, escalating to outer retry loop...', retryError)
+        throw new Error('JSON_PARSE_ERROR')
+      }
+    }
+  }
+
+  // If we got through all retry logic but still have no actions, escalate to the outer
+  // retry loop. This prevents silently showing a blank result when the model returns
+  // empty arrays.
+  if (data.length === 0) {
+    console.warn('[processAIResponse] No actions after all processing/retries, escalating to outer retry loop...')
+    throw new Error('JSON_PARSE_ERROR')
   }
 
   logDebug('Parsed Action Sequence:', data)
@@ -3480,42 +2672,12 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
 }
 
 const getCharacterName = (id: string): string | null => {
-  if (!id || id === 'none') return null
-  if (id === 'current') return getCharacterName(market.live2d.current_id)
-
-  const rosterMatch = resolveCharacterIdFromInput(id, rosterRows.value, characterCatalog)
-  if (rosterMatch) {
-    const rosterName = characterCatalog.idToName[rosterMatch]
-    if (rosterName) return rosterName
-  }
-
-  const char = l2d.find((c) => c.id.toLowerCase() === id.toLowerCase() || c.name.toLowerCase() === id.toLowerCase())
-
-  return char ? char.name : id
+  return getCharacterDisplayName(id, market.live2d.current_id, rosterRows.value, characterCatalog)
 }
 
 // Get the base character name (e.g., "Neon" from "Neon Bling Bullet")
 const getBaseCharacterName = (id: string): string | null => {
-  if (!id || id === 'none') return null
-
-  // Get the full name (which might be a skin variant)
-  const fullName = getCharacterName(id)
-  if (!fullName) return null
-
-  // Check if this is a skin variant (contains space and starts with a base character name)
-  for (const baseName of characterCatalog.baseNames) {
-    if (fullName.toLowerCase().startsWith(baseName.toLowerCase() + ' ')) {
-      return baseName
-    }
-  }
-
-  // Check if this is a colon variant (e.g., "Rapi: Red Hood")
-  if (fullName.includes(':')) {
-    return fullName.split(':')[0].trim()
-  }
-
-  // It's already a base name
-  return fullName
+  return getBaseCharacterDisplayName(id, market.live2d.current_id, rosterRows.value, characterCatalog)
 }
 
 const executeAction = async (data: any) => {
@@ -3847,10 +3009,19 @@ const executeAction = async (data: any) => {
     if (data.speaking) {
       let name = null
 
-      if (effectiveCharId === 'none') {
-        // If character is explicitly none, it's likely the Commander in Story Mode
+      if (effectiveCharId === 'commander') {
+        // Commander speaking - use properly capitalized name
+        name = 'Commander'
+      } else if (effectiveCharId === 'none') {
+        // In Story Mode, 'none' with speaking means a non-roster NPC is speaking.
+        // Try to extract the speaker name from the text itself (e.g. "Guard: Halt!" or "**Guard:** Halt!").
         if (mode.value === 'story') {
-          name = 'Commander'
+          const speakerLabelMatch = content.match(/^\s*(?:\*\*\s*)?([^*:]+?)(?:\s*\*\*)?\s*:\s*/)
+          if (speakerLabelMatch) {
+            // The text already has a speaker label — use it as the name and don't prepend another
+            name = speakerLabelMatch[1].trim()
+          }
+          // If no speaker label found, name stays null — no label will be prepended
         }
       } else {
         // Use base character name (not skin variant) for display
@@ -4016,10 +3187,10 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
       apiProvider: apiProvider.value,
       apiKey: apiKey.value,
       model: model.value,
-      localMaxTokens: localMaxTokens.value,
       localUrl: localUrl.value,
       prompts,
       enableContextCaching: enableContextCaching.value,
+      reasoningEffort: reasoningEffort.value,
       signal: activeAbortController?.signal,
       existingSummary: storySummary.value
     })
@@ -4052,10 +3223,10 @@ const performCompaction = async (): Promise<boolean> => {
       apiProvider: apiProvider.value,
       apiKey: apiKey.value,
       model: model.value,
-      localMaxTokens: localMaxTokens.value,
       localUrl: localUrl.value,
       prompts,
       enableContextCaching: enableContextCaching.value,
+      reasoningEffort: reasoningEffort.value,
       signal: activeAbortController?.signal
     })
 
