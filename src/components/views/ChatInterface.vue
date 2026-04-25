@@ -76,11 +76,11 @@
       </div>
 
       <div class="chat-input-area" style="gap: 6px">
-        <n-input v-model:value="userInput" type="textarea" :placeholder="apiKey || apiProvider === 'pollinations' || apiProvider === 'local' ? 'Type your message...' : 'Please enter API Key in settings'" :disabled="!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local'" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
-        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local')">Send</n-button>
+        <n-input v-model:value="userInput" type="textarea" :placeholder="isApiKeyMissing ? 'Please enter API Key in settings' : 'Type your message...'" :disabled="isApiKeyMissing" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
+        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing">Send</n-button>
         <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
-        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
-        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
+        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
+        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing">
           {{ waitingForNext ? 'Next' : 'Continue' }}
         </n-button>
       </div>
@@ -245,7 +245,7 @@
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
           <n-alert type="info" style="margin-bottom: 12px" title=""> Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB. </n-alert>
-          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key. </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> to get a required API key. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title=""> Users are responsible for any possible cost using this functionality. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title="">
             Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
@@ -656,7 +656,7 @@
             <h4>🔑 API Setup</h4>
             <ul>
               <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
-              <li><strong>Pollinations:</strong> Can be used without a key, but with limited models and rate limits.</li>
+              <li><strong>Pollinations:</strong> Requires an API key.</li>
               <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
               <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
             </ul>
@@ -1109,6 +1109,10 @@ const modelOptions = computed(() => {
   return []
 })
 
+const providerRequiresApiKey = computed(() => apiProvider.value !== 'local')
+
+const isApiKeyMissing = computed(() => providerRequiresApiKey.value && !apiKey.value.trim())
+
 // Computed
 
 const computedUsesWikiFetch = computed(() => usesWikiFetch(apiProvider.value, model.value))
@@ -1118,8 +1122,37 @@ const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAuto
 const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
 
 const isCompactSummaryDisabled = computed(() => {
-  return isLoading.value || tokenUsage.value === 'goddess' || summaryJustCompacted.value || storySummary.value.length < COMPACT_MIN_LENGTH || (summarizationSuccessCount.value === 0 && !storySummary.value)
+  return isApiKeyMissing.value || isLoading.value || tokenUsage.value === 'goddess' || summaryJustCompacted.value || storySummary.value.length < COMPACT_MIN_LENGTH || (summarizationSuccessCount.value === 0 && !storySummary.value)
 })
+
+const refreshPollinationsModels = async () => {
+  const trimmedApiKey = apiKey.value.trim()
+
+  if (!trimmedApiKey) {
+    pollinationsModels.value = []
+    if (apiProvider.value === 'pollinations') {
+      model.value = ''
+    }
+    return
+  }
+
+  pollinationsModels.value = await fetchPollinationsModels(trimmedApiKey)
+
+  const validModels = pollinationsModels.value.map((m) => m.value)
+  if (!model.value || !validModels.includes(model.value)) {
+    model.value = pollinationsModels.value[0]?.value || ''
+  }
+}
+
+const ensureApiKeyForCurrentProvider = () => {
+  if (!isApiKeyMissing.value) {
+    return true
+  }
+
+  showSettings.value = true
+  loadingStatus.value = 'Please enter API Key in settings.'
+  return false
+}
 
 const assetQuality = computed({
   get: () => (market.live2d.HQassets ? 'high' : 'low'),
@@ -1241,10 +1274,7 @@ watch(chatMode, (newVal) => {
 watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
   if (apiProvider.value === 'pollinations') {
-    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-    if (pollinationsModels.value.length > 0) {
-      model.value = pollinationsModels.value[0].value
-    }
+    await refreshPollinationsModels()
   }
 })
 
@@ -1419,11 +1449,7 @@ watch(apiProvider, async (newVal) => {
     }
   } else if (apiProvider.value === 'pollinations') {
     model.value = ''
-    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-
-    if (pollinationsModels.value.length > 0) {
-      model.value = pollinationsModels.value[0].value
-    }
+    await refreshPollinationsModels()
   }
 })
 
@@ -1471,7 +1497,7 @@ const initializeSettings = async () => {
     if (stored.apiProvider === 'openrouter') {
       openRouterModels.value = await fetchOpenRouterModels()
     } else if (stored.apiProvider === 'pollinations') {
-      pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
+      await refreshPollinationsModels()
     }
 
     let validModels: string[] = []
@@ -1479,13 +1505,15 @@ const initializeSettings = async () => {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
     } else if (stored.apiProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
-    } else if (stored.apiProvider === 'pollinations') {
+    } else if (stored.apiProvider === 'pollinations' && pollinationsModels.value.length > 0) {
       validModels = pollinationsModels.value.map((m) => m.value)
     }
 
-    const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, openRouterModels.value.length > 0 ? openRouterModels.value[0].value : undefined)
-    if (validModel) model.value = validModel
-    if (warning) console.warn(warning)
+    if (stored.apiProvider !== 'pollinations' || validModels.length > 0) {
+      const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, openRouterModels.value.length > 0 ? openRouterModels.value[0].value : undefined)
+      if (validModel) model.value = validModel
+      if (warning) console.warn(warning)
+    }
   }
 
   // Ensure models are loaded for the current provider
@@ -1495,10 +1523,7 @@ const initializeSettings = async () => {
       model.value = openRouterModels.value[0].value
     }
   } else if (apiProvider.value === 'pollinations' && pollinationsModels.value.length === 0) {
-    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-    if (pollinationsModels.value.length > 0 && !model.value) {
-      model.value = pollinationsModels.value[0].value
-    }
+    await refreshPollinationsModels()
   }
 
   isRestoring.value = false
@@ -1773,6 +1798,7 @@ const flushPendingGameChoice = () => {
 
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
+  if (!ensureApiKeyForCurrentProvider()) return
 
   let text = userInput.value
 
@@ -1844,6 +1870,8 @@ const sendMessage = async () => {
 }
 
 const retryLastMessage = async () => {
+  if (!ensureApiKeyForCurrentProvider()) return
+
   // Remove the last system error message
   if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
     chatHistory.value.pop()
@@ -1962,6 +1990,7 @@ const nextAction = () => {
 
 const continueStory = async () => {
   if (isLoading.value) return
+  if (!ensureApiKeyForCurrentProvider()) return
 
   const text = mode.value === 'story' ? prompts.continue.story : prompts.continue.roleplay
   chatHistory.value.push({ role: 'user', content: text })
@@ -3296,7 +3325,7 @@ const performCompaction = async (): Promise<boolean> => {
 }
 
 const handleCompactSummary = async () => {
-  if (isCompactSummaryDisabled.value) return
+  if (isCompactSummaryDisabled.value || !ensureApiKeyForCurrentProvider()) return
 
   isLoading.value = true
   activeAbortController = new AbortController()

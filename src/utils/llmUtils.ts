@@ -151,6 +151,16 @@ const parsePollinationsStreamResponse = async (response: Response) => {
   return content
 }
 
+const getRequiredPollinationsApiKey = (apiKey?: string) => {
+  const trimmedApiKey = apiKey?.trim()
+
+  if (!trimmedApiKey) {
+    throw new AIError(401, 'Pollinations API key is required.')
+  }
+
+  return trimmedApiKey
+}
+
 export const fetchOpenRouterModels = async () => {
   try {
     const response = await fetch('https://openrouter.ai/api/v1/models')
@@ -181,65 +191,47 @@ export const fetchOpenRouterModels = async () => {
 }
 
 export const fetchPollinationsModels = async (apiKey?: string) => {
+  const trimmedApiKey = apiKey?.trim()
+
+  if (!trimmedApiKey) {
+    return []
+  }
+
   let models: any[] = []
 
   try {
-    const headers: Record<string, string> = {}
+    const response = await fetch('https://gen.pollinations.ai/text/models', {
+      headers: {
+        Authorization: `Bearer ${trimmedApiKey}`
+      }
+    })
 
-    if (apiKey) {
-      headers['Authorization'] = `Bearer ${apiKey}`
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
     }
-    const url = apiKey ? 'https://gen.pollinations.ai/text/models' : 'https://text.pollinations.ai/models'
-    const response = await fetch(url, { headers })
+
     const data = await response.json()
     models = data
 
     // Handle both old format (array of strings) and new format (array of objects)
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
-      models = data.map((name) => ({ name, pricing: { input_token_price: 0 } }))
+      models = data.map((name) => ({ name }))
     }
 
     return models
       .filter((m: any) => {
-        if (!apiKey) {
-          const allowedModels = ['gemini', 'gemini-search', 'mistral']
-          return allowedModels.includes(m.name)
-        } else {
-          const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
-          return !hiddenModels.includes(m.name)
-        }
+        const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
+        return !hiddenModels.includes(m.name)
       })
-      .map((m: any) => {
-        const isFree = m.pricing && m.pricing.input_token_price === 0
-
-        return {
-          label: (isFree ? '[FREE] ' : '') + m.name,
-          value: m.name,
-          isFree: isFree,
-          style: isFree ? { color: '#18a058', fontWeight: 'bold' } : {}
-        }
-      })
-      .sort((a: any, b: any) => {
-        if (a.isFree && !b.isFree) return -1
-        if (!a.isFree && b.isFree) return 1
-
-        return a.label.localeCompare(b.label)
-      })
+      .map((m: any) => ({
+        label: m.name,
+        value: m.name
+      }))
+      .sort((a: any, b: any) => a.label.localeCompare(b.label))
   } catch (error) {
     console.error('Failed to fetch Pollinations models:', error)
-    // Fallback to hardcoded models
-    models = [
-      { name: 'gemini', pricing: { input_token_price: 0 } },
-      { name: 'gemini-search', pricing: { input_token_price: 0 } },
-      { name: 'mistral', pricing: { input_token_price: 0 } }
-    ]
-
-    return models.map((m: any) => ({
-      label: '[FREE] ' + m.name,
-      value: m.name,
-      isFree: true,
-      style: { color: '#18a058', fontWeight: 'bold' }
-    }))
+    return []
   }
 }
 
@@ -307,6 +299,7 @@ export const callOpenRouterSummarization = async (messages: any[], apiKey: strin
 }
 
 export const callPollinationsSummarization = async (messages: any[], apiKey: string, model: string, enableContextCaching?: boolean, signal?: AbortSignal) => {
+  const pollinationsApiKey = getRequiredPollinationsApiKey(apiKey)
   const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
 
   const requestBody: any = {
@@ -320,13 +313,11 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
   }
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${pollinationsApiKey}`
   }
 
-  const url = apiKey ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+  const url = 'https://gen.pollinations.ai/v1/chat/completions'
 
   const response = await fetch(url, {
     method: 'POST',
@@ -521,6 +512,7 @@ export const callPollinations = async (
   }
 ) => {
   const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching, signal } = opts
+  const pollinationsApiKey = getRequiredPollinationsApiKey(apiKey)
 
   if (modelsWithoutJsonSupport.value.has(model)) {
     logDebug(`Model ${model} known to not support json_schema, using text fallback...`)
@@ -546,13 +538,11 @@ export const callPollinations = async (
   }
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${pollinationsApiKey}`
   }
 
-  const url = apiKey ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+  const url = 'https://gen.pollinations.ai/v1/chat/completions'
 
   const response = await fetch(url, {
     method: 'POST',
@@ -627,6 +617,7 @@ export const callPollinations = async (
 
 export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
   const { model, apiKey, reasoningEffort, enableContextCaching, signal } = opts
+  const pollinationsApiKey = getRequiredPollinationsApiKey(apiKey)
 
   const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
 
@@ -645,13 +636,11 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
   }
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${pollinationsApiKey}`
   }
 
-  const url = apiKey ? 'https://gen.pollinations.ai/v1/chat/completions' : 'https://text.pollinations.ai/openai'
+  const url = 'https://gen.pollinations.ai/v1/chat/completions'
 
   const response = await fetch(url, {
     method: 'POST',
