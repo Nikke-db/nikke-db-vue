@@ -52,11 +52,23 @@
     "id": "c016_02"
   },
   {
-    "name": "Anis",
+    "name": "Rapi: Red Hood Shining Light",
+    "id": "c016_03"
+  },
+  {
+    "name": "Anis: Star",
     "id": "c017"
   },
   {
-    "name": "Neon",
+    "name": "Anis: Star Starlight",
+    "id": "c017_01"
+  },
+  {
+    "name": "Anis: Star T.T. STAR",
+    "id": "c017_02"
+  },
+  {
+    "name": "Neon: Vision Eye",
     "id": "c018"
   },
   {
@@ -648,6 +660,10 @@
     "id": "c233_01"
   },
   {
+    "name": "Dorothy Luna Light",
+    "id": "c233_02"
+  },
+  {
     "name": "Dorothy (CN)",
     "id": "c233_80"
   },
@@ -714,6 +730,10 @@
   {
     "name": "Liberalio",
     "id": "c262"
+  },
+  {
+    "name": "Liberalio Dreaming Lake",
+    "id": "c262_01"
   },
   {
     "name": "Indivilia",
@@ -2006,6 +2026,14 @@
   {
     "name": "Hanson",
     "id": "c9023"
+  },
+  {
+    "name": "Yoyo",
+    "id": "c9024"
+  },
+  {
+    "name": "Egovista",
+    "id": "c9025"
   },
   {
     "name": "Amy",
