@@ -577,6 +577,10 @@ const getDefaultAnimation = () => {
     return 'idle_front'
   }
 
+  if (['smol_anis', 'smol_prika', 'smol_mint'].includes(market.live2d.current_id)) {
+    return 'pose_idle'
+  }
+
   // mass manufactured rapi
   if (market.live2d.current_id === 'c994') return 'idle_02'
 
