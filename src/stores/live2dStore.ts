@@ -67,7 +67,7 @@ export const useLive2dStore = defineStore('live2d', () => {
     const base_array: live2d_interface[] = l2d
     filtered_l2d_Array.value = base_array.sort(
       (a: live2d_interface, b: live2d_interface) => {
-        return a.name.localeCompare(b.name)
+        return a.name.trim().localeCompare(b.name.trim())
       }
     )
   }
