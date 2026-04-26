@@ -2419,7 +2419,9 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     godModeEnabled: godModeEnabled.value,
     realisticModeEnabled: realisticModeEnabled.value,
     lowContextMode: lowContextMode.value,
-    characterCatalog
+    characterCatalog,
+    currentUserPrompt: lastPrompt.value,
+    chatHistory: chatHistory.value
   })
 }
 

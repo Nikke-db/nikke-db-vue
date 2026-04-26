@@ -2,8 +2,33 @@
 import { type Ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
+import locationProfiles from '@/utils/json/locationProfiles.json'
 import prompts from '@/utils/json/prompts.json'
 import { parseSelectionValue, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
+
+type ChatHistoryEntry = {
+  role: string
+  content: string
+}
+
+type LocationTriggerSources = {
+  userText?: boolean
+  recentChat?: boolean
+  profileText?: boolean
+}
+
+type LocationProfile = {
+  aliases?: string[]
+  profileKeywords?: string[]
+  relatedCharacters?: string[]
+  triggerSources?: LocationTriggerSources
+  visuals: string
+  description: string
+}
+
+const LOCATION_PROFILE_FIELDS = ['backstory', 'relationships', 'characterProgression'] as const
+const RECENT_LOCATION_HISTORY_LIMIT = 8
+const MAX_RELEVANT_LOCATIONS = 2
 
 // Helper to merge base profiles with progression overlays (personality + relationships only)
 export const getEffectiveCharacterProfiles = (base: Record<string, any>, progression: Record<string, any>): Record<string, any> => {
@@ -1619,6 +1644,114 @@ export type SystemPromptParams = {
   realisticModeEnabled: boolean
   lowContextMode: boolean
   characterCatalog: CharacterCatalog
+  currentUserPrompt?: string
+  chatHistory?: ChatHistoryEntry[]
+}
+
+type ResolvedLocation = {
+  name: string
+  profile: LocationProfile
+  score: number
+  matchedByUser: boolean
+  matchedByRecentChat: boolean
+  matchedByProfile: boolean
+}
+
+const joinProfileText = (profile: any): string => {
+  if (!profile || typeof profile !== 'object') return ''
+
+  const parts: string[] = []
+
+  for (const field of LOCATION_PROFILE_FIELDS) {
+    const value = profile[field]
+    if (!value) continue
+
+    if (typeof value === 'string') {
+      parts.push(value)
+      continue
+    }
+
+    if (typeof value === 'object') {
+      parts.push(JSON.stringify(value))
+    }
+  }
+
+  return parts.join(' ')
+}
+
+const getRecentChatText = (chatHistory: ChatHistoryEntry[] = [], currentUserPrompt: string = ''): string => {
+  const recentHistory = chatHistory
+    .filter((entry) => entry.role !== 'system')
+    .slice(-RECENT_LOCATION_HISTORY_LIMIT)
+    .map((entry) => entry.content)
+    .join('\n')
+
+  return currentUserPrompt ? `${recentHistory}\n${currentUserPrompt}` : recentHistory
+}
+
+const hasLocationTermMatch = (text: string, terms: string[]): boolean => {
+  if (!text || terms.length === 0) return false
+  return terms.some((term) => isWholeWordPresent(text, term))
+}
+
+const resolveRelevantLocations = (params: { profiles: Record<string, any>; currentUserPrompt?: string; chatHistory?: ChatHistoryEntry[] }): ResolvedLocation[] => {
+  const userText = params.currentUserPrompt || ''
+  const recentChatText = getRecentChatText(params.chatHistory, userText)
+  const locationMap = locationProfiles as Record<string, LocationProfile>
+  const matches: ResolvedLocation[] = []
+
+  for (const [name, profile] of Object.entries(locationMap)) {
+    const aliases = Array.from(new Set([name, ...(profile.aliases || [])]))
+    const profileKeywords = Array.from(new Set([...(profile.profileKeywords || []), ...aliases]))
+    const triggerSources = profile.triggerSources || {}
+    const relatedCharacters = new Set((profile.relatedCharacters || []).map((charName) => charName.toLowerCase()))
+
+    const matchedByUser = triggerSources.userText !== false && hasLocationTermMatch(userText, aliases)
+    const matchedByRecentChat = !matchedByUser && triggerSources.recentChat !== false && hasLocationTermMatch(recentChatText, aliases)
+
+    let matchedByProfile = false
+    if (!matchedByUser && !matchedByRecentChat && triggerSources.profileText) {
+      for (const [characterName, characterProfile] of Object.entries(params.profiles || {})) {
+        if (relatedCharacters.size > 0 && !relatedCharacters.has(characterName.toLowerCase())) continue
+        if (hasLocationTermMatch(joinProfileText(characterProfile), profileKeywords)) {
+          matchedByProfile = true
+          break
+        }
+      }
+    }
+
+    if (!matchedByUser && !matchedByRecentChat && !matchedByProfile) continue
+
+    const score = matchedByUser ? 3 : matchedByRecentChat ? 2 : 1
+    matches.push({
+      name,
+      profile,
+      score,
+      matchedByUser,
+      matchedByRecentChat,
+      matchedByProfile
+    })
+  }
+
+  const strongestExplicitMatch = matches.some((location) => location.matchedByUser)
+  const filteredMatches = strongestExplicitMatch ? matches.filter((location) => location.matchedByUser) : matches
+
+  return filteredMatches
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score
+      return a.name.localeCompare(b.name)
+    })
+    .slice(0, MAX_RELEVANT_LOCATIONS)
+}
+
+const getFilteredLocationsForAI = (locations: ResolvedLocation[]): Record<string, { description: string; visuals: string }> => {
+  return locations.reduce<Record<string, { description: string; visuals: string }>>((acc, location) => {
+    acc[location.name] = {
+      description: location.profile.description,
+      visuals: location.profile.visuals
+    }
+    return acc
+  }, {})
 }
 
 /**
@@ -1626,9 +1759,10 @@ export type SystemPromptParams = {
  * Pure function — no Vue reactivity, no side effects.
  */
 export const generateSystemPrompt = (params: SystemPromptParams): string => {
-  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog } = params
+  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog, currentUserPrompt, chatHistory } = params
 
   const knownCharacterNames = Object.keys(profiles)
+  const relevantLocations = lowContextMode ? [] : resolveRelevantLocations({ profiles, currentUserPrompt, chatHistory })
 
   // Helper to filter out defaultSkin and optionally backstory from profiles
   const getFilteredProfilesForAI = (): Record<string, any> => {
@@ -1744,6 +1878,9 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
 
   ${prompts.systemPrompt.knownProfiles}
   ${knownCharacterNames.length > 0 ? JSON.stringify(getFilteredProfilesForAI(), null, 2) : prompts.systemPrompt.noProfilesMessage}
+
+  ${prompts.systemPrompt.knownLocations}
+  ${relevantLocations.length > 0 ? JSON.stringify(getFilteredLocationsForAI(relevantLocations), null, 2) : prompts.systemPrompt.noLocationsMessage}
 
   ${prompts.systemPrompt.idReference}
   ${relevantCharacterIds.length > 0 ? relevantCharacterIds.join(', ') : prompts.systemPrompt.noIdsMessage}

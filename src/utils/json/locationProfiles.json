@@ -1,0 +1,42 @@
+{
+    "Crown Kingdom": {
+        "aliases": [
+            "Crown Kingdom",
+            "The Crown Kingdom",
+            "Last Kingdom"
+        ],
+        "profileKeywords": [
+            "Crown Kingdom",
+            "Last Kingdom",
+            "White Knight squad",
+            "White Knights"
+        ],
+        "relatedCharacters": [
+            "Crown",
+            "Chime",
+            "Kilo",
+            "Modernia"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "A sprawling stone-and-brick fortress with multiple towers, spires, turrets, and an imposing central gatehouse featuring a large wooden portcullis-style gate and a blue shield emblem above it. A tall, ornate left-side tower topped with a distinctive circular metal weather vane or crown-like symbol. Thick battlemented walls, smaller watchtowers, and arched bridges connecting sections of the castle. A grassy cliff edge with weathered wooden fences, giving the sense of an elevated vantage point. Courtyard: wide cobblestone paths and grand stone staircases leading up to the fortress entrance. The area is framed by towering medieval walls, turrets, and fluttering yellow banners, with a decorative fountain/sundial centerpiece under the sky. Dining hall: warm, elegant medieval dining hall inside the castle. Sunlight streams through tall gothic arched windows onto a long dining table set with a white cloth, red upholstered chairs, and tableware. The room includes a large stone fireplace with a lit fire, a chandelier, wall sconces, and lush potted plants.",
+        "description": "The Crown Kingdom, also known as the Last Kingdom, is an ancient, majestic fortress located in a remote region of the surface. It serves as the home of the White Knight squad. Originally built as a fortress on an artificial island and once a tourist destination, it has aged but still retains its grandeur. Only a handful of people know its location. According to Pioneer, it is one of only two known safe havens against the Raptures on the surface (the other being Eden). Citizens share tasks and chores on a rotating basis. Materials (batteries, electronics, metals, wood) are scavenged from the surroundings through collective effort. Maintenance and repairs are primarily handled by Chime, and later by Kilo & T.A.L.O.S. The kingdom has powerful signal jamming capabilities, keeping it hidden from Raptures. If detected, it relies on outdated but modified catapults and cannons mounted on its walls for defense. Beneath the castle (via secret passages) lies its greatest treasure: a vault containing completed seeds of a superfood miracle crop capable of sustaining humanity for generations. The White Knights guard these seeds to help humanity reclaim and thrive on the surface. The Kingdom has 82 citizens. Its main ones are Crown, Chime, Trombe, Modernia, Kilo and T.A.L.O.S. The Kingdom's law consists of 12 clauses."
+    },
+    "The Ark": {
+        "aliases": [
+            "The Ark",
+            "Ark",
+            "Dome of Eternity"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "A vast, enclosed domed underground megacity known as the Dome of Eternity, its immense curved inner surface displaying a realistic projected image of a bright open sky with drifting clouds. Towering futuristic structures, residential blocks, and infrastructure packed tightly within the limited underground space. Artificial lighting mimics daylight across sprawling urban districts, corporate zones, and elevated transit networks. The outer edges transition into darker, cramped industrial sectors and the impoverished Outer Rim filled with makeshift scrap buildings and dim lighting. Occasional artificial rain or snow falls across sections of the city. Massive elevator shafts and vertical transit hubs connect the deep underground levels, with the central Lift area featuring heavily secured basements. Advanced but aging technology visible in architecture, power conduits along the dome walls, and dense population centers under the eternal artificial sky.",
+        "description": "The Ark is a massive domed underground city built deep beneath the surface, serving as the last refuge for humanity after the Raptures seized control of the world above. Originally constructed as a nuclear bunker, it represents the pinnacle of human engineering and scientific achievement. The city spans roughly 10,000 square kilometers and houses tens of millions of people, mostly descendants of the original surface population. Access to and from the surface occurs exclusively through a complex network of vertical and horizontal elevators, though the labyrinthine layout often leads to malfunctions. The Ark's artificial sky is projected across the inner surface of the Dome of Eternity, which also functions as the colony's power grid. The entire city is powered by a hidden Ultra Massive Core derived from Rapture technology, located in a secured basement area. While technologically advanced with capabilities to float and rise to the surface, this potential remains unused. Severe resource and food shortages plague the Ark due to limited underground space and lack of renewable energy sources. Most citizens subsist on Splendamin, a processed plant-based jelly, while real organic food and surface-sourced items remain expensive luxuries reserved for the elite. The universal currency is the Credit, embedded in citizenship chips and managed through central online banking. Society is informally divided into three groups: Sovereigns, the wealthy upper class with custom citizen chips; Quotidians, the common majority of ordinary citizens; and Noncitizens or Outlaws, those without chips who are banished to the harsh Outer Rim where they survive on scraps amid inhospitable conditions. An ID chip is mandatory for full citizenship and access to services, with noncitizens barred from the main city and subject to lethal enforcement if they attempt entry."
+    }
+}
