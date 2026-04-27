@@ -256,7 +256,7 @@
                 </n-icon>
               </template>
               <div>
-                <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wikia to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
+                <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wiki to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
                 <p>Web search is used on the first turn and when new characters are introduced. You can disable this by enabling "Use Nikke-DB Knowledge".</p>
                 <p>It is strongly suggested to check your provider's documentation and model page for information regarding possible costs.</p>
                 <p>It is also recommended to select a limit on your API key to prevent unexpected charges.</p>
@@ -299,7 +299,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  This mode severely limits the AI's context by stripping backstory information and forcing aggressive summarization. It is <strong>only intended and recommended</strong> when using a model with a <strong>very small context window</strong> (e.g., 8K or 16K tokens), where even basic conversations may exceed the limit.<br /><br />
+                  This mode severely limits the AI's context by stripping backstory information and forcing aggressive summarization. It is <strong>only intended and recommended</strong> when using a model with a <strong>very small context window</strong> (e.g., 8K or 16K tokens), where even short sessions may exceed the limit.<br /><br />
                   For models with larger context windows (32K+), this mode will unnecessarily degrade response quality.
                 </div>
               </n-popover>
@@ -476,6 +476,23 @@
           <n-divider />
           <n-form-item v-if="showAdvancedSettings">
             <template #label>
+              Low Power Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Caps the animations to 30 frames per second, forces Asset Quality to <strong>Low</strong> and disables Animation Replay.<br /><br />
+                  Useful for mobile devices to preserve battery and reduce heating.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="lowPowerMode" />
+          </n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
+            <template #label>
               Asset Quality
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
@@ -489,7 +506,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-radio-group v-model:value="assetQuality" name="assetqualitygroup">
+            <n-radio-group v-model:value="assetQuality" name="assetqualitygroup" :disabled="lowPowerMode" :style="{ opacity: lowPowerMode ? 0.5 : 1 }">
               <n-radio-button value="low">Low</n-radio-button>
               <n-radio-button value="high">High</n-radio-button>
             </n-radio-group>
@@ -551,7 +568,7 @@
             <n-switch v-model:value="market.live2d.yapEnabled" />
           </n-form-item>
 
-          <n-form-item>
+          <n-form-item :style="{ opacity: lowPowerMode ? 0.5 : 1 }">
             <template #label>
               Enable Animation Replay
               <n-popover trigger="hover" placement="bottom">
@@ -566,7 +583,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="enableAnimationReplay" />
+            <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode" />
           </n-form-item>
 
           <n-form-item>
@@ -778,6 +795,10 @@ import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUti
 
 const market = useMarket()
 
+const STORY_GEN_LOW_POWER_STORAGE_KEY = 'nikke_story_gen_low_power_mode'
+const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
+type AssetQualityMode = 'low' | 'high'
+
 const pendingGameChoiceText = ref<string | null>(null)
 const abortCurrentPlaybackForChoice = ref(false)
 
@@ -865,9 +886,14 @@ const availableRosterOptions = computed(() => {
 const showAdvancedSettings = ref(true)
 const lowContextMode = ref(false)
 const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
+const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
 const enableAnimationReplay = ref(false)
 const selectedMessageIndex = ref<number | null>(null)
 const originalHQAssets = ref(true)
+const storyGenAssetQualityPreference = ref<AssetQualityMode>(localStorage.getItem('nikke_hq_assets') === 'false' ? 'low' : 'high')
+const previousAssetQualityBeforeLowPower = ref<AssetQualityMode | null>(null)
+const storyGenAnimationReplayPreference = ref(localStorage.getItem('nikke_enable_animation_replay') !== 'false')
+const previousAnimationReplayBeforeLowPower = ref<boolean | null>(null)
 
 // NIKKE Mode State
 const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'nikke')
@@ -1154,10 +1180,48 @@ const ensureApiKeyForCurrentProvider = () => {
   return false
 }
 
+const syncStoryGenLowPowerDataset = () => {
+  if (typeof document === 'undefined') return
+
+  if (lowPowerMode.value && market.route.name === 'story-gen') {
+    document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY] = 'true'
+  } else {
+    delete document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY]
+  }
+}
+
+const applyStoryGenAssetQuality = (quality: AssetQualityMode) => {
+  market.live2d.HQassets = quality === 'high'
+}
+
+const applyLowPowerModeState = (enabled: boolean) => {
+  syncStoryGenLowPowerDataset()
+
+  if (enabled) {
+    previousAssetQualityBeforeLowPower.value ??= storyGenAssetQualityPreference.value
+    previousAnimationReplayBeforeLowPower.value ??= storyGenAnimationReplayPreference.value
+    applyStoryGenAssetQuality('low')
+    enableAnimationReplay.value = false
+    return
+  }
+
+  const restoredQuality = previousAssetQualityBeforeLowPower.value ?? storyGenAssetQualityPreference.value
+  const restoredAnimationReplay = previousAnimationReplayBeforeLowPower.value ?? storyGenAnimationReplayPreference.value
+  previousAssetQualityBeforeLowPower.value = null
+  previousAnimationReplayBeforeLowPower.value = null
+  applyStoryGenAssetQuality(restoredQuality)
+  enableAnimationReplay.value = restoredAnimationReplay
+}
+
 const assetQuality = computed({
-  get: () => (market.live2d.HQassets ? 'high' : 'low'),
+  get: (): AssetQualityMode => (lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value),
   set: (val: string) => {
-    market.live2d.HQassets = val === 'high'
+    const normalizedValue: AssetQualityMode = val === 'high' ? 'high' : 'low'
+    storyGenAssetQualityPreference.value = normalizedValue
+
+    if (!lowPowerMode.value) {
+      applyStoryGenAssetQuality(normalizedValue)
+    }
   }
 })
 
@@ -1343,7 +1407,15 @@ watch(lowContextMode, (val) => {
   }
 })
 
+watch(lowPowerMode, (enabled) => {
+  localStorage.setItem(STORY_GEN_LOW_POWER_STORAGE_KEY, String(enabled))
+  applyLowPowerModeState(enabled)
+})
+
 watch(enableAnimationReplay, (newVal) => {
+  if (!lowPowerMode.value) {
+    storyGenAnimationReplayPreference.value = newVal
+  }
   localStorage.setItem('nikke_enable_animation_replay', String(newVal))
 })
 
@@ -1405,8 +1477,19 @@ watch(
 watch(
   () => market.live2d.HQassets,
   (newVal) => {
-    localStorage.setItem('nikke_hq_assets', String(newVal))
+    if (!lowPowerMode.value) {
+      const nextPreference: AssetQualityMode = newVal ? 'high' : 'low'
+      storyGenAssetQualityPreference.value = nextPreference
+      localStorage.setItem('nikke_hq_assets', String(newVal))
+    }
     market.live2d.triggerResetPlacement()
+  }
+)
+
+watch(
+  () => market.route.name,
+  () => {
+    syncStoryGenLowPowerDataset()
   }
 )
 
@@ -1474,10 +1557,12 @@ const initializeSettings = async () => {
   // Load all simple settings from localStorage
   const stored = loadSettingsFromStorage()
 
+  storyGenAssetQualityPreference.value = stored.hqAssets === false ? 'low' : 'high'
+
   if (stored.mode !== undefined) mode.value = stored.mode
   if (stored.playbackMode !== undefined) playbackMode.value = stored.playbackMode
   if (stored.yapEnabled !== undefined) market.live2d.yapEnabled = stored.yapEnabled
-  if (stored.hqAssets !== undefined) market.live2d.HQassets = stored.hqAssets
+  applyStoryGenAssetQuality(lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value)
   if (stored.ttsEnabled !== undefined) ttsEnabled.value = stored.ttsEnabled
   if (stored.ttsEndpoint !== undefined) ttsEndpoint.value = stored.ttsEndpoint
   if (stored.ttsProvider !== undefined) ttsProvider.value = stored.ttsProvider
@@ -1488,7 +1573,10 @@ const initializeSettings = async () => {
   if (stored.enableContextCaching !== undefined) enableContextCaching.value = stored.enableContextCaching
   if (stored.autoCompactSummaries !== undefined) autoCompactSummaries.value = stored.autoCompactSummaries
   if (stored.autoCompactFrequency !== undefined) autoCompactFrequency.value = stored.autoCompactFrequency
-  if (stored.enableAnimationReplay !== undefined) enableAnimationReplay.value = stored.enableAnimationReplay
+  if (stored.enableAnimationReplay !== undefined) {
+    storyGenAnimationReplayPreference.value = stored.enableAnimationReplay
+  }
+  enableAnimationReplay.value = lowPowerMode.value ? false : storyGenAnimationReplayPreference.value
 
   // Provider + model (needs async model fetching)
   if (stored.apiProvider) {
@@ -1568,9 +1656,12 @@ onMounted(() => {
       chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
     }
   })
+
+  syncStoryGenLowPowerDataset()
 })
 
 onUnmounted(() => {
+  delete document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY]
   market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
   unlockMobilePageScroll()
