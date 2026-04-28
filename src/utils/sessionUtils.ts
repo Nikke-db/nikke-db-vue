@@ -45,7 +45,13 @@ export interface SessionData {
   mode: string
   timestamp: string
   rosterRows: StoryCharacterEntry[]
+  playerCharacter?: PlayerCharacterSessionState
   settings: SessionSettings
+}
+
+export interface PlayerCharacterSessionState {
+  useCustomCharacter: boolean
+  characterName?: string
 }
 
 /** Parameters for building the session export data. */
@@ -59,6 +65,7 @@ export interface BuildSessionExportParams {
   summaryJustCompacted: boolean
   mode: string
   rosterRows: StoryCharacterEntry[]
+  playerCharacter: PlayerCharacterSessionState
   enableAnimationReplay: boolean
   apiProvider: string
   model: string
@@ -128,6 +135,7 @@ export function buildSessionExportData(params: BuildSessionExportParams): Sessio
     mode: params.mode,
     timestamp: new Date().toISOString(),
     rosterRows: params.rosterRows,
+    playerCharacter: params.playerCharacter,
     settings: {
       apiProvider: params.apiProvider,
       model: params.model,
@@ -222,6 +230,25 @@ export interface ValidatedSessionSettings {
   modelWarning?: string
   /** If the provider is openrouter, we need to fetch models before validating. */
   needsOpenRouterModelFetch?: boolean
+}
+
+export function validatePlayerCharacterState(value: any): PlayerCharacterSessionState {
+  const fallback: PlayerCharacterSessionState = {
+    useCustomCharacter: false
+  }
+
+  if (!value || typeof value !== 'object') return fallback
+
+  const useCustomCharacter = value.useCustomCharacter === true
+  const characterName = typeof value.characterName === 'string' && value.characterName.trim() ? value.characterName.trim() : undefined
+
+  if (!useCustomCharacter) return fallback
+  if (!characterName) return fallback
+
+  return {
+    useCustomCharacter: true,
+    characterName
+  }
 }
 
 /**

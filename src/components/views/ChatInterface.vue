@@ -417,9 +417,9 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br /><br />
+                  <strong>Roleplay:</strong> Play as the Commander by default, or optionally as another supported character from Settings. Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br /><br />
                   <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.<br /><br />
-                  <strong>Game:</strong> Similar to Roleplay, but instead of typing in the chatbox, you are presented choices similarly to the videogame. You may still override the choices by typing your own after pressing the red X icon on the upper right corner.
+                  <strong>Game:</strong> Similar to Roleplay, but instead of typing in the chatbox, you are presented choices similarly to the videogame. You may still override the choices by typing your own after pressing the red X icon on the upper right corner. The active player character can also be changed from Settings before the session starts.
                 </div>
               </n-popover>
             </template>
@@ -429,6 +429,30 @@
               <n-radio-button value="game">Game</n-radio-button>
             </n-radio-group>
           </n-form-item>
+
+          <n-form-item v-if="mode !== 'story'">
+            <template #label>
+              Play As Different Character
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  If this is off, you play as the Commander (standard behaviour). If this is on, you can choose another character to control from the local profile database for Roleplay and Game modes.<br /><br />
+                  Once a session starts, this setting is locked until you reset or load another session.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="useCustomPlayerCharacter" :disabled="playerCharacterSelectionLocked" />
+          </n-form-item>
+
+          <n-form-item v-if="mode !== 'story' && useCustomPlayerCharacter" label="Player Character">
+            <n-select v-model:value="selectedPlayerCharacterName" :options="playerCharacterOptions" filterable :disabled="playerCharacterSelectionLocked" placeholder="Select character" />
+          </n-form-item>
+
+          <n-alert v-if="mode !== 'story' && playerCharacterSelectionLocked" type="info" style="margin-bottom: 12px" title=""> Player character selection is locked for the current session. Reset or load another session to change it. </n-alert>
 
           <n-form-item v-if="mode !== 'story'">
             <template #label>
@@ -459,11 +483,11 @@
                   </n-icon>
                 </template>
                 <div v-if="realisticModeEnabled">
-                  In Realistic Mode, God Mode prevents the Commander from dying but does <strong>NOT</strong> prevent bad outcomes. The Commander can still lose fights, get injured, get captured, or fail — death is simply replaced with the nearest non-lethal outcome (e.g., captured, knocked unconscious, rescued).<br /><br />
+                  In Realistic Mode, God Mode prevents the active player character from dying but does <strong>NOT</strong> prevent bad outcomes. The active player character can still lose fights, get injured, get captured, or fail — death is simply replaced with the nearest non-lethal outcome (e.g., captured, knocked unconscious, rescued).<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
                 <div v-else>
-                  Prevents any action in the story from causing the Commander's death.<br /><br />
+                  Prevents any action in the story from causing the active player character's death.<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
               </n-popover>
@@ -685,7 +709,7 @@
           <div class="guide-section">
             <ul>
               <li>
-                <strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the narrative.
+                <strong>Roleplay Mode:</strong> You play as the Commander by default, or another supported character if selected in Settings. The AI controls the narrative.
                 <ul>
                   <li>Use <code>[brackets]</code> for actions (e.g., <code>[I nod slowly]</code>).</li>
                   <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
@@ -700,7 +724,7 @@
               <li>
                 <strong>Game Mode:</strong> A NIKKE-like experience.
                 <ul>
-                  <li>The AI narrates, and you choose from generated options.</li>
+                  <li>The AI narrates, and you choose from generated options for the active player character.</li>
                   <li>You can still override choices by clicking the red X and then typing as you would in Roleplay Mode..</li>
                 </ul>
               </li>
@@ -790,7 +814,7 @@ import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/util
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
-import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex } from '@/utils/sessionUtils'
+import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState } from '@/utils/sessionUtils'
 import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
 const market = useMarket()
@@ -814,9 +838,21 @@ const model = ref('')
 const mode = ref('game')
 const tokenUsage = ref('medium')
 const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
+const useCustomPlayerCharacter = ref(false)
+const selectedPlayerCharacterName = ref('')
 
 watch(reasoningEffort, (val) => {
   localStorage.setItem('nikke_reasoning_effort', val)
+})
+
+watch(useCustomPlayerCharacter, (enabled) => {
+  localStorage.setItem('nikke_player_character_use_custom', String(enabled))
+  if (enabled) ensureValidSelectedPlayerCharacter()
+})
+
+watch(selectedPlayerCharacterName, (name) => {
+  if (!name) return
+  localStorage.setItem('nikke_player_character_name', name)
 })
 
 const reasoningEffortOptions = computed(() => getReasoningEffortOptions(apiProvider.value))
@@ -870,6 +906,51 @@ const characterCatalog = buildCharacterCatalog()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
+const playerCharacterProfileCatalog = {
+  ...(localCharacterProfiles as Record<string, any>),
+  ...(variantCharacterProfiles as Record<string, any>)
+}
+const playerCharacterProfileNames = Object.keys(playerCharacterProfileCatalog).sort((a, b) => a.localeCompare(b))
+const playerCharacterOptions = computed(() => playerCharacterProfileNames.map((name) => ({ label: name, value: name })))
+
+const findPlayerCharacterProfileKey = (name?: string | null): string | null => {
+  if (!name) return null
+  const normalized = name.trim().toLowerCase()
+  return playerCharacterProfileNames.find((key) => key.toLowerCase() === normalized) || null
+}
+
+const ensureValidSelectedPlayerCharacter = () => {
+  const resolvedKey = findPlayerCharacterProfileKey(selectedPlayerCharacterName.value)
+  if (resolvedKey) {
+    selectedPlayerCharacterName.value = resolvedKey
+    return
+  }
+
+  selectedPlayerCharacterName.value = playerCharacterProfileNames[0] || ''
+}
+
+const playerCharacterSelectionLocked = computed(() => chatHistory.value.some((msg) => msg.role === 'user' || msg.role === 'assistant'))
+const resolvedPlayerCharacterKey = computed(() => findPlayerCharacterProfileKey(selectedPlayerCharacterName.value))
+const selectedPlayerCharacterProfile = computed(() => {
+  const resolvedKey = resolvedPlayerCharacterKey.value
+  return resolvedKey ? playerCharacterProfileCatalog[resolvedKey] || null : null
+})
+const isCustomPlayerCharacterActive = computed(() => mode.value !== 'story' && useCustomPlayerCharacter.value && !!resolvedPlayerCharacterKey.value && !!selectedPlayerCharacterProfile.value)
+const activePlayerCharacterName = computed(() => (isCustomPlayerCharacterActive.value ? resolvedPlayerCharacterKey.value! : 'Commander'))
+const playerCharacterAwareProfiles = computed<Record<string, any>>(() => {
+  const merged = { ...characterProfiles.value }
+
+  if (isCustomPlayerCharacterActive.value && resolvedPlayerCharacterKey.value && selectedPlayerCharacterProfile.value) {
+    const existingKey = Object.keys(merged).find((key) => key.toLowerCase() === resolvedPlayerCharacterKey.value!.toLowerCase())
+    if (!existingKey) {
+      merged[resolvedPlayerCharacterKey.value] = selectedPlayerCharacterProfile.value
+    }
+  }
+
+  return merged
+})
+
+ensureValidSelectedPlayerCharacter()
 
 const availableRosterOptions = computed(() => {
   return rosterOptions.value.map((option) => {
@@ -1051,7 +1132,7 @@ const resetChatLayout = () => initChatLayout(chatSize, chatPosition)
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
-  return getEffectiveCharacterProfiles(characterProfiles.value, characterProgression.value)
+  return getEffectiveCharacterProfiles(playerCharacterAwareProfiles.value, characterProgression.value)
 })
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -1573,6 +1654,9 @@ const initializeSettings = async () => {
   if (stored.enableContextCaching !== undefined) enableContextCaching.value = stored.enableContextCaching
   if (stored.autoCompactSummaries !== undefined) autoCompactSummaries.value = stored.autoCompactSummaries
   if (stored.autoCompactFrequency !== undefined) autoCompactFrequency.value = stored.autoCompactFrequency
+  if (stored.playerCharacterUseCustom !== undefined) useCustomPlayerCharacter.value = stored.playerCharacterUseCustom
+  if (stored.playerCharacterName !== undefined) selectedPlayerCharacterName.value = stored.playerCharacterName
+  ensureValidSelectedPlayerCharacter()
   if (stored.enableAnimationReplay !== undefined) {
     storyGenAnimationReplayPreference.value = stored.enableAnimationReplay
   }
@@ -1706,6 +1790,10 @@ const saveSession = () => {
     summaryJustCompacted: summaryJustCompacted.value,
     mode: mode.value,
     rosterRows: rosterRows.value,
+    playerCharacter: {
+      useCustomCharacter: useCustomPlayerCharacter.value,
+      characterName: resolvedPlayerCharacterKey.value || undefined
+    },
     enableAnimationReplay: enableAnimationReplay.value,
     apiProvider: apiProvider.value,
     model: model.value,
@@ -1762,6 +1850,10 @@ const handleFileUpload = (event: Event) => {
         if (data.storySummary) {
           storySummary.value = data.storySummary
         }
+        const restoredPlayerCharacter = validatePlayerCharacterState(data.playerCharacter)
+        useCustomPlayerCharacter.value = restoredPlayerCharacter.useCustomCharacter
+        selectedPlayerCharacterName.value = restoredPlayerCharacter.characterName || selectedPlayerCharacterName.value
+        ensureValidSelectedPlayerCharacter()
         if (data.lastSummarizedIndex !== undefined) {
           lastSummarizedIndex.value = data.lastSummarizedIndex
         }
@@ -2183,7 +2275,10 @@ const getUserReminders = (): string => {
     wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value
   }
 
-  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>)
+  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>, {
+    playerCharacterName: activePlayerCharacterName.value,
+    customPlayerCharacterActive: isCustomPlayerCharacterActive.value
+  })
 
   for (const key of togglesToClear) {
     const entry = toggleMap[key]
@@ -2318,11 +2413,15 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   // Build hidden honorifics instruction for first turn only
   // This is injected into the first user message but NOT saved to history
-  const buildHonorificsReminder = (): string => {
+  const buildFirstTurnReminder = (): string => {
     if (!isFirstTurn) return ''
 
+    if (isCustomPlayerCharacterActive.value) {
+      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
+    }
+
     // Get relevant honorifics from the characterHonorifics JSON
-    const knownNames = Object.keys(characterProfiles.value)
+    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
 
     if (knownNames.length === 0) return ''
 
@@ -2341,8 +2440,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   // Helper to inject honorifics reminder into the last user message (first turn only)
-  const injectHonorificsReminder = (messages: any[]): any[] => {
-    const reminder = buildHonorificsReminder()
+  const injectFirstTurnReminder = (messages: any[]): any[] => {
+    const reminder = buildFirstTurnReminder()
 
     if (!reminder) return messages
 
@@ -2369,8 +2468,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
 
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
@@ -2379,8 +2478,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, undefined, enableWebSearch)
@@ -2389,8 +2488,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to Pollinations:', messages)
     response = await callPollinations(messages, enableWebSearch)
@@ -2399,8 +2498,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to Local:', messages)
     response = await callLocal(messages)
@@ -2434,6 +2533,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
 // Separate function to call AI without search (after character lookup)
 const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
+  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
   const systemPrompt = generateSystemPrompt(false)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
 
@@ -2447,25 +2547,66 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   // Get user toggled reminders
   const reminders = getUserReminders()
 
+  const buildFirstTurnReminder = (): string => {
+    if (!isFirstTurn) return ''
+
+    if (isCustomPlayerCharacterActive.value) {
+      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
+    }
+
+    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
+    if (knownNames.length === 0) return ''
+
+    const honorificExamples: string[] = []
+    for (const name of knownNames) {
+      const honorific = getHonorific(name)
+      if (honorific && honorific !== 'Commander') {
+        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
+      }
+    }
+
+    if (honorificExamples.length === 0) return ''
+    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
+  }
+
+  const injectFirstTurnReminder = (messages: any[]): any[] => {
+    const reminder = buildFirstTurnReminder()
+    if (!reminder) return messages
+
+    const result = [...messages]
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (result[i].role === 'user') {
+        result[i] = { ...result[i], content: result[i].content + reminder }
+        break
+      }
+    }
+
+    return result
+  }
+
   // Tumbling window summarization + context/history preparation
   const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAIWithoutSearch]')
   contextMsg = updatedContextMsg
 
   if (apiProvider.value === 'gemini') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callGemini(messages, false)
   } else if (apiProvider.value === 'openrouter') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callOpenRouter(messages, undefined, false)
   } else if (apiProvider.value === 'pollinations') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callPollinations(messages, false)
   } else if (apiProvider.value === 'local') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callLocal(messages)
   }
 
@@ -2475,7 +2616,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 // Check if the AI response contains a search request for unknown characters
 const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
   return checkForSearchRequestUtil(response, userPrompt, {
-    characterProfiles: characterProfiles.value,
+    characterProfiles: playerCharacterAwareProfiles.value,
     characterCatalog,
     apiProvider: apiProvider.value,
     allowWebSearchFallback: allowWebSearchFallback.value
@@ -2512,7 +2653,9 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     lowContextMode: lowContextMode.value,
     characterCatalog,
     currentUserPrompt: lastPrompt.value,
-    chatHistory: chatHistory.value
+    chatHistory: chatHistory.value,
+    playerCharacterName: activePlayerCharacterName.value,
+    customPlayerCharacterActive: isCustomPlayerCharacterActive.value
   })
 }
 
@@ -2766,7 +2909,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     const unique = Array.from(new Set(requested))
 
     return unique.filter((name) => {
-      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((key) => key.toLowerCase() === name.toLowerCase())
+      if (existingKey || name.toLowerCase() === 'commander') return false
       const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
       const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
       return !!(inUserPrompt || inGeneratedText)
@@ -2882,7 +3026,7 @@ const executeAction = async (data: any) => {
 
   // Normalize legacy/misused profile updates (e.g., DeepSeek using characterProfile/memory) so they
   // cannot overwrite existing profiles and instead become characterProgression updates.
-  data = normalizeAiActionCharacterData(data, characterProfiles.value)
+  data = normalizeAiActionCharacterData(data, playerCharacterAwareProfiles.value)
 
   if (data.memory) {
     logDebug('[AI Memory Update - New Characters Only]:', data.memory)
@@ -2890,7 +3034,7 @@ const executeAction = async (data: any) => {
 
     for (const [charName, profile] of Object.entries(data.memory)) {
       // 1. Check if already in active profiles (Case-Insensitive)
-      const existingKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
 
       if (existingKey) {
         logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
@@ -2966,7 +3110,7 @@ const executeAction = async (data: any) => {
 
     for (const [charName, progression] of Object.entries(data.characterProgression)) {
       // Find target profile (Case-Insensitive) in BASE profiles.
-      const targetKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const targetKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
       const resolvedKey = targetKey || charName
 
       if (typeof progression === 'object' && progression !== null) {
@@ -3332,6 +3476,8 @@ const resetSession = () => {
     selectedMessageIndex.value = null
     nikkeOverlayVisible.value = false
     rosterRows.value = []
+    useCustomPlayerCharacter.value = false
+    ensureValidSelectedPlayerCharacter()
   }
 }
 

@@ -24,6 +24,8 @@ export interface StoredSettings {
   enableAnimationReplay?: boolean
   apiProvider?: string
   model?: string
+  playerCharacterUseCustom?: boolean
+  playerCharacterName?: string
 }
 
 /**
@@ -112,6 +114,16 @@ export function loadSettingsFromStorage(): StoredSettings {
 
   const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
   result.enableAnimationReplay = savedAnimationReplay !== 'false'
+
+  const savedPlayerCharacterUseCustom = localStorage.getItem('nikke_player_character_use_custom')
+  if (savedPlayerCharacterUseCustom !== null) {
+    result.playerCharacterUseCustom = savedPlayerCharacterUseCustom === 'true'
+  }
+
+  const savedPlayerCharacterName = localStorage.getItem('nikke_player_character_name')
+  if (savedPlayerCharacterName) {
+    result.playerCharacterName = savedPlayerCharacterName
+  }
 
   // Provider + model (raw values — caller must validate model against fetched lists)
   const savedProvider = localStorage.getItem('nikke_api_provider')

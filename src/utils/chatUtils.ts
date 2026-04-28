@@ -80,7 +80,12 @@ export type ReminderToggleState = {
  * Build the user-toggled reminders string and return which toggles should be cleared.
  * Pure function — no Vue reactivity, so the caller handles clearing.
  */
-export const buildUserReminders = (toggles: ReminderToggleState, mode: string, reminders: Record<string, string>): { text: string; togglesToClear: (keyof ReminderToggleState)[] } => {
+export const buildUserReminders = (
+  toggles: ReminderToggleState,
+  mode: string,
+  reminders: Record<string, string>,
+  opts?: { playerCharacterName?: string; customPlayerCharacterActive?: boolean }
+): { text: string; togglesToClear: (keyof ReminderToggleState)[] } => {
   let text = ''
   const togglesToClear: (keyof ReminderToggleState)[] = []
 
@@ -104,7 +109,10 @@ export const buildUserReminders = (toggles: ReminderToggleState, mode: string, r
     togglesToClear.push('narrationAndDialogueNotSplit')
   }
   if (toggles.aiControllingUser) {
-    text += '\n\n' + reminders.aiControllingUserReminder
+    const reminder = opts?.customPlayerCharacterActive && opts.playerCharacterName && reminders.aiControllingUserReminderCustom
+      ? reminders.aiControllingUserReminderCustom.replaceAll('{playerCharacter}', opts.playerCharacterName)
+      : reminders.aiControllingUserReminder
+    text += '\n\n' + reminder
     togglesToClear.push('aiControllingUser')
   }
   if (toggles.wrongSpeechStyles) {
@@ -1646,6 +1654,8 @@ export type SystemPromptParams = {
   characterCatalog: CharacterCatalog
   currentUserPrompt?: string
   chatHistory?: ChatHistoryEntry[]
+  playerCharacterName?: string
+  customPlayerCharacterActive?: boolean
 }
 
 type ResolvedLocation = {
@@ -1759,7 +1769,7 @@ const getFilteredLocationsForAI = (locations: ResolvedLocation[]): Record<string
  * Pure function — no Vue reactivity, no side effects.
  */
 export const generateSystemPrompt = (params: SystemPromptParams): string => {
-  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog, currentUserPrompt, chatHistory } = params
+  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog, currentUserPrompt, chatHistory, playerCharacterName = 'Commander', customPlayerCharacterActive = false } = params
 
   const knownCharacterNames = Object.keys(profiles)
   const relevantLocations = lowContextMode ? [] : resolveRelevantLocations({ profiles, currentUserPrompt, chatHistory })
@@ -1852,27 +1862,71 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
     relevantHonorifics[name] = getHonorific(name)
   }
 
+  const replacePlayerCharacterToken = (value: string) => value.replaceAll('{playerCharacter}', playerCharacterName)
+
   let modeInstructions = ''
   if (mode === 'game') {
-    modeInstructions = prompts.systemPrompt.instructions.game
+    modeInstructions = customPlayerCharacterActive
+      ? replacePlayerCharacterToken((prompts.systemPrompt.instructions as any).gameCustom)
+      : prompts.systemPrompt.instructions.game
   } else if (mode === 'story') {
     modeInstructions = prompts.systemPrompt.instructions.story
   } else {
-    modeInstructions = prompts.systemPrompt.instructions.roleplay
+    modeInstructions = customPlayerCharacterActive
+      ? replacePlayerCharacterToken((prompts.systemPrompt.instructions as any).roleplayCustom)
+      : prompts.systemPrompt.instructions.roleplay
   }
+
+  const modePrompt = mode === 'story'
+    ? prompts.systemPrompt.modes.story
+    : mode === 'game'
+      ? customPlayerCharacterActive
+        ? replacePlayerCharacterToken((prompts.systemPrompt.modes as any).gameCustom)
+        : prompts.systemPrompt.modes.game
+      : customPlayerCharacterActive
+        ? replacePlayerCharacterToken((prompts.systemPrompt.modes as any).roleplayCustom)
+        : prompts.systemPrompt.modes.roleplay
+
+  const criticalErrors = customPlayerCharacterActive
+    ? replacePlayerCharacterToken((prompts.systemPrompt as any).criticalErrorsCustom)
+    : prompts.systemPrompt.criticalErrors
+
+  const playerCharacterContext = customPlayerCharacterActive
+    ? `
+
+  ${replacePlayerCharacterToken((prompts.systemPrompt as any).playerCharacterContext)}`
+    : ''
+
+  const godModeText = !godModeEnabled
+    ? ''
+    : realisticModeEnabled && mode !== 'story'
+      ? customPlayerCharacterActive
+        ? replacePlayerCharacterToken((prompts.systemPrompt as any).godModeRealisticCustom)
+        : (prompts.systemPrompt as any).godModeRealistic
+      : customPlayerCharacterActive
+        ? replacePlayerCharacterToken((prompts.systemPrompt as any).godModeCustom)
+        : prompts.systemPrompt.godMode
+
+  const realisticModeText = realisticModeEnabled && mode !== 'story'
+    ? customPlayerCharacterActive
+      ? replacePlayerCharacterToken((prompts.systemPrompt as any).realisticModeCustom)
+      : (prompts.systemPrompt as any).realisticMode
+    : ''
 
   let prompt = `${prompts.systemPrompt.intro}
 
-  ${mode === 'roleplay' ? prompts.systemPrompt.modes.roleplay : mode === 'game' ? prompts.systemPrompt.modes.game : prompts.systemPrompt.modes.story}
+  ${modePrompt}
 
   ${prompts.systemPrompt.honorifics.header}
   ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
 
   ${prompts.systemPrompt.honorifics.rules}
 
+  ${playerCharacterContext}
+
   ${enableWebSearch ? prompts.systemPrompt.characterResearch.enabled : prompts.systemPrompt.characterResearch.disabled}
 
-  ${prompts.systemPrompt.criticalErrors}
+  ${criticalErrors}
 
   ${mode === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
 
@@ -1888,8 +1942,8 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
   ${prompts.systemPrompt.instructions.base}
   ${modeInstructions}
   ${prompts.systemPrompt.instructions.closing}
-  ${godModeEnabled ? (realisticModeEnabled && mode !== 'story' ? (prompts.systemPrompt as any).godModeRealistic : prompts.systemPrompt.godMode) : ''}
-  ${realisticModeEnabled && mode !== 'story' ? (prompts.systemPrompt as any).realisticMode : ''}
+  ${godModeText}
+  ${realisticModeText}
   `
 
   return prompt
