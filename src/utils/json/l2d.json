@@ -1288,8 +1288,18 @@
     "id": "c600"
   },
   {
+    "name": "Mint",
+    "id": "c600_01",
+    "f": "c600_01"
+  },
+  {
     "name": "Prika",
     "id": "c601"
+  },
+  {
+    "name": "Prika",
+    "id": "c601_01",
+    "f": "c601_01"
   },
   {
     "name": "Mekami Shifty",
@@ -2434,6 +2444,21 @@
   {
     "name": "Smol Emilia",
     "id": "smol_emilia"
+  },
+  {
+    "name": "Smol Anis TTS",
+    "id": "smol_anis",
+    "f": "tts_c017_02"
+  },
+  {
+    "name": "Smol Mint TTS",
+    "id": "smol_mint",
+    "f": "tts_c600_00"
+  },
+  {
+    "name": "Smol Prika TTS",
+    "id": "smol_prika",
+    "f": "tts_c601_00"
   },
   {
     "name": "AZX Service Time 1",
