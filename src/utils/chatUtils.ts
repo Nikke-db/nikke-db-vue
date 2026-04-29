@@ -1819,6 +1819,14 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
 
   // Add characters from profiles (always use lowest ID when duplicates exist)
   for (const name of knownCharacterNames) {
+    if (name.toLowerCase() === 'commander') {
+      if (!relevantCharacterIds.some((r) => r.includes('= commander'))) {
+        relevantCharacterIds.push('Commander = commander')
+        relevantCharacterNames.push('Commander')
+      }
+      continue
+    }
+
     // Find all characters with this name and pick the one with lowest ID
     const matchingChars = (l2d as any[]).filter((c) => c.name.toLowerCase() === name.toLowerCase())
     if (matchingChars.length === 0) continue
@@ -1891,6 +1899,10 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
     ? replacePlayerCharacterToken((prompts.systemPrompt as any).criticalErrorsCustom)
     : prompts.systemPrompt.criticalErrors
 
+  const honorificRules = customPlayerCharacterActive
+    ? replacePlayerCharacterToken((prompts.systemPrompt.honorifics as any).rulesCustom)
+    : prompts.systemPrompt.honorifics.rules
+
   const playerCharacterContext = customPlayerCharacterActive
     ? `
 
@@ -1920,7 +1932,7 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
   ${prompts.systemPrompt.honorifics.header}
   ${Object.keys(relevantHonorifics).length > 0 ? JSON.stringify(relevantHonorifics, null, 2) : '(No characters loaded yet - honorifics will be provided once characters appear)'}
 
-  ${prompts.systemPrompt.honorifics.rules}
+  ${honorificRules}
 
   ${playerCharacterContext}
 

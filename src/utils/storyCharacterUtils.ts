@@ -41,6 +41,11 @@ const isIdFiltered = (id: string) => filteredIds.has(id)
 
 const toKey = (value: string) => (value || '').trim().toLowerCase()
 
+const isCommanderLikeName = (name: string) => {
+  const key = toKey(name)
+  return key === 'commander' || key.startsWith('commander (')
+}
+
 // Override map: IDs that should appear as skins under a specific base character
 // in the Story/Roleplaying Generator instead of being treated as separate entries.
 // These entries bypass the normal name/ID pattern matching and are injected directly
@@ -57,6 +62,7 @@ const buildBaseMap = (items: CharacterItem[]) => {
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
     if (isOverrideId(item.id)) continue
+    if (isCommanderLikeName(item.name)) continue
     if (isVariantName(item.name)) continue
     if (item.id.includes('_')) continue
 
@@ -95,6 +101,7 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
     if (isOverrideId(item.id)) continue
+    if (isCommanderLikeName(item.name)) continue
     idToName[item.id] = item.name
 
     // For nameToId, keep the lowest ID when there are duplicates
@@ -112,6 +119,7 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
     if (isOverrideId(item.id)) continue
+    if (isCommanderLikeName(item.name)) continue
 
     if (isVariantName(item.name)) {
       const baseName = item.name.split(':')[0].trim()

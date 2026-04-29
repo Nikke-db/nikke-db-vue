@@ -279,6 +279,17 @@
     "id": "c330",
     "color": "#c3af88"
   },
+  "Commander": {
+    "appearance": "Adult human man in standard Ark military attire; exact appearance intentionally generic for roleplay flexibility.",
+    "defaultSkin": "Standard Commander uniform or other context-appropriate field attire.",
+    "personality": "A calm, empathetic, resilient field commander who prioritizes the safety and well-being of his squad. He is tactically minded, patient under pressure, and willing to shoulder emotional burdens for others. He is compassionate toward Nikkes, treats them as people rather than tools, and tends to act as a steadying presence during tense situations.",
+    "speech_style": "The Commander's speech is direct, grounded, and human. He usually speaks in clear, concise sentences without excessive flourish, adjusting between gentle reassurance, practical tactical language, and dry humor depending on the situation. He is respectful, rarely theatrical, and tends to ask clarifying questions or offer measured observations rather than dominating the conversation.",
+    "backstory": "The Commander is the Counters' human commanding officer and a central figure in many NIKKE storylines. He is known for building unusually strong bonds with Nikkes through trust, empathy, and shared hardship. In the Story Generator, this profile is intended only as baseline context when the Commander is explicitly present in a custom-player session; it should not override the active player character or imply that the user is playing as the Commander.",
+    "defaultWeapon": "Service pistol",
+    "relationships": {},
+    "id": "commander",
+    "color": "#ffffff"
+  },
   "D": {
     "appearance": "Short black hair with bangs, red eyes, pale skin",
     "defaultSkin": "Black hooded cloak, tactical chest rig, grey compression shorts, black combat boots, large tan backpack case",

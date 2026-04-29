@@ -906,11 +906,17 @@ const characterCatalog = buildCharacterCatalog()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
+const isCommanderProfileKey = (name: string) => {
+  const normalized = name.trim().toLowerCase()
+  return normalized === 'commander' || normalized.startsWith('commander (')
+}
 const playerCharacterProfileCatalog = {
   ...(localCharacterProfiles as Record<string, any>),
   ...(variantCharacterProfiles as Record<string, any>)
 }
-const playerCharacterProfileNames = Object.keys(playerCharacterProfileCatalog).sort((a, b) => a.localeCompare(b))
+const playerCharacterProfileNames = Object.keys(playerCharacterProfileCatalog)
+  .filter((name) => !isCommanderProfileKey(name))
+  .sort((a, b) => a.localeCompare(b))
 const playerCharacterOptions = computed(() => playerCharacterProfileNames.map((name) => ({ label: name, value: name })))
 
 const findPlayerCharacterProfileKey = (name?: string | null): string | null => {
@@ -937,6 +943,11 @@ const selectedPlayerCharacterProfile = computed(() => {
 })
 const isCustomPlayerCharacterActive = computed(() => mode.value !== 'story' && useCustomPlayerCharacter.value && !!resolvedPlayerCharacterKey.value && !!selectedPlayerCharacterProfile.value)
 const activePlayerCharacterName = computed(() => (isCustomPlayerCharacterActive.value ? resolvedPlayerCharacterKey.value! : 'Commander'))
+const customPlayerSessionHasCommander = computed(() => {
+  if (!isCustomPlayerCharacterActive.value) return false
+
+  return chatHistory.value.some((msg) => msg.role === 'user' && isWholeWordPresent(msg.content, 'Commander'))
+})
 const playerCharacterAwareProfiles = computed<Record<string, any>>(() => {
   const merged = { ...characterProfiles.value }
 
@@ -944,6 +955,16 @@ const playerCharacterAwareProfiles = computed<Record<string, any>>(() => {
     const existingKey = Object.keys(merged).find((key) => key.toLowerCase() === resolvedPlayerCharacterKey.value!.toLowerCase())
     if (!existingKey) {
       merged[resolvedPlayerCharacterKey.value] = selectedPlayerCharacterProfile.value
+    }
+  }
+
+  if (customPlayerSessionHasCommander.value) {
+    const existingKey = Object.keys(merged).find((key) => key.toLowerCase() === 'commander')
+    if (!existingKey) {
+      const commanderProfile = (localCharacterProfiles as Record<string, any>).Commander
+      if (commanderProfile) {
+        merged.Commander = commanderProfile
+      }
     }
   }
 
