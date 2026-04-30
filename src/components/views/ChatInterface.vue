@@ -3497,7 +3497,6 @@ const resetSession = () => {
     selectedMessageIndex.value = null
     nikkeOverlayVisible.value = false
     rosterRows.value = []
-    useCustomPlayerCharacter.value = false
     ensureValidSelectedPlayerCharacter()
   }
 }
