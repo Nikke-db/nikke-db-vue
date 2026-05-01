@@ -74,6 +74,8 @@ export type ReminderToggleState = {
   incorrectSpeakerLabeling: boolean
   narrationAsDialogue: boolean
   wrongCharacterOnScreen: boolean
+  npcUsingCommanderHonorifics: boolean
+  commanderPresentButSilent: boolean
 }
 
 /**
@@ -134,6 +136,17 @@ export const buildUserReminders = (
   if (toggles.wrongCharacterOnScreen) {
     text += '\n\n' + reminders.wrongCharacterOnScreen
     togglesToClear.push('wrongCharacterOnScreen')
+  }
+  if (toggles.npcUsingCommanderHonorifics) {
+    const reminder = opts?.customPlayerCharacterActive && opts.playerCharacterName && reminders.npcUsingCommanderHonorificsReminderCustom
+      ? reminders.npcUsingCommanderHonorificsReminderCustom.replaceAll('{playerCharacter}', opts.playerCharacterName)
+      : reminders.npcUsingCommanderHonorificsReminder
+    text += '\n\n' + reminder
+    togglesToClear.push('npcUsingCommanderHonorifics')
+  }
+  if (toggles.commanderPresentButSilent) {
+    text += '\n\n' + reminders.commanderPresentButSilentReminder
+    togglesToClear.push('commanderPresentButSilent')
   }
 
   return { text, togglesToClear }
@@ -1785,7 +1798,7 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
         return parsed?.type === 'base' && parsed.baseName === name
       })
 
-      let filteredProfile: Record<string, any> = { ...(profile as any) }
+      const filteredProfile: Record<string, any> = { ...(profile as any) }
 
       if (rosterEntry?.skinId && profile.id && rosterEntry.skinId !== profile.id) {
         // Non-default skin selected - exclude defaultSkin field
@@ -1925,7 +1938,7 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
       : (prompts.systemPrompt as any).realisticMode
     : ''
 
-  let prompt = `${prompts.systemPrompt.intro}
+  const prompt = `${prompts.systemPrompt.intro}
 
   ${modePrompt}
 

@@ -163,6 +163,8 @@
             <n-checkbox v-model:checked="incorrectSpeakerLabelingToggle">Incorrect Speaker Labeling</n-checkbox>
             <n-checkbox v-model:checked="narrationAsDialogueToggle">Narration presented as dialogue</n-checkbox>
             <n-checkbox v-model:checked="wrongCharacterOnScreenToggle">Wrong character on screen</n-checkbox>
+            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="npcUsingCommanderHonorificsToggle">NPCs are using Commander's honorifics with me</n-checkbox>
+            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="commanderPresentButSilentToggle">Commander is present but not talking</n-checkbox>
           </div>
         </n-popover>
       </div>
@@ -1180,6 +1182,8 @@ const incorrectAnimationsPersist = ref(false)
 const incorrectSpeakerLabelingToggle = ref(false)
 const narrationAsDialogueToggle = ref(false)
 const wrongCharacterOnScreenToggle = ref(false)
+const npcUsingCommanderHonorificsToggle = ref(false)
+const commanderPresentButSilentToggle = ref(false)
 
 watch(invalidJsonPersist, (val) => {
   if (val) {
@@ -2065,6 +2069,8 @@ const sendMessage = async () => {
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
     wrongSpeechStylesToggle.value = false
+    npcUsingCommanderHonorificsToggle.value = false
+    commanderPresentButSilentToggle.value = false
   }
 
   isLoading.value = false
@@ -2134,6 +2140,8 @@ const retryLastMessage = async () => {
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
     wrongSpeechStylesToggle.value = false
+    npcUsingCommanderHonorificsToggle.value = false
+    commanderPresentButSilentToggle.value = false
   }
 
   isLoading.value = false
@@ -2256,6 +2264,8 @@ const continueStory = async () => {
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
     wrongSpeechStylesToggle.value = false
+    npcUsingCommanderHonorificsToggle.value = false
+    commanderPresentButSilentToggle.value = false
   }
 
   isLoading.value = false
@@ -2278,7 +2288,9 @@ const getUserReminders = (): string => {
     incorrectAnimationsPersist: { ref: incorrectAnimationsPersist },
     incorrectSpeakerLabeling: { ref: incorrectSpeakerLabelingToggle },
     narrationAsDialogue: { ref: narrationAsDialogueToggle },
-    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle }
+    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle },
+    npcUsingCommanderHonorifics: { ref: npcUsingCommanderHonorificsToggle },
+    commanderPresentButSilent: { ref: commanderPresentButSilentToggle }
   }
 
   const snapshot: ReminderToggleState = {
@@ -2293,7 +2305,9 @@ const getUserReminders = (): string => {
     incorrectAnimationsPersist: incorrectAnimationsPersist.value,
     incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle.value,
     narrationAsDialogue: narrationAsDialogueToggle.value,
-    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value
+    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value,
+    npcUsingCommanderHonorifics: npcUsingCommanderHonorificsToggle.value,
+    commanderPresentButSilent: commanderPresentButSilentToggle.value
   }
 
   const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>, {
@@ -3204,9 +3218,9 @@ const executeAction = async (data: any) => {
           data.character = resolvedRosterId
           effectiveCharId = resolvedRosterId
         }
-        // Force 'none' if in Story Mode and character is Commander
-        if (mode.value === 'story' && (data.character.toLowerCase().includes('commander') || data.character === 'c000')) {
-          logDebug('[Chat] Hiding Commander sprite in Story Mode')
+        // Force 'none' if character is Commander
+        if (data.character.toLowerCase().includes('commander') || data.character === 'c000') {
+          logDebug('[Chat] Hiding Commander sprite')
           market.live2d.isVisible = false
         } else {
           // Find character object
