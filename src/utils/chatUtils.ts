@@ -1782,7 +1782,20 @@ const getFilteredLocationsForAI = (locations: ResolvedLocation[]): Record<string
  * Pure function — no Vue reactivity, no side effects.
  */
 export const generateSystemPrompt = (params: SystemPromptParams): string => {
-  const { enableWebSearch, effectiveCharacterProfiles: profiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog, currentUserPrompt, chatHistory, playerCharacterName = 'Commander', customPlayerCharacterActive = false } = params
+  const { enableWebSearch, effectiveCharacterProfiles: originalProfiles, rosterRows, currentLive2dId, mode, godModeEnabled, realisticModeEnabled, lowContextMode, characterCatalog, currentUserPrompt, chatHistory, playerCharacterName = 'Commander', customPlayerCharacterActive = false } = params
+
+  // In Game/Roleplay mode, never inject the Commander profile when the user IS the Commander
+  let profiles = originalProfiles
+  if (!customPlayerCharacterActive && mode !== 'story') {
+    profiles = {}
+    for (const [name, profile] of Object.entries(originalProfiles)) {
+      const normalized = name.trim().toLowerCase()
+      if (normalized === 'commander' || normalized.startsWith('commander (')) {
+        continue
+      }
+      profiles[name] = profile
+    }
+  }
 
   const knownCharacterNames = Object.keys(profiles)
   const relevantLocations = lowContextMode ? [] : resolveRelevantLocations({ profiles, currentUserPrompt, chatHistory })

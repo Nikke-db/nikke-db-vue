@@ -1,0 +1,19 @@
+{
+  "_comment": "Animation overrides keyed by character/skin ID (must match l2d.json). Each group can target multiple IDs. 'original' is the real Spine animation name; 'replaced' is the context-aware name shown to AI models.",
+  "overrides": [
+    {
+      "ids": ["c220"],
+      "name": "Snow White",
+      "overrides": [
+        { "original": "special", "replaced": "drool" }
+      ]
+    },
+    {
+      "ids": ["c221"],
+      "name": "Rapunzel",
+      "overrides": [
+        { "original": "pain", "replaced": "lust" }
+      ]
+    }
+  ]
+}

@@ -815,7 +815,8 @@ import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, cal
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
-import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState } from '@/utils/sessionUtils'
 import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
@@ -905,6 +906,7 @@ const OVERLAP_TURNS = 3
 
 // Story/Roleplay character roster
 const characterCatalog = buildCharacterCatalog()
+validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
@@ -1368,6 +1370,16 @@ const ensureRosterEntry = (selection: string, skinId: string | undefined, source
     source
   }
   rosterRows.value.push(entry)
+
+  // Log animation overrides for the newly added character
+  const charId = getSelectedCharacterId(entry, characterCatalog)
+  if (charId) {
+    const overrides = getAnimationOverrides(charId)
+    if (overrides.length > 0) {
+      logDebug(`[Chat] Animation overrides for ${charId}:`, overrides)
+    }
+  }
+
   return entry
 }
 
@@ -3283,7 +3295,14 @@ const executeAction = async (data: any) => {
     const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
     const normalized = isForbidden ? 'idle' : requested
     logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
-    market.live2d.current_animation = normalized
+
+    // Apply animation override reverse lookup (replaced name -> original Spine name)
+    const animCharId = effectiveCharId || market.live2d.current_id
+    const resolvedAnim = resolveAnimationOverride(animCharId, normalized)
+    if (resolvedAnim !== normalized) {
+      logDebug(`[Chat] Animation override applied: ${normalized} -> ${resolvedAnim} for ${animCharId}`)
+    }
+    market.live2d.current_animation = resolvedAnim
   }
 
   // Speaking

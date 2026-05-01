@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import { animationMappings } from '@/utils/animationMappings'
 import { logDebug, AIError } from '@/utils/chatUtils'
 import { getRosterIdPairs, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
+import { applyOverridesForContext } from '@/utils/animationOverrideUtils'
 import l2d from '@/utils/json/l2d.json'
 
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
@@ -1390,7 +1391,7 @@ export const enrichActionsWithAnimations = async (
         const anims = characterAnimations[charId]
 
         if (anims && anims.length > 0) {
-          const filtered = getFilteredAnimations(anims)
+          const filtered = getFilteredAnimations(applyOverridesForContext(charId, anims))
           return `Available Animations for ${charName} (${charId}): ${JSON.stringify(filtered)}`
         } else {
           return `Available Animations for ${charName} (${charId}): (not loaded yet - use generic emotions)`
@@ -1399,7 +1400,7 @@ export const enrichActionsWithAnimations = async (
       .join('\n')
   } else {
     // Fallback to old format if no characterAnimations provided
-    formattedAnimations = `Available Animations for Current Character (${currentCharacterId}): ${JSON.stringify(filteredAnimations)}`
+    formattedAnimations = `Available Animations for Current Character (${currentCharacterId}): ${JSON.stringify(applyOverridesForContext(currentCharacterId, filteredAnimations))}`
   }
 
   const prompt = animationEnrichmentPrompt
@@ -1588,7 +1589,7 @@ export const formatAnimationsForContext = (opts: { characterProfiles: Record<str
       anims = opts.currentLive2dAnimations
     }
     if (anims && anims.length > 0) {
-      return getFilteredAnimations(anims)
+      return getFilteredAnimations(applyOverridesForContext(id, anims))
     }
     return null
   }
@@ -1598,7 +1599,7 @@ export const formatAnimationsForContext = (opts: { characterProfiles: Record<str
   }
 
   const formatPlaceholderForChar = (info: { name: string; id: string }): string => {
-    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(placeholderAnimations)}`
+    return `Animations for ${info.name} (${info.id}): ${JSON.stringify(applyOverridesForContext(info.id, placeholderAnimations))}`
   }
 
   const allCharacterIds = new Set<string>()
