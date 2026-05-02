@@ -1,5 +1,5 @@
 <template>
-  <n-h4 v-show="shouldApplyToAttachment" style="display: flex; gap: 8px;">
+  <n-h4 ref="itemRef" v-show="shouldApplyToAttachment" :class="{ 'click-selected': isClickHighlighted }" style="display: flex; gap: 8px;">
     <div :style="`width: 8px; display: block; height: 16px; margin-top: 4px; background-color: ${getRgba()}`"/>
     <div>
       <n-icon
@@ -19,7 +19,7 @@
 <script lang="ts" setup>
 
 import type { AttachmentItemInterface } from '@/utils/interfaces/live2d'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useMarket } from '@/stores/market'
 import { EyeFilled } from '@vicons/antd'
 
@@ -35,6 +35,57 @@ const props = defineProps<{
 const market = useMarket()
 
 const isAttachmentChecked = ref(false)
+
+let selectionIntervalId: any = null
+let selectionColorBackup: { r: number; g: number; b: number; a: number } | null = null
+
+const startSelectionCycle = () => {
+  if (selectionIntervalId !== null) return
+  const colorRef = market.live2d.attachments[props.index]?.[props.item.name]?.color
+  if (!colorRef) return
+  selectionColorBackup = { ...colorRef }
+  let phase = 'r'
+  selectionIntervalId = setInterval(() => {
+    const colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
+    if (!colorObj) return
+    colorObj.r = phase === 'r' ? 2 : 0
+    colorObj.g = phase === 'g' ? 2 : 0
+    colorObj.b = phase === 'b' ? 2 : 0
+    colorObj.a = 1
+    phase = phase === 'r' ? 'g' : phase === 'g' ? 'b' : 'r'
+  }, 250)
+}
+
+const stopSelectionCycle = (restore = true) => {
+  if (selectionIntervalId === null) return
+  clearInterval(selectionIntervalId)
+  selectionIntervalId = null
+  if (restore && selectionColorBackup) {
+    const colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
+    if (colorObj) Object.assign(colorObj, selectionColorBackup)
+  }
+  selectionColorBackup = null
+}
+
+watch(isAttachmentChecked, (checked) => {
+  if (checked && market.live2d.clickToSelectMode) {
+    startSelectionCycle()
+  } else {
+    stopSelectionCycle()
+  }
+})
+
+watch(() => market.live2d.clickToSelectMode, (enabled) => {
+  if (enabled && isAttachmentChecked.value) {
+    startSelectionCycle()
+  } else {
+    stopSelectionCycle()
+  }
+})
+
+onUnmounted(() => {
+  stopSelectionCycle()
+})
 
 const shouldApplyToAttachment = computed(() => {
   return props.item.name.includes(props.searchQuery)
@@ -73,6 +124,48 @@ watch(() => market.live2d.updateAttachments, () => {
   }
 })
 
+watch(() => market.live2d.hideSelectedLayers, () => {
+  if (isAttachmentChecked.value) {
+    // Stop cycling colors, otherwise the attachment will continue flashing and won't be properly hidden
+    stopSelectionCycle(false) 
+    selectionColorBackup = null
+    market.live2d.attachments[props.index][props.item.name].color.a = 0
+    market.live2d.triggerApplyAttachments()
+  }
+})
+
+watch(() => market.live2d.resetSelectedLayers, () => {
+  if (isAttachmentChecked.value) {
+    stopSelectionCycle(false)
+    selectionColorBackup = null
+    market.live2d.attachments[props.index][props.item.name].color = { r: 1, g: 1, b: 1, a: 1 }
+    isAttachmentChecked.value = false
+    market.live2d.triggerApplyAttachments()
+  }
+})
+
+watch(() => market.live2d.resetAllLayers, () => {
+  selectionColorBackup = null
+  isAttachmentChecked.value = false
+})
+
+const itemRef = ref<any>(null)
+const isClickHighlighted = ref(false)
+
+watch(() => market.live2d.triggerClickedAttachment, async () => {
+  if (
+    market.live2d.clickedAttachmentKey === props.item.name &&
+    market.live2d.clickedAttachmentIndex === props.index
+  ) {
+    isAttachmentChecked.value = !isAttachmentChecked.value
+    isClickHighlighted.value = true
+    await nextTick()
+    const el = itemRef.value?.$el ?? itemRef.value
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setTimeout(() => { isClickHighlighted.value = false }, 1200)
+  }
+})
+
 const previewing = ref(false)
 const previewhovering = () => {
   previewing.value = true
@@ -93,5 +186,13 @@ watch(previewing, () => {
 <style lang="less" scoped>
 .n-h4 {
   margin: 0;
+}
+@keyframes clickHighlight {
+  0%   { background-color: rgba(99, 226, 183, 0.35); }
+  100% { background-color: transparent; }
+}
+.click-selected {
+  animation: clickHighlight 1.2s ease-out;
+  border-radius: 4px;
 }
 </style>

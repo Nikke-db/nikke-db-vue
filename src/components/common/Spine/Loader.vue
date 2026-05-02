@@ -75,7 +75,13 @@ const onMouseDown = (e: MouseEvent) => {
   if (filterDomEvents(e)) {
     oldX = e.clientX
     oldY = e.clientY
+    mouseDownX = e.clientX
+    mouseDownY = e.clientY
+    isCanvasMouseDown = true
+    didDrag = false
     move = true
+  } else {
+    isCanvasMouseDown = false
   }
 }
 
@@ -131,10 +137,14 @@ const onTouchStart = (e: TouchEvent) => {
   }
 }
 
-const onMouseUp = () => {
+const onMouseUp = (e: MouseEvent) => {
+  if (isCanvasMouseDown && market.live2d.clickToSelectMode && !didDrag) {
+    handleCanvasClick(mouseDownX, mouseDownY)
+  }
   oldX = 0
   oldY = 0
   move = false
+  isCanvasMouseDown = false
 }
 
 const onTouchEnd = () => {
@@ -145,9 +155,22 @@ const onTouchEnd = () => {
 }
 
 const onMouseMove = (e: MouseEvent) => {
+  if (market.live2d.clickToSelectMode && !move) {
+    if (filterDomEvents(e)) {
+      handleCanvasHover(e.clientX, e.clientY)
+    } else {
+      stopHoverCycle()
+    }
+  }
+
   if (move && canvas) {
     const newX = e.clientX
     const newY = e.clientY
+    if (!didDrag) {
+      const dx = newX - mouseDownX
+      const dy = newY - mouseDownY
+      if (dx * dx + dy * dy > 25) didDrag = true
+    }
 
     const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
     const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
@@ -808,6 +831,7 @@ async function exportAnimationFrames(timestamp: number) {
 
 const loadSpineAfterWatcher = () => {
   if (market.live2d.canLoadSpine) {
+    stopHoverCycle()
     if (spineCanvas) {
       try {
         spineCanvas.dispose()
@@ -905,6 +929,10 @@ const filterDomEvents = (event: any) => {
 let oldX: number
 let oldY: number
 let move = false as boolean
+let mouseDownX = 0
+let mouseDownY = 0
+let isCanvasMouseDown = false
+let didDrag = false
 
 /**
  * zoom in or out for the live2d
@@ -983,9 +1011,49 @@ watch(() => market.live2d.isYapping, (value) => {
 /**
  * Attachment / Layer edition
  */
+// Sync slot.attachment on the live skeleton based on color.a.
+// color.a === 0: Null the slot so hit-testing naturally skips it.
+// color.a  > 0: Restore if the slot was nulled.
+const syncHiddenSlots = () => {
+  if (!spinePlayer?.skeleton) return
+  market.live2d.attachments.forEach((slotAtts: any, slotIndex: number) => {
+    if (!slotAtts) return
+    Object.keys(slotAtts).forEach((key: string) => {
+      const slot = spinePlayer.skeleton.slots[slotIndex]
+      if (!slot) return
+      if (slotAtts[key].color.a === 0) {
+        if (slot.attachment?.name === key) slot.attachment = null
+      } else if (slot.attachment === null && slot.data.attachmentName === key) {
+        slot.attachment = slotAtts[key]
+      }
+    })
+  })
+}
+
 watch(() => market.live2d.applyAttachments, () => {
   spineCanvas.animationState.data.skeletonData.defaultSkin.attachments = [ ...market.live2d.attachments ]
+  syncHiddenSlots()
 }, { deep: true })
+
+watch(() => market.live2d.hideSelectedLayers, () => {
+  stopHoverCycle()
+}, { flush: 'sync' })
+
+watch(() => market.live2d.resetSelectedLayers, () => {
+  stopHoverCycle()
+}, { flush: 'sync' })
+
+watch(() => market.live2d.resetAllLayers, () => {
+  stopHoverCycle()
+  if (spinePlayer?.skeleton) spinePlayer.skeleton.setSlotsToSetupPose()
+  market.live2d.attachments.forEach((a: any) => {
+    if (!a) return
+    Object.keys(a).forEach((k: string) => {
+      a[k].color = { r: 1, g: 1, b: 1, a: 1 }
+    })
+  })
+  market.live2d.triggerApplyAttachments()
+})
 
 
 // preview layer
@@ -1050,6 +1118,271 @@ const triggerPreview1 = () => {
     spineCanvas.animationState.data.skeletonData.defaultSkin.attachments[market.live2d.layerEditorPreviewObj.index][market.live2d.layerEditorPreviewObj.key].color = colors
 
   }, 250) as any
+}
+
+watch(() => market.live2d.clickToSelectMode, (val) => {
+  if (canvas) canvas.style.cursor = val ? 'crosshair' : ''
+  if (!val) stopHoverCycle()
+})
+
+// Click-to-select hit testing and hover preview.
+// Loader owns only the temporary hover color cycle for the attachment under the cursor
+// Selected-layer cycling is handled by AttachmentEditorListItem.
+
+type CycleState = {
+  slotIndex: number
+  key: string
+  backup: { r: number; g: number; b: number; a: number }
+  intervalId: any
+}
+
+const ALPHA_HIT_THRESHOLD = 12
+let hoverCycle: CycleState | null = null
+const textureImageDataCache = new WeakMap<object, ImageData | null>()
+
+const getAttachment = (slotIndex: number, key: string): any =>
+  spineCanvas?.animationState?.data?.skeletonData?.defaultSkin?.attachments?.[slotIndex]?.[key] ?? null
+
+const startCycling = (slotIndex: number, key: string): any => {
+  let phase = 'r'
+  const applyNextColor = () => {
+    const att = getAttachment(slotIndex, key)
+    if (!att) return
+    att.color = {
+      r: phase === 'r' ? 2 : 0,
+      g: phase === 'g' ? 2 : 0,
+      b: phase === 'b' ? 2 : 0,
+      a: 1
+    }
+    phase = phase === 'r' ? 'g' : phase === 'g' ? 'b' : 'r'
+  }
+  applyNextColor()
+  return setInterval(applyNextColor, 250)
+}
+
+
+const stopHoverCycle = () => {
+  if (!hoverCycle) return
+  clearInterval(hoverCycle.intervalId)
+  const att = getAttachment(hoverCycle.slotIndex, hoverCycle.key)
+  if (att) att.color = { ...hoverCycle.backup }
+  hoverCycle = null
+}
+
+const pointInQuad = (px: number, py: number, v: number[]): boolean => {
+  let sign = 0
+  for (let i = 0; i < 4; i++) {
+    const x1 = v[i * 2], y1 = v[i * 2 + 1]
+    const x2 = v[((i + 1) % 4) * 2], y2 = v[((i + 1) % 4) * 2 + 1]
+    const cross = (x2 - x1) * (py - y1) - (y2 - y1) * (px - x1)
+    if (cross === 0) continue
+    const s = cross > 0 ? 1 : -1
+    if (sign === 0) sign = s
+    else if (s !== sign) return false
+  }
+  return true
+}
+
+const pointInTriangle = (
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  cx: number,
+  cy: number
+): boolean => {
+  const d1 = (px - bx) * (ay - by) - (ax - bx) * (py - by)
+  const d2 = (px - cx) * (by - cy) - (bx - cx) * (py - cy)
+  const d3 = (px - ax) * (cy - ay) - (cx - ax) * (py - ay)
+  const hasNeg = d1 < 0 || d2 < 0 || d3 < 0
+  const hasPos = d1 > 0 || d2 > 0 || d3 > 0
+  return !(hasNeg && hasPos)
+}
+
+const pointInMeshTriangles = (px: number, py: number, verts: number[], triangles: number[]): boolean => {
+  for (let i = 0; i < triangles.length; i += 3) {
+    const a = triangles[i] * 2
+    const b = triangles[i + 1] * 2
+    const c = triangles[i + 2] * 2
+    if (
+      pointInTriangle(
+        px,
+        py,
+        verts[a],
+        verts[a + 1],
+        verts[b],
+        verts[b + 1],
+        verts[c],
+        verts[c + 1]
+      )
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+const getTriangleBarycentric = (
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  cx: number,
+  cy: number
+) => {
+  const denom = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+  if (denom === 0) return null
+  const w1 = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / denom
+  const w2 = ((cy - ay) * (px - cx) + (ax - cx) * (py - cy)) / denom
+  const w3 = 1 - w1 - w2
+  const epsilon = -0.0001
+  if (w1 < epsilon || w2 < epsilon || w3 < epsilon) return null
+  return { w1, w2, w3 }
+}
+
+const getImageDataForRegion = (region: any): ImageData | null => {
+  const image = region?.page?.texture?.getImage?.()
+  if (!image) return null
+  if (textureImageDataCache.has(image)) return textureImageDataCache.get(image) ?? null
+
+  try {
+    const canvasForTexture = document.createElement('canvas')
+    canvasForTexture.width = image.width
+    canvasForTexture.height = image.height
+    const ctx = canvasForTexture.getContext('2d')
+    if (!ctx) {
+      textureImageDataCache.set(image, null)
+      return null
+    }
+    ctx.drawImage(image, 0, 0)
+    const imageData = ctx.getImageData(0, 0, image.width, image.height)
+    textureImageDataCache.set(image, imageData)
+    return imageData
+  } catch (_) {
+    textureImageDataCache.set(image, null)
+    return null
+  }
+}
+
+const getInterpolatedUvInTriangle = (
+  px: number,
+  py: number,
+  verts: number[],
+  uvs: ArrayLike<number>,
+  vertexIndexes: [number, number, number]
+) => {
+  const [i1, i2, i3] = vertexIndexes
+  const b = getTriangleBarycentric(
+    px,
+    py,
+    verts[i1 * 2],
+    verts[i1 * 2 + 1],
+    verts[i2 * 2],
+    verts[i2 * 2 + 1],
+    verts[i3 * 2],
+    verts[i3 * 2 + 1]
+  )
+  if (!b) return null
+  return {
+    u: uvs[i1 * 2] * b.w1 + uvs[i2 * 2] * b.w2 + uvs[i3 * 2] * b.w3,
+    v: uvs[i1 * 2 + 1] * b.w1 + uvs[i2 * 2 + 1] * b.w2 + uvs[i3 * 2 + 1] * b.w3
+  }
+}
+
+const isOpaqueRegionHit = (px: number, py: number, verts: number[], attachment: any): boolean => {
+  const imageData = getImageDataForRegion(attachment.region)
+  if (!imageData) return true
+
+  const uv =
+    getInterpolatedUvInTriangle(px, py, verts, attachment.uvs, [0, 1, 2]) ??
+    getInterpolatedUvInTriangle(px, py, verts, attachment.uvs, [0, 2, 3])
+  if (!uv) return false
+
+  const x = Math.max(0, Math.min(imageData.width - 1, Math.floor(uv.u * imageData.width)))
+  const y = Math.max(0, Math.min(imageData.height - 1, Math.floor(uv.v * imageData.height)))
+  return imageData.data[(y * imageData.width + x) * 4 + 3] > ALPHA_HIT_THRESHOLD
+}
+
+const hitTest = (screenX: number, screenY: number): { slotIndex: number, key: string } | null => {
+  if (!canvas || !spinePlayer) return null
+
+  const cam = spinePlayer.sceneRenderer?.camera
+  if (!cam) return null
+
+  const skeleton = spinePlayer.skeleton
+  if (!skeleton?.drawOrder) return null
+
+  const rect = canvas.getBoundingClientRect()
+  const normX = (screenX - rect.left) / rect.width
+  const normY = (screenY - rect.top) / rect.height
+
+  const worldX = cam.position.x + (normX - 0.5) * cam.viewportWidth * cam.zoom
+  const worldY = cam.position.y + (0.5 - normY) * cam.viewportHeight * cam.zoom
+
+  const drawOrder: any[] = skeleton.drawOrder
+  for (let i = drawOrder.length - 1; i >= 0; i--) {
+    const slot = drawOrder[i]
+    const attachment = slot.attachment
+    if (!attachment) continue
+    if (attachment.color?.a === 0) continue
+
+    try {
+      if (attachment.offset && attachment.width !== undefined) {
+        // RegionAttachment
+        const verts = new Array(8).fill(0)
+        attachment.computeWorldVertices(slot, verts, 0, 2)
+        if (pointInQuad(worldX, worldY, verts) && isOpaqueRegionHit(worldX, worldY, verts, attachment)) {
+          return { slotIndex: slot.data.index, key: attachment.name }
+        }
+      } else if (attachment.triangles !== undefined) {
+        // MeshAttachment
+        const vl: number = attachment.worldVerticesLength
+        const verts = new Array(vl).fill(0)
+        attachment.computeWorldVertices(slot, 0, vl, verts, 0, 2)
+        if (pointInMeshTriangles(worldX, worldY, verts, attachment.triangles)) {
+          return { slotIndex: slot.data.index, key: attachment.name }
+        }
+      }
+    } catch (_) {}
+  }
+  return null
+}
+
+const handleCanvasHover = (screenX: number, screenY: number) => {
+  const hit = hitTest(screenX, screenY)
+
+  if (!hit) {
+    stopHoverCycle()
+    return
+  }
+
+  // Already hovering this exact attachment
+  if (hoverCycle && hoverCycle.slotIndex === hit.slotIndex && hoverCycle.key === hit.key) return
+
+  stopHoverCycle()
+
+  const att = getAttachment(hit.slotIndex, hit.key)
+  if (!att) return
+
+  hoverCycle = {
+    slotIndex: hit.slotIndex,
+    key: hit.key,
+    backup: { ...att.color },
+    intervalId: startCycling(hit.slotIndex, hit.key)
+  }
+}
+
+const handleCanvasClick = (screenX: number, screenY: number) => {
+  stopHoverCycle()
+  const hit = hitTest(screenX, screenY)
+  if (!hit) return
+  market.live2d.clickedAttachmentKey = hit.key
+  market.live2d.clickedAttachmentIndex = hit.slotIndex
+  market.live2d.fireClickedAttachment()
 }
 
 </script>

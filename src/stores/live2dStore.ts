@@ -36,6 +36,25 @@ export const useLive2dStore = defineStore('live2d', () => {
     key: '',
     preview : false // false = stop preview, true = previewing
   })
+  const clickToSelectMode = ref(false)
+  const clickedAttachmentKey = ref('')
+  const clickedAttachmentIndex = ref(-1)
+  const triggerClickedAttachment = ref(0)
+  const fireClickedAttachment = () => {
+    triggerClickedAttachment.value = new Date().getTime()
+  }
+  const hideSelectedLayers = ref(0)
+  const triggerHideSelectedLayers = () => {
+    hideSelectedLayers.value = new Date().getTime()
+  }
+  const resetAllLayers = ref(0)
+  const triggerResetAllLayers = () => {
+    resetAllLayers.value = new Date().getTime()
+  }
+  const resetSelectedLayers = ref(0)
+  const triggerResetSelectedLayers = () => {
+    resetSelectedLayers.value = new Date().getTime()
+  }
 
   const fr = new FileReader()
 
@@ -348,6 +367,17 @@ export const useLive2dStore = defineStore('live2d', () => {
     layerEditorPreviewObj,
     layerPreviewMode,
     triggerLayerPreviewMode,
+    clickToSelectMode,
+    clickedAttachmentKey,
+    clickedAttachmentIndex,
+    triggerClickedAttachment,
+    fireClickedAttachment,
+    hideSelectedLayers,
+    triggerHideSelectedLayers,
+    resetAllLayers,
+    triggerResetAllLayers,
+    resetSelectedLayers,
+    triggerResetSelectedLayers,
     f
   }
 })
