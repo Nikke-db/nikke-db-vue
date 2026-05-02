@@ -15,10 +15,6 @@ export default defineConfig({
   // The below values point to local addresses: this is correct, because TTS models can be run locally.
   // This is still manually configurable from within the UI.
   server: {
-    watch: {
-      usePolling: true,
-      interval: 100
-    },
     proxy: {
       '/alltalk': {
         target: 'http://127.0.0.1:7851',
