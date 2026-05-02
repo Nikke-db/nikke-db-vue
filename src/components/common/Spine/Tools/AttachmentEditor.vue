@@ -58,7 +58,7 @@
               Apply modifications to selected layers
             </n-button>
 
-            <span class="selectionButtons">
+            <span class="hide-and-reset-buttons">
               <n-button round type="warning" ghost @click="market.live2d.triggerHideSelectedLayers()">Hide selected</n-button>
               <n-button round type="warning" ghost @click="market.live2d.triggerResetSelectedLayers()">Reset selected</n-button>
               <n-button round type="error" ghost @click="market.live2d.triggerResetAllLayers()">Reset all layers</n-button>
@@ -266,5 +266,10 @@ const fixBrokenAnimation = () => {
 }
 .n-upload-file-list {
   display: none;
+}
+.hide-and-reset-buttons {
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
 }
 </style>
