@@ -126,7 +126,8 @@ watch(() => market.live2d.updateAttachments, () => {
 
 watch(() => market.live2d.hideSelectedLayers, () => {
   if (isAttachmentChecked.value) {
-    stopSelectionCycle(false) // stop cycling without restoring color — we're about to set a=0
+    // Stop cycling colors, otherwise the attachment will continue flashing and won't be properly hidden
+    stopSelectionCycle(false) 
     selectionColorBackup = null
     market.live2d.attachments[props.index][props.item.name].color.a = 0
     market.live2d.triggerApplyAttachments()
@@ -144,7 +145,7 @@ watch(() => market.live2d.resetSelectedLayers, () => {
 })
 
 watch(() => market.live2d.resetAllLayers, () => {
-  selectionColorBackup = null // prevent restore — Loader.vue resets colors to {1,1,1,1}
+  selectionColorBackup = null
   isAttachmentChecked.value = false
 })
 

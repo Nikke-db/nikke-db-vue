@@ -831,7 +831,7 @@ async function exportAnimationFrames(timestamp: number) {
 
 const loadSpineAfterWatcher = () => {
   if (market.live2d.canLoadSpine) {
-    stopAllCycles()
+    stopHoverCycle()
     if (spineCanvas) {
       try {
         spineCanvas.dispose()
@@ -1012,8 +1012,8 @@ watch(() => market.live2d.isYapping, (value) => {
  * Attachment / Layer edition
  */
 // Sync slot.attachment on the live skeleton based on color.a.
-// color.a === 0 → null the slot so hit-testing naturally skips it.
-// color.a  > 0 → restore if the slot was nulled.
+// color.a === 0: Null the slot so hit-testing naturally skips it.
+// color.a  > 0: Restore if the slot was nulled.
 const syncHiddenSlots = () => {
   if (!spinePlayer?.skeleton) return
   market.live2d.attachments.forEach((slotAtts: any, slotIndex: number) => {
@@ -1036,15 +1036,15 @@ watch(() => market.live2d.applyAttachments, () => {
 }, { deep: true })
 
 watch(() => market.live2d.hideSelectedLayers, () => {
-  stopAllCycles()
+  stopHoverCycle()
 }, { flush: 'sync' })
 
 watch(() => market.live2d.resetSelectedLayers, () => {
-  stopAllCycles()
+  stopHoverCycle()
 }, { flush: 'sync' })
 
 watch(() => market.live2d.resetAllLayers, () => {
-  stopAllCycles()
+  stopHoverCycle()
   if (spinePlayer?.skeleton) spinePlayer.skeleton.setSlotsToSetupPose()
   market.live2d.attachments.forEach((a: any) => {
     if (!a) return
@@ -1122,14 +1122,12 @@ const triggerPreview1 = () => {
 
 watch(() => market.live2d.clickToSelectMode, (val) => {
   if (canvas) canvas.style.cursor = val ? 'crosshair' : ''
-  if (!val) stopAllCycles()
+  if (!val) stopHoverCycle()
 })
 
-// ─── Click-to-select: hit testing + self-contained color cycling ─────────────
-// We manage cycling directly (setInterval + manual color backup) instead of
-// going through the store watcher system. Two concurrent watcher triggers in
-// the same tick would be batched by Vue, causing the "restore" call to be
-// swallowed by the "start" call and leaving colors stuck.
+// Click-to-select hit testing and hover preview.
+// Loader owns only the temporary hover color cycle for the attachment under the cursor
+// Selected-layer cycling is handled by AttachmentEditorListItem.
 
 type CycleState = {
   slotIndex: number
@@ -1169,10 +1167,6 @@ const stopHoverCycle = () => {
   const att = getAttachment(hoverCycle.slotIndex, hoverCycle.key)
   if (att) att.color = { ...hoverCycle.backup }
   hoverCycle = null
-}
-
-const stopAllCycles = () => {
-  stopHoverCycle()
 }
 
 const pointInQuad = (px: number, py: number, v: number[]): boolean => {
