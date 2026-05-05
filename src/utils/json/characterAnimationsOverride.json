@@ -5,7 +5,7 @@
       "ids": ["c220"],
       "name": "Snow White",
       "overrides": [
-        { "original": "special", "replaced": "drool" }
+        { "original": "special", "replaced": "hungry" }
       ]
     },
     {
@@ -13,6 +13,13 @@
       "name": "Rapunzel",
       "overrides": [
         { "original": "pain", "replaced": "lust" }
+      ]
+    },
+    {
+      "ids": ["c330"],
+      "name": "Crown",
+      "overrides": [
+        { "original": "special", "replaced": "hungry" }
       ]
     }
   ]

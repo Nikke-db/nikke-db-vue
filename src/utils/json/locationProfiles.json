@@ -38,5 +38,24 @@
         },
         "visuals": "A vast, enclosed domed underground megacity known as the Dome of Eternity, its immense curved inner surface displaying a realistic projected image of a bright open sky with drifting clouds. Towering futuristic structures, residential blocks, and infrastructure packed tightly within the limited underground space. Artificial lighting mimics daylight across sprawling urban districts, corporate zones, and elevated transit networks. The outer edges transition into darker, cramped industrial sectors and the impoverished Outer Rim filled with makeshift scrap buildings and dim lighting. Occasional artificial rain or snow falls across sections of the city. Massive elevator shafts and vertical transit hubs connect the deep underground levels, with the central Lift area featuring heavily secured basements. Advanced but aging technology visible in architecture, power conduits along the dome walls, and dense population centers under the eternal artificial sky.",
         "description": "The Ark is a massive domed underground city built deep beneath the surface, serving as the last refuge for humanity after the Raptures seized control of the world above. Originally constructed as a nuclear bunker, it represents the pinnacle of human engineering and scientific achievement. The city spans roughly 10,000 square kilometers and houses tens of millions of people, mostly descendants of the original surface population. Access to and from the surface occurs exclusively through a complex network of vertical and horizontal elevators, though the labyrinthine layout often leads to malfunctions. The Ark's artificial sky is projected across the inner surface of the Dome of Eternity, which also functions as the colony's power grid. The entire city is powered by a hidden Ultra Massive Core derived from Rapture technology, located in a secured basement area. While technologically advanced with capabilities to float and rise to the surface, this potential remains unused. Severe resource and food shortages plague the Ark due to limited underground space and lack of renewable energy sources. Most citizens subsist on Splendamin, a processed plant-based jelly, while real organic food and surface-sourced items remain expensive luxuries reserved for the elite. The universal currency is the Credit, embedded in citizenship chips and managed through central online banking. Society is informally divided into three groups: Sovereigns, the wealthy upper class with custom citizen chips; Quotidians, the common majority of ordinary citizens; and Noncitizens or Outlaws, those without chips who are banished to the harsh Outer Rim where they survive on scraps amid inhospitable conditions. An ID chip is mandatory for full citizenship and access to services, with noncitizens barred from the main city and subject to lethal enforcement if they attempt entry."
+    },
+    "The Outpost": {
+        "aliases": [
+            "The Outpost",
+            "Outpost"
+        ],
+        "profileKeywords": [
+            "the Outpost",
+            "The Outpost",
+            "Outpost"
+        ],
+        "relatedCharacters": [],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "A diverse surface facility containing a variety of specialized structures and themed areas. The landscape includes a serene Flower Park, a bustling Amusement Park with a large Ferris wheel, and a Guest Camp. Other notable locations consist of an Observatory, a Police Station, a luxury Hotel, a cozy Maid Cafe, a vibrant Toy Store, and a Train Station. Industrial and functional buildings such as a Workshop, Armory, Generator, and Radio Tower are present, alongside various community hubs. The area is also marked by monuments such as the Goddess of Victory statue and the Wings of Victory.",
+        "description": "The Outpost is a surface-based facility serving as an operational center and resupply point for squads. Originally intended to be a midway point between the Ark and the surface, its construction was flawed due to architects digging too close to the surface, which allowed Raptures easy access. This led to significant casualties and the destruction of almost all elevators, leaving only one connection to the Ark and one to the surface. It functions as a central hub for various Nikke squads, hosting various facilities, including: an Observatory, a Police Station, a luxury Hotel, a vibrant Toy Store, a Train Station, the Workshop where Mighty Tools (Centi and Liter) work, the 'Maid For You' Maid cafe, the Cafe manned by Cafe Sweety Nikkes, a shopping mall, a hospital, a library, and others."
     }
 }
