@@ -975,8 +975,6 @@ const playerCharacterAwareProfiles = computed<Record<string, any>>(() => {
   return merged
 })
 
-ensureValidSelectedPlayerCharacter()
-
 const availableRosterOptions = computed(() => {
   return rosterOptions.value.map((option) => {
     const isSelected = isCharacterInRoster(option.value)
