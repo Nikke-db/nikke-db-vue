@@ -41,12 +41,28 @@
     },
     "The Outpost": {
         "aliases": [
-            "The Outpost",
             "Outpost"
         ],
         "profileKeywords": [
-            "the Outpost",
-            "The Outpost",
+            "Outpost",
+            "surface facility",
+            "resupply point"
+        ],
+        "relatedCharacters": [],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "A diverse surface facility containing a variety of specialized structures and themed areas. The landscape includes a serene Flower Park, a bustling Amusement Park with a large Ferris wheel, and a Guest Camp. Other notable locations consist of an Observatory, a Police Station, a luxury Hotel, a cozy Maid Cafe, a vibrant Toy Store, and a Train Station. Industrial and functional buildings such as a Workshop, Armory, Generator, and Radio Tower are present, alongside community hubs like a Trendy Bar, Library, Hospital, Cafe Sweety, Theater, Seedy Club, Courthouse, Church, Clothing Store, Shopping Mall, Radio Tower, Goddess of Victory statue, Wings of Victory statue, and Fitness Club.",
+        "description": "The Outpost is a surface-based facility serving as an operational center and resupply point for squads. Originally intended to be a midway point between the Ark and the surface, its construction was flawed due to architects digging too close to the surface, which allowed Raptures easy access. This led to significant casualties and the destruction of almost all elevators, leaving only one connection to the Ark and one to the surface. It functions as a central hub for various Nikke squads, hosting key facilities like the Command Center, Tactics Academy, Synchro Device, Recycling Room, Infrastructure Core, and themed locations including the Flower Park, Amusement Park, Guest Camp, Observatory, Police Station, Hotel, Maid Cafe, Toy Store, Train Station, Workshop, Armory, Generator, Trendy Bar, Library, Hospital, Cafe Sweety, Theater, Seedy Club, Courthouse, Church, Clothing Store, Shopping Mall, Radio Tower, Goddess of Victory statue, Wings of Victory statue, and Fitness Club."
+    },
+    "Flower Park": {
+        "aliases": [
+            "Flower Park"
+        ],
+        "profileKeywords": [
+            "Flower Park",
             "Outpost"
         ],
         "relatedCharacters": [],
@@ -55,7 +71,596 @@
             "recentChat": true,
             "profileText": false
         },
-        "visuals": "A diverse surface facility containing a variety of specialized structures and themed areas. The landscape includes a serene Flower Park, a bustling Amusement Park with a large Ferris wheel, and a Guest Camp. Other notable locations consist of an Observatory, a Police Station, a luxury Hotel, a cozy Maid Cafe, a vibrant Toy Store, and a Train Station. Industrial and functional buildings such as a Workshop, Armory, Generator, and Radio Tower are present, alongside various community hubs. The area is also marked by monuments such as the Goddess of Victory statue and the Wings of Victory.",
-        "description": "The Outpost is a surface-based facility serving as an operational center and resupply point for squads. Originally intended to be a midway point between the Ark and the surface, its construction was flawed due to architects digging too close to the surface, which allowed Raptures easy access. This led to significant casualties and the destruction of almost all elevators, leaving only one connection to the Ark and one to the surface. It functions as a central hub for various Nikke squads, hosting various facilities, including: an Observatory, a Police Station, a luxury Hotel, a vibrant Toy Store, a Train Station, the Workshop where Mighty Tools (Centi and Liter) work, the 'Maid For You' Maid cafe, the Cafe manned by Cafe Sweety Nikkes, a shopping mall, a hospital, a library, and others."
+        "visuals": "",
+        "description": "A flower park where blossoms are dancing in the wind."
+    },
+    "Amusement Park": {
+        "aliases": [
+            "Amusement Park"
+        ],
+        "profileKeywords": [
+            "Amusement Park",
+            "Outpost"
+        ],
+        "relatedCharacters": [],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A busy and noisy Amusement Park. With just a simple glance, the large Ferris wheel can impresss anyone."
+    },
+    "Guest Camp": {
+        "aliases": [
+            "Guest Camp"
+        ],
+        "profileKeywords": [
+            "Guest Camp",
+            "Outpost"
+        ],
+        "relatedCharacters": [],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "The area where guests are received. While a bit shabby, it gets the job done."
+    },
+    "Observatory": {
+        "aliases": [
+            "Observatory"
+        ],
+        "profileKeywords": [
+            "Observatory",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Delta",
+            "Signal",
+            "Delta: Ninja Thief"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "An Observation Station that detects enemies approaching the Outpost. Nikkes from the Scouts work here."
+    },
+    "Police Station": {
+        "aliases": [
+            "Police Station",
+            "A.C.P.U."
+        ],
+        "profileKeywords": [
+            "Police Station",
+            "A.C.P.U.",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Miranda",
+            "Poli",
+            "Quiry"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "A Police Station that is responsible for maintaing public security in the Outpost. Nikkes from A.C.P.U. work here."
+    },
+    "Hotel": {
+        "aliases": [
+            "Hotel"
+        ],
+        "profileKeywords": [
+            "Hotel",
+            "Outpost"
+        ],
+        "relatedCharacters": [],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A luxury hotel that welcomes all Nikkes."
+    },
+    "Maid Cafe": {
+        "aliases": [
+            "Maid Cafe",
+            "Maid For You"
+        ],
+        "profileKeywords": [
+            "Maid Cafe",
+            "Maid For You",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Cocoa",
+            "Soda",
+            "Privaty: Unkind Maid",
+            "Ade",
+            "Soda: Twinkling Bunny",
+            "Ade: Agent Bunny",
+            "Velvet"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "A cafe full of girlish charm. It's got a small and cozy atmosphere."
+    },
+    "Toy Store": {
+        "aliases": [
+            "Toy Store"
+        ],
+        "profileKeywords": [
+            "Toy Store",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Mica",
+            "Belorta",
+            "Mica: Snow Buddy"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "A Toy Store filled with various intriguing toys. A huge eye-catching toy is also displayed in the store. Nikkes from Carronades work here."
+    },
+    "Train Station": {
+        "aliases": [
+            "Train Station"
+        ],
+        "profileKeywords": [
+            "Train Station",
+            "AZX",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Diesel",
+            "Soline",
+            "Brid",
+            "Soline: Frost Ticket",
+            "Diesel: Winter Sweets",
+            "Brid: Silent Track"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "Provides civilian transit inside the Ark and supply convoys that operate on the surface. The train is called the AZX. Nikkes from Infinity Rail work here."
+    },
+    "Workshop": {
+        "aliases": [
+            "Workshop"
+        ],
+        "profileKeywords": [
+            "Workshop",
+            "Raze & Rebuild",
+            "Raze and Rebuild",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Centi",
+            "Liter"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "A Workshop that churns out one item after another. Nikkes from Mighty Tools work here."
+    },
+    "Armory": {
+        "aliases": [
+            "Armory"
+        ],
+        "profileKeywords": [
+            "Armory",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Emma",
+            "Eunhwa",
+            "Vesti",
+            "Emma: Tactical Upgrade",
+            "Eunhwa: Tactical Upgrade",
+            "Vesti: Tactical Upgrade"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "An armory wherer various weaponry used by Nikkes is stored. Nikkes from Absolute work here."
+    },
+    "Generator": {
+        "aliases": [
+            "Generator"
+        ],
+        "profileKeywords": [
+            "Generator",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Drake",
+            "Laplace",
+            "Maxwell"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "An enormous Generator that provides energy to the Ark. Nikkes from Matis work here."
+    },
+    "Trendy Bar": {
+        "aliases": [
+            "Trendy Bar"
+        ],
+        "profileKeywords": [
+            "Trendy Bar",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Crow",
+            "Jackal",
+            "Viper",
+            "E.H."
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A Trendy Bar where you can make small talk over a few cocktails. Non-alcoholic drinks are also avaiable. You can often find Nikkes from Exotic here."
+    },
+    "Library": {
+        "aliases": [
+            "Library"
+        ],
+        "profileKeywords": [
+            "Library",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "N102",
+            "Anne: Miracle Fairy",
+            "Arcana",
+            "Label",
+            "Phantom"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A library for broadening one's horizon."
+    },
+    "Hospital": {
+        "aliases": [
+            "Hospital"
+        ],
+        "profileKeywords": [
+            "Hospital",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Mary",
+            "Pepper",
+            "Mary: Bay Goddess"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A Hospital that treats Nikkes, humans, and everything in between. Nikkes from Seraphim work here."
+    },
+    "Cafe Sweety": {
+        "aliases": [
+            "Cafe Sweety"
+        ],
+        "profileKeywords": [
+            "Cafe Sweety",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Sugar",
+            "Frima",
+            "Milk",
+            "Milk: Blooming Bunny"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "A Cafe in the Outpost that specializes in vending machine coffee. Nikkes from Cafe Sweety work here."
+    },
+    "Theater": {
+        "aliases": [
+            "Theater"
+        ],
+        "profileKeywords": [
+            "Theater",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Julia",
+            "Volume",
+            "Noise",
+            "Aria"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A magnificent-looking opera house. You can often find Nikkes from Master Hand and Prima Donna here."
+    },
+    "Seedy Club": {
+        "aliases": [
+            "Seedy Club"
+        ],
+        "profileKeywords": [
+            "Seedy Club",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Yuni",
+            "Mihara",
+            "Mihara: Bonding Chain"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A suspicious-looking club. You can often find Nikkes from Wardress here."
+    },
+    "Courthouse": {
+        "aliases": [
+            "Courthouse"
+        ],
+        "profileKeywords": [
+            "Courthouse",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Privaty",
+            "Yulha",
+            "Admi"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "An immaculately maintained court, the symbol of justice and law. Nikkes from Triangle work here."
+    },
+    "Church": {
+        "aliases": [
+            "Church"
+        ],
+        "profileKeywords": [
+            "Church",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Guillotine",
+            "Maiden",
+            "Maiden: Ice Rose",
+            "Guillotine: Winter Slayer"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A Church where one worshop and prays in faith. You can often find Nikkes from Extrinsic here."
+    },
+    "Clothing Store": {
+        "aliases": [
+            "Clothing Store"
+        ],
+        "profileKeywords": [
+            "Clothing Store",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Alice",
+            "Ludmilla",
+            "Neve",
+            "Tove",
+            "Ludmilla: Winter Owner",
+            "Alice: Wonderland Bunny",
+            "Rupee"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A luxurious clothing store. You can often find Nikkes from Unlimited here."
+    },
+    "Shopping Mall": {
+        "aliases": [
+            "Shopping Mall"
+        ],
+        "profileKeywords": [
+            "Shopping Mall",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Dolla",
+            "Rupee",
+            "Rupee: Winter Shopper",
+            "Yan"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A Shopping Mall packed to the gills with goods that cater to all shopaholics' needs. You can often find Nikkes from Talentum here."
+    },
+    "Radio Tower": {
+        "aliases": [
+            "Radio Tower"
+        ],
+        "profileKeywords": [
+            "Radio Tower",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Exia",
+            "Novel"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": true
+        },
+        "visuals": "",
+        "description": "A Radio Tower that transmits and receives radio waves from the Ark. You can often find Nikkes from Protocol here."
+    },
+    "Goddess of Victory statue": {
+        "aliases": [
+            "Goddess of Victory statue"
+        ],
+        "profileKeywords": [
+            "Goddess of Victory statue",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Rapunzel",
+            "Snow White",
+            "Scarlet",
+            "Nayuta"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "Goddess of Victory, a statue of a Nikke. You can often find Nikkes from Pioneer here."
+    },
+    "Wings of Victory statue": {
+        "aliases": [
+            "Wings of Victory statue"
+        ],
+        "profileKeywords": [
+            "Wings of Victory statue",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Noah",
+            "Harran",
+            "Isabel",
+            "Dorothy",
+            "Dorothy: Serendipity"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A statue of wings. You can often find Nikkes from Inherit here."
+    },
+    "Fitness Club": {
+        "aliases": [
+            "Fitness Club"
+        ],
+        "profileKeywords": [
+            "Fitness Club",
+            "Outpost"
+        ],
+        "relatedCharacters": [
+            "Epinel",
+            "Folkwang",
+            "Rumani"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "",
+        "description": "A Fitness Club with various types of recreational sports facilities. You can often find Nikkes from Nepenthe here."
+    },
+    "Reclamation Site 01": {
+        "aliases": [
+            "Reclamation Site 01",
+            "RS01"
+        ],
+        "profileKeywords": [
+            "Reclamation Site 01",
+            "RS01",
+            "reclaimed land",
+            "Red Hood's hometown"
+        ],
+        "relatedCharacters": [
+            "Rapi",
+            "Anis",
+            "Neon",
+            "Cinderella",
+            "Grave"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "A functional surface settlement serving as a base of operations for the Counters squad, marking the first piece of land successfully reclaimed by humanity.",
+        "description": "Reclamation Site 01 is the first piece of land permanently reclaimed by humanity on the surface, located a week's walk from the Ark. It was originally the hometown of the legendary Nikke, Red Hood. After fulfilling Red Hood's last wishes, the site was designated as a reclamation zone and now serves as the primary base of operations for the Counters squad as they scout the surface for resources. Following recent events, Cinderella and Grave have also become residents to assist in the effort to reclaim the surface."
+    },
+    "Eden": {
+        "aliases": [
+            "Eden"
+        ],
+        "profileKeywords": [
+            "Eden"
+        ],
+        "relatedCharacters": [
+            "Johan",
+            "Cecil",
+            "Noah",
+            "Dorothy"
+        ],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "A futuristic and highly advanced settlement hidden by optical camouflage in a remote surface region. It features lush, genetically modified gardens that replicate pre-invasion flora and fauna, highly advanced research facilities, and a massive tower housing a supermassive particle cannon.",
+        "description": "Eden is an advanced, self-sufficient settlement on the surface where humans and Nikkes coexist as equals in theory, though currently no human lives there and only a handful of Nikke are part of it. Founded by Dorothy, Johan, and Cecil using a repurposed First Rapture War laboratory, it utilizes cutting-edge technology like optical camouflage and advanced energy infrastructure to remain hidden. Key facilities include the Garden of Eden, which hosts a near-perfect replica of pre-invasion flora and fauna; the Central Research Facility for advanced weaponry and medical research; and Eden's Spear, a supermassive particle cannon capable of devastating attacks. The settlement is guided by seven edicts focused on capability, protection, and the ultimate goal of reclaiming the surface. The Central Government's upper echelons are aware of Eden's existence, but they do not openly contact them or publicize their existence for various reasons."
     }
 }
