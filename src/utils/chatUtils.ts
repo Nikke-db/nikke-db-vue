@@ -30,6 +30,35 @@ const LOCATION_PROFILE_FIELDS = ['backstory', 'relationships', 'characterProgres
 const RECENT_LOCATION_HISTORY_LIMIT = 8
 const MAX_RELEVANT_LOCATIONS = 2
 
+const L2D_CHAR_FIELDS = (c: any): string => typeof c?.name === 'string' ? c.name : ''
+
+const findCharacterByName = (name: string): { id: string; name: string } | undefined => {
+  if (!name) return undefined
+  const lower = name.toLowerCase()
+  if (lower === 'commander') return { id: 'commander', name: 'Commander' }
+  return (l2d as any[]).find((c) => L2D_CHAR_FIELDS(c).toLowerCase() === lower) as { id: string; name: string } | undefined
+}
+
+const findCharacterIdByName = (name: string): string | undefined => {
+  const char = findCharacterByName(name)
+  return char ? char.id : undefined
+}
+
+const findCharacterByIdOrName = (idOrName: string): { id: string; name: string } | undefined => {
+  if (!idOrName) return undefined
+  const lower = idOrName.toLowerCase()
+  return (l2d as any[]).find((c) =>
+    (typeof c?.id === 'string' && c.id.toLowerCase() === lower) ||
+    (typeof c?.name === 'string' && c.name.toLowerCase() === lower)
+  ) as { id: string; name: string } | undefined
+}
+
+const hasMeaningfulAnimation = (anim: any): boolean => {
+  if (typeof anim !== 'string') return false
+  const t = anim.trim().toLowerCase()
+  return t !== '' && t !== 'idle' && t !== 'none'
+}
+
 // Helper to merge base profiles with progression overlays (personality + relationships only)
 export const getEffectiveCharacterProfiles = (base: Record<string, any>, progression: Record<string, any>): Record<string, any> => {
   const merged: Record<string, any> = {}
@@ -228,12 +257,7 @@ export const createTypewriterController = (opts: { displayedRef: Ref<string>; cu
   return { start, stop }
 }
 
-// Helper to identify speaker labels.
-// Supports plain "Name:" and bolded "**Name:**" (colon inside the bold).
-const isSpeakerLabel = (s: string) => {
-  const normalized = (s || '').replace(/\u00A0/g, ' ').trim()
-  return /^\s*(?:\*\*)?\s*[^*:\n]+?\s*:\s*(?:\*\*)?\s*$/.test(normalized)
-}
+const NON_DUPLICATED_FIELDS = new Set(['needs_search', 'memory', 'characterProgression', 'characterProfile', 'characterProfiles', 'debug_info', 'choices'])
 
 // Helper to check if a word appears as a whole word in text (case-insensitive)
 export const isWholeWordPresent = (text: string, word: string): boolean => {
@@ -560,10 +584,6 @@ export const parseAIResponse = (responseStr: string): any[] => {
 export const sanitizeActions = (actions: any[]): any[] => {
   const newActions: any[] = []
 
-  // Metadata fields that should not be duplicated if we split an action into multiple ones.
-  // These can trigger side-effects (search, profile updates, debug panels).
-  const nonDuplicatedFields = new Set(['needs_search', 'memory', 'characterProgression', 'characterProfile', 'characterProfiles', 'debug_info', 'choices'])
-
   const looksLikeNarrationWithoutQuotes = (rawText: string): boolean => {
     const t = (rawText || '').trim()
 
@@ -587,11 +607,11 @@ export const sanitizeActions = (actions: any[]): any[] => {
       // Direct address ("Name,")
       if (nextChar === ',') return false
 
-      // Possessive narration: "Name's ..." / "Name’s ..."
-      if (nextChar === '\'' || nextChar === '’') {
+      // Possessive narration: "Name's ..." / "Name's ..."
+      if (nextChar === '\'' || nextChar === '\u2019') {
         const poss = after.slice(0, 2)
 
-        if (poss === '\'s' || poss === '’s') return true
+        if (poss === '\'s' || poss === '\u2019s') return true
       }
 
       // Strong narration clue: "Name ..., her/his/ ..." early in the sentence.
@@ -608,21 +628,6 @@ export const sanitizeActions = (actions: any[]): any[] => {
     return false
   }
 
-  const resolveCharacterIdFromSpeakerLabel = (labelText: string): string | undefined => {
-    const cleaned = (labelText || '').replace(/\*\*/g, '').trim()
-
-    if (!cleaned) return undefined
-
-    const name = cleaned.endsWith(':') ? cleaned.slice(0, -1).trim() : cleaned
-
-    if (!name) return undefined
-    if (name.toLowerCase() === 'commander') return 'commander'
-
-    const exact = l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
-
-    return exact ? (exact as any).id : undefined
-  }
-
   const resolveCharacterIdFromLeadingName = (rawText: string): string | undefined => {
     const t = (rawText || '').replace(/\u00A0/g, ' ').trimStart()
     if (!t) return undefined
@@ -631,7 +636,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
     if (t.toLowerCase().startsWith('commander')) {
       const after = t.slice('commander'.length)
       const next = after.charAt(0)
-      if (!next || /[\s,.:;!?\-—–'’]/.test(next)) return 'commander'
+      if (!next || /[\s,.:;!?\-—–'']/.test(next)) return 'commander'
     }
 
     for (const char of l2d as any[]) {
@@ -645,7 +650,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
       const after = t.slice(name.length)
       const next = after.charAt(0)
       // Accept boundaries that imply "Name ..." is the subject of narration.
-      if (!next || /[\s,.:;!?\-—–'’]/.test(next)) return id
+      if (!next || /[\s,.:;!?\-—–'']/.test(next)) return id
     }
 
     return undefined
@@ -682,7 +687,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
       if (i > 0) {
         for (const key of Object.keys(partAction)) {
-          if (nonDuplicatedFields.has(key)) {
+          if (NON_DUPLICATED_FIELDS.has(key)) {
             if (key === 'needs_search') partAction[key] = []
             else delete partAction[key]
           }
@@ -698,6 +703,18 @@ export const sanitizeActions = (actions: any[]): any[] => {
     }
 
     return out
+  }
+
+  const isSpeakerLabel = (s: string): boolean => {
+    const normalized = (s || '').replace(/\u00A0/g, ' ').trim()
+    return /^\s*(?:\*\*)?\s*[^*:\n]+?\s*:\s*(?:\*\*)?\s*$/.test(normalized)
+  }
+
+  const resolveCharacterIdFromSpeakerLabel = (labelText: string): string | undefined => {
+    const cleaned = (labelText || '').replace(/\*\*/g, '').trim()
+    if (!cleaned) return undefined
+    const name = cleaned.endsWith(':') ? cleaned.slice(0, -1).trim() : cleaned
+    return findCharacterIdByName(name)
   }
 
   for (const rawAction of actions) {
@@ -731,8 +748,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
           // Validate name by resolving to an l2d character or Commander.
           // IMPORTANT: Do NOT do substring matching here. It causes false positives like "Crow" matching "Crown".
-          const resolved = name.toLowerCase() === 'commander' ? 'commander' : l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
-
+          const resolved = findCharacterByName(name)
           if (!resolved) continue
 
           const start = m.index + boundary.length
@@ -744,15 +760,6 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
         const out: { text: string; speaking: boolean; character?: string }[] = []
         let cursor = 0
-
-        const resolveId = (name: string): string | undefined => {
-          if (!name) return undefined
-          if (name.toLowerCase() === 'commander') return 'commander'
-
-          const exact = l2d.find((c: any) => typeof c?.name === 'string' && c.name.toLowerCase() === name.toLowerCase())
-
-          return exact ? (exact as any).id : undefined
-        }
 
         for (let i = 0; i < matches.length; i++) {
           const curr = matches[i]
@@ -767,7 +774,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
           const dialogueText = raw.slice(curr.end, next ? next.start : raw.length).trim()
 
           if (dialogueText) {
-            out.push({ text: dialogueText, speaking: true, character: resolveId(curr.name) })
+            out.push({ text: dialogueText, speaking: true, character: findCharacterIdByName(curr.name) })
           }
 
           cursor = next ? next.start : raw.length
@@ -796,7 +803,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
             if (i > 0) {
               for (const key of Object.keys(base)) {
-                if (nonDuplicatedFields.has(key)) {
+                if (NON_DUPLICATED_FIELDS.has(key)) {
                   if (key === 'needs_search') base[key] = []
                   else delete base[key]
                 }
@@ -829,8 +836,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
           if (charId === 'commander') {
             charName = 'Commander'
           } else if (charId && charId !== 'none' && charId !== 'current') {
-            const c = l2d.find((x) => x.id === charId)
-
+            const c = findCharacterByIdOrName(charId)
             if (c) charName = c.name
           }
 
@@ -862,7 +868,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
 
               // Remove duplicated fields from the second part
               for (const key of Object.keys(narrationAction)) {
-                if (nonDuplicatedFields.has(key) && key !== 'choices') {
+                if (NON_DUPLICATED_FIELDS.has(key) && key !== 'choices') {
                   if (key === 'needs_search') narrationAction[key] = []
                   else delete narrationAction[key]
                 }
@@ -927,7 +933,7 @@ export const sanitizeActions = (actions: any[]): any[] => {
         const base: any = { ...action }
         if (i > 0) {
           for (const key of Object.keys(base)) {
-            if (nonDuplicatedFields.has(key)) {
+            if (NON_DUPLICATED_FIELDS.has(key)) {
               if (key === 'needs_search') base[key] = []
               else delete base[key]
             }
@@ -982,13 +988,6 @@ export const sanitizeActions = (actions: any[]): any[] => {
     const prev = newActions[i - 1]
     const curr = newActions[i]
 
-    const hasMeaningfulAnimation = (anim: any): boolean => {
-      if (typeof anim !== 'string') return false
-      const t = anim.trim().toLowerCase()
-      if (!t) return false
-      return t !== 'idle' && t !== 'none'
-    }
-
     // Check if previous is narration, current is dialogue
     if (prev.speaking === false && curr.speaking === true && prev.animation && prev.animation !== 'idle' && prev.character && curr.character && prev.character === curr.character && (!curr.animation || curr.animation === 'idle')) {
       // Only carry over animation for the SAME character, and only when the dialogue didn't specify one.
@@ -999,17 +998,17 @@ export const sanitizeActions = (actions: any[]): any[] => {
     // (created by splitting a combined line) doesn't, copy dialogue's animation to narration.
     if (prev.character && curr.character && prev.character === curr.character) {
       // Narration -> dialogue continuity (copy dialogue emotion back onto preceding narration if narration is missing)
-      if (prev.speaking === false && curr.speaking === true && hasMeaningfulAnimation(curr.animation) && (!prev.animation || String(prev.animation).toLowerCase() === 'idle' || String(prev.animation).trim() === '')) {
+      if (prev.speaking === false && curr.speaking === true && hasMeaningfulAnimation(curr.animation) && !hasMeaningfulAnimation(prev.animation)) {
         prev.animation = curr.animation
       }
 
       // Dialogue -> narration
-      if (prev.speaking === true && curr.speaking === false && hasMeaningfulAnimation(prev.animation) && (!curr.animation || String(curr.animation).toLowerCase() === 'idle' || String(curr.animation).trim() === '')) {
+      if (prev.speaking === true && curr.speaking === false && hasMeaningfulAnimation(prev.animation) && !hasMeaningfulAnimation(curr.animation)) {
         curr.animation = prev.animation
       }
 
       // Narration -> dialogue (more permissive than the earlier block, but only when dialogue is missing)
-      if (prev.speaking === false && curr.speaking === true && hasMeaningfulAnimation(prev.animation) && (!curr.animation || String(curr.animation).toLowerCase() === 'idle' || String(curr.animation).trim() === '')) {
+      if (prev.speaking === false && curr.speaking === true && hasMeaningfulAnimation(prev.animation) && !hasMeaningfulAnimation(curr.animation)) {
         curr.animation = prev.animation
       }
     }
@@ -1147,7 +1146,7 @@ const extractTrailingSpeakerLabel = (text: string): { text: string; speakerId: s
     }
   }
 
-  const charObj = l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
+  const charObj = findCharacterByName(name)
 
   if (charObj) {
     return {
@@ -1301,21 +1300,21 @@ export const parseFallback = (text: string): any[] => {
   let match
 
   // Collect all label matches first so we can slice dialogue until the next label.
-  const labels: Array<{ index: number; end: number; name: string }> = []
+  const labels: Array<{ index: number; end: number; name: string; charId: string }> = []
   while ((match = regex.exec(cleanText)) !== null) {
     const boundary = match[1] || ''
     const name = (match[2] || '').trim().replace(/\s+/g, ' ')
     if (!name) continue
 
     // Resolve Character ID; if it doesn't resolve to a known character (or Commander), ignore.
-    const isCommander = name.toLowerCase() === 'commander'
-    const charObj = isCommander ? null : l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
-    if (!charObj && !isCommander) continue
+    const charId = findCharacterIdByName(name)
+    if (!charId) continue
 
     labels.push({
       index: match.index + boundary.length,
       end: regex.lastIndex,
-      name
+      name,
+      charId
     })
   }
 
@@ -1331,22 +1330,11 @@ export const parseFallback = (text: string): any[] => {
     const curr = labels[i]
     const next = labels[i + 1]
 
-    const name = curr.name
     const index = curr.index
+    const charId = curr.charId || 'current'
 
     // 1. Narration (text before the speaker)
     const narration = cleanText.substring(lastIndex, index).trim()
-
-    // Resolve Character ID
-    let charId = 'current'
-
-    if (name.toLowerCase() === 'commander') {
-      charId = 'commander'
-    } else {
-      const charObj = l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())
-
-      if (charObj) charId = charObj.id
-    }
 
     if (narration) {
       const narrationActions = splitNarration(narration)
@@ -1616,7 +1604,7 @@ export const replayMessage = async (msg: any, index: number, ctx: ReplayContext)
 
   // Switch Character
   if (msg.character && msg.character !== 'none' && msg.character !== ctx.market.live2d.current_id) {
-    const charObj = l2d.find((c) => c.id.toLowerCase() === msg.character.toLowerCase() || c.name.toLowerCase() === msg.character.toLowerCase())
+    const charObj = findCharacterByIdOrName(msg.character)
     if (charObj) {
       ctx.market.live2d.change_current_spine(charObj)
     }

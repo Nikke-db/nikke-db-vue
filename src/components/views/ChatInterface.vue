@@ -988,6 +988,10 @@ const availableRosterOptions = computed(() => {
 
 // Settings
 const showAdvancedSettings = ref(true)
+watch(showAdvancedSettings, (val) => {
+  if (!val) reasoningEffort.value = 'default'
+})
+
 const lowContextMode = ref(false)
 const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
 const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
