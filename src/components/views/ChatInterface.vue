@@ -698,7 +698,7 @@
           <div class="guide-section">
             <h4>🔑 API Setup</h4>
             <ul>
-              <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
+              <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenCode Go</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
               <li><strong>Pollinations:</strong> Requires an API key.</li>
               <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
               <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
@@ -811,7 +811,7 @@ import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, fo
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch, checkForSearchRequest as checkForSearchRequestUtil } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
@@ -1165,6 +1165,7 @@ const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
 const pollinationsModels = ref<any[]>([])
+const openCodeGoModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
@@ -1238,6 +1239,8 @@ const modelOptions = computed(() => {
     ]
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
+  } else if (apiProvider.value === 'opencode-go') {
+    return openCodeGoModels.value
   } else if (apiProvider.value === 'pollinations') {
     return pollinationsModels.value
   }
@@ -1277,6 +1280,15 @@ const refreshPollinationsModels = async () => {
   const validModels = pollinationsModels.value.map((m) => m.value)
   if (!model.value || !validModels.includes(model.value)) {
     model.value = pollinationsModels.value[0]?.value || ''
+  }
+}
+
+const refreshOpenCodeGoModels = async () => {
+  openCodeGoModels.value = await fetchOpenCodeGoModels(apiKey.value.trim() || undefined)
+
+  const validModels = openCodeGoModels.value.map((m) => m.value)
+  if (!model.value || !validModels.includes(model.value)) {
+    model.value = openCodeGoModels.value[0]?.value || ''
   }
 }
 
@@ -1459,6 +1471,8 @@ watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
   if (apiProvider.value === 'pollinations') {
     await refreshPollinationsModels()
+  } else if (apiProvider.value === 'opencode-go') {
+    await refreshOpenCodeGoModels()
   }
 })
 
@@ -1643,6 +1657,9 @@ watch(apiProvider, async (newVal) => {
   // Reset model when provider changes
   if (apiProvider.value === 'gemini') {
     model.value = 'gemini-2.5-flash'
+  } else if (apiProvider.value === 'opencode-go') {
+    model.value = ''
+    await refreshOpenCodeGoModels()
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
     openRouterModels.value = await fetchOpenRouterModels()
@@ -1705,7 +1722,9 @@ const initializeSettings = async () => {
   if (stored.apiProvider) {
     apiProvider.value = stored.apiProvider
 
-    if (stored.apiProvider === 'openrouter') {
+    if (stored.apiProvider === 'opencode-go') {
+      await refreshOpenCodeGoModels()
+    } else if (stored.apiProvider === 'openrouter') {
       openRouterModels.value = await fetchOpenRouterModels()
     } else if (stored.apiProvider === 'pollinations') {
       await refreshPollinationsModels()
@@ -1714,21 +1733,26 @@ const initializeSettings = async () => {
     let validModels: string[] = []
     if (stored.apiProvider === 'gemini') {
       validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
+    } else if (stored.apiProvider === 'opencode-go') {
+      validModels = openCodeGoModels.value.map((m) => m.value)
     } else if (stored.apiProvider === 'openrouter') {
       validModels = openRouterModels.value.map((m) => m.value)
     } else if (stored.apiProvider === 'pollinations' && pollinationsModels.value.length > 0) {
       validModels = pollinationsModels.value.map((m) => m.value)
     }
 
-    if (stored.apiProvider !== 'pollinations' || validModels.length > 0) {
-      const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, openRouterModels.value.length > 0 ? openRouterModels.value[0].value : undefined)
+    if ((stored.apiProvider !== 'pollinations' && stored.apiProvider !== 'opencode-go') || validModels.length > 0) {
+      const fallbackModel = stored.apiProvider === 'openrouter' ? openRouterModels.value[0]?.value : openCodeGoModels.value[0]?.value
+      const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, fallbackModel)
       if (validModel) model.value = validModel
       if (warning) console.warn(warning)
     }
   }
 
   // Ensure models are loaded for the current provider
-  if (apiProvider.value === 'openrouter' && openRouterModels.value.length === 0) {
+  if (apiProvider.value === 'opencode-go' && openCodeGoModels.value.length === 0) {
+    await refreshOpenCodeGoModels()
+  } else if (apiProvider.value === 'openrouter' && openRouterModels.value.length === 0) {
     openRouterModels.value = await fetchOpenRouterModels()
     if (openRouterModels.value.length > 0 && !model.value) {
       model.value = openRouterModels.value[0].value
@@ -1910,13 +1934,17 @@ const handleFileUpload = (event: Event) => {
         if (data.settings) {
           // If the saved provider is openrouter, fetch models first
           const savedProvider = data.settings.apiProvider
-          if (savedProvider === 'openrouter') {
+          if (savedProvider === 'opencode-go') {
+            await refreshOpenCodeGoModels()
+          } else if (savedProvider === 'openrouter') {
             openRouterModels.value = await fetchOpenRouterModels()
           }
 
           let validModels: string[] = []
           if (savedProvider === 'gemini') {
             validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
+          } else if (savedProvider === 'opencode-go') {
+            validModels = openCodeGoModels.value.map((m) => m.value)
           } else if (savedProvider === 'openrouter') {
             validModels = openRouterModels.value.map((m) => m.value)
           }
@@ -2522,6 +2550,14 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
+  } else if (apiProvider.value === 'opencode-go') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
+
+    logDebug('Sending to OpenCode Go:', messages)
+    response = await callOpenCodeGo(messages)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
@@ -2642,6 +2678,11 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
     messages = injectFirstTurnReminder(messages)
     return await callGemini(messages, false)
+  } else if (apiProvider.value === 'opencode-go') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
+    return await callOpenCodeGo(messages)
   } else if (apiProvider.value === 'openrouter') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
@@ -2679,11 +2720,11 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
 
 // Wrapper functions for web search
 const wrappedSearchForCharactersWithNativeSearch = async (characterNames: string[]) => {
-  return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
+  return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations, callOpenCodeGo)
 }
 
 const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) => {
-  return searchForCharactersViaWikiFetch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
+  return searchForCharactersViaWikiFetch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations, callOpenCodeGo)
 }
 
 const wrappedSearchForCharacters = async (characterNames: string[]) => {
@@ -2746,6 +2787,16 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
     enableContextCaching: enableContextCaching.value,
+    signal: activeAbortController?.signal
+  })
+}
+
+const callOpenCodeGo = async (messages: any[]) => {
+  return await callOpenCodeGoImpl(messages, {
+    model: model.value,
+    apiKey: apiKey.value,
+    modeIsGame: mode.value === 'game',
+    reasoningEffort: reasoningEffort.value,
     signal: activeAbortController?.signal
   })
 }

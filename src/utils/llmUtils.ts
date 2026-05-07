@@ -11,13 +11,22 @@ import l2d from '@/utils/json/l2d.json'
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
 export const modelsRequiringStreamForHighTokens = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsRequiringStreamForHighTokens') || '[]')))
 export const modelsWithoutCacheControlSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutCacheControlSupport') || '[]')))
+export const modelsWithoutReasoningSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutReasoningSupport') || '[]')))
 
 export const providerOptions = [
   { label: 'Gemini', value: 'gemini' },
+  { label: 'OpenCode Go', value: 'opencode-go' },
   { label: 'OpenRouter', value: 'openrouter' },
   { label: 'Pollinations', value: 'pollinations' },
   { label: 'Local (OpenAI-compatible API)', value: 'local' }
 ]
+
+const OPENCODE_GO_CHAT_COMPLETIONS_URL = '/opencode-go/zen/go/v1/chat/completions'
+const OPENCODE_GO_MODELS_URL = '/opencode-go/zen/go/v1/models'
+const OPENCODE_GO_EXCLUDED_MODEL_IDS = new Set([
+  'minimax-m2.5',
+  'minimax-m2.7'
+])
 
 export const tokenUsageOptions = [
   { label: 'Low (10 turns)', value: 'low' },
@@ -33,7 +42,7 @@ export const tokenUsageOptions = [
 export const getReasoningEffortOptions = (provider: string): { label: string; value: string }[] => {
   let options: { label: string; value: string }[] = []
 
-  if (provider === 'openrouter' || provider === 'pollinations' || provider === 'local') {
+  if (provider === 'openrouter' || provider === 'pollinations' || provider === 'local' || provider === 'opencode-go') {
     options = [
       { label: 'Default', value: 'default' },
       { label: 'None', value: 'none' },
@@ -234,6 +243,164 @@ export const fetchPollinationsModels = async (apiKey?: string) => {
     console.error('Failed to fetch Pollinations models:', error)
     return []
   }
+}
+
+export const fetchOpenCodeGoModels = async (apiKey?: string) => {
+  try {
+    const headers: Record<string, string> = {}
+    if (apiKey?.trim()) {
+      headers['Authorization'] = `Bearer ${apiKey.trim()}`
+    }
+
+    const response = await fetch(OPENCODE_GO_MODELS_URL, { headers })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
+    }
+
+    const data = await response.json()
+    const models = Array.isArray(data?.data) ? data.data : []
+
+    return models
+      .filter((m: any) => typeof m?.id === 'string' && !OPENCODE_GO_EXCLUDED_MODEL_IDS.has(m.id))
+      .map((m: any) => ({
+        label: m.id,
+        value: m.id
+      }))
+      .sort((a: any, b: any) => a.label.localeCompare(b.label))
+  } catch (error) {
+    console.error('Failed to fetch OpenCode Go models:', error)
+    return []
+  }
+}
+
+const buildOpenAiCompatibleRequestBody = (opts: {
+  messages: any[]
+  maxTokens: number
+  model?: string
+  modeIsGame?: boolean
+  reasoningEffort?: string
+  includeJsonSchema?: boolean
+  reasoningExclude?: boolean
+}) => {
+  const { messages, maxTokens, model, modeIsGame = false, reasoningEffort, includeJsonSchema = false, reasoningExclude = false } = opts
+  const requestBody: any = {
+    messages,
+    max_tokens: maxTokens
+  }
+
+  if (model) requestBody.model = model
+  if (includeJsonSchema) {
+    requestBody.response_format = buildStoryResponseSchema(modeIsGame)
+  }
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: reasoningEffort,
+      exclude: reasoningExclude
+    }
+  }
+
+  return requestBody
+}
+
+const getOpenAiCompatibleHeaders = (apiKey?: string) => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  return headers
+}
+
+const parseOpenAiCompatibleTextResponse = async (response: Response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
+  }
+
+  const data = await response.json()
+  return data.choices[0].message.content
+}
+
+const sendOpenAiCompatibleRequest = async (url: string, opts: { requestBody: any; apiKey?: string; signal?: AbortSignal }) => {
+  return await fetch(url, {
+    method: 'POST',
+    headers: getOpenAiCompatibleHeaders(opts.apiKey),
+    body: JSON.stringify(opts.requestBody),
+    signal: opts.signal
+  })
+}
+
+const sendOpenCodeGoRequest = async (requestBody: any, apiKey: string, signal?: AbortSignal) => {
+  const response = await sendOpenAiCompatibleRequest(OPENCODE_GO_CHAT_COMPLETIONS_URL, {
+    requestBody,
+    apiKey,
+    signal
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('OpenCode Go API Error Details:', errorData)
+
+    if (response.status === 429) {
+      throw new Error('RATE_LIMITED')
+    }
+
+    return { response, errorData }
+  }
+
+  return { response }
+}
+
+const isReasoningParameterError = (errorData: any) => {
+  const msg = (errorData?.error?.message || '') + ' ' + (errorData?.error?.code || '')
+  return msg.toLowerCase().includes('reasoning') || (typeof errorData?.message === 'string' && errorData.message.toLowerCase().includes('reasoning'))
+}
+
+const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string; apiKey: string; maxTokens: number; reasoningEffort?: string; signal?: AbortSignal }) => {
+  const { messages, model, apiKey, maxTokens, signal } = opts
+  let { reasoningEffort } = opts
+
+  if (reasoningEffort && reasoningEffort !== 'default' && modelsWithoutReasoningSupport.value.has(model)) {
+    reasoningEffort = undefined
+  }
+
+  const requestBody = buildOpenAiCompatibleRequestBody({
+    messages,
+    maxTokens,
+    model,
+    reasoningEffort
+  })
+
+  const result = await sendOpenCodeGoRequest(requestBody, apiKey, signal)
+
+  if (!result.response.ok) {
+    if (result.response.status === 400 && isReasoningParameterError(result.errorData)) {
+      console.warn(`Model ${model} rejected reasoning settings, remembering and retrying without reasoning...`)
+      modelsWithoutReasoningSupport.value.add(model)
+      sessionStorage.setItem('modelsWithoutReasoningSupport', JSON.stringify([...modelsWithoutReasoningSupport.value]))
+      const retryRequestBody = buildOpenAiCompatibleRequestBody({
+        messages,
+        maxTokens,
+        model
+      })
+      const retryResult = await sendOpenCodeGoRequest(retryRequestBody, apiKey, signal)
+
+      if (!retryResult.response.ok) {
+        throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
+      }
+
+      return await parseOpenAiCompatibleTextResponse(retryResult.response)
+    }
+
+    throw new AIError(result.errorData?.error?.code ?? result.response.status, result.errorData?.error?.message ?? result.response.statusText ?? 'Unknown error')
+  }
+
+  return await parseOpenAiCompatibleTextResponse(result.response)
 }
 
 export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal) => {
@@ -704,38 +871,20 @@ export const callLocalSummarization = async (messages: any[], opts: { model?: st
     endpoint = `${endpoint}/chat/completions`
   }
 
-  const requestBody: any = {
-    messages: messages,
-    max_tokens: maxTokens
-  }
-  if (model) requestBody.model = model
-  if (reasoningEffort && reasoningEffort !== 'default') {
-    requestBody.reasoning = {
-      effort: reasoningEffort,
-      exclude: false
-    }
-  }
+  const requestBody = buildOpenAiCompatibleRequestBody({
+    messages,
+    maxTokens,
+    model,
+    reasoningEffort
+  })
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(requestBody),
+  const response = await sendOpenAiCompatibleRequest(endpoint, {
+    requestBody,
+    apiKey,
     signal
   })
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
-  }
-  const data = await response.json()
-  return data.choices[0].message.content
+  return await parseOpenAiCompatibleTextResponse(response)
 }
 
 export const callLocal = async (
@@ -759,38 +908,20 @@ export const callLocal = async (
   }
 
   const callWithoutJsonFormat = async () => {
-    const requestBody: any = {
-      messages: messages,
-      max_tokens: maxTokens
-    }
-    if (model) requestBody.model = model
-    if (reasoningEffort && reasoningEffort !== 'default') {
-      requestBody.reasoning = {
-        effort: reasoningEffort,
-        exclude: false
-      }
-    }
+    const requestBody = buildOpenAiCompatibleRequestBody({
+      messages,
+      maxTokens,
+      model,
+      reasoningEffort
+    })
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    }
-    if (apiKey) {
-      headers['Authorization'] = `Bearer ${apiKey}`
-    }
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(requestBody),
+    const response = await sendOpenAiCompatibleRequest(endpoint, {
+      requestBody,
+      apiKey,
       signal
     })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
-    }
-    const data = await response.json()
-    return data.choices[0].message.content
+    return await parseOpenAiCompatibleTextResponse(response)
   }
 
   if (model && modelsWithoutJsonSupport.value.has(model)) {
@@ -798,32 +929,18 @@ export const callLocal = async (
     return callWithoutJsonFormat()
   }
 
-  const responseSchema = buildStoryResponseSchema(modeIsGame)
+  const requestBody = buildOpenAiCompatibleRequestBody({
+    messages,
+    maxTokens,
+    model,
+    modeIsGame,
+    reasoningEffort,
+    includeJsonSchema: true
+  })
 
-  const requestBody: any = {
-    messages: messages,
-    max_tokens: maxTokens,
-    response_format: responseSchema
-  }
-  if (model) requestBody.model = model
-  if (reasoningEffort && reasoningEffort !== 'default') {
-    requestBody.reasoning = {
-      effort: reasoningEffort,
-      exclude: false
-    }
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
-  }
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(requestBody),
+  const response = await sendOpenAiCompatibleRequest(endpoint, {
+    requestBody,
+    apiKey,
     signal
   })
 
@@ -845,6 +962,106 @@ export const callLocal = async (
   }
 
   const data = await response.json()
+  return data.choices[0].message.content
+}
+
+export const callOpenCodeGoSummarization = async (messages: any[], opts: { model: string; apiKey: string; maxTokens?: number; reasoningEffort?: string; signal?: AbortSignal }) => {
+  const { model, apiKey, maxTokens = 16384, reasoningEffort, signal } = opts
+
+  return await callOpenCodeGoTextRequest({
+    messages,
+    model,
+    apiKey,
+    maxTokens,
+    reasoningEffort,
+    signal
+  })
+}
+
+export const callOpenCodeGo = async (
+  messages: any[],
+  opts: {
+    model: string
+    apiKey: string
+    modeIsGame: boolean
+    maxTokens?: number
+    reasoningEffort?: string
+    signal?: AbortSignal
+  }
+) => {
+  const { model, apiKey, modeIsGame, maxTokens = 16384, signal } = opts
+  let { reasoningEffort } = opts
+
+  if (reasoningEffort && reasoningEffort !== 'default' && modelsWithoutReasoningSupport.value.has(model)) {
+    reasoningEffort = undefined
+  }
+
+  const callWithoutJsonFormat = async () => {
+    return await callOpenCodeGoTextRequest({
+      messages,
+      model,
+      apiKey,
+      maxTokens,
+      reasoningEffort
+    })
+  }
+
+  if (modelsWithoutJsonSupport.value.has(model)) {
+    logDebug(`Model ${model} known to not support json_schema, using text fallback...`)
+    return callWithoutJsonFormat()
+  }
+
+  const requestBody = buildOpenAiCompatibleRequestBody({
+    messages,
+    maxTokens,
+    model,
+    modeIsGame,
+    reasoningEffort,
+    includeJsonSchema: true
+  })
+
+  const result = await sendOpenCodeGoRequest(requestBody, apiKey, signal)
+
+  if (!result.response.ok) {
+    if (result.response.status === 400 && (JSON.stringify(result.errorData).includes('response_format') || JSON.stringify(result.errorData).includes('json_schema') || JSON.stringify(result.errorData).includes('schema'))) {
+      console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
+      modelsWithoutJsonSupport.value.add(model)
+      sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
+      return callWithoutJsonFormat()
+    }
+
+    if (result.response.status === 400 && isReasoningParameterError(result.errorData)) {
+      console.warn(`Model ${model} rejected reasoning settings, remembering and retrying without reasoning...`)
+      modelsWithoutReasoningSupport.value.add(model)
+      sessionStorage.setItem('modelsWithoutReasoningSupport', JSON.stringify([...modelsWithoutReasoningSupport.value]))
+      const retryRequestBody = buildOpenAiCompatibleRequestBody({
+        messages,
+        maxTokens,
+        model,
+        modeIsGame,
+        includeJsonSchema: true
+      })
+      const retryResult = await sendOpenCodeGoRequest(retryRequestBody, apiKey, signal)
+
+      if (!retryResult.response.ok) {
+        if (retryResult.response.status === 400 && (JSON.stringify(retryResult.errorData).includes('response_format') || JSON.stringify(retryResult.errorData).includes('json_schema') || JSON.stringify(retryResult.errorData).includes('schema'))) {
+          console.warn(`Model ${model} does not support json_schema response format after retrying without reasoning, remembering and retrying without it...`)
+          modelsWithoutJsonSupport.value.add(model)
+          sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
+          return callWithoutJsonFormat()
+        }
+
+        throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
+      }
+
+      const retryData = await retryResult.response.json()
+      return retryData.choices[0].message.content
+    }
+
+    throw new AIError(result.errorData?.error?.code ?? result.response.status, result.errorData?.error?.message ?? result.response.statusText ?? 'Unknown error')
+  }
+
+  const data = await result.response.json()
   return data.choices[0].message.content
 }
 
@@ -935,6 +1152,8 @@ export const summarizeChunk = async (
 
   if (opts.apiProvider === 'gemini') {
     summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+  } else if (opts.apiProvider === 'opencode-go') {
+    summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
     summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'pollinations') {
@@ -974,6 +1193,8 @@ export const compactSummary = async (
 
   if (opts.apiProvider === 'gemini') {
     summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+  } else if (opts.apiProvider === 'opencode-go') {
+    summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
     summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'pollinations') {
@@ -1426,6 +1647,13 @@ export const enrichActionsWithAnimations = async (
 
     if (apiProvider === 'gemini') {
       response = await callGemini(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false, signal })
+    } else if (apiProvider === 'opencode-go') {
+      response = await callOpenCodeGo(messages, {
+        model: model!,
+        apiKey,
+        modeIsGame: false,
+        signal
+      })
     } else if (apiProvider === 'openrouter') {
       response = await callOpenRouter(messages, {
         model: model!,

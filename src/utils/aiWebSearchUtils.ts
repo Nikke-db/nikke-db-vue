@@ -17,7 +17,7 @@ export const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
 // Helper functions
 export const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some((prefix) => modelId.startsWith(prefix))
 
-export const usesWikiFetch = (apiProvider: string, model: string) => apiProvider === 'openrouter' && !hasNativeSearch(model)
+export const usesWikiFetch = (apiProvider: string, model: string) => (apiProvider === 'openrouter' && !hasNativeSearch(model)) || apiProvider === 'opencode-go'
 
 export const usesPollinationsAutoFallback = (apiProvider: string, model: string) => {
   if (apiProvider !== 'pollinations') return false
@@ -69,7 +69,7 @@ export const fetchWikiContent = async (characterName: string): Promise<string | 
   }
 }
 
-export const searchForCharactersViaWikiFetch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function): Promise<void> => {
+export const searchForCharactersViaWikiFetch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function, callOpenCodeGo: Function): Promise<void> => {
   logDebug('[searchForCharactersViaWikiFetch] Fetching wiki pages for:', characterNames)
 
   for (const name of characterNames) {
@@ -101,6 +101,8 @@ export const searchForCharactersViaWikiFetch = async (characterNames: string[], 
 
         if (apiProvider === 'gemini') {
           result = await callGemini(messages, false)
+        } else if (apiProvider === 'opencode-go') {
+          result = await callOpenCodeGo(messages)
         } else if (apiProvider === 'openrouter') {
           result = await callOpenRouter(messages, false)
         } else if (apiProvider === 'pollinations') {
@@ -151,7 +153,7 @@ export const searchForCharactersViaWikiFetch = async (characterNames: string[], 
   }
 }
 
-export const searchForCharactersWithNativeSearch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function): Promise<void> => {
+export const searchForCharactersWithNativeSearch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function, callOpenCodeGo: Function): Promise<void> => {
   logDebug('[searchForCharactersWithNativeSearch] Searching for:', characterNames)
 
   for (const name of characterNames) {
@@ -179,6 +181,8 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
 
         if (apiProvider === 'gemini') {
           result = await callGemini(messages, true)
+        } else if (apiProvider === 'opencode-go') {
+          result = await callOpenCodeGo(messages)
         } else if (apiProvider === 'openrouter') {
           result = await callOpenRouter(messages, true)
         } else if (apiProvider === 'pollinations') {
@@ -295,6 +299,11 @@ export const searchForCharacters = async (characterNames: string[], characterPro
       // For models without native search, fetch wiki pages directly and have the model summarize
       await searchForCharactersViaWikiFetch(charsToSearch)
     }
+    return true
+  }
+
+  if (apiProvider === 'opencode-go') {
+    await searchForCharactersViaWikiFetch(charsToSearch)
     return true
   }
 

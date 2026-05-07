@@ -228,7 +228,7 @@ export interface ValidatedSessionSettings {
   model?: string
   /** If the saved model was invalid, this is the warning message to show. */
   modelWarning?: string
-  /** If the provider is openrouter, we need to fetch models before validating. */
+  /** If the provider uses a fetched model list, we need to fetch models before validating. */
   needsOpenRouterModelFetch?: boolean
 }
 
@@ -314,14 +314,14 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
 
   if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
     result.apiProvider = savedProvider
-    result.needsOpenRouterModelFetch = savedProvider === 'openrouter'
+    result.needsOpenRouterModelFetch = savedProvider === 'openrouter' || savedProvider === 'opencode-go'
 
     if (savedModel && validModels.includes(savedModel)) {
       result.model = savedModel
     } else {
       // Fallback to default
       if (savedProvider === 'gemini') result.model = 'gemini-2.5-flash'
-      else if (savedProvider === 'openrouter' && validModels.length > 0) result.model = validModels[0]
+      else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && validModels.length > 0) result.model = validModels[0]
 
       if (savedModel) {
         result.modelWarning = `Warning: Saved model '${savedModel}' is invalid or unavailable. Using default.`

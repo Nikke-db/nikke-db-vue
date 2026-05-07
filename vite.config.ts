@@ -30,6 +30,11 @@ export default defineConfig({
         target: 'http://127.0.0.1:4123',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/chatterbox/, '')
+      },
+      '/opencode-go': {
+        target: 'https://opencode.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/opencode-go/, '')
       }
     }
   }
