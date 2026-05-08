@@ -2,6 +2,20 @@
   "_comment": "Animation overrides keyed by character/skin ID (must match l2d.json). Each group can target multiple IDs. 'original' is the real Spine animation name; 'replaced' is the context-aware name shown to AI models.",
   "overrides": [
     {
+      "ids": ["c010", "c010_02", "c010_03"],
+      "name": "Rapi",
+      "overrides": [
+        { "original": "special", "replaced": "happy" }
+      ]
+    },
+    {
+      "ids": ["c016"],
+      "name": "Rapi: Red Hood",
+      "overrides": [
+        { "original": "special", "replaced": "smiling" }
+      ]
+    },
+    {
       "ids": ["c220"],
       "name": "Snow White",
       "overrides": [
@@ -20,6 +34,27 @@
       "name": "Crown",
       "overrides": [
         { "original": "special", "replaced": "hungry" }
+      ]
+    },
+    {
+      "ids": ["c331"],
+      "name": "Chime",
+      "overrides": [
+        { "original": "special", "replaced": "satisfied" }
+      ]
+    },
+    {
+      "ids": ["c233"],
+      "name": "Dorothy",
+      "overrides": [
+        { "original": "angry_02", "replaced": "angry_with_combatarmor" },
+        { "original": "cry_02", "replaced": "cry_with_combatarmor" },
+        { "original": "pain_02", "replaced": "pain_with_combatarmor" },
+        { "original": "idle_alt", "replaced": "idle_with_combatarmor" },
+        { "original": "sad_02", "replaced": "sad_with_combatarmor" },
+        { "original": "smile_02", "replaced": "smile_with_combatarmor" },
+        { "original": "think_02", "replaced": "think_with_combatarmor" },
+        { "original": "worry_02", "replaced": "worry_with_combatarmor" }
       ]
     }
   ]

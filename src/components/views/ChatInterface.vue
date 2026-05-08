@@ -434,7 +434,7 @@
 
           <n-form-item v-if="mode !== 'story'">
             <template #label>
-              Play As Different Character
+              Play As Different Character <span style="font-size: smaller">(Beta)</span>
               <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -443,7 +443,8 @@
                 </template>
                 <div>
                   If this is off, you play as the Commander (standard behaviour). If this is on, you can choose another character to control from the local profile database for Roleplay and Game modes.<br /><br />
-                  Once a session starts, this setting is locked until you reset or load another session.
+                  Once a session starts, this setting is locked until you reset or load another session. <br /><br />
+                  Please note that this feature is still in beta. You may experience issues such as NPCs interacting with your character using the Commander's honorifics and other unforeseen bugs. If you encounter any issues, please report them in the GitHub repo.
                 </div>
               </n-popover>
             </template>
@@ -683,10 +684,12 @@
           <h3>🆕 What's New?</h3>
           <div class="guide-section">
             <ul>
-              <li>Added Realistic Mode for Roleplay and Game modes</li>
-              <li>Added Commander relationships with characters in the database, plus new characters</li>
-              <li>Improvements on almost all APIs, including Local</li>
-              <li>Significant under-the-hood fixes and improvements</li>
+              <li>Added the ability to play as different characters (Beta)</li>
+              <li>Added OpenCode Go as a new AI provider</li>
+              <li>Improved lore awareness with location profiles</li>
+              <li>Added a Low-Context Mode for very small models</li>
+              <li>Added a Low Power Mode for mobile devices, low-end hardware or to save battery life</li>
+              <li>Improved Settings UI and many other significant under-the-hood enhancements</li>
             </ul>
           </div>
         </div>
@@ -699,9 +702,8 @@
             <h4>🔑 API Setup</h4>
             <ul>
               <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenCode Go</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
-              <li><strong>Pollinations:</strong> Requires an API key.</li>
               <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
-              <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
+              <li><strong>Cost:</strong> Be mindful of your provider's usage. You are solely responsible for all costs.</li>
             </ul>
           </div>
         </div>
@@ -739,7 +741,7 @@
           <div class="guide-section">
             <ul>
               <li><strong>Yap Mode:</strong> Enables real-time lip-syncing for characters on screen.</li>
-              <li><strong>Text-to-Speech (TTS):</strong> Experimental support for <strong>AllTalk</strong>, <strong>GPT-SoVits</strong>, and <strong>Chatterbox</strong> for voiced dialogue.</li>
+              <li><strong>Text-to-Speech (TTS):</strong> Experimental support for various providers, enabling voiced dialogue.</li>
               <li><strong>Animation Replay:</strong> Click on any message in the history to replay the character's animation and expression from that moment.</li>
               <li><strong>Playback:</strong> Choose <strong>Auto</strong> for a continuous flow or <strong>Manual</strong> to advance at your own pace.</li>
             </ul>
@@ -752,7 +754,7 @@
             <ul>
               <li><strong>Nikke-DB Knowledge:</strong> Uses built-in character profiles for better accuracy and lower costs.</li>
               <li><strong>AI Memory:</strong> The AI can track <strong>Character Progression</strong>, updating personalities and relationships as the story develops.</li>
-              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by some OpenRouter models) or fetch from the Nikke Wiki.</li>
+              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by some models) or fetch from the Nikke Wiki directly.</li>
               <li><strong>Local Models:</strong> Connect to your own local LLM server (like LM Studio or Ollama) via the <strong>Local</strong> provider.</li>
             </ul>
           </div>
@@ -764,8 +766,9 @@
             <ul>
               <li><strong>Problems? Button:</strong> Use this if the AI is misbehaving, such as showing garbled text, using wrong speech styles for characters, etc.</li>
               <li><strong>Model Quality:</strong> The experience varies greatly between models. Larger models generally perform better. Avoid using models tuned for other tasks such as coding.</li>
+              <li><strong>Currently Recommended Models:</strong> GLM-5.1, Claude Sonnet 4.6, Kimi K2.6, Grok 4.3/Grok 4.1 Fast. This is not a complete list.</li>
               <li><strong>Save/Load:</strong> Use the <strong>Save</strong> icon to download your session. You can resume it later by loading the file.</li>
-              <li><strong>Context Usage:</strong> Adjust "Tokens Usage" in settings to balance between speed and cost.</li>
+              <li><strong>Context Usage:</strong> Adjust "Tokens Usage" in settings to balance between speed and cost. Default values recommended.</li>
             </ul>
           </div>
         </div>
@@ -1233,7 +1236,7 @@ const modelOptions = computed(() => {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
-      { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite-preview' },
+      { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite' },
       { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
       { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro-preview' }
     ]
