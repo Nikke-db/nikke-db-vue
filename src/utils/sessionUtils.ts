@@ -226,10 +226,93 @@ export interface ValidatedSessionSettings {
   autoCompactFrequency?: number
   apiProvider?: string
   model?: string
+  backgroundImagesEnabled?: boolean
   /** If the saved model was invalid, this is the warning message to show. */
   modelWarning?: string
   /** If the provider uses a fetched model list, we need to fetch models before validating. */
   needsOpenRouterModelFetch?: boolean
+}
+
+export type SessionRestoreProviders = {
+  refreshOpenCodeGoModels: () => Promise<void>
+  refreshPollinationsModels: () => Promise<void>
+  fetchOpenRouterModels: () => Promise<Array<{ value: string }>>
+}
+
+export type SessionRestoreModelState = {
+  openRouterModels: Array<{ value: string }>
+  openCodeGoModels: Array<{ value: string }>
+  pollinationsModels: Array<{ value: string }>
+}
+
+export async function resolveProviderModelsForSessionRestore(
+  provider: string,
+  deps: SessionRestoreProviders,
+  state: SessionRestoreModelState
+): Promise<string[]> {
+  if (provider === 'opencode-go') {
+    await deps.refreshOpenCodeGoModels()
+    return state.openCodeGoModels.map((m) => m.value)
+  }
+
+  if (provider === 'openrouter') {
+    state.openRouterModels = await deps.fetchOpenRouterModels()
+    return state.openRouterModels.map((m) => m.value)
+  }
+
+  if (provider === 'pollinations') {
+    await deps.refreshPollinationsModels()
+    return state.pollinationsModels.map((m) => m.value)
+  }
+
+  if (provider === 'gemini') {
+    return ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview']
+  }
+
+  return []
+}
+
+export type ApplyValidatedSessionSettingsParams = {
+  validated: ValidatedSessionSettings
+  playbackMode: { value: string }
+  setYapEnabled: (value: boolean) => void
+  ttsEnabled: { value: boolean }
+  ttsEndpoint: { value: string }
+  ttsProvider: { value: 'alltalk' | 'gptsovits' | 'chatterbox' }
+  gptSovitsEndpoint: { value: string }
+  gptSovitsBasePath: { value: string }
+  tokenUsage: { value: string }
+  enableContextCaching: { value: boolean }
+  useLocalProfiles: { value: boolean }
+  allowWebSearchFallback: { value: boolean }
+  reasoningEffort: { value: string }
+  autoCompactSummaries: { value: boolean }
+  autoCompactFrequency: { value: number }
+  apiProvider: { value: string }
+  model: { value: string }
+}
+
+export function applyValidatedSessionSettings(params: ApplyValidatedSessionSettingsParams): string | undefined {
+  const { validated } = params
+
+  if (validated.playbackMode !== undefined) params.playbackMode.value = validated.playbackMode
+  if (validated.yapEnabled !== undefined) params.setYapEnabled(validated.yapEnabled)
+  if (validated.ttsEnabled !== undefined) params.ttsEnabled.value = validated.ttsEnabled
+  if (validated.ttsEndpoint !== undefined) params.ttsEndpoint.value = validated.ttsEndpoint
+  if (validated.ttsProvider !== undefined) params.ttsProvider.value = validated.ttsProvider as 'alltalk' | 'gptsovits' | 'chatterbox'
+  if (validated.gptSovitsEndpoint !== undefined) params.gptSovitsEndpoint.value = validated.gptSovitsEndpoint
+  if (validated.gptSovitsBasePath !== undefined) params.gptSovitsBasePath.value = validated.gptSovitsBasePath
+  if (validated.tokenUsage !== undefined) params.tokenUsage.value = validated.tokenUsage
+  if (validated.enableContextCaching !== undefined) params.enableContextCaching.value = validated.enableContextCaching
+  if (validated.useLocalProfiles !== undefined) params.useLocalProfiles.value = validated.useLocalProfiles
+  if (validated.allowWebSearchFallback !== undefined) params.allowWebSearchFallback.value = validated.allowWebSearchFallback
+  if (validated.reasoningEffort !== undefined) params.reasoningEffort.value = validated.reasoningEffort
+  if (validated.autoCompactSummaries !== undefined) params.autoCompactSummaries.value = validated.autoCompactSummaries
+  if (validated.autoCompactFrequency !== undefined) params.autoCompactFrequency.value = validated.autoCompactFrequency
+  if (validated.apiProvider !== undefined) params.apiProvider.value = validated.apiProvider
+  if (validated.model !== undefined) params.model.value = validated.model
+
+  return validated.modelWarning
 }
 
 export function validatePlayerCharacterState(value: any): PlayerCharacterSessionState {
@@ -306,6 +389,9 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
   }
   if (typeof settings.autoCompactFrequency === 'number' && [3, 4, 5, 10].includes(settings.autoCompactFrequency)) {
     result.autoCompactFrequency = settings.autoCompactFrequency
+  }
+  if (typeof settings.backgroundImagesEnabled === 'boolean') {
+    result.backgroundImagesEnabled = settings.backgroundImagesEnabled
   }
 
   // Provider + model

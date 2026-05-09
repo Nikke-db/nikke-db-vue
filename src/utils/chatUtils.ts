@@ -2,33 +2,15 @@
 import { type Ref } from 'vue'
 import l2d from '@/utils/json/l2d.json'
 import characterHonorifics from '@/utils/json/honorifics.json'
-import locationProfiles from '@/utils/json/locationProfiles.json'
 import prompts from '@/utils/json/prompts.json'
 import { parseSelectionValue, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
+import { getBackgroundPromptScenes, getCurrentBackgroundPromptState } from '@/utils/backgroundUtils'
+import { resolveRelevantLocations, getFilteredLocationsForAI } from '@/utils/storyLocationUtils'
 
 type ChatHistoryEntry = {
   role: string
   content: string
 }
-
-type LocationTriggerSources = {
-  userText?: boolean
-  recentChat?: boolean
-  profileText?: boolean
-}
-
-type LocationProfile = {
-  aliases?: string[]
-  profileKeywords?: string[]
-  relatedCharacters?: string[]
-  triggerSources?: LocationTriggerSources
-  visuals: string
-  description: string
-}
-
-const LOCATION_PROFILE_FIELDS = ['backstory', 'relationships', 'characterProgression'] as const
-const RECENT_LOCATION_HISTORY_LIMIT = 8
-const MAX_RELEVANT_LOCATIONS = 2
 
 const L2D_CHAR_FIELDS = (c: any): string => typeof c?.name === 'string' ? c.name : ''
 
@@ -1657,112 +1639,9 @@ export type SystemPromptParams = {
   chatHistory?: ChatHistoryEntry[]
   playerCharacterName?: string
   customPlayerCharacterActive?: boolean
-}
-
-type ResolvedLocation = {
-  name: string
-  profile: LocationProfile
-  score: number
-  matchedByUser: boolean
-  matchedByRecentChat: boolean
-  matchedByProfile: boolean
-}
-
-const joinProfileText = (profile: any): string => {
-  if (!profile || typeof profile !== 'object') return ''
-
-  const parts: string[] = []
-
-  for (const field of LOCATION_PROFILE_FIELDS) {
-    const value = profile[field]
-    if (!value) continue
-
-    if (typeof value === 'string') {
-      parts.push(value)
-      continue
-    }
-
-    if (typeof value === 'object') {
-      parts.push(JSON.stringify(value))
-    }
-  }
-
-  return parts.join(' ')
-}
-
-const getRecentChatText = (chatHistory: ChatHistoryEntry[] = [], currentUserPrompt: string = ''): string => {
-  const recentHistory = chatHistory
-    .filter((entry) => entry.role !== 'system')
-    .slice(-RECENT_LOCATION_HISTORY_LIMIT)
-    .map((entry) => entry.content)
-    .join('\n')
-
-  return currentUserPrompt ? `${recentHistory}\n${currentUserPrompt}` : recentHistory
-}
-
-const hasLocationTermMatch = (text: string, terms: string[]): boolean => {
-  if (!text || terms.length === 0) return false
-  return terms.some((term) => isWholeWordPresent(text, term))
-}
-
-const resolveRelevantLocations = (params: { profiles: Record<string, any>; currentUserPrompt?: string; chatHistory?: ChatHistoryEntry[] }): ResolvedLocation[] => {
-  const userText = params.currentUserPrompt || ''
-  const recentChatText = getRecentChatText(params.chatHistory, userText)
-  const locationMap = locationProfiles as Record<string, LocationProfile>
-  const matches: ResolvedLocation[] = []
-
-  for (const [name, profile] of Object.entries(locationMap)) {
-    const aliases = Array.from(new Set([name, ...(profile.aliases || [])]))
-    const profileKeywords = Array.from(new Set([...(profile.profileKeywords || []), ...aliases]))
-    const triggerSources = profile.triggerSources || {}
-    const relatedCharacters = new Set((profile.relatedCharacters || []).map((charName) => charName.toLowerCase()))
-
-    const matchedByUser = triggerSources.userText !== false && hasLocationTermMatch(userText, aliases)
-    const matchedByRecentChat = !matchedByUser && triggerSources.recentChat !== false && hasLocationTermMatch(recentChatText, aliases)
-
-    let matchedByProfile = false
-    if (!matchedByUser && !matchedByRecentChat && triggerSources.profileText) {
-      for (const [characterName, characterProfile] of Object.entries(params.profiles || {})) {
-        if (relatedCharacters.size > 0 && !relatedCharacters.has(characterName.toLowerCase())) continue
-        if (hasLocationTermMatch(joinProfileText(characterProfile), profileKeywords)) {
-          matchedByProfile = true
-          break
-        }
-      }
-    }
-
-    if (!matchedByUser && !matchedByRecentChat && !matchedByProfile) continue
-
-    const score = matchedByUser ? 3 : matchedByRecentChat ? 2 : 1
-    matches.push({
-      name,
-      profile,
-      score,
-      matchedByUser,
-      matchedByRecentChat,
-      matchedByProfile
-    })
-  }
-
-  const strongestExplicitMatch = matches.some((location) => location.matchedByUser)
-  const filteredMatches = strongestExplicitMatch ? matches.filter((location) => location.matchedByUser) : matches
-
-  return filteredMatches
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score
-      return a.name.localeCompare(b.name)
-    })
-    .slice(0, MAX_RELEVANT_LOCATIONS)
-}
-
-const getFilteredLocationsForAI = (locations: ResolvedLocation[]): Record<string, { description: string; visuals: string }> => {
-  return locations.reduce<Record<string, { description: string; visuals: string }>>((acc, location) => {
-    acc[location.name] = {
-      description: location.profile.description,
-      visuals: location.profile.visuals
-    }
-    return acc
-  }, {})
+  backgroundImagesEnabled?: boolean
+  backgroundImageMap?: Map<string, File>
+  currentBackgroundFilename?: string
 }
 
 /**
@@ -1786,7 +1665,7 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
   }
 
   const knownCharacterNames = Object.keys(profiles)
-  const relevantLocations = lowContextMode ? [] : resolveRelevantLocations({ profiles, currentUserPrompt, chatHistory })
+  const relevantLocations = lowContextMode ? [] : resolveRelevantLocations({ profiles, currentUserPrompt, chatHistory, isWholeWordPresent })
 
   // Helper to filter out defaultSkin and optionally backstory from profiles
   const getFilteredProfilesForAI = (): Record<string, any> => {
@@ -1939,6 +1818,40 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
       : (prompts.systemPrompt as any).realisticMode
     : ''
 
+  const isBackgroundEnabled = params.backgroundImagesEnabled
+    && params.backgroundImageMap
+    && params.backgroundImageMap.size > 0
+
+  let backgroundSection = ''
+  if (isBackgroundEnabled) {
+    const availableFilenames = [...params.backgroundImageMap!.keys()].sort()
+    const relevantLocationNames = relevantLocations.map((location) => location.name)
+    // Feed the AI a compact semantic shortlist instead of raw filenames. The runtime
+    // resolves the returned scene key back to a concrete loaded file later.
+    const availableScenes = getBackgroundPromptScenes({
+      availableFilenames,
+      relevantLocations: relevantLocationNames,
+      currentBackgroundFilename: params.currentBackgroundFilename
+    })
+    const currentBackground = getCurrentBackgroundPromptState({
+      currentBackgroundFilename: params.currentBackgroundFilename,
+      availableFilenames
+    })
+
+    backgroundSection = `
+
+${(prompts.systemPrompt as any).backgroundImages.header}
+
+Available Background Scene Keys:
+${JSON.stringify(availableScenes, null, 2)}
+
+Current Background Scene:
+${currentBackground ? JSON.stringify(currentBackground, null, 2) : 'none'}
+
+${(prompts.systemPrompt as any).backgroundImages.schemaAddition}
+`
+  }
+
   const prompt = `${prompts.systemPrompt.intro}
 
   ${modePrompt}
@@ -1968,6 +1881,7 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
   ${prompts.systemPrompt.instructions.base}
   ${modeInstructions}
   ${prompts.systemPrompt.instructions.closing}
+  ${backgroundSection}
   ${godModeText}
   ${realisticModeText}
   `

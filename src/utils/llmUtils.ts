@@ -6,6 +6,8 @@ import { animationMappings } from '@/utils/animationMappings'
 import { logDebug, AIError } from '@/utils/chatUtils'
 import { getRosterIdPairs, type StoryCharacterEntry, type CharacterCatalog } from '@/utils/storyCharacterUtils'
 import { applyOverridesForContext } from '@/utils/animationOverrideUtils'
+import { callGemini, callGeminiSummarization } from '@/utils/geminiUtils'
+export { callGemini, callGeminiSummarization } from '@/utils/geminiUtils'
 import l2d from '@/utils/json/l2d.json'
 
 export const modelsWithoutJsonSupport = ref<Set<string>>(new Set(JSON.parse(sessionStorage.getItem('modelsWithoutJsonSupport') || '[]')))
@@ -577,93 +579,6 @@ export const callPollinationsSummarization = async (messages: any[], apiKey: str
   return data.choices[0].message.content
 }
 
-export const callGeminiSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal) => {
-  // Gemini API format is different, need to adapt
-
-  // Check if we have a system message (first message with role 'system' or just need to treat first as system)
-  // If there's only one message, treat it as user content (no system instruction)
-  const hasSystemMessage = messages.length > 1 || messages[0]?.role === 'system'
-
-  let contents: any[]
-  let systemMessage: any = null
-
-  if (hasSystemMessage && messages.length > 1) {
-    // Extract system prompt (first message)
-    systemMessage = messages[0]
-    // Filter out system message and map the rest to Gemini format
-    contents = messages.slice(1).map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
-  } else {
-    // No system message, all messages are content
-    contents = messages.map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
-  }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
-
-  const requestBody: any = {
-    contents: contents,
-    generationConfig: {
-      maxOutputTokens: 32768 // Higher limit for summarization
-    }
-  }
-
-  // Only add systemInstruction if we have a system message
-  if (systemMessage) {
-    requestBody.systemInstruction = {
-      parts: [{ text: systemMessage.content }]
-    }
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody),
-    signal
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Gemini Summarization Error Details:', errorData)
-    if (response.status === 503) {
-      throw new Error('Gemini API Error: 503 Service Unavailable')
-    }
-    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
-  }
-  const data = await response.json()
-
-  // Handle various response formats from Gemini
-  if (!data.candidates || data.candidates.length === 0) {
-    console.error('Gemini returned no candidates:', data)
-
-    throw new Error('Gemini API Error: No candidates in response')
-  }
-
-  const candidate = data.candidates[0]
-
-  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-    console.error('Gemini returned empty content:', candidate)
-
-    throw new Error('Gemini API Error: Empty content in response')
-  }
-
-  // Find the text part (there might be other parts like function calls when using tools)
-  const textPart = candidate.content.parts.find((p: any) => p.text !== undefined)
-
-  if (!textPart) {
-    console.error('Gemini returned no text part:', candidate.content.parts)
-
-    throw new Error('Gemini API Error: No text in response')
-  }
-
-  return textPart.text
-}
 
 export const callPollinations = async (
   messages: any[],
@@ -1090,6 +1005,20 @@ export const buildStoryResponseSchema = (isGameMode: boolean) => ({
               text: { type: 'string' },
               character: { type: 'string' },
               animation: { type: 'string' },
+              background: {
+                anyOf: [
+                  { type: 'string' },
+                  {
+                    type: 'object',
+                    properties: {
+                      key: { type: 'string' },
+                      variant: { type: 'string' }
+                    },
+                    required: ['key'],
+                    additionalProperties: false
+                  }
+                ]
+              },
               speaking: { type: 'boolean' },
               duration: { type: 'number' }
             },
@@ -1403,169 +1332,6 @@ export const callOpenRouter = async (
   return data.choices[0].message.content
 }
 
-export const callGemini = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; reasoningEffort?: string; signal?: AbortSignal }) => {
-  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, reasoningEffort, signal } = opts
-
-  const hasSystemMessage = messages.length > 1 || messages[0]?.role === 'system'
-
-  let contents: any[]
-  let systemMessage: any = null
-
-  if (hasSystemMessage && messages.length > 1) {
-    systemMessage = messages[0]
-    contents = messages.slice(1).map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }))
-  } else {
-    contents = messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }))
-  }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
-
-  const shouldSearch = enableWebSearch && !(useLocalProfiles && !allowWebSearchFallback)
-
-  const requestBody: any = {
-    contents: contents,
-    generationConfig: {
-      responseMimeType: shouldSearch ? undefined : 'application/json'
-    }
-  }
-
-  if (reasoningEffort && reasoningEffort !== 'default') {
-    if (model.includes('gemini-2.5')) {
-      // Gemini 2.5: Use thinkingBudget
-      let budget = 4096 // Default
-      switch (reasoningEffort) {
-        case 'minimal':
-          budget = 1024
-          break
-        case 'low':
-          budget = 2048
-          break
-        case 'medium':
-          budget = 8192
-          break
-        case 'high':
-          budget = 16384
-          break
-        case 'xhigh':
-          budget = 32768
-          break
-        default:
-          budget = 4096
-      }
-
-      requestBody.generationConfig.thinkingConfig = {
-        includeThoughts: false,
-        thinkingBudget: budget
-      }
-    } else if (model.includes('gemini-3')) {
-      // Gemini 3: Use thinkingLevel
-      let level = 'LOW' // Default
-      const isFlash = model.includes('flash')
-
-      if (isFlash) {
-        // Flash supports MINIMAL, LOW, MEDIUM, HIGH
-        switch (reasoningEffort) {
-          case 'minimal':
-            level = 'MINIMAL'
-            break
-          case 'low':
-            level = 'LOW'
-            break
-          case 'medium':
-            level = 'MEDIUM'
-            break
-          case 'high':
-            level = 'HIGH'
-            break
-          case 'xhigh':
-            level = 'HIGH'
-            break
-          default:
-            level = 'LOW'
-        }
-      } else {
-        // Pro 3.1 supports LOW, MEDIUM, HIGH
-        switch (reasoningEffort) {
-          case 'minimal':
-            level = 'LOW'
-            break
-          case 'low':
-            level = 'LOW'
-            break
-          case 'medium':
-            level = 'MEDIUM'
-            break
-          case 'high':
-            level = 'HIGH'
-            break
-          case 'xhigh':
-            level = 'HIGH'
-            break
-          default:
-            level = 'LOW'
-        }
-      }
-
-      requestBody.generationConfig.thinkingConfig = {
-        includeThoughts: false,
-        thinkingLevel: level
-      }
-    }
-  }
-
-  if (systemMessage) {
-    requestBody.systemInstruction = { parts: [{ text: systemMessage.content }] }
-  }
-
-  if (shouldSearch) {
-    requestBody.tools = [{ googleSearch: {} }]
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody),
-    signal
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Gemini API Error Details:', errorData)
-    if (response.status === 503) {
-      throw new Error('Gemini API Error: 503 Service Unavailable')
-    }
-    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
-  }
-
-  const data = await response.json()
-
-  // Check for content filtering/safety blocks
-  if (data.promptFeedback?.blockReason === 'PROHIBITED_CONTENT') {
-    console.error('Gemini content blocked:', data)
-    throw new Error('GEMINI_PROHIBITED_CONTENT')
-  }
-
-  if (!data.candidates || data.candidates.length === 0) {
-    console.error('Gemini returned no candidates:', data)
-    throw new Error('Gemini API Error: No candidates in response')
-  }
-
-  const candidate = data.candidates[0]
-
-  if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-    console.error('Gemini returned empty content:', candidate)
-    throw new Error('Gemini API Error: Empty content in response')
-  }
-
-  const textPart = candidate.content.parts.find((p: any) => p.text !== undefined)
-
-  if (!textPart) {
-    console.error('Gemini returned no text part:', candidate.content.parts)
-    throw new Error('Gemini API Error: No text in response')
-  }
-
-  return textPart.text
-}
 
 export const enrichActionsWithAnimations = async (
   actions: any[],

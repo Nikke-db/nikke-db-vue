@@ -612,6 +612,35 @@
             </template>
             <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode" />
           </n-form-item>
+            <n-form-item v-if="showAdvancedSettings">
+            <template #label>
+              Enable Background Images
+              <n-popover trigger="hover" placement="bottom" style="max-width: 360px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Displays a background image behind the Spine character, automatically selected by the AI based on the current scene and location.<br /><br />
+                  <strong>Setup:</strong> Download the background image pack from the <em>Background Image Pack</em> button in the Live2D Viewer section, decompress the ZIP into a folder, then select that folder below.<br /><br />
+                  Files are stored locally in memory and not actually uploaded. They are discarded when the page is closed or the option is turned off.<br /><br />
+                  <strong style="color: #e88080">Warning:</strong> Enabling this increases memory usage while active. The generator now receives a compact scene-key shortlist instead of the full filename list.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode" :style="{ opacity: lowPowerMode ? 0.5 : 1 }" />
+          </n-form-item>
+          <template v-if="showAdvancedSettings && market.live2d.backgroundImagesEnabled && !lowPowerMode">
+            <n-form-item label="Background Folder">
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%">
+                <n-button size="small" @click="triggerFolderPicker">Select Folder</n-button>
+                <span v-if="backgroundFolderName" style="font-size: 12px; color: #aaa">{{ backgroundFolderName }} ({{ loadedBackgroundCount }}/{{ totalBackgroundCount }})</span>
+                <span v-else style="font-size: 12px; color: #888">No folder selected</span>
+              </div>
+            </n-form-item>
+            <input ref="folderInput" type="file" webkitdirectory style="display: none" @change="handleFolderSelection" />
+          </template>
 
           <n-form-item>
             <template #label>
@@ -807,11 +836,13 @@ import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSel
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
+import backgroundImagesList from '@/utils/json/backgroundImages.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
 import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, getAIErrorMessage, buildUserReminders, generateSystemPrompt as generateSystemPromptUtil, type ReminderToggleState } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
+import { formatBackgroundFolderLoadFeedback, resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch, checkForSearchRequest as checkForSearchRequestUtil } from '@/utils/aiWebSearchUtils'
 import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
@@ -820,7 +851,7 @@ import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from 
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
-import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState } from '@/utils/sessionUtils'
+import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
 const market = useMarket()
@@ -999,12 +1030,17 @@ const lowContextMode = ref(false)
 const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
 const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
 const enableAnimationReplay = ref(false)
+const backgroundFolderName = ref('')
+const folderInput = ref<HTMLInputElement | null>(null)
+const loadedBackgroundCount = computed(() => market.live2d.backgroundImageMap.size)
+const totalBackgroundCount = computed(() => (backgroundImagesList as string[]).length)
 const selectedMessageIndex = ref<number | null>(null)
 const originalHQAssets = ref(true)
 const storyGenAssetQualityPreference = ref<AssetQualityMode>(localStorage.getItem('nikke_hq_assets') === 'false' ? 'low' : 'high')
 const previousAssetQualityBeforeLowPower = ref<AssetQualityMode | null>(null)
 const storyGenAnimationReplayPreference = ref(localStorage.getItem('nikke_enable_animation_replay') !== 'false')
 const previousAnimationReplayBeforeLowPower = ref<boolean | null>(null)
+const previousBackgroundImagesBeforeLowPower = ref<boolean | null>(null)
 
 // NIKKE Mode State
 const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'nikke')
@@ -1325,17 +1361,32 @@ const applyLowPowerModeState = (enabled: boolean) => {
   if (enabled) {
     previousAssetQualityBeforeLowPower.value ??= storyGenAssetQualityPreference.value
     previousAnimationReplayBeforeLowPower.value ??= storyGenAnimationReplayPreference.value
+    previousBackgroundImagesBeforeLowPower.value ??= market.live2d.backgroundImagesEnabled
     applyStoryGenAssetQuality('low')
     enableAnimationReplay.value = false
+    if (market.live2d.backgroundImagesEnabled) {
+      market.live2d.backgroundImagesEnabled = false
+      market.live2d.clearBackgroundImages()
+      backgroundFolderName.value = ''
+      localStorage.setItem('nikke_background_images_enabled', 'false')
+    }
     return
   }
 
   const restoredQuality = previousAssetQualityBeforeLowPower.value ?? storyGenAssetQualityPreference.value
   const restoredAnimationReplay = previousAnimationReplayBeforeLowPower.value ?? storyGenAnimationReplayPreference.value
+  const restoredBackgroundImages = previousBackgroundImagesBeforeLowPower.value ?? false
   previousAssetQualityBeforeLowPower.value = null
   previousAnimationReplayBeforeLowPower.value = null
+  previousBackgroundImagesBeforeLowPower.value = null
   applyStoryGenAssetQuality(restoredQuality)
   enableAnimationReplay.value = restoredAnimationReplay
+  market.live2d.backgroundImagesEnabled = restoredBackgroundImages
+  if (!restoredBackgroundImages) {
+    market.live2d.clearBackgroundImages()
+    backgroundFolderName.value = ''
+  }
+  localStorage.setItem('nikke_background_images_enabled', String(restoredBackgroundImages))
 }
 
 const assetQuality = computed({
@@ -1721,28 +1772,42 @@ const initializeSettings = async () => {
   }
   enableAnimationReplay.value = lowPowerMode.value ? false : storyGenAnimationReplayPreference.value
 
+  if (stored.backgroundImagesEnabled !== undefined) {
+    market.live2d.backgroundImagesEnabled = stored.backgroundImagesEnabled
+  }
+
   // Provider + model (needs async model fetching)
   if (stored.apiProvider) {
     apiProvider.value = stored.apiProvider
 
-    if (stored.apiProvider === 'opencode-go') {
-      await refreshOpenCodeGoModels()
-    } else if (stored.apiProvider === 'openrouter') {
-      openRouterModels.value = await fetchOpenRouterModels()
-    } else if (stored.apiProvider === 'pollinations') {
-      await refreshPollinationsModels()
-    }
-
-    let validModels: string[] = []
-    if (stored.apiProvider === 'gemini') {
-      validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
-    } else if (stored.apiProvider === 'opencode-go') {
-      validModels = openCodeGoModels.value.map((m) => m.value)
-    } else if (stored.apiProvider === 'openrouter') {
-      validModels = openRouterModels.value.map((m) => m.value)
-    } else if (stored.apiProvider === 'pollinations' && pollinationsModels.value.length > 0) {
-      validModels = pollinationsModels.value.map((m) => m.value)
-    }
+    const validModels = await resolveProviderModelsForSessionRestore(
+      stored.apiProvider,
+      {
+        refreshOpenCodeGoModels,
+        refreshPollinationsModels,
+        fetchOpenRouterModels: async () => await fetchOpenRouterModels()
+      },
+      {
+        get openRouterModels() {
+          return openRouterModels.value
+        },
+        set openRouterModels(value) {
+          openRouterModels.value = value
+        },
+        get openCodeGoModels() {
+          return openCodeGoModels.value
+        },
+        set openCodeGoModels(value) {
+          openCodeGoModels.value = value
+        },
+        get pollinationsModels() {
+          return pollinationsModels.value
+        },
+        set pollinationsModels(value) {
+          pollinationsModels.value = value
+        }
+      }
+    )
 
     if ((stored.apiProvider !== 'pollinations' && stored.apiProvider !== 'opencode-go') || validModels.length > 0) {
       const fallbackModel = stored.apiProvider === 'openrouter' ? openRouterModels.value[0]?.value : openCodeGoModels.value[0]?.value
@@ -1886,6 +1951,41 @@ const triggerRestore = () => {
   fileInput.value?.click()
 }
 
+const triggerFolderPicker = () => {
+  folderInput.value?.click()
+}
+
+const handleFolderSelection = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+
+  market.live2d.clearBackgroundImages()
+
+  backgroundFolderName.value = input.files[0].webkitRelativePath.split('/')[0]
+
+  const loadResult = market.live2d.loadBackgroundImages(input.files)
+  const feedback = formatBackgroundFolderLoadFeedback({
+    folderName: backgroundFolderName.value,
+    matchCount: loadResult.matchCount,
+    aliasMatchCount: loadResult.aliasMatches.length,
+    unmatchedImageCount: loadResult.unmatchedImageFiles.length
+  })
+  for (const message of feedback.info) console.log(message)
+  for (const message of feedback.warnings) console.warn(message)
+
+  input.value = ''
+}
+
+const onBackgroundImagesToggle = (enabled: boolean) => {
+  if (enabled && lowPowerMode.value) return
+  market.live2d.backgroundImagesEnabled = enabled
+  localStorage.setItem('nikke_background_images_enabled', String(enabled))
+  if (!enabled) {
+    market.live2d.clearBackgroundImages()
+    backgroundFolderName.value = ''
+  }
+}
+
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
 
@@ -1935,44 +2035,58 @@ const handleFileUpload = (event: Event) => {
 
         // Restore Settings — build valid model list, then validate
         if (data.settings) {
-          // If the saved provider is openrouter, fetch models first
           const savedProvider = data.settings.apiProvider
-          if (savedProvider === 'opencode-go') {
-            await refreshOpenCodeGoModels()
-          } else if (savedProvider === 'openrouter') {
-            openRouterModels.value = await fetchOpenRouterModels()
-          }
-
-          let validModels: string[] = []
-          if (savedProvider === 'gemini') {
-            validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
-          } else if (savedProvider === 'opencode-go') {
-            validModels = openCodeGoModels.value.map((m) => m.value)
-          } else if (savedProvider === 'openrouter') {
-            validModels = openRouterModels.value.map((m) => m.value)
-          }
+          const validModels = await resolveProviderModelsForSessionRestore(
+            savedProvider,
+            {
+              refreshOpenCodeGoModels,
+              refreshPollinationsModels,
+              fetchOpenRouterModels: async () => await fetchOpenRouterModels()
+            },
+            {
+              get openRouterModels() {
+                return openRouterModels.value
+              },
+              set openRouterModels(value) {
+                openRouterModels.value = value
+              },
+              get openCodeGoModels() {
+                return openCodeGoModels.value
+              },
+              set openCodeGoModels(value) {
+                openCodeGoModels.value = value
+              },
+              get pollinationsModels() {
+                return pollinationsModels.value
+              },
+              set pollinationsModels(value) {
+                pollinationsModels.value = value
+              }
+            }
+          )
 
           const validated = validateSessionSettings(data.settings, validModels)
-
-          // Apply validated settings to refs
-          if (validated.playbackMode !== undefined) playbackMode.value = validated.playbackMode
-          if (validated.yapEnabled !== undefined) market.live2d.yapEnabled = validated.yapEnabled
-          if (validated.ttsEnabled !== undefined) ttsEnabled.value = validated.ttsEnabled
-          if (validated.ttsEndpoint !== undefined) ttsEndpoint.value = validated.ttsEndpoint
-          if (validated.ttsProvider !== undefined) ttsProvider.value = validated.ttsProvider
-          if (validated.gptSovitsEndpoint !== undefined) gptSovitsEndpoint.value = validated.gptSovitsEndpoint
-          if (validated.gptSovitsBasePath !== undefined) gptSovitsBasePath.value = validated.gptSovitsBasePath
-          if (validated.tokenUsage !== undefined) tokenUsage.value = validated.tokenUsage
-          if (validated.enableContextCaching !== undefined) enableContextCaching.value = validated.enableContextCaching
-          if (validated.useLocalProfiles !== undefined) useLocalProfiles.value = validated.useLocalProfiles
-          if (validated.allowWebSearchFallback !== undefined) allowWebSearchFallback.value = validated.allowWebSearchFallback
-          if (validated.reasoningEffort !== undefined) reasoningEffort.value = validated.reasoningEffort
-          if (validated.autoCompactSummaries !== undefined) autoCompactSummaries.value = validated.autoCompactSummaries
-          if (validated.autoCompactFrequency !== undefined) autoCompactFrequency.value = validated.autoCompactFrequency
-          if (validated.apiProvider !== undefined) apiProvider.value = validated.apiProvider
-          if (validated.model !== undefined) model.value = validated.model
-          if (validated.modelWarning) {
-            chatHistory.value.push({ role: 'system', content: validated.modelWarning })
+          const modelWarning = applyValidatedSessionSettings({
+            validated,
+            playbackMode,
+            setYapEnabled: (value) => { market.live2d.yapEnabled = value },
+            ttsEnabled,
+            ttsEndpoint,
+            ttsProvider,
+            gptSovitsEndpoint,
+            gptSovitsBasePath,
+            tokenUsage,
+            enableContextCaching,
+            useLocalProfiles,
+            allowWebSearchFallback,
+            reasoningEffort,
+            autoCompactSummaries,
+            autoCompactFrequency,
+            apiProvider,
+            model
+          })
+          if (modelWarning) {
+            chatHistory.value.push({ role: 'system', content: modelWarning })
           }
         }
 
@@ -2735,6 +2849,7 @@ const wrappedSearchForCharacters = async (characterNames: string[]) => {
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
+  const isBgReady = market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0
   return generateSystemPromptUtil({
     enableWebSearch,
     effectiveCharacterProfiles: effectiveCharacterProfiles.value,
@@ -2748,7 +2863,10 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     currentUserPrompt: lastPrompt.value,
     chatHistory: chatHistory.value,
     playerCharacterName: activePlayerCharacterName.value,
-    customPlayerCharacterActive: isCustomPlayerCharacterActive.value
+    customPlayerCharacterActive: isCustomPlayerCharacterActive.value,
+    backgroundImagesEnabled: isBgReady,
+    backgroundImageMap: isBgReady ? market.live2d.backgroundImageMap : undefined,
+    currentBackgroundFilename: isBgReady ? market.live2d.currentBackground : undefined
   })
 }
 
@@ -3271,6 +3389,23 @@ const executeAction = async (data: any) => {
     }
   }
 
+  // Apply background image if specified
+  if (data.background && market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0) {
+    const backgroundSelection = resolveAiBackgroundSelection({
+      background: data.background,
+      availableFilenames: market.live2d.backgroundImageMap.keys()
+    })
+
+    if (backgroundSelection.action === 'clear') {
+      market.live2d.clearActiveBackground()
+    } else if (backgroundSelection.action === 'apply') {
+      const applied = backgroundSelection.filename ? market.live2d.applyBackground(backgroundSelection.filename) : false
+      if (!applied) {
+        console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
+      }
+    }
+  }
+
   // Prepare character update promise
   const characterUpdatePromise = (async () => {
     if (data.character) {
@@ -3570,6 +3705,8 @@ const resetSession = () => {
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
 
   if (confirmed) {
+    // Resetting the story should not keep the previous visual scene pinned to the
+    // page background, so clear any active blob URL even if the pack stays loaded.
     chatHistory.value = []
     characterProfiles.value = {}
     characterProgression.value = {}
@@ -3583,6 +3720,8 @@ const resetSession = () => {
     isLoadedSession.value = false
     lastPrompt.value = ''
     market.live2d.isVisible = false
+    market.live2d.current_id = 'c010'
+    market.live2d.clearActiveBackground()
     selectedMessageIndex.value = null
     nikkeOverlayVisible.value = false
     rosterRows.value = []

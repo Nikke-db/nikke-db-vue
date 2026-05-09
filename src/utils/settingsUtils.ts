@@ -26,6 +26,7 @@ export interface StoredSettings {
   model?: string
   playerCharacterUseCustom?: boolean
   playerCharacterName?: string
+  backgroundImagesEnabled?: boolean
 }
 
 /**
@@ -134,6 +135,11 @@ export function loadSettingsFromStorage(): StoredSettings {
   const savedModel = localStorage.getItem('nikke_model')
   if (savedModel) {
     result.model = savedModel
+  }
+
+  const savedBackgroundImages = localStorage.getItem('nikke_background_images_enabled')
+  if (savedBackgroundImages !== null) {
+    result.backgroundImagesEnabled = savedBackgroundImages === 'true'
   }
 
   return result

@@ -2,6 +2,8 @@ import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { type AttachmentInterface, type live2d_interface } from '@/utils/interfaces/live2d'
 import l2d from '@/utils/json/l2d.json'
+import { theme } from '@/utils/enum/globalParams'
+import { resolveCanonicalBackgroundFilename, type BackgroundLoadResult } from '@/utils/backgroundUtils'
 
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
@@ -62,6 +64,11 @@ export const useLive2dStore = defineStore('live2d', () => {
   const customLoad = ref(0)
   const customDefaultAnimationIdle = ref(true)
   const customLoader = ref<'skel' | 'json'>('skel') // whether the load a skel or json
+
+  const backgroundImagesEnabled = ref(false) as Ref<boolean>
+  const currentBackground = ref('') as Ref<string>
+  const currentBackgroundUrl = ref('') as Ref<string>
+  const backgroundImageMap = ref(new Map<string, File>()) as Ref<Map<string, File>>
 
   const filter = () => {
     const base_array: live2d_interface[] = l2d
@@ -292,6 +299,93 @@ export const useLive2dStore = defineStore('live2d', () => {
     layerPreviewMode.value = new Date().getTime()
   }
 
+  /**
+   * Load a user-selected background folder into the canonical filename map.
+   *
+   * Files in the downloaded ZIP do not always match our expected names exactly,
+   * so we resolve each uploaded filename to a canonical background key first.
+   * `matchCount` counts unique canonical backgrounds loaded, while `aliasMatches`
+   * reports typo/alias filenames that were accepted and remapped.
+   */
+  const loadBackgroundImages = (files: FileList): BackgroundLoadResult => {
+    const fileArray = Array.from(files)
+    let matchCount = 0
+    const aliasMatches: Array<{ uploaded: string; canonical: string }> = []
+    const unmatchedImageFiles: string[] = []
+
+    for (const file of fileArray) {
+      if (!file.type.startsWith('image/')) continue
+
+      const canonicalFilename = resolveCanonicalBackgroundFilename(file.name)
+      if (!canonicalFilename) {
+        unmatchedImageFiles.push(file.name)
+        continue
+      }
+
+      const isNewCanonicalMatch = !backgroundImageMap.value.has(canonicalFilename)
+      backgroundImageMap.value.set(canonicalFilename, file)
+      if (file.name !== canonicalFilename) {
+        aliasMatches.push({ uploaded: file.name, canonical: canonicalFilename })
+      }
+      if (isNewCanonicalMatch) {
+        matchCount++
+      }
+    }
+
+    return {
+      matchCount,
+      aliasMatches,
+      unmatchedImageFiles
+    }
+  }
+
+  /**
+   * Apply a previously loaded canonical background file to the page body.
+   *
+   * Revoke the previous object URL before creating the new one so repeated
+   * background switches do not leak blob URLs during long sessions.
+   */
+  const applyBackground = (filename: string): boolean => {
+    const file = backgroundImageMap.value.get(filename)
+    if (!file) return false
+
+    if (currentBackgroundUrl.value) {
+      URL.revokeObjectURL(currentBackgroundUrl.value)
+    }
+
+    const url = URL.createObjectURL(file)
+    currentBackgroundUrl.value = url
+    currentBackground.value = filename
+
+    document.body.style.backgroundImage = `url(${url})`
+    document.body.style.backgroundColor = '#000000'
+    document.body.style.backgroundSize = 'contain'
+    document.body.style.backgroundPosition = 'center'
+    document.body.style.backgroundRepeat = 'no-repeat'
+    document.body.style.backgroundAttachment = 'fixed'
+
+    return true
+  }
+
+  const clearActiveBackground = () => {
+    if (currentBackgroundUrl.value) {
+      URL.revokeObjectURL(currentBackgroundUrl.value)
+      currentBackgroundUrl.value = ''
+    }
+    currentBackground.value = ''
+    document.body.style.backgroundImage = 'none'
+    document.body.style.backgroundColor = theme.BACKGROUND_COLOR
+    document.body.style.backgroundSize = ''
+    document.body.style.backgroundPosition = ''
+    document.body.style.backgroundRepeat = ''
+    document.body.style.backgroundAttachment = ''
+  }
+
+  const clearBackgroundImages = () => {
+    clearActiveBackground()
+    backgroundImageMap.value.clear()
+  }
+
   return {
     filtered_l2d_Array,
     current_id,
@@ -348,6 +442,14 @@ export const useLive2dStore = defineStore('live2d', () => {
     layerEditorPreviewObj,
     layerPreviewMode,
     triggerLayerPreviewMode,
+    backgroundImagesEnabled,
+    currentBackground,
+    currentBackgroundUrl,
+    backgroundImageMap,
+    loadBackgroundImages,
+    applyBackground,
+    clearActiveBackground,
+    clearBackgroundImages,
     f
   }
 })
