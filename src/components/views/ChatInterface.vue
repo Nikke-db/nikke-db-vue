@@ -179,42 +179,17 @@
     </div>
 
     <!-- NIKKE Mode Overlay -->
-    <transition name="fade">
-      <div v-if="chatMode === 'nikke' && nikkeOverlayVisible" class="nikke-chat-overlay" :class="{ passthrough: nikkeOverlayPassthrough }">
-        <div class="nikke-vignette"></div>
-
-        <!-- Stop Button for NIKKE Mode -->
-        <div class="nikke-overlay-controls">
-          <n-button type="error" circle @mousedown.stop="stopGeneration" @touchstart.stop="stopGeneration" title="Stop Generation">
-            <template #icon
-              ><n-icon><Close /></n-icon
-            ></template>
-          </n-button>
-        </div>
-
-        <div class="nikke-dialogue-container">
-          <div v-if="nikkeCurrentSpeaker" class="nikke-speaker-name">
-            <div class="nikke-speaker-indicator" :style="{ backgroundColor: nikkeSpeakerColor }"></div>
-            <span>{{ nikkeCurrentSpeaker }}</span>
-          </div>
-          <div class="nikke-dialogue-text">
-            {{ nikkeDisplayedText }}
-          </div>
-        </div>
-
-        <!-- Game Mode Choices Overlay -->
-        <transition name="fade">
-          <div v-if="gameChoices.length > 0" class="game-choices-overlay">
-            <div class="choices-container">
-              <div v-for="(choice, index) in gameChoices" :key="index" class="choice-btn" @click="handleGameChoice(choice)">
-                <div class="choice-marker"></div>
-                <span class="choice-text">{{ (choice.text || (choice as any).label || '').replace(/^["']|["']$/g, '') }}</span>
-              </div>
-            </div>
-          </div>
-        </transition>
-      </div>
-    </transition>
+    <NikkeChatOverlay
+      :chatMode="chatMode"
+      :nikkeOverlayVisible="nikkeOverlayVisible"
+      :nikkeOverlayPassthrough="nikkeOverlayPassthrough"
+      :nikkeCurrentSpeaker="nikkeCurrentSpeaker"
+      :nikkeDisplayedText="nikkeDisplayedText"
+      :nikkeSpeakerColor="nikkeSpeakerColor"
+      :gameChoices="gameChoices"
+      @stop="stopGeneration"
+      @game-choice="handleGameChoice"
+    />
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
@@ -707,123 +682,13 @@
 
     <input type="file" ref="fileInput" style="display: none" accept=".json" @change="handleFileUpload" />
 
-    <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw">
-      <div class="guide-content">
-        <div v-if="guidePage === 1" class="guide-page">
-          <h3>🆕 What's New?</h3>
-          <div class="guide-section">
-            <ul>
-              <li>Added the ability to play as different characters (Beta)</li>
-              <li>Added OpenCode Go as a new AI provider</li>
-              <li>Improved lore awareness with location profiles</li>
-              <li>Added a Low-Context Mode for very small models</li>
-              <li>Added a Low Power Mode for mobile devices, low-end hardware or to save battery life</li>
-              <li>Improved Settings UI and many other significant under-the-hood enhancements</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 2" class="guide-page">
-          <h3>🚀 Welcome to the Story Generator</h3>
-          <p>Create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
-
-          <div class="guide-section">
-            <h4>🔑 API Setup</h4>
-            <ul>
-              <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenCode Go</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
-              <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
-              <li><strong>Cost:</strong> Be mindful of your provider's usage. You are solely responsible for all costs.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 3" class="guide-page">
-          <h3>🎭 Interaction Modes</h3>
-          <div class="guide-section">
-            <ul>
-              <li>
-                <strong>Roleplay Mode:</strong> You play as the Commander by default, or another supported character if selected in Settings. The AI controls the narrative.
-                <ul>
-                  <li>Use <code>[brackets]</code> for actions (e.g., <code>[I nod slowly]</code>).</li>
-                  <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
-                <ul>
-                  <li><strong>Tip:</strong> Start by defining the <strong>Setting</strong> and <strong>Characters</strong>.</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Game Mode:</strong> A NIKKE-like experience.
-                <ul>
-                  <li>The AI narrates, and you choose from generated options for the active player character.</li>
-                  <li>You can still override choices by clicking the red X and then typing as you would in Roleplay Mode..</li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 4" class="guide-page">
-          <h3>✨ Immersive Features</h3>
-          <div class="guide-section">
-            <ul>
-              <li><strong>Yap Mode:</strong> Enables real-time lip-syncing for characters on screen.</li>
-              <li><strong>Text-to-Speech (TTS):</strong> Experimental support for various providers, enabling voiced dialogue.</li>
-              <li><strong>Animation Replay:</strong> Click on any message in the history to replay the character's animation and expression from that moment.</li>
-              <li><strong>Playback:</strong> Choose <strong>Auto</strong> for a continuous flow or <strong>Manual</strong> to advance at your own pace.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 5" class="guide-page">
-          <h3>🧠 Knowledge & Search</h3>
-          <div class="guide-section">
-            <ul>
-              <li><strong>Nikke-DB Knowledge:</strong> Uses built-in character profiles for better accuracy and lower costs.</li>
-              <li><strong>AI Memory:</strong> The AI can track <strong>Character Progression</strong>, updating personalities and relationships as the story develops.</li>
-              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by some models) or fetch from the Nikke Wiki directly.</li>
-              <li><strong>Local Models:</strong> Connect to your own local LLM server (like LM Studio or Ollama) via the <strong>Local</strong> provider.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 6" class="guide-page">
-          <h3>💡 Tips & Troubleshooting</h3>
-          <div class="guide-section">
-            <ul>
-              <li><strong>Problems? Button:</strong> Use this if the AI is misbehaving, such as showing garbled text, using wrong speech styles for characters, etc.</li>
-              <li><strong>Model Quality:</strong> The experience varies greatly between models. Larger models generally perform better. Avoid using models tuned for other tasks such as coding.</li>
-              <li><strong>Currently Recommended Models:</strong> GLM-5.1, Claude Sonnet 4.6, Kimi K2.6, Grok 4.3/Grok 4.1 Fast. This is not a complete list.</li>
-              <li><strong>Save/Load:</strong> Use the <strong>Save</strong> icon to download your session. You can resume it later by loading the file.</li>
-              <li><strong>Context Usage:</strong> Adjust "Tokens Usage" in settings to balance between speed and cost. Default values recommended.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="guide-footer">
-          <div class="guide-steps">
-            <div v-for="p in 6" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
-          </div>
-          <div class="guide-actions">
-            <n-button v-if="guidePage > 1" @click="guidePage--" style="margin-right: 10px">
-              <template #icon
-                ><n-icon><ChevronLeft /></n-icon
-              ></template>
-              Back
-            </n-button>
-            <n-button v-if="guidePage < 6" type="primary" @click="guidePage++">
-              Next
-              <template #icon
-                ><n-icon><ChevronRight /></n-icon
-              ></template>
-            </n-button>
-            <n-button v-else type="primary" @click="closeGuide">Got it!</n-button>
-          </div>
-        </div>
-      </div>
-    </n-modal>
+    <StoryGuideModal
+      :showGuide="showGuide"
+      :guidePage="guidePage"
+      @update:showGuide="showGuide = $event"
+      @update:guidePage="guidePage = $event"
+      @close="closeGuide"
+    />
   </div>
 </template>
 
@@ -831,8 +696,8 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight, TextScale } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox, NTag } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
@@ -852,6 +717,8 @@ import { initChatLayout, createDragHandlers, createResizeHandlers, createViewpor
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
+import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
+import NikkeChatOverlay from '@/components/common/StoryGenerator/NikkeChatOverlay.vue'
 import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
 const market = useMarket()
