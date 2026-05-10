@@ -232,43 +232,37 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
   }
 }
 
-export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, useLocalProfiles: boolean, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<boolean> => {
+export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<boolean> => {
   logDebug('[searchForCharacters] Searching for:', characterNames)
 
-  if (useLocalProfiles) {
-    loadingStatus.value = 'Searching for characters in the database...'
-  } else {
-    loadingStatus.value = 'Searching the web for characters...'
-  }
+  loadingStatus.value = 'Searching for characters in the database...'
 
   let charsToSearch = [...characterNames]
 
-  // Check local profiles first if enabled
-  if (useLocalProfiles) {
-    const remainingChars: string[] = []
+  // Check local profiles first
+  const remainingChars: string[] = []
 
-    for (const name of charsToSearch) {
-      // Case-insensitive lookup in local profiles
-      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
-      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
-      const resolvedKey = variantKey || localKey
+  for (const name of charsToSearch) {
+    // Case-insensitive lookup in local profiles
+    const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
+    const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
+    const resolvedKey = variantKey || localKey
 
-      if (resolvedKey) {
-        const profile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
-        // Use the name requested by the AI as the key, but the data from the local profile
-        characterProfiles[name] = {
-          ...profile,
-          // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
-          id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
-        }
-        logDebug(`[searchForCharacters] Found local profile for ${name}`)
-      } else {
-        remainingChars.push(name)
+    if (resolvedKey) {
+      const profile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
+      // Use the name requested by the AI as the key, but the data from the local profile
+      characterProfiles[name] = {
+        ...profile,
+        // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
+        id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
       }
+      logDebug(`[searchForCharacters] Found local profile for ${name}`)
+    } else {
+      remainingChars.push(name)
     }
-
-    charsToSearch = remainingChars
   }
+
+  charsToSearch = remainingChars
 
   if (charsToSearch.length === 0) {
     logDebug('[searchForCharacters] All characters found locally.')
@@ -277,7 +271,7 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   }
 
   // If fallback is disabled, stop here
-  if (useLocalProfiles && !allowWebSearchFallback) {
+  if (!allowWebSearchFallback) {
     logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
     setRandomLoadingMessage()
     return false

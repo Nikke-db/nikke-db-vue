@@ -224,22 +224,7 @@
           <n-alert type="info" style="margin-bottom: 12px" title=""> Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB. </n-alert>
           <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> to get a required API key. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title=""> Users are responsible for any possible cost using this functionality. </n-alert>
-          <n-alert type="warning" style="margin-bottom: 12px" title="">
-            Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
-            <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
-              <template #trigger>
-                <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                  <Help />
-                </n-icon>
-              </template>
-              <div>
-                <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wiki to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
-                <p>Web search is used on the first turn and when new characters are introduced. You can disable this by enabling "Use Nikke-DB Knowledge".</p>
-                <p>It is strongly suggested to check your provider's documentation and model page for information regarding possible costs.</p>
-                <p>It is also recommended to select a limit on your API key to prevent unexpected charges.</p>
-              </div>
-            </n-popover>
-          </n-alert>
+
           <n-form-item label="Model" v-if="apiProvider !== 'local'">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
@@ -306,7 +291,7 @@
 
           <n-form-item v-if="showAdvancedSettings && isDev">
             <template #label>
-              Context Caching <span style="font-size: smaller">(Experimental)</span>
+              Context Caching
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -348,25 +333,8 @@
 
           <h4 class="settings-section-header accent-light-blue">Knowledge & Search</h4>
           <n-divider />
-          <n-form-item v-if="showAdvancedSettings">
-            <template #label>
-              Use Nikke-DB Knowledge <span style="font-size: smaller">(Recommended)</span>
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br /><br />
-                  Faster and saves API costs.
-                </div>
-              </n-popover>
-            </template>
-            <n-switch v-model:value="useLocalProfiles" :disabled="!isDev" />
-          </n-form-item>
 
-          <n-form-item v-if="showAdvancedSettings && useLocalProfiles">
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Allow Web Search Fallback <span style="font-size: smaller">(Recommended)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -589,7 +557,7 @@
           </n-form-item>
             <n-form-item v-if="showAdvancedSettings">
             <template #label>
-              Enable Background Images
+              Enable Background Images <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom" style="max-width: 360px">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -600,7 +568,7 @@
                   Displays a background image behind the Spine character, automatically selected by the AI based on the current scene and location.<br /><br />
                   <strong>Setup:</strong> Download the background image pack from the <em>Background Image Pack</em> button in the Live2D Viewer section, decompress the ZIP into a folder, then select that folder below.<br /><br />
                   Files are stored locally in memory and not actually uploaded. They are discarded when the page is closed or the option is turned off.<br /><br />
-                  <strong style="color: #e88080">Warning:</strong> Enabling this increases memory usage while active. The generator now receives a compact scene-key shortlist instead of the full filename list.
+                  <strong style="color: #e88080">Warning:</strong> Enabling this increases memory and tokens usage while active.
                 </div>
               </n-popover>
             </template>
@@ -734,7 +702,6 @@ const abortCurrentPlaybackForChoice = ref(false)
 const showSettings = ref(false)
 const showGuide = ref(false)
 const guidePage = ref(1)
-const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
 const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
@@ -1076,8 +1043,6 @@ const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
 
-if (!isDev) useLocalProfiles.value = true
-
 // AI Reminders state
 const showRemindersDropdown = ref(false)
 const invalidJsonToggle = ref(false)
@@ -1399,14 +1364,6 @@ watch(apiKey, async (newVal) => {
 
 watch(localUrl, (newVal) => {
   localStorage.setItem('nikke_local_url', newVal)
-})
-
-watch(useLocalProfiles, (newVal) => {
-  if (isDev || newVal) {
-    localStorage.setItem('nikke_use_local_profiles', String(newVal))
-  } else {
-    useLocalProfiles.value = true
-  }
 })
 
 watch(allowWebSearchFallback, (newVal) => {
@@ -1804,7 +1761,6 @@ const saveSession = () => {
     gptSovitsBasePath: gptSovitsBasePath.value,
     tokenUsage: tokenUsage.value,
     enableContextCaching: enableContextCaching.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     reasoningEffort: reasoningEffort.value,
     autoCompactSummaries: autoCompactSummaries.value,
@@ -1944,7 +1900,6 @@ const handleFileUpload = (event: Event) => {
             gptSovitsBasePath,
             tokenUsage,
             enableContextCaching,
-            useLocalProfiles,
             allowWebSearchFallback,
             reasoningEffort,
             autoCompactSummaries,
@@ -2409,12 +2364,12 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
 
-  // If using local profiles, we disable initial web search to force the "needs_search" flow
+  // Disable initial web search to force the "needs_search" flow
   // This allows us to check local JSON first before falling back to web search
-  const enableWebSearch = isFirstTurn && !useLocalProfiles.value
+  const enableWebSearch = false
 
-  // If using local profiles, pre-load profiles for any characters mentioned in the first prompt
-  if (isFirstTurn && useLocalProfiles.value && chatHistory.value.length > 0) {
+  // Pre-load profiles for any characters mentioned in the first prompt
+  if (isFirstTurn && chatHistory.value.length > 0) {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
     syncRosterFromPrompt(firstPrompt)
     // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
@@ -2712,7 +2667,7 @@ const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) 
 }
 
 const wrappedSearchForCharacters = async (characterNames: string[]) => {
-  return searchForCharacters(characterNames, characterProfiles.value, useLocalProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
+  return searchForCharacters(characterNames, characterProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
@@ -2742,7 +2697,6 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     model: model.value,
     apiKey: apiKey.value,
     enableContextCaching: enableContextCaching.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     modeIsGame: mode.value === 'game',
     enableWebSearch,
@@ -2757,7 +2711,6 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
   return await callGeminiImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
@@ -2769,7 +2722,6 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
   return await callPollinationsImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     modeIsGame: mode.value === 'game',
     enableWebSearch,
@@ -3129,22 +3081,20 @@ const executeAction = async (data: any) => {
         continue
       }
 
-      // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
-      if (useLocalProfiles.value) {
-        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const resolvedKey = variantKey || localKey
-        if (resolvedKey) {
-          logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
+      // 2. Check local profiles - ENFORCE READ-ONLY FROM DB
+      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const resolvedKey = variantKey || localKey
+      if (resolvedKey) {
+        logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
 
-          const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
-          // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
-          newProfiles[charName] = {
-            ...localProfile,
-            id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
-          }
-          continue
+        const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
+        // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
+        newProfiles[charName] = {
+          ...localProfile,
+          id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
         }
+        continue
       }
 
       if (typeof profile === 'object' && profile !== null) {

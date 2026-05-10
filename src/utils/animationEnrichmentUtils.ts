@@ -93,7 +93,7 @@ export const enrichActionsWithAnimations = async (
     let response: string
 
     if (apiProvider === 'gemini') {
-      response = await callGemini(messages, { model: model!, apiKey, useLocalProfiles: false, allowWebSearchFallback: false, signal })
+      response = await callGemini(messages, { model: model!, apiKey, allowWebSearchFallback: false, signal })
     } else if (apiProvider === 'opencode-go') {
       response = await callOpenCodeGo(messages, {
         model: model!,
@@ -106,7 +106,6 @@ export const enrichActionsWithAnimations = async (
         model: model!,
         apiKey,
         enableContextCaching: false,
-        useLocalProfiles: false,
         allowWebSearchFallback: false,
         modeIsGame: false,
         prompts: {} as any, // Not needed for this call
@@ -116,7 +115,6 @@ export const enrichActionsWithAnimations = async (
       response = await callPollinations(messages, {
         model: model!,
         apiKey,
-        useLocalProfiles: false,
         allowWebSearchFallback: false,
         modeIsGame: false,
         signal

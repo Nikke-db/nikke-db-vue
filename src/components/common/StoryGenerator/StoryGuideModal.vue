@@ -6,6 +6,7 @@
         <div class="guide-section">
           <ul>
             <li>Added the ability to play as different characters (Beta)</li>
+            <li>Added the ability to use dynamically-changing background images</li>
             <li>Added OpenCode Go as a new AI provider</li>
             <li>Improved lore awareness with location profiles</li>
             <li>Added a Low-Context Mode for very small models</li>

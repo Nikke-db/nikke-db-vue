@@ -212,7 +212,6 @@ export const callPollinations = async (
   opts: {
     model: string
     apiKey?: string
-    useLocalProfiles: boolean
     allowWebSearchFallback: boolean
     modeIsGame: boolean
     enableWebSearch?: boolean

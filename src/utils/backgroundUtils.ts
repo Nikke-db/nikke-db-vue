@@ -40,7 +40,7 @@ export type CurrentBackgroundPromptState = {
 }
 
 const VARIANT_SUFFIX_REGEX = /_(d|n|s|e|i|r)$/i
-const BACKGROUND_PROMPT_SCENE_LIMIT = 12
+const BACKGROUND_PROMPT_SCENE_LIMIT = 20
 const VARIANT_ORDER = ['default', 'day', 'night', 'sunset', 'event', 'special', 'alternate']
 const VARIANT_LABELS: Record<string, string> = {
   d: 'day',
@@ -128,7 +128,7 @@ const BACKGROUND_SCENE_OVERRIDES: Record<string, BackgroundSceneOverride> = {
   Hotel: { locations: ['Hotel'] },
   Library: { locations: ['Library'] },
   MachineRoom: { key: 'machine_room', label: 'Machine Room', locations: ['Workshop'] },
-  Mafiaoffice: { key: 'mafia_office', label: 'Mafia Office', locations: ['Seedy Club'] },
+  Mafiaoffice: { key: 'mafia_office', label: 'Mafia Office', locations: [] },
   MaidCafe: { key: 'maid_cafe', label: 'Maid Cafe', locations: ['Maid Cafe'] },
   MissilisOffice: { key: 'missilis_office', label: 'Missilis Office', locations: ['The Ark'] },
   NikkeCorridor: { key: 'nikke_corridor', label: 'Nikke Corridor', locations: ['The Ark'] },
@@ -148,11 +148,11 @@ const BACKGROUND_SCENE_OVERRIDES: Record<string, BackgroundSceneOverride> = {
   Theater: { locations: ['Theater'] },
   ToyShop: { key: 'toy_store', label: 'Toy Store', locations: ['Toy Store'] },
   TrainingField: { key: 'training_field', label: 'Training Field', locations: ['The Outpost'] },
-  WasteLand_01: { key: 'reclamation_site_01_wasteland_01', label: 'Reclamation Site Wasteland 01', locations: ['Reclamation Site 01'] },
-  WasteLand_02: { key: 'reclamation_site_01_wasteland_02', label: 'Reclamation Site Wasteland 02', locations: ['Reclamation Site 01'] },
-  WasteLand_03: { key: 'reclamation_site_01_wasteland_03', label: 'Reclamation Site Wasteland 03', locations: ['Reclamation Site 01'] },
-  WasteLand_04: { key: 'reclamation_site_01_wasteland_04', label: 'Reclamation Site Wasteland 04', locations: ['Reclamation Site 01'] },
-  Wasteland_03: { key: 'reclamation_site_01_wasteland_03_alt', label: 'Reclamation Site Wasteland 03 Alt', locations: ['Reclamation Site 01'] },
+  WasteLand_01: { key: 'wasteland_01', label: 'Wasteland 01', locations: ['Wasteland'] },
+  WasteLand_02: { key: 'wasteland_02', label: 'Wasteland 02', locations: ['Wasteland'] },
+  WasteLand_03: { key: 'wasteland_03', label: 'Wasteland 03', locations: ['Wasteland'] },
+  WasteLand_04: { key: 'wasteland_04', label: 'Wasteland 04', locations: ['Wasteland'] },
+  Wasteland_03: { key: 'wasteland_03_alt', label: 'Wasteland 03 Alt', locations: ['Wasteland'] },
   WhiteHouse: { key: 'courthouse', label: 'Courthouse', locations: ['Courthouse'] },
   WingOfVictory: { key: 'wings_of_victory_statue', label: 'Wings of Victory Statue', locations: ['Wings of Victory statue'] },
   Winter_AmusementPark: { key: 'winter_amusement_park', label: 'Winter Amusement Park', locations: ['Amusement Park'] },

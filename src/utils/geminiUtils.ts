@@ -96,11 +96,11 @@ export const callGeminiSummarization = async (messages: any[], apiKey: string, m
   return extractGeminiText(data)
 }
 
-export const callGemini = async (messages: any[], opts: { model: string; apiKey: string; useLocalProfiles: boolean; allowWebSearchFallback: boolean; enableWebSearch?: boolean; reasoningEffort?: string; signal?: AbortSignal }) => {
-  const { model, apiKey, useLocalProfiles, allowWebSearchFallback, enableWebSearch = false, reasoningEffort, signal } = opts
+export const callGemini = async (messages: any[], opts: { model: string; apiKey: string; allowWebSearchFallback: boolean; enableWebSearch?: boolean; reasoningEffort?: string; signal?: AbortSignal }) => {
+  const { model, apiKey, allowWebSearchFallback, enableWebSearch = false, reasoningEffort, signal } = opts
   const { contents, systemMessage } = buildGeminiContents(messages)
 
-  const shouldSearch = enableWebSearch && !(useLocalProfiles && !allowWebSearchFallback)
+  const shouldSearch = enableWebSearch && allowWebSearchFallback
 
   const requestBody: any = {
     contents,

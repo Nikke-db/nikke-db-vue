@@ -27,7 +27,6 @@ export interface SessionSettings {
   gptSovitsBasePath: string
   tokenUsage: string
   enableContextCaching: boolean
-  useLocalProfiles: boolean
   allowWebSearchFallback: boolean
   reasoningEffort: string
   autoCompactSummaries: boolean
@@ -78,7 +77,6 @@ export interface BuildSessionExportParams {
   gptSovitsBasePath: string
   tokenUsage: string
   enableContextCaching: boolean
-  useLocalProfiles: boolean
   allowWebSearchFallback: boolean
   reasoningEffort: string
   autoCompactSummaries: boolean
@@ -148,7 +146,6 @@ export function buildSessionExportData(params: BuildSessionExportParams): Sessio
       gptSovitsBasePath: params.gptSovitsBasePath,
       tokenUsage: params.tokenUsage,
       enableContextCaching: params.enableContextCaching,
-      useLocalProfiles: params.useLocalProfiles,
       allowWebSearchFallback: params.allowWebSearchFallback,
       reasoningEffort: params.reasoningEffort,
       autoCompactSummaries: params.autoCompactSummaries,
@@ -219,7 +216,6 @@ export interface ValidatedSessionSettings {
   gptSovitsBasePath?: string
   tokenUsage?: string
   enableContextCaching?: boolean
-  useLocalProfiles?: boolean
   allowWebSearchFallback?: boolean
   reasoningEffort?: string
   autoCompactSummaries?: boolean
@@ -283,7 +279,6 @@ export type ApplyValidatedSessionSettingsParams = {
   gptSovitsBasePath: { value: string }
   tokenUsage: { value: string }
   enableContextCaching: { value: boolean }
-  useLocalProfiles: { value: boolean }
   allowWebSearchFallback: { value: boolean }
   reasoningEffort: { value: string }
   autoCompactSummaries: { value: boolean }
@@ -304,7 +299,6 @@ export function applyValidatedSessionSettings(params: ApplyValidatedSessionSetti
   if (validated.gptSovitsBasePath !== undefined) params.gptSovitsBasePath.value = validated.gptSovitsBasePath
   if (validated.tokenUsage !== undefined) params.tokenUsage.value = validated.tokenUsage
   if (validated.enableContextCaching !== undefined) params.enableContextCaching.value = validated.enableContextCaching
-  if (validated.useLocalProfiles !== undefined) params.useLocalProfiles.value = validated.useLocalProfiles
   if (validated.allowWebSearchFallback !== undefined) params.allowWebSearchFallback.value = validated.allowWebSearchFallback
   if (validated.reasoningEffort !== undefined) params.reasoningEffort.value = validated.reasoningEffort
   if (validated.autoCompactSummaries !== undefined) params.autoCompactSummaries.value = validated.autoCompactSummaries
@@ -374,9 +368,6 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
   }
   if (typeof settings.enableContextCaching === 'boolean') {
     result.enableContextCaching = settings.enableContextCaching
-  }
-  if (typeof settings.useLocalProfiles === 'boolean') {
-    result.useLocalProfiles = settings.useLocalProfiles
   }
   if (typeof settings.allowWebSearchFallback === 'boolean') {
     result.allowWebSearchFallback = settings.allowWebSearchFallback

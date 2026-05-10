@@ -520,7 +520,6 @@ export const callOpenRouter = async (
     model: string
     apiKey: string
     enableContextCaching: boolean
-    useLocalProfiles: boolean
     allowWebSearchFallback: boolean
     modeIsGame: boolean
     enableWebSearch?: boolean
@@ -530,7 +529,7 @@ export const callOpenRouter = async (
     signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, enableContextCaching, useLocalProfiles, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, signal } = opts
+  const { model, apiKey, enableContextCaching, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, signal } = opts
 
   let processedMessages = messages
 
@@ -575,7 +574,7 @@ export const callOpenRouter = async (
 
   const buildWebPlugin = () => {
     if (!enableWebSearch) return undefined
-    if (useLocalProfiles && !allowWebSearchFallback) return undefined
+    if (!allowWebSearchFallback) return undefined
     return [{ id: 'web', max_results: 10 }]
   }
 
