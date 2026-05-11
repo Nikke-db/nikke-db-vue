@@ -3272,6 +3272,54 @@ const executeAction = async (data: any) => {
           const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
 
           if (charObj) {
+            // Auto-load character profile from local JSON if not already known.
+            // This ensures profiles are injected into the system prompt for future
+            // turns even when the AI omits `needs_search` and `memory` blocks.
+            const charName = charObj.name
+            const profileAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
+              (k) => k.toLowerCase() === charName.toLowerCase()
+            )
+            if (!profileAlreadyKnown) {
+              const localKey = Object.keys(localCharacterProfiles).find(
+                (k) => k.toLowerCase() === charName.toLowerCase()
+              )
+              const variantKey = Object.keys(variantCharacterProfiles).find(
+                (k) => k.toLowerCase() === charName.toLowerCase()
+              )
+              const resolvedKey = variantKey || localKey
+              if (resolvedKey) {
+                const sourceProfile = variantKey
+                  ? (variantCharacterProfiles as Record<string, any>)[resolvedKey]
+                  : (localCharacterProfiles as Record<string, any>)[resolvedKey]
+                const newEntry = {
+                  ...sourceProfile,
+                  id: sourceProfile.id || charObj.id
+                }
+                characterProfiles.value = { ...characterProfiles.value, [charName]: newEntry }
+                logDebug(`[Chat] Auto-loaded local profile for new character: ${charName} (${charObj.id})`)
+
+                if (variantKey && charName.includes(':')) {
+                  const baseName = charName.split(':')[0].trim()
+                  const baseAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
+                    (k) => k.toLowerCase() === baseName.toLowerCase()
+                  )
+                  if (!baseAlreadyKnown) {
+                    const baseProfileKey = Object.keys(localCharacterProfiles).find(
+                      (k) => k.toLowerCase() === baseName.toLowerCase()
+                    )
+                    if (baseProfileKey) {
+                      characterProfiles.value = {
+                        ...characterProfiles.value,
+                        [baseName]: { ...(localCharacterProfiles as Record<string, any>)[baseProfileKey] }
+                      }
+                      logDebug(`[Chat] Also auto-loaded base profile for variant: ${baseName}`)
+                    }
+                  }
+                }
+                syncRosterFromProfiles([charName], 'ai')
+              }
+            }
+
             // Ensure visible
             logDebug('[Chat] Setting visibility to true')
             market.live2d.isVisible = true
