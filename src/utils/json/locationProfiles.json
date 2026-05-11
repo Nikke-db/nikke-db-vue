@@ -662,5 +662,24 @@
         },
         "visuals": "A futuristic and highly advanced settlement hidden by optical camouflage in a remote surface region. It features lush, genetically modified gardens that replicate pre-invasion flora and fauna, highly advanced research facilities, and a massive tower housing a supermassive particle cannon.",
         "description": "Eden is an advanced, self-sufficient settlement on the surface where humans and Nikkes coexist as equals in theory, though currently no human lives there and only a handful of Nikke are part of it. Founded by Dorothy, Johan, and Cecil using a repurposed First Rapture War laboratory, it utilizes cutting-edge technology like optical camouflage and advanced energy infrastructure to remain hidden. Key facilities include the Garden of Eden, which hosts a near-perfect replica of pre-invasion flora and fauna; the Central Research Facility for advanced weaponry and medical research; and Eden's Spear, a supermassive particle cannon capable of devastating attacks. The settlement is guided by seven edicts focused on capability, protection, and the ultimate goal of reclaiming the surface. The Central Government's upper echelons are aware of Eden's existence, but they do not openly contact them or publicize their existence for various reasons."
+    },
+    "Wasteland": {
+        "aliases": [
+            "Wasteland",
+            "the Wasteland",
+            "surface wasteland"
+        ],
+        "profileKeywords": [
+            "Wasteland",
+            "wasteland"
+        ],
+        "relatedCharacters": [],
+        "triggerSources": {
+            "userText": true,
+            "recentChat": true,
+            "profileText": false
+        },
+        "visuals": "Vast barren landscapes of slagged, cratered terrain with zero greenery; unrecognizable ruins and scattered wreckage under open skies.",
+        "description": "The Wasteland is the barren, desolate surface region of extreme hostility, marked by slagged earth and total landscape alteration."
     }
 }
