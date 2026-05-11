@@ -130,7 +130,7 @@
           <div v-if="showRosterList" class="story-character-list">
             <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
               <n-select class="story-character-select" :value="entry.selection" :options="availableRosterOptions" filterable placeholder="Character" @update:value="(val) => updateRosterSelection(entry, val as string)" />
-              <n-select v-if="parseSelectionValue(entry.selection)?.type === 'base'" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
+              <n-select v-if="getSkinOptionsForEntry(entry).length > 0" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
               <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
               <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
             </div>
@@ -682,7 +682,7 @@ import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, cal
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
-import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
@@ -1316,8 +1316,10 @@ const updateRosterSkin = (entry: StoryCharacterEntry, skinId: string) => {
 
 const getSkinOptionsForEntry = (entry: StoryCharacterEntry) => {
   const parsed = parseSelectionValue(entry.selection)
-  if (!parsed || parsed.type !== 'base') return []
-  return getSkinOptionsForBase(characterCatalog, parsed.baseName)
+  if (!parsed) return []
+  if (parsed.type === 'base') return getSkinOptionsForBase(characterCatalog, parsed.baseName)
+  if (parsed.type === 'variant') return getSkinOptionsForVariant(characterCatalog, parsed.variantId)
+  return []
 }
 
 const syncRosterFromProfiles = (names: string[], source: 'ai' | 'user') => {
@@ -1325,7 +1327,12 @@ const syncRosterFromProfiles = (names: string[], source: 'ai' | 'user') => {
     const selectionInfo = getSelectionForName(name, characterCatalog)
     if (!selectionInfo) continue
     const parsed = parseSelectionValue(selectionInfo.selection)
-    const skinId = selectionInfo.skinId || (parsed?.type === 'base' ? getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value : undefined)
+    let skinId = selectionInfo.skinId
+    if (!skinId && parsed?.type === 'base') {
+      skinId = getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value
+    } else if (!skinId && parsed?.type === 'variant') {
+      skinId = getSkinOptionsForVariant(characterCatalog, parsed.variantId)[0]?.value
+    }
     ensureRosterEntry(selectionInfo.selection, skinId, source)
   }
 }
@@ -1337,7 +1344,12 @@ const syncRosterFromPrompt = (prompt: string) => {
     const selectionInfo = getSelectionForName(characterCatalog.idToName[id] || id, characterCatalog)
     if (!selectionInfo) continue
     const parsed = parseSelectionValue(selectionInfo.selection)
-    const skinId = selectionInfo.skinId || (parsed?.type === 'base' ? getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value : undefined)
+    let skinId = selectionInfo.skinId
+    if (!skinId && parsed?.type === 'base') {
+      skinId = getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value
+    } else if (!skinId && parsed?.type === 'variant') {
+      skinId = getSkinOptionsForVariant(characterCatalog, parsed.variantId)[0]?.value
+    }
     ensureRosterEntry(selectionInfo.selection, skinId, 'user')
   }
 }
@@ -2398,15 +2410,14 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       }
     }
 
-    // Colon variants (e.g., "Anis: Sparkling Summer") are mutually exclusive with their
-    // base characters. If a variant is matched, drop the base name to avoid injecting both
-    // profiles into the system prompt and confusing the AI about which character to use.
-    const matchedVariantBases = new Set(foundNames.filter((n) => n.includes(':')).map((n) => n.split(':')[0].trim()))
-    const deduplicatedNames = foundNames.filter((name) => !(name.includes(':') === false && matchedVariantBases.has(name)))
-
-    if (deduplicatedNames.length > 0 && !isStopped.value) {
-      logDebug('[callAI] Pre-loading local profiles for:', deduplicatedNames)
-      await wrappedSearchForCharacters(deduplicatedNames)
+    // Both variant and base character profiles are now injected together. Variant
+    // profiles (e.g., "Anis: Star") carry variant-specific details, while base
+    // profiles (e.g., "Anis") provide complementary backstory and personality
+    // context. searchForCharacters will auto-inject base profiles for any
+    // variant names it encounters.
+    if (foundNames.length > 0 && !isStopped.value) {
+      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
+      await wrappedSearchForCharacters(foundNames)
     }
   }
 
@@ -3093,6 +3104,19 @@ const executeAction = async (data: any) => {
         newProfiles[charName] = {
           ...localProfile,
           id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
+        }
+
+        // When a variant is loaded, also inject the base profile for context
+        if (variantKey && charName.includes(':')) {
+          const baseName = charName.split(':')[0].trim()
+          const alreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (!alreadyKnown && !newProfiles[baseName]) {
+            const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+            if (baseKey) {
+              newProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
+              logDebug(`[AI Memory] Also loading base profile for variant "${charName}": ${baseName}`)
+            }
+          }
         }
         continue
       }

@@ -1437,6 +1437,29 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
       filtered[name] = filteredProfile
     }
 
+    // Merge base character context into variant profiles and remove standalone base entries.
+    // This gives the AI the base character's backstory/personality/relationships as labeled
+    // reference fields nested inside the variant profile, without confusing the AI into
+    // thinking two separate characters are present.
+    for (const [name] of Object.entries(filtered)) {
+      if (!name.includes(':')) continue
+
+      const baseName = name.split(':')[0].trim()
+      const baseProfile = filtered[baseName]
+      if (!baseProfile || !baseProfile.backstory) continue
+
+      const variant = filtered[name]
+
+      variant.base_character = baseName
+      variant.base_backstory = baseProfile.backstory
+      if (baseProfile.personality) variant.base_personality = baseProfile.personality
+      if (baseProfile.speech_style) variant.base_speech_style = baseProfile.speech_style
+      if (baseProfile.relationships) variant.base_relationships = baseProfile.relationships
+
+      // Remove the standalone base entry — it's now nested inside the variant
+      delete filtered[baseName]
+    }
+
     return filtered
   }
 
@@ -1452,6 +1475,19 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
   }
 
   for (const name of knownCharacterNames) {
+    // Skip base character profiles that are loaded purely for context
+    // (because a variant is the active character).  Prevents the AI
+    // from thinking two separate characters are present.
+    if (!name.includes(':')) {
+      const hasVariantInRoster = rosterRows.some((entry) => {
+        const sel = parseSelectionValue(entry.selection)
+        if (sel?.type !== 'variant') return false
+        const variantName = characterCatalog.idToName[sel.variantId]
+        return variantName && variantName.split(':')[0].trim().toLowerCase() === name.toLowerCase()
+      })
+      if (hasVariantInRoster) continue
+    }
+
     if (name.toLowerCase() === 'commander') {
       if (!relevantCharacterIds.some((r) => r.includes('= commander'))) {
         relevantCharacterIds.push('Commander = commander')

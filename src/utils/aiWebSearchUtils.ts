@@ -257,6 +257,20 @@ export const searchForCharacters = async (characterNames: string[], characterPro
         id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
       }
       logDebug(`[searchForCharacters] Found local profile for ${name}`)
+
+      // When a variant profile (e.g., "Anis: Star") is loaded, also inject the
+      // base character profile (e.g., "Anis") for context — it contains backstory
+      // and personality data that complements the variant-specific information.
+      if (variantKey && name.includes(':')) {
+        const baseName = name.split(':')[0].trim()
+        if (!characterProfiles[baseName]) {
+          const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (baseKey) {
+            characterProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
+            logDebug(`[searchForCharacters] Also loaded base profile for variant "${name}": ${baseName}`)
+          }
+        }
+      }
     } else {
       remainingChars.push(name)
     }
