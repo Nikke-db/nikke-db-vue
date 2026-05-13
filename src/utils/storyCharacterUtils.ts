@@ -23,6 +23,7 @@ type CharacterVariant = {
   id: string
   name: string
   baseName: string
+  skins: CharacterItem[]
 }
 
 export type CharacterCatalog = {
@@ -41,6 +42,11 @@ const isIdFiltered = (id: string) => filteredIds.has(id)
 
 const toKey = (value: string) => (value || '').trim().toLowerCase()
 
+const isCommanderLikeName = (name: string) => {
+  const key = toKey(name)
+  return key === 'commander' || key.startsWith('commander (')
+}
+
 // Override map: IDs that should appear as skins under a specific base character
 // in the Story/Roleplaying Generator instead of being treated as separate entries.
 // These entries bypass the normal name/ID pattern matching and are injected directly
@@ -57,6 +63,7 @@ const buildBaseMap = (items: CharacterItem[]) => {
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
     if (isOverrideId(item.id)) continue
+    if (isCommanderLikeName(item.name)) continue
     if (isVariantName(item.name)) continue
     if (item.id.includes('_')) continue
 
@@ -87,6 +94,18 @@ const findBaseNameForSkin = (name: string, baseNames: string[]) => {
   return matched
 }
 
+const findVariantForSkin = (name: string, variants: CharacterVariant[]): CharacterVariant | null => {
+  const lower = toKey(name)
+  const sorted = [...variants].sort((a, b) => b.name.length - a.name.length)
+  for (const variant of sorted) {
+    const variantLower = toKey(variant.name)
+    if (!lower.startsWith(variantLower)) continue
+    const nextChar = name.slice(variant.name.length, variant.name.length + 1)
+    if (nextChar === ' ') return variant
+  }
+  return null
+}
+
 export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterItem[]): CharacterCatalog => {
   const idToName: Record<string, string> = {}
   const nameToId: Record<string, string> = {}
@@ -95,6 +114,7 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
     if (isOverrideId(item.id)) continue
+    if (isCommanderLikeName(item.name)) continue
     idToName[item.id] = item.name
 
     // For nameToId, keep the lowest ID when there are duplicates
@@ -112,10 +132,15 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
     if (!item?.name || !item?.id) continue
     if (isIdFiltered(item.id)) continue
     if (isOverrideId(item.id)) continue
+    if (isCommanderLikeName(item.name)) continue
 
     if (isVariantName(item.name)) {
+      if (item.id.includes('_')) {
+        // Skin of a variant — handled in second pass below
+        continue
+      }
       const baseName = item.name.split(':')[0].trim()
-      variants.push({ id: item.id, name: item.name, baseName })
+      variants.push({ id: item.id, name: item.name, baseName, skins: [] })
       continue
     }
 
@@ -131,6 +156,26 @@ export const buildCharacterCatalog = (items: CharacterItem[] = l2d as CharacterI
   for (const baseName of baseNames) {
     baseMap[baseName].skins = baseMap[baseName].skins.filter((skin) => !isIdFiltered(skin.id))
     baseMap[baseName].skins.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  // Second pass: assign skins to variant characters
+  for (const item of items) {
+    if (!item?.name || !item?.id) continue
+    if (isIdFiltered(item.id)) continue
+    if (isOverrideId(item.id)) continue
+    if (!item.id.includes('_')) continue
+    if (!isVariantName(item.name)) continue
+
+    const variant = findVariantForSkin(item.name, variants)
+    if (variant) {
+      variant.skins.push({ id: item.id, name: item.name })
+    }
+  }
+
+  // Filter and sort variant skins
+  for (const variant of variants) {
+    variant.skins = variant.skins.filter((skin) => !isIdFiltered(skin.id))
+    variant.skins.sort((a, b) => a.name.localeCompare(b.name))
   }
 
   // Process skin overrides: inject override entries as skins under their target base character
@@ -189,6 +234,16 @@ export const getSkinOptionsForBase = (catalog: CharacterCatalog, baseName: strin
   return options
 }
 
+export const getSkinOptionsForVariant = (catalog: CharacterCatalog, variantId: string) => {
+  const variant = catalog.variants.find((v) => v.id === variantId)
+  if (!variant) return []
+  const options = [{ label: `Default (${variant.name})`, value: variant.id }]
+  for (const skin of variant.skins) {
+    options.push({ label: skin.name, value: skin.id })
+  }
+  return options
+}
+
 export const getSelectionForName = (name: string, catalog: CharacterCatalog): { selection: string; skinId?: string } | null => {
   if (!name) return null
   const key = toKey(name)
@@ -196,6 +251,13 @@ export const getSelectionForName = (name: string, catalog: CharacterCatalog): { 
 
   if (exactId) {
     if (isVariantName(name)) {
+      // Check if this is a variant skin (has '_' in ID and matches a parent variant)
+      if (exactId.includes('_')) {
+        const variant = findVariantForSkin(name, catalog.variants)
+        if (variant) {
+          return { selection: getSelectionValueForVariant(variant.id), skinId: exactId }
+        }
+      }
       return { selection: getSelectionValueForVariant(exactId) }
     }
 
@@ -237,6 +299,13 @@ export const getSelectionForId = (id: string, catalog: CharacterCatalog): { sele
   if (!name) return null
 
   if (isVariantName(name)) {
+    // Check if this is a variant skin (has '_' in ID and matches a parent variant)
+    if (id.includes('_')) {
+      const variant = findVariantForSkin(name, catalog.variants)
+      if (variant) {
+        return { selection: getSelectionValueForVariant(variant.id), skinId: id }
+      }
+    }
     return { selection: getSelectionValueForVariant(id) }
   }
 
@@ -259,7 +328,7 @@ export const getSelectedCharacterId = (entry: StoryCharacterEntry, catalog: Char
   if (!selection) return null
 
   if (selection.type === 'variant') {
-    return selection.variantId
+    return entry.skinId || selection.variantId
   }
 
   const base = catalog.baseMap[selection.baseName]

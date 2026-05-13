@@ -52,11 +52,23 @@
     "id": "c016_02"
   },
   {
-    "name": "Anis",
+    "name": "Rapi: Red Hood Shining Light",
+    "id": "c016_03"
+  },
+  {
+    "name": "Anis: Star",
     "id": "c017"
   },
   {
-    "name": "Neon",
+    "name": "Anis: Star Starlight",
+    "id": "c017_01"
+  },
+  {
+    "name": "Anis: Star T.T. STAR",
+    "id": "c017_02"
+  },
+  {
+    "name": "Neon: Vision Eye",
     "id": "c018"
   },
   {
@@ -648,6 +660,10 @@
     "id": "c233_01"
   },
   {
+    "name": "Dorothy Luna Light",
+    "id": "c233_02"
+  },
+  {
     "name": "Dorothy (CN)",
     "id": "c233_80"
   },
@@ -714,6 +730,10 @@
   {
     "name": "Liberalio",
     "id": "c262"
+  },
+  {
+    "name": "Liberalio Dreaming Lake",
+    "id": "c262_01"
   },
   {
     "name": "Indivilia",
@@ -1172,11 +1192,11 @@
     "id": "c513_02"
   },
   {
-    "name": "Grave the Great (GraGre)",
+    "name": "Grave",
     "id": "c514"
   },
   {
-    "name": "Grave the Great (GraGre) Beatiful You",
+    "name": "Grave Beatiful You",
     "id": "c514_01"
   },
   {
@@ -1268,8 +1288,18 @@
     "id": "c600"
   },
   {
+    "name": "Mint",
+    "id": "c600_01",
+    "f": "c600_01"
+  },
+  {
     "name": "Prika",
     "id": "c601"
+  },
+  {
+    "name": "Prika",
+    "id": "c601_01",
+    "f": "c601_01"
   },
   {
     "name": "Mekami Shifty",
@@ -1500,7 +1530,7 @@
     "id": "c850_03"
   },
   {
-    "name": "Raven Keyhole Dress",
+    "name": "Raven",
     "id": "c851"
   },
   {
@@ -2008,6 +2038,14 @@
     "id": "c9023"
   },
   {
+    "name": "Yoyo",
+    "id": "c9024"
+  },
+  {
+    "name": "Egovista",
+    "id": "c9025"
+  },
+  {
     "name": "Amy",
     "id": "c9026"
   },
@@ -2406,6 +2444,21 @@
   {
     "name": "Smol Emilia",
     "id": "smol_emilia"
+  },
+  {
+    "name": "Smol Anis TTS",
+    "id": "smol_anis",
+    "f": "tts_c017_02"
+  },
+  {
+    "name": "Smol Mint TTS",
+    "id": "smol_mint",
+    "f": "tts_c600_00"
+  },
+  {
+    "name": "Smol Prika TTS",
+    "id": "smol_prika",
+    "f": "tts_c601_00"
   },
   {
     "name": "AZX Service Time 1",

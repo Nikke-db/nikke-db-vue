@@ -4,7 +4,7 @@
  * Backstory Update Script
  *
  * This script updates existing characters in characterProfiles.json or characterProfilesVariants.json
- * by fetching wiki content and using either Gemini 3 Pro or Grok 4.1 Fast to extract information.
+ * by fetching wiki content and using Gemini, OpenRouter, or Pollinations to extract information.
  *
  * Usage:
  *   node scripts/updateBackstories.js
@@ -19,6 +19,7 @@
  * Environment Variables:
  *   GEMINI_API_KEY - Your Gemini API key
  *   OPENROUTER_API_KEY - Your OpenRouter API key
+ *   POLLINATIONS_API_KEY - Your Pollinations API key
  *   RATE_LIMIT_MS - Delay between API calls in milliseconds (default: 2000)
  *
  */
@@ -32,7 +33,9 @@ const readline = require('readline')
 const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
 const OPENROUTER_MODEL = 'x-ai/grok-4.1-fast'
+const POLLINATIONS_MODELS = ['grok', 'grok-large', 'claude-fast']
 const RATE_LIMIT_MS = parseInt(process.env.RATE_LIMIT_MS) || 2000
 
 const PROFILES_BASE_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfiles.json')
@@ -58,14 +61,32 @@ let UPDATE_SCOPE = 'all' // 'single' or 'all'
 let API_PROVIDER = null
 let GEMINI_API_KEY = process.env.GEMINI_API_KEY
 let OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+let POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY
+let POLLINATIONS_MODEL = null
 
-if (!GEMINI_API_KEY && !OPENROUTER_API_KEY) {
-  console.error('Error: Either GEMINI_API_KEY or OPENROUTER_API_KEY environment variable is required')
+if (!GEMINI_API_KEY && !OPENROUTER_API_KEY && !POLLINATIONS_API_KEY) {
+  console.error('Error: GEMINI_API_KEY, OPENROUTER_API_KEY, or POLLINATIONS_API_KEY environment variable is required')
   console.error('Set one with:')
   console.error('  export GEMINI_API_KEY=your_gemini_key_here')
   console.error('  OR')
   console.error('  export OPENROUTER_API_KEY=your_openrouter_key_here')
+  console.error('  OR')
+  console.error('  export POLLINATIONS_API_KEY=your_pollinations_key_here')
   process.exit(1)
+}
+
+function getProviderDisplayName() {
+  if (API_PROVIDER === 'openrouter') return 'OpenRouter'
+  if (API_PROVIDER === 'pollinations') return 'Pollinations'
+  if (API_PROVIDER === 'gemini') return 'Gemini'
+  return API_PROVIDER || 'Unknown'
+}
+
+function getProviderLogLabel() {
+  if (API_PROVIDER === 'pollinations' && POLLINATIONS_MODEL) {
+    return `${getProviderDisplayName()} (${POLLINATIONS_MODEL})`
+  }
+  return getProviderDisplayName()
 }
 
 // Prompt template for base characters (backstory only)
@@ -624,6 +645,90 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
   }
 }
 
+// Call Pollinations API to extract data
+async function extractDataPollinations(characterName, wikiContent, imageUrl = null, modeOverride = null, extraContext = null) {
+  const effectiveMode = modeOverride || MODE
+  let prompt
+  let content
+
+  if (effectiveMode === 'visual' && imageUrl) {
+    // Visual mode: use vision capabilities
+    prompt = VISUAL_PROMPT
+    content = [
+      {
+        type: 'text',
+        text: prompt
+      },
+      {
+        type: 'image_url',
+        image_url: {
+          url: imageUrl
+        }
+      }
+    ]
+  } else {
+    // Text mode: use appropriate prompt
+    let promptTemplate
+    if (effectiveMode === 'base') {
+      promptTemplate = BASE_PROMPT
+    } else if (effectiveMode === 'commander') {
+      promptTemplate = COMMANDER_RELATIONSHIP_PROMPT
+    } else if (effectiveMode === 'update') {
+      promptTemplate = UPDATE_BACKSTORY_PROMPT
+    } else {
+      promptTemplate = VARIANTS_PROMPT
+    }
+    prompt = promptTemplate.replace('{name}', characterName).replace('{content}', wikiContent)
+    if (effectiveMode === 'update' && extraContext?.existingBackstory) {
+      prompt = prompt.replace('{existing_backstory}', extraContext.existingBackstory)
+    }
+    content = prompt
+  }
+
+  const requestBody = {
+    model: POLLINATIONS_MODEL,
+    messages: [
+      {
+        role: 'user',
+        content: content
+      }
+    ],
+    temperature: 0.3,
+    max_tokens: 4096
+  }
+
+  try {
+    const response = await fetch(POLLINATIONS_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+
+      throw new Error(`API error: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+
+    const text = data.choices?.[0]?.message?.content
+
+    if (!text) {
+      throw new Error('No content in API response')
+    }
+
+    return parseApiResponse(text, characterName, modeOverride)
+  } catch (e) {
+    console.error(`  Error extracting data for ${characterName}:`, e.message)
+    
+    return null
+  }
+}
+
 // Parse API response and extract fields
 function parseApiResponse(text, characterName, modeOverride = null) {
   const effectiveMode = modeOverride || MODE
@@ -957,35 +1062,20 @@ async function selectUpdateTarget() {
   }
 }
 
-// Select API provider
-async function selectProvider() {
+// Select Pollinations model
+async function selectPollinationsModel() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   })
 
-  // If only one key is available, use it automatically
-  if (GEMINI_API_KEY && !OPENROUTER_API_KEY) {
-    console.log('Using Gemini API (only GEMINI_API_KEY found)')
-    API_PROVIDER = 'gemini'
-    rl.close()
-    return
-  }
-
-  if (!GEMINI_API_KEY && OPENROUTER_API_KEY) {
-    console.log('Using OpenRouter API (only OPENROUTER_API_KEY found)')
-    API_PROVIDER = 'openrouter'
-    rl.close()
-    return
-  }
-
-  // Both keys available - ask user
-  console.log('\nMultiple API keys found. Which provider would you like to use?')
-  console.log('1) Gemini (Google)')
-  console.log('2) OpenRouter (x-ai/grok-4.1-fast)')
+  console.log('\nWhich Pollinations model would you like to use?')
+  console.log('1) grok')
+  console.log('2) grok-large')
+  console.log('3) claude-fast')
 
   const answer = await new Promise((resolve) => {
-    rl.question('\nEnter choice (1 or 2): ', (input) => {
+    rl.question('\nEnter choice (1, 2, or 3): ', (input) => {
       resolve(input.trim())
     })
   })
@@ -993,11 +1083,85 @@ async function selectProvider() {
   rl.close()
 
   if (answer === '2') {
-    API_PROVIDER = 'openrouter'
-    console.log('Selected: OpenRouter\n')
+    POLLINATIONS_MODEL = 'grok-large'
+  } else if (answer === '3') {
+    POLLINATIONS_MODEL = 'claude-fast'
   } else {
-    API_PROVIDER = 'gemini'
-    console.log('Selected: Gemini\n')
+    POLLINATIONS_MODEL = 'grok'
+  }
+
+  console.log(`Selected Pollinations model: ${POLLINATIONS_MODEL}\n`)
+}
+
+// Select API provider
+async function selectProvider() {
+  const availableProviders = []
+
+  if (GEMINI_API_KEY) {
+    availableProviders.push({
+      key: 'gemini',
+      label: 'Gemini (Google)',
+      envVar: 'GEMINI_API_KEY'
+    })
+  }
+
+  if (OPENROUTER_API_KEY) {
+    availableProviders.push({
+      key: 'openrouter',
+      label: 'OpenRouter (x-ai/grok-4.1-fast)',
+      envVar: 'OPENROUTER_API_KEY'
+    })
+  }
+
+  if (POLLINATIONS_API_KEY) {
+    availableProviders.push({
+      key: 'pollinations',
+      label: 'Pollinations',
+      envVar: 'POLLINATIONS_API_KEY'
+    })
+  }
+
+  // If only one key is available, use it automatically
+  if (availableProviders.length === 1) {
+    const selectedProvider = availableProviders[0]
+    API_PROVIDER = selectedProvider.key
+    console.log(`Using ${getProviderDisplayName()} API (only ${selectedProvider.envVar} found)`)
+
+    if (API_PROVIDER === 'pollinations') {
+      await selectPollinationsModel()
+    }
+
+    return
+  }
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  // Both keys available - ask user
+  console.log('\nMultiple API keys found. Which provider would you like to use?')
+  availableProviders.forEach((provider, index) => {
+    console.log(`${index + 1}) ${provider.label}`)
+  })
+
+  const answer = await new Promise((resolve) => {
+    rl.question(`\nEnter choice (${availableProviders.map((_, index) => index + 1).join(', ')}): `, (input) => {
+      resolve(input.trim())
+    })
+  })
+
+  rl.close()
+
+  const selectedIndex = parseInt(answer, 10) - 1
+  const selectedProvider = availableProviders[selectedIndex] || availableProviders[0]
+  API_PROVIDER = selectedProvider.key
+
+  if (API_PROVIDER === 'pollinations') {
+    console.log('Selected: Pollinations')
+    await selectPollinationsModel()
+  } else {
+    console.log(`Selected: ${getProviderDisplayName()}\n`)
   }
 }
 
@@ -1005,6 +1169,9 @@ async function selectProvider() {
 async function extractData(characterName, wikiContent, imageUrl = null, modeOverride = null, extraContext = null) {
   if (API_PROVIDER === 'openrouter') {
     return extractDataOpenRouter(characterName, wikiContent, imageUrl, modeOverride, extraContext)
+  }
+  if (API_PROVIDER === 'pollinations') {
+    return extractDataPollinations(characterName, wikiContent, imageUrl, modeOverride, extraContext)
   }
   return extractDataGemini(characterName, wikiContent, imageUrl, modeOverride, extraContext)
 }
@@ -1112,7 +1279,7 @@ async function createNewEntry() {
     console.log('  ✗ No wiki content found. Text fields will be empty.')
   } else {
     console.log(`  Wiki content: ${wikiContent.length} chars`)
-    console.log(`  Extracting personality, speech_style, backstory, relationships with ${API_PROVIDER}...`)
+    console.log(`  Extracting personality, speech_style, backstory, relationships with ${getProviderLogLabel()}...`)
     textData = await extractData(charName, wikiContent, null, 'variants')
     if (textData) {
       const fields = Object.keys(textData).join(', ')
@@ -1131,7 +1298,7 @@ async function createNewEntry() {
     console.log('  ✗ No image URL found. Visual fields will be empty.')
   } else {
     console.log(`  Image URL: ${imageUrl}`)
-    console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${API_PROVIDER}...`)
+    console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${getProviderLogLabel()}...`)
     visualData = await extractData(charName, null, imageUrl, 'visual')
     if (visualData) {
       const fields = Object.keys(visualData).join(', ')
@@ -1257,7 +1424,7 @@ async function processProfilesFile(filePath, fileLabel) {
     } else {
       extractFields = 'personality, speech_style, backstory, relationships'
     }
-    console.log(`  Extracting ${extractFields} with ${API_PROVIDER}...`)
+    console.log(`  Extracting ${extractFields} with ${getProviderLogLabel()}...`)
     const data = await extractData(charName, wikiContent, imageUrl)
 
     if (data && applyData(profile, data)) {
@@ -1374,7 +1541,7 @@ async function processCommanderRelationships() {
       }
 
       console.log(`  Wiki content: ${wikiContent.length} chars`)
-      console.log(`  Extracting Commander relationship with ${API_PROVIDER}...`)
+      console.log(`  Extracting Commander relationship with ${getProviderLogLabel()}...`)
 
       const data = await extractData(charName, wikiContent, null, 'commander')
 
@@ -1508,12 +1675,12 @@ async function processBackstoryUpdates() {
       if (hasExistingBackstory) {
         // Has existing backstory: use update mode to compare and merge
         console.log(`  Existing backstory: ${existingBackstory.length} chars`)
-        console.log(`  Comparing & merging with ${API_PROVIDER}...`)
+        console.log(`  Comparing & merging with ${getProviderLogLabel()}...`)
         data = await extractData(charName, wikiContent, null, 'update', { existingBackstory })
       } else {
         // No existing backstory: generate from scratch using base prompt
         console.log('  No existing backstory found, generating from scratch...')
-        console.log(`  Extracting backstory with ${API_PROVIDER}...`)
+        console.log(`  Extracting backstory with ${getProviderLogLabel()}...`)
         data = await extractData(charName, wikiContent, null, 'base')
       }
 
@@ -1675,7 +1842,7 @@ async function main() {
   }
 
   console.log(`Mode: ${modeLabel}`)
-  console.log(`Provider: ${API_PROVIDER}`)
+  console.log(`Provider: ${getProviderLogLabel()}`)
   if (MODE !== 'create' && MODE !== 'commander' && MODE !== 'update') {
     console.log(`Rate limit: ${RATE_LIMIT_MS}ms between calls`)
     console.log(`Skip existing: ${SKIP_EXISTING ? 'yes' : 'no'}`)

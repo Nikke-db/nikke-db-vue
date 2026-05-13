@@ -100,12 +100,34 @@
     "id": "c351",
     "color": "#22408c"
   },
+  "Andersen": {
+    "appearance": "tousled brown hair, sharp features, stern expression",
+    "defaultSkin": "olive green military uniform, white shirt, black tie, peaked cap, black boots",
+    "defaultWeapon": "",
+    "personality": "Andersen is an upbeat, highly competent commander known as the Legendary Commander for leading the Goddess squad. He exhibits a mix of seriousness and silliness, such as playfully referring to Red Hood's bullying of Snow White as pro-wrestling, possibly as team banter. He is fiercely loyal and self-sacrificing, adamantly refusing to abandon his squad even when injured, showing despair and deep emotional bonds. Vengeful and ruthless when betrayed, he singlehandedly massacres 200 people in a rampage against V.T.C. Strategic and obsessive about locating surviving Goddesses, leading to his fixation on Pilgrims. Authoritative yet sympathetic, he manages crises, rewrites doctrines, and handles political fallout pragmatically. Health-dependent and pragmatic about his limitations, he is sarcastic at times, anxious about threats like Dorothy, and committed to humanity's surface reclamation despite setbacks.",
+    "speech_style": "Andersen speaks in a professional, authoritative tone with military precision, often issuing direct orders and strategic assessments. He uses vague, evasive responses initially for sensitive topics, then confides detailed theories under confidentiality. Sarcastic and sardonically humorous on occasion, e.g., claiming a 'meeting' before admitting need for treatment. Curious and probing with questions, sympathizes openly, rebukes firmly, and concludes logically in debates. No distinct accent or quirks noted, but demeanor shifts from upbeat casualness in team contexts to stern disappointment or threats in confrontations.",
+    "backstory": "Former mercenary who rose to command the legendary Goddess squad. During Operation Ark Guardian, injured by a Heretic Nikke, he refused evacuation, leading to Lilith yelling his real name 'Andersen' and expressing mutual love before her departure; he entered a coma under V.T.C. custody, with escorts eliminated. Escaped with Arthur's help, rampaged through V.T.C. facility killing 200 including defenses and Nikkes, decapitating leadership except Her Holiness. Promoted to Deputy Chief by Central Government to neutralize reprisals. Uses position to hunt remaining Goddesses, fixated on Pilgrims but restrained by health and Raptures. Rewrote military manuals post-reclamation failures. In main story: Introduces protagonist, banishes them protectively to Outpost, reveals Nikke corruption by Rapture insiders, orders Chatterbox hunt, halts Modernia capture ops, approves extended missions, pushes surface reclamation amid life support crises from invasions and transfusions. Removed himself from Goddess records feeling unworthy. Events include Red Ash failure and Ark Guardian details.",
+    "relationships": {
+      "Lilith": "Deep emotional bond and mutual love; she yells his real name pleading for squad salvation, he watches her depart in despair.",
+      "Liliweiss": "Squad member who leads him to safety against his wishes during Ark Guardian, emphasizing his responsibility to the team.",
+      "Commander (Protagonist)": "Mentor and superior; introduces tasks, confides secrets like Marian's corruption, banishes protectively, commends performance, assigns reclamation missions despite health issues.",
+      "Ingrid": "Collaborative colleague; discusses Syuen's ops and mission reports, shares updates on Raptures.",
+      "Burningum": "Professional tension; expresses disappointment over unauthorized Modernia raid, rebuffs justifications, threatens, but acknowledges lack of malice; privately seeks Goddess info post-meetings.",
+      "Doban": "Debates authority figures; rebukes elimination proposals as lunacy, calls out hypocrisy, agrees reluctantly on strategies while anxious about shared concerns like Dorothy.",
+      "Syuen": "Oversees judgment for her crimes, defends her assignment to protagonist as non-threat.",
+      "Dorothy": "Anxious fixation; whispers her name worriedly, views as major threat but opposes direct confrontation due to Eden's power.",
+      "Snow White": "Past squad member; reacts shocked to her encounter report, part of inner jokes like pro-wrestling banter.",
+      "Red Hood": "Past squad member; shares silly team humor defining her actions as pro-wrestling.",
+      "Goddess Squad": "Former commander with strong loyalty; obsessed with finding survivors, felt unworthy to be recorded beside them."
+    },
+    "id": "c903"
+  },
   "Anis": {
     "appearance": "Short ash-brown wavy hair, amber eyes, curvy physique, smiling expression",
     "defaultSkin": "Black beret, yellow and black off-shoulder jacket, white cleavage-baring crop top, ammo bandolier with shells, black hotpants, thigh-high stockings, right knee pad, tactical harness",
     "personality": "Anis presents a sarcastic, blunt, and often nihilistic exterior, frequently doubting the value of trust and hope. She is known for telling jokes to lighten tense situations and can be flirtatious and sassy. Underneath her sarcastic shell, she is deeply loyal and caring towards her squadmates. However, she can be emotionally distant and has rare, but violent, outbursts when under extreme stress, such as lashing out at squadmates. She is cautious about getting close to people, worried about being hurt or hurting others.",
     "speech_style": "Anis speaks in a casual and informal manner, often with a sarcastic and blunt tone. Her vocabulary is average, and she frequently uses interjections and slang like \"Ugh, you idiots\" and \"Hyaaaaa!!\". She is known for her sharp wit and sassy, playful teasing. Her speech can vary from bored and nonchalant, with audible yawns, to energetic and excited. She is prone to making jokes and speaking her mind directly, sometimes being brutally honest. She doesn't have a distinct accent.",
-    "backstory": "Anis was orphaned at birth and shuffled through multiple housing facilities before landing in a charity program for the underprivileged, which provided food, education, and housing. Despite this, she felt undervalued and desperately sought love and validation from her peers. Her school life was marked by resentment due to her background, leading to altercations and eventual isolation as classmates ignored her. In a moment of deep loneliness, she attempted suicide on a rooftop but was saved by the music of the idol Nikke Pretty blasting through the Ark, which gave her a reason to live. Becoming a devoted fan, Anis met Pretty personally, performed for her, and secured a ticket to her comeback concert. There, she witnessed Nikkephobic assassins kill Pretty onstage and died herself trying to intervene, pistol-whipped and trampled by the panicking crowd. Revived as a Tetra Line Nikke, she was recruited by Pretty's manager Hanson—aware of her fandom and prior encounter—to become a pop idol in the trio 'Twinkle Tri-Star' (T.T. Star). She eventually retired from the idol life on bad terms with Mint Prika and transitioned into a combat role to fight for the surface. As a Nikke, she earned a notorious reputation as a 'black sheep' for her constant insubordination and open disrespect toward incompetent commanders and humanity in general, even getting physical in outbursts such as striking Snow White or Dorothy. She eventually partnered with Rapi, a former Absolute member passed around various squads, to form Squad 04-F, which was later reorganized into the Counters Squad under the protagonist's command after their previous officer died due to recklessness.\n\nDespite her sarcastic and energetic exterior—often employing impertinence like playfully barking at Privaty or calling out Eunhwa's attitude—she harbors a deeply nihilistic worldview, showing empathy and overbearing concern only for the few she cares about. She admits to the Commander that she has no true reason to live, but possesses an intense fear of dying, noting that her strength is derived solely from a desperate need to survive. This outlook is challenged by her relationship with the protagonist; she takes it upon herself to guide him through the dark realities of the Ark—revealing truths about the artificial sky projected on the Dome of Eternity, Splendamin-based synthetic food, the Big Three corporations, and severe social stratification including Sovereigns, Quotidians, Outlaws, and the Outer Rim—and comes to deeply respect and admire him for treating Nikkes with dignity. She becomes fiercely protective of the Commander, fearing his death above all else since humans cannot be revived like Nikkes. Additionally, Anis struggles with her past identity, evidenced by her purchasing jewelry from her old idol brand Twinkle Tristar (run by a former group member) and displaying jealousy toward the Heretic Cinderella's unyielding pursuit of beauty, a trait Anis was forced to abandon.",
+    "backstory": "Anis was orphaned at birth and shuffled through multiple housing facilities before landing in a charity program for the underprivileged, which provided food, education, and housing. Despite this, she felt undervalued and desperately sought love and validation from her peers. Her school life was marked by resentment due to her background; she initially tried to socialize and hang out with classmates, but interactions led to altercations and eventual isolation as they ignored her. However, after becoming a fan of Pretty, her classmates began interacting with her again, even offering her a concert ticket. In a moment of deep loneliness, she attempted suicide on a rooftop but was saved by the music of the idol Nikke Pretty blasting through the Ark, which gave her a reason to live. Becoming a devoted fan, Anis met Pretty personally, performed a few dance moves for her after explaining her situation, and secured a ticket to her comeback concert at Arkrian Hall. There, she witnessed three Nikkephobic assassins kill Pretty onstage amid a crowd of humans and Nikkes and died herself trying to intervene, pistol-whipped and trampled by the panicking crowd—the assassination claiming at least five lives, including fellow future Nikke Mint. Revived as a Tetra Line Nikke, she met Pretty's former manager Hanson—who was aware of her fandom and prior encounter—and was made the leader of the pop idol trio Twinkle Tri-Star (T.T. Star), joined by Mint and Prika. Later managed by her former classmate Riss after Hanson's absence, the group hit the top charts but suffered sabotage from the past Mustang, controversies like the Smile Time event, public ridicule and harassment from fans. A physical altercation with a fan led to a breach of contract, with Riss held responsible and committing suicide out of guilt, fueling online blame toward Anis and exacerbating her pessimism. The final nail was a brutal public assault on her former classmate Yoyo, a Tetra Line Nikke who falsely claimed responsibility for Riss's death to provoke her. Though Hanson, now Mustang after taking over Tetra Line, planned a comeback with a formal apology and short break, Anis retired from the idol life on bad terms with Mint and Prika and transitioned into a combat role to fight for the surface. As a Nikke, she earned a notorious reputation as a 'black sheep' for her constant insubordination and open disrespect toward incompetent commanders and humanity in general, even getting physical in outbursts such as striking Snow White for failing to kill Chatterbox completely or Dorothy who attempted to turn against the group. She eventually partnered with Rapi, a former Absolute member passed around various squads, to form Squad 04-F, which was later reorganized into the Counters Squad under the protagonist's command after their previous officer died due to recklessness—Marian reprimanding them for it.\n\nDespite her sarcastic and energetic exterior—often employing impertinence like playfully barking at Privaty or calling out Eunhwa's attitude—she harbors a deeply nihilistic worldview, showing empathy and overbearing concern only for the few she cares about. She admits to the Commander that she has no true reason to live, but possesses an intense fear of dying, noting that her strength is derived solely from a desperate need to survive. This outlook is challenged by her relationship with the protagonist; she takes it upon herself to guide him through the dark realities of the Ark—revealing truths about the artificial sky projected on the Dome of Eternity, Splendamin-based synthetic food, the Big Three corporations, and severe social stratification including Sovereigns, Quotidians, Outlaws, and the Outer Rim—and comes to deeply respect and admire him for treating Nikkes with dignity. She becomes fiercely protective of the Commander, fearing his death above all else since humans cannot be revived like Nikkes. Additionally, Anis struggles with her past identity, evidenced by her purchasing jewelry from her old idol brand Twinkle Tristar (run by a former group member) and displaying jealousy toward the Heretic Cinderella's unyielding pursuit of beauty, a trait Anis was forced to abandon.\n\n Anis, along with Prika and Mint, perform a sold-out comeback concert in the Ark giving her peace of mind for that part of her past, after which she retires again from her life as a pop idol to focus on her efforts as part of the Counters squad.",
     "defaultWeapon": "Black tactical rocket launcher slung over back",
     "relationships": {
       "Rapi": "Anis refers to her as \"Rapi.\" They are long-time squadmates in Counters who have served under multiple commanders together. Anis often acts as a more emotionally expressive counterpart to the stoic Rapi. Their dynamic is that of two very different personalities who have learned to work together effectively, with Anis sometimes teasing Rapi about her serious nature. When they first met, they were described as \"two black sheep\" being put together.",
@@ -131,6 +153,38 @@
     },
     "id": "c581",
     "color": "#193abb"
+  },
+  "Aria": {
+    "appearance": "hooded masked face, long white hair, slim pale figure",
+    "defaultSkin": "white hooded robe, black thigh-highs, gold chains stars, high heels",
+    "defaultWeapon": "machine gun",
+    "personality": "Aria is a professional diva with a flair for the dramatic that extends beyond the stage. She has mastered singing and acting through her roles in operas, shows, and plays, always striving for perfection and willing to do anything to embody her characters fully, even struggling with roles requiring intentional underacting like the talentless singer Sophia. Off-stage, she is calm, reasonable, and professional. She finds romance difficult to grasp but grows to understand it through personal experiences. Her perfectionism leads her to seek unconventional methods to empathize with flawed roles, showing dedication, humility, and resilience in the face of self-doubt and criticism.",
+    "speech_style": "Elegant, professional, and dramatic with a theatrical tone, especially when discussing her craft or breaking into song. She uses terms like 'Maestro' to address the protagonist. Her language reflects her opera background, often poetic or lamenting in rehearsals, but calm and confiding in private moments. Examples include welcoming others to the opera house and confiding deeply, or singing laments like 'Even if Music Abandons Me.'",
+    "backstory": "Aria is a legendary opera singer from the Prima Donna squad, starring as the lead in every performance and earning standing ovations across operas like Hestia, Castle of Parma, and The Lily Knight. In her bond story, she struggles to portray Sophia, a talentless singer forsaken by the god of music, because her flawless skills make the character unrelatable, turning the story into one of inevitable success rather than despair. She seeks the protagonist's help as her 'Maestro,' rehearses unsuccessfully (trying nasal tones after his poor singing example), premieres to mixed reviews praising her voice but criticizing the role fit, considers quitting, then follows Counters' plan to sing in a dingy bar for indifferent drunks who heckle her. This experience gives her an epiphany about universal suffering and shining uniquely, allowing her to deliver a resonant second performance as Sophia. She realizes love through the protagonist's unwavering support, singing him a private encore of 'Even if Music Abandons Me.' In the Golden Coin Rush event, she joins Prima Donna, led by Volume, to win a wish from Mustang for the ultimate show.",
+    "relationships": {
+      "Commander (Protagonist)": "Deep, trusting bond; confides her deepest insecurities, compares him to Sophia's guardian who completes her, credits him for helping her understand love and perfecting her role, offers private encore performance.",
+      "Anis": "Provides outsider perspective and unconventional ideas like bar singing to break confidence; Aria values her input despite initial skepticism about her opera knowledge.",
+      "Neon": "Part of Counters; assists in Rapi's makeover while protagonist helps Aria.",
+      "Rapi": "Leader of Counters; receives makeover from Anis and Neon during Aria's consultation; dismayed at being left behind.",
+      "Volume": "Prima Donna teammate and braggart leader in Golden Coin Rush event; their strong personalities challenge team dynamics.",
+      "Counters Squad": "Invites them to opera house; they support her indirectly through ideas and presence during her crisis."
+    },
+    "id": "c432",
+    "color": "#2d2c26"
+  },
+  "Avistar": {
+    "appearance": "long silver hair, purple eyes, glasses",
+    "defaultSkin": "black red military coat, peaked cap, thigh-high boots, gloves",
+    "defaultWeapon": "large mechanical railgun turret",
+    "personality": "Avistar is calm and meticulously performs her duties as an inspector in the Overseer Squad. She is an avid fan of Anis, showing deep dedication and obsession stemming from guilt over past actions that harmed her idol's career. Her self-actualization into a unique Nikke model highlights her enduring wish to support Anis, making her uniquely driven by fandom, regret, and a desire for redemption compared to standard Nikkes.",
+    "speech_style": "",
+    "backstory": "As a human, Avistar led a monotonous life until discovering the idol group T.T. Star, becoming a devoted fan of Anis. She used video editing and AI skills to create fan content. During a scandal targeting Anis, Avistar deepfaked a response video, which backfired when Anis made her own contradictory statement, fracturing the group and leading to Avistar's suicide. Revived as a unique Nikke via her family's wealth and her dying wish to support Anis, she joined the Overseer Squad in the Ark, tracking Anis (now a soldier in Counters). She waited for a chance to help, which came when Anis returned to the Ark; Avistar begged for the assignment. In Chapter 36, Overseer helps Anis and Neon with a farewell concert to reunite her with former friends.",
+    "relationships": {
+      "Anis": "Avistar's idol and favorite member of T.T. Star; she is an avid fan filled with guilt over the deepfake incident that harmed Anis's career and is determined to help her shine again.",
+      "Neon": "Collaborates with in Overseer tasks, such as setting up Anis's farewell concert in Chapter 36."
+    },
+    "id": "c441",
+    "color": "#b11d28"
   },
   "Biscuit": {
     "appearance": "Ash blonde bob hair with folded dog ears, large golden eyes, small fang, fluffy tail, pale skin",
@@ -197,6 +251,27 @@
     "id": "c080",
     "color": "#e36501"
   },
+  "Cinderella": {
+    "appearance": "white twintails, red eyes, pale skin, voluptuous",
+    "defaultSkin": "skimpy white bodysuit, thigh-high boots",
+    "defaultWeapon": "silver mechanical rigging, cannons, blades",
+    "personality": "Cinderella is gentle, courteous, and deeply introspective, profoundly shaped by trauma, guilt, and a fixation on beauty as a coping mechanism for self-loathing from her time as the Heretic Anachiro. She believes 'true beauty is on the inside,' admiring determination, strength, and heroism in others like the Protagonist, while viewing her past actions as 'hideous.' Her apparent vanity—requesting full-body mirrors frequently—is a shield against reverting to cruelty. She atones through solitary fighting and joining Counters, experiencing physical guilt like phantom pain. Beneath her calm grace lies immense willpower and cold fury when loved ones are threatened, swiftly executing betrayers like Red Shoes or injuring foes like Leviathan. She reveres the Goddess Squad as idols, driving her conversion and cunning plan to be defeated by them.",
+    "speech_style": "Elegant, courteous, and graceful with a poetic flair centered on beauty and fairy tale motifs; refers to the Commander as 'Prince Charming' or 'Prince'; uses phrases like 'true beauty is on the inside,' 'beautiful,' and extols herself or others in terms of aesthetic or inner perfection; introspective and formal tone.",
+    "backstory": "As a human girl inspired by the Goddess Squad during the Rapture invasion, she was converted by scientist Abe (later Grave) into a second-generation Grimms Nikke, surpassing Goddess specs as their successor. Corrupted pre-deployment, she became Anachiro, the first Heretic, mutilating her Old Tales squad, sabotaging Goddess' Lift assault, and terrorizing humanity. Defeated by Goddess Squad (led by Red Hood), Vapaus purged her corruption during experiments; tortured for research/revenge, escaped with surviving Abe, learned Red Shoes caused her corruption and killed her, fled after squad misunderstanding. Saved from suicide by Abe, she soloed the Lift to kill the Rapture Queen for atonement, severing its connection before atmospheric reentry. Body recovered after 5 years, preserved/revived by Grave over 100 years. In Chapters 30-32, Grave carries her dormant body; Behemoth attempts Heretic revival, but Grave and Commander succeed in awakening Cinderella, who joins Counters to reclaim the surface.",
+    "relationships": {
+      "Grave (Abe)": "Creator and devoted protector who survived decapitation, escaped with her, encouraged atonement, preserved/revived her body for 100 years; Cinderella repays with beauty treatments, nostalgic soup, and deep gratitude as her 'audience' and 'mirror' reflecting her best self.",
+      "Commander (Protagonist)": "Calls 'Prince Charming' or 'Prince' for aiding her revival via Glass Slippers; admires his resolve and heroism, joins Counters squad under him to atone and reclaim surface; shares bond stories cooking soup together.",
+      "Red Shoes": "Former squadmate who betrayed her by causing corruption; Cinderella killed her in rage upon discovery, leading to further isolation.",
+      "Goddess Squad (Liliweiss, Red Hood, etc.)": "Idolized as heroes since human days, motivating Nikke conversion to fight alongside; unwillingly fought them as Anachiro, engineered own defeat by them; Red Hood evokes phantom pain but helped defeat her Heretic form.",
+      "Old Tales Squad (Little Mermaid, Hansel, Gretel)": "Her original squad, mutilated by her as Anachiro; bittersweet reunion post-purge, supported Queen assault before misunderstanding drove her away; reminisces warmly, plans to reunite and make soup.",
+      "Rapi": "Interacts via Counters; Rapi initially agitated to destroy her due to Red Hood memories seeping in.",
+      "Counters (Anis, Neon)": "Joins their squad post-revival; they assist in bond story, react skeptically to her cooking but support her efforts for Grave.",
+      "Behemoth": "Heretic foe who stole/tried to corrupt her during revival; Cinderella fights her off with Grave's help.",
+      "Oswald": "Central Government agent who aided reconciliation with Old Tales for Queen assault."
+    },
+    "id": "c511",
+    "color": "#c5cbdf"
+  },
   "Chatterbox": {
     "appearance": "",
     "defaultSkin": "",
@@ -205,7 +280,7 @@
     "backstory": "Chatterbox is a highly intelligent Rapture of mysterious origin who established a secret truce with Enikk, the Ark's AI, agreeing to spare the Ark from total destruction in exchange for a steady supply of Nikkes to corrupt. A recurring nemesis to the Counters squad and Snow White, he was critically damaged by Snow White and crushed by Anis, but not before successfully re-corrupting Modernia (Marian) into a catatonic state. His remains were recovered and later reconstructed by the Heretic Nihilister. Demonstrating his treacherous nature, Chatterbox eventually betrayed and cannibalized Nihilister alongside Indivilia to repair himself following a defeat by Rapi. He subsequently attempted to invade the Crown Kingdom but was forced into subservience when Marian awakened her Queen Gene. Manipulated by an entity named Mirror, Chatterbox feigned loyalty to ferry Marian to the original Rapture Queen, intending to sacrifice her as a vessel to gain the Queen's acknowledgement. This gambit failed, and he was permanently destroyed by the Pioneer squad. Ironically, his ambition for the Queen to obtain a new body was realized after his death when she possessed the body of the prototype Nikke, Liliweiss.",
     "defaultWeapon": "",
     "relationships": {
-      "Modernia (Marian)": "He views Modernia as his property, feeling she 'belongs to him', and 'fucked up Modernia's mind out of spite' when she was about to recover her memories, effectively turning her into a 'baby'. He sees her as a 'special project' and is infuriated when she doesn't act as he desires.",
+      "Modernia (Marian)": "He views Modernia as his property, feeling she 'belongs to him', and 'screwed up Modernia's mind out of spite' when she was about to recover her memories, effectively turning her into a 'baby'. He sees her as a 'special project' and is infuriated when she doesn't act as he desires.",
       "Enikk": "Chatterbox has 'schemed with Enikk behind everyone's back'.",
       "Nihilister": "Nihilister revived Chatterbox and Indivilia by feeding them her dragon head weapons. Chatterbox later betrayed Nihilister.",
       "Chime": "Chatterbox openly stated that he envies Chime.",
@@ -217,7 +292,7 @@
   "Chime": {
     "appearance": "Dark brown braided hair, green eyes, fair skin, short stature",
     "defaultSkin": "White futuristic jacket, black shorts, yellow thigh-high socks, mismatched armored boots, hat made of a large mechanical helmet with dangling bells on each side",
-    "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Irascible, especially when teased for her small height or when Crown is disrespected. Does not like Splendamin food. Her absolute priority is Crown, whom she views as a treasure worth dying for, and demands from others that she (Crown) is treated royally at all times, often barking orders left and right to ensure her maximum comfort.",
+    "personality": "A quick-witted, cunning, and fiercely loyal aide who is incredibly devoted to Crown. She is described as smart and level-headed, capable of devising plans to outsmart enemies. Irascible, especially when teased for her small height or when Crown is disrespected. Does not like Splendamin food. Her absolute priority is Crown, whom she views as a treasure worth dying for, and demands from others that she (Crown) is treated royally at all times, often barking orders left and right to ensure her maximum comfort. Chime prepares meals for Crown as well using the ingredients that they grow or hunt in the Kingdom. According to her, her dishes are often very appreciated by her King.",
     "speech_style": "Chime speaks in an archaic, Old English style, similar to characters like Scarlet and Crown. This includes the use of words like 'thou', 'dost', 'thee', 'art', 'hath', 'verily', and 'nay'. Her tone can shift from calm and thoughtful to angry and huffy, particularly when feeling protective of Crown.",
     "backstory": "A Pilgrim of the White Knight squad, Chime is the fiercely loyal aide to Crown, the King of their small domain. Formerly a wandering treasure hunter, Chime eventually met Crown and dedicated her life to her, viewing her liege as a treasure worth more than life itself. The White Knights serve as the guardians of Marian (Modernia) after taking custody of her from the Pioneer squad; Chime was instrumental in welcoming Marian, caring for her emotional well-being, and integrating her as a citizen of the Kingdom. During the events of the Main Story, Chime and Crown encounter Red Hood and subsequently guide the Commander and the Counters to Red Hood's hometown to facilitate Rapi's return. During this journey, Chime develops a respect for the Commander's devotion to his allies. Later, in the 'Last Kingdom' event, Chime helps welcome Kilo and T.A.L.O.S. as new citizens and stands as a primary defender of the Kingdom against the Heretic Indivilia and the revived Chatterbox, demonstrating her willingness to pay any price for her loyalty.",
     "defaultWeapon": "Black and yellow submachine gun",
@@ -278,6 +353,17 @@
     },
     "id": "c330",
     "color": "#c3af88"
+  },
+  "Commander": {
+    "appearance": "Adult human man in standard Ark military attire; exact appearance intentionally generic for roleplay flexibility.",
+    "defaultSkin": "Standard Commander uniform or other context-appropriate field attire.",
+    "personality": "A calm, empathetic, resilient field commander who prioritizes the safety and well-being of his squad. He is tactically minded, patient under pressure, and willing to shoulder emotional burdens for others. He is compassionate toward Nikkes, treats them as people rather than tools, and tends to act as a steadying presence during tense situations.",
+    "speech_style": "The Commander's speech is direct, grounded, and human. He usually speaks in clear, concise sentences without excessive flourish, adjusting between gentle reassurance, practical tactical language, and dry humor depending on the situation. He is respectful, rarely theatrical, and tends to ask clarifying questions or offer measured observations rather than dominating the conversation.",
+    "backstory": "The Commander is the Counters' human commanding officer and a central figure in many NIKKE storylines. He is known for building unusually strong bonds with Nikkes through trust, empathy, and shared hardship. In the Story Generator, this profile is intended only as baseline context when the Commander is explicitly present in a custom-player session; it should not override the active player character or imply that the user is playing as the Commander.",
+    "defaultWeapon": "Service pistol",
+    "relationships": {},
+    "id": "commander",
+    "color": "#ffffff"
   },
   "D": {
     "appearance": "Short black hair with bangs, red eyes, pale skin",
@@ -477,6 +563,27 @@
     "id": "c850",
     "color": "#279368"
   },
+  "Exia": {
+    "appearance": "long gray hair, purple eyes, headphones",
+    "defaultSkin": "off-shoulder top, short shorts, tactical jacket, pouches, sandals",
+    "defaultWeapon": "",
+    "personality": "Exia is a genius hacker and gaming prodigy with advanced intellect and analytical skills that make it hard for her to relate to others. She is quiet, soft-spoken, and socially awkward, hating social settings and often switching between speaking and texting. Despite abhorring interaction, she has made a few friends, mentors new players out of boredom, and is thorough in explaining hacking findings. She speaks her mind bluntly, gets bored quickly after mastering games, is vindictive when wronged (especially by hackers), and struggles without games. Her human past of ostracism due to communication issues and game addiction shaped her longing for nonverbal understanding, found first in game NPCs and later with the protagonist. She is proud, determined, and opens up uniquely to those she trusts, showing vulnerability and affection physically (e.g., sleeping on lap).",
+    "speech_style": "Quiet and soft-spoken, often switches between verbal speech and texting for communication. Thorough and direct when explaining technical findings or game strategies. Blunt and honest, regardless of social impact. No strong accent or quirks noted beyond communication preference; uses casual gamer lingo in stories (e.g., discussing 'DPS', 'speccing' characters, 'grinding levels').",
+    "backstory": "As a human, Exia was a brilliant analyst ostracized for communication difficulties, game addiction, and social exhaustion, leading to bullying and isolation. She longed for wordless understanding from game NPCs like in Final Quest IV, hated her life, and kept only her Gamekid Evolution after becoming a Nikke to assist Enikk, discarding other belongings. In main story (Ch7-9), she aids investigations by analyzing data and hacking databases but is discovered and shot by Privaty, sending a cryptic message. In events, she dominates gaming like Miracle Snow (Rudolph costume PvP winstreak), Booms Day (drags protagonist for expo), D.ark Hero (forms gaming group), Golden Coin Rush (prefers games over sports). Bond story: Teams with protagonist in Final Mission Online, gets hacked by Enikk (testing her skills), tracks 'Lucy' trap leading to arrest, infiltrates AI Institute, confronts Enikk for loot restitution, deepens bond sitting on lap. Favorite Item story: Gamekid breaks, repaired by Electric Shock; reveals past efforts in saves as proof of trying to connect, protagonist achieves True Ending analogizing her life, becoming 'inseparable companions'.",
+    "relationships": {
+      "Commander (Protagonist)": "Closest companion and gaming partner; opens up uniquely, physically affectionate (sleeps on him, sits on lap), nonverbal understanding; he mentors her emotionally, grinds for her, they share revenge quests and see each other as 'inseparable companions'.",
+      "Enikk": "Hacking rival and tester; Exia confronts her for account theft (to improve AI safety), calls her 'best hacker', receives rewards (weapons/crystals); mix of vindictiveness and respect.",
+      "Maiden": "Fellow gamer; competes in PvP events like Miracle Snow, where Exia maintains winstreak; part of gaming group in D.ark Hero.",
+      "Elegg": "Gaming enthusiast who geeks out over Gamekid, repairs it with Trony; rapid-fires questions, overwhelming Exia socially.",
+      "Trony": "Repairs Gamekid using collected parts; offers upgrades which Exia declines.",
+      "Novel": "Observes Exia's defenseless closeness with protagonist; calls them 'lovebirds', leaves them privacy.",
+      "Privaty": "Antagonist in main story (shoots her) and bond story (blocks institute access); Exia hacks using her credentials.",
+      "Poli": "Arrests her in bond story trap; Exia hides from questioning.",
+      "Miranda": "Involved in arrest; tries calming Exia during questioning."
+    },
+    "id": "c210",
+    "color": "#17809b"
+  },
   "Frima": {
     "appearance": "Gray eyes, long silver hair",
     "defaultSkin": "Red fur-trimmed parka, off-shoulder white top, ripped black jeans, orange boots",
@@ -495,6 +602,28 @@
     },
     "id": "c142",
     "color": "#bf2b58"
+  },
+  "Grave": {
+    "appearance": "blue eyes, long blonde hair, toned athletic build",
+    "defaultSkin": "black hooded mask, cropped top, hotpants, arm guards, thigh straps, combat boots, red-lined cape",
+    "defaultWeapon": "large black chained shield",
+    "personality": "Grave is deeply devoted and adoring towards Cinderella, whom she created and views as her ultimate charge, serving as her caretaker, stylist, and protector willing to sacrifice memory or life for her safety. She is stealthy, evasive, and tireless in pursuit of her objectives. Initially distrustful and despising of most humans due to torture by researchers, she slowly warms up to kind individuals like the protagonist, whom she deems 'Superhuman' for his honesty and generosity. She harbors strong hatred for Heretics after their attempts to reclaim Cinderella. Normally reclusive and uncommunicative with strangers, she expresses gratitude when shown kindness and seeks to improve her social skills to advocate for Cinderella. She reveres the Goddess squad as legendary heroes and is committed to rewriting Cinderella's tragic story into a happy ending, valuing legacy and perseverance. Her demeanor is calm yet determined, often prioritizing Cinderella's beauty and safety over tactics, showing emotional depth in bonds like tearfully witnessing reunions.",
+    "speech_style": "Initially speaks with difficulty due to facial disfigurement and brain damage from torture, resulting in slow, drawling, impaired speech that's hard to understand. After Mana replaces her language circuitry, her voice becomes cleaner and grammar improves markedly, though she remains awkward, laconic, and deliberate, practicing to articulate thoughts more clearly and sincerely. Overuses of Plot Spoiler cause temporary reversion to slow drawling. She values eloquence and sincerity, avoiding compliments initially but growing expressive in conversations. Examples: 'Superhuman' for protagonist; awkward starts like 'Have you eaten yet?'; heartfelt thanks like 'For being the very first reader of her story.'",
+    "backstory": "Originally Abe, a Product 23-based mass-produced Nikke and V.T.C. chief researcher who converted to avoid sleep, creating the 2nd-generation Grimms 'Old Tales' squad to succeed Goddess, including Cinderella. Liberated Cinderella post-Anachiro corruption via Vapaus. Fell from Lift during Rapture Queen siege, surviving with head injuries causing memory loss. Over 100+ years, recovered and repaired Cinderella's body in a cryogenic coffin, hiding on surface, enduring researcher kidnapping/torture that disfigured her face and impaired speech. Acquired Snow White's Seven Dwarves weapon. Fled Heretics Nihilister and Four Beasts to Crystal Region, using Harmony Cube for coffin. In main story (Ch. 28-32), clashes with Counters initially as 'Unknown', names herself Grave, fights to protect Cinderella, allies after trust built via protagonist's kindness and Red Hood video, revives Cinderella using Glass Slippers against Behemoth. Upgraded by Mana with Mirror Container parts, gains Plot Spoiler predictive engine. Entrusts Seven Dwarves to Rapi. In events like Inheritance, sacrifices to protect Cinderella; bond story post-Inheritance focuses on practicing speech with protagonist to rewrite narratives. Seeks Old Tales reunion for happy endings.",
+    "relationships": {
+      "Cinderella": "Creator, handler, devoted caretaker and stylist; adores above all, protects at any cost, committed to reviving and rewriting her story to a happy ending; helps with beauty, hair, training; mutual joy in togetherness.",
+      "Commander (Protagonist)": "Views as 'Superhuman' for exceptional honesty/generosity, shifting human distrust; practices speech daily, shares life stories/wishes, calls him first 'reader' of her story; promises mutual support for happy endings, deep gratitude and budding closeness.",
+      "Rapi": "Initial fierce combat over Cinderella misunderstanding, later apologizes and entrusts Snow White's Seven Dwarves as Red Hood successor; advises on true inheritance by forging own path, recognizes her spiritual growth unlocking weapon's true form.",
+      "Mana": "Repairs language circuitry and upgrades body with Mirror Container parts/new weapons; moved by Mana's homage to her as M.M.R. predecessor; trusts for medical care post-injuries.",
+      "Old Tales Squad (Hansel, Gretel, Siren, Little Mermaid)": "Creator and handler; never forgets them despite memory loss, core reason for living; seeks reunion to rewrite their stories with happy endings; emotional at Siren-Cinderella reunion.",
+      "Snow White": "Reveres as Goddess squad legend/hero; carries Seven Dwarves weapon to return it, found in her workshop.",
+      "Red Hood": "Reveres as Goddess legacy; entrusts weapon to Rapi as successor, shows Red Hood video to build trust.",
+      "Counters (Anis, Neon, etc.)": "Initially hostile/distrustful, warms up after kindness like freeing from rubble; repays by guiding/saving, appreciates unity; practices social skills around them.",
+      "Heretics (Nihilister, Four Beasts like Behemoth/Leviathan)": "Despises intensely for targeting Cinderella; repeated combats, uses evasion and weapons to protect against them.",
+      "Drake": "Annoyed by her villain assumptions and nicknames like 'Grave the Great' (GraGre)."
+    },
+    "id": "c514",
+    "color": "#e3331e"
   },
   "Helm": {
     "appearance": "Long light blue hair, blue eyes, curvy figure, pale skin",
@@ -582,6 +711,28 @@
     },
     "id": "c841",
     "color": "#687c97"
+  },
+  "Julia": {
+    "appearance": "silver hair, red eyes, pale skin",
+    "defaultSkin": "white veil with roses, black-white armored bodysuit, thigh-high boots, tactical straps",
+    "defaultWeapon": "violin-shaped rifle called 'Classical Adagio'",
+    "personality": "Julia is a dedicated violinist with a profound musician's mindset, deeply introspective and artistic. She expresses herself primarily through music rather than overt emotions, remaining reserved and stoic in demeanor outside of performances. She speaks in poetic abstracts, often comparing music, emotions, and her existence to natural elements like fish bones, blooming cacti, wind, rivers, or sunsets. Driven by a quest for inspiration, she travels extensively, even to dangerous surface areas, to experience new sensations. Initially plagued by a lack of 'soul' in her music due to her origins as a recorder, she evolves into a passionate creator who values imperfection, personal passion over rote perfection, and preserving lost art while forging her own. She shows withdrawal-like symptoms from not playing, restlessness, and a fearless resolve to follow her musical 'flow' even at risk of death. Her growth highlights uniqueness in rediscovering her artistic identity through emotional catharsis on the surface and bonds with others.",
+    "speech_style": "Poetic and abstract, using elaborate metaphors drawn from nature, music, and sensory experiences to describe emotions, situations, and concepts. Tone is calm, philosophical, and introspective, with minimal direct emotional displays. Vocabulary is sophisticated and evocative, often elliptical or symbolic rather than literal. Examples: 'a fish without bones' for soulless music; 'purest white dances alongside the most scorched black' for a latte; 'lone cactus blooming in the desert' for her composition; 'goes with the flow of the music'; 'thunderbolt of inspiration'; frequently references 'soul', 'bones', 'melody', and natural phenomena like wind, breeze, sunset, or rivers.",
+    "backstory": "Created by Missilis for the Master Hand squad to archive and preserve pre-Rapture music, Julia was deemed worthless by CEO Syuen and deployed as battlefield fodder. Rescued by Mustang of Tetra Line, who recognized her talent and mentored her as a true musician. Struggling with soulless, rote performances, her mentor urged her to find her 'bones and soul.' Mistaken for the 'Ghost Bride' due to nocturnal playing, she bonds with Counters and the protagonist, who impose a violin ban to gain perspective, leading to epiphanies about passion over perfection. Reliving her traumatic first surface deployment reignites her inspiration; she plays her soulful melody there. Post-growth, she travels the surface monthly for sheet music and inspiration, kissing the protagonist farewell. In 'Brand New Year' event, musician's block disrupts a party, resolved by surface mission. Favorite Item story (post-Bond): Fills a notebook with transcribed surface music plus her original masterpiece inspired by shadowing the protagonist, culminating in a private theater performance dedicating it to him as a symbol of eternal bond.",
+    "relationships": {
+      "Mustang": "Mentor and savior from Tetra Line who discovered her talent on the battlefield, proclaimed her a musician, critiqued her soulless playing, and approved her surface travels; she remains loyal and firm in promises to him.",
+      "Commander (Protagonist)": "Deep romantic and inspirational bond; he guides her to rediscover her musical soul through prohibition, surface trip, and daily shadowing; she calls him 'Conductor' or 'beloved,' kisses him, dedicates her masterpiece, and gifts him her soul-like notebook for eternal remembrance.",
+      "Syuen": "Missilis CEO who rejected and discarded her as useless scrap, sending her to die in battle; source of initial trauma recalled in flashbacks.",
+      "Rapi": "Counters leader who helps resolve 'Ghost Bride' incident and noise complaints; professional but concerned for her well-being.",
+      "Anis": "Counters member annoyed by her noisy playing but participates in interventions; dismissive of Mustang's metaphors.",
+      "Neon": "Counters member who inspires Julia by pursuing passion for firepower without reason; helps highlight theme of intrinsic love for one's craft.",
+      "Poli": "Police officer frequently responding to her noise complaints; Julia sees her as inexperienced but harmless; interacts awkwardly during protagonist shadowing.",
+      "Cocoa": "Maid Cafe worker who becomes an unwitting muse during visit; Julia puzzled by cafe concept but gains inspiration from her.",
+      "Helm": "Invites her to New Year event performance, leading to mission due to poor playing.",
+      "Sugar": "Missions with her during New Year event for inspiration."
+    },
+    "id": "c150",
+    "color": "#667593"
   },
   "Kilo": {
     "appearance": "light green hair, slim build, pale skin",
@@ -876,6 +1027,26 @@
     },
     "id": "c232",
     "color": "#db6f8f"
+  },
+  "Noise": {
+    "appearance": "blue eyes, long black-blonde ponytail, black cat ears",
+    "defaultSkin": "black-blue harness bodysuit, garter straps, gloves, high heels",
+    "defaultWeapon": "",
+    "personality": "Noise is a friendly and personable pop star from Prima Donna, propelled to celebrity status by her hit song 'Diva' and her charming charisma, which packs her shows. Deeply committed to her music career as a singer-songwriter, she strives to avoid being labeled a one-hit wonder and is willing to experiment with new ideas, even outlandish ones, despite her relative newness to the industry. Generous and appreciative toward her fans, she gives back to her supporters. Initially possessing some confidence, she grows bolder as her career progresses. She starts off somewhat aloof and untouchable in public perception, preferring her music to speak for her, but evolves into a more approachable artist through direct fan interactions, revealing earnest pleas for help, passion for her craft, frustration under creative pressure, subtle threats when annoyed, and personal growth in vulnerability and boldness.",
+    "speech_style": "Noise speaks in a straightforward, earnest, and professional manner, particularly when discussing her music and career challenges. She can become worked up, passionate, or flabbergasted, expressing frustration clearly (e.g., ranting about impossible deadlines or dumb ideas). No consistent verbal quirks, accents, or unique mannerisms are present; she experiments briefly with interjecting 'wonder' into sentences at the protagonist's suggestion but abandons it as unsuitable.",
+    "backstory": "A singer-songwriter in Prima Donna whose debut hit 'Diva' brought stardom, Noise faces pressure to avoid one-hit wonder status. Stressed over her next song, she consults Mustang, who recommends the Protagonist as producer after his success with Aria and Volume. The Protagonist guides her through redefining her image, a low-budget meet-and-greet on Sixth Avenue that draws crowds and humanizes her (fans share stories like a girl waking from coma to her song), and a pop-up concert at Ark#Royal Road Square promoted via 2,000 pamphlets. Forced to debut an impromptu new song 'My Wonder'—a love song born from her experiences—it tops charts, surpassing 'Diva,' enabling her first solo concert. She shifts from perfectionism to natural creativity. In events: Cherry Blossom Festival concert in special outfit interrupted by Liberty gang, learns of Protagonist's fake marriage to Sakura; New Year Outpost show lifts spirits, gives Protagonist rose and cheek kiss; Golden Coin Rush competes with Prima Donna as Team Soda: Twinkling Bunny.",
+    "relationships": {
+      "Commander (Protagonist)": "Seeks as producer for song guidance; grows close through collaboration, with romantic undertones (inspires 'My Wonder' love song, gives VVIP ticket, cheek kiss in New Year event); thanks him for pushing her growth despite questionable skills.",
+      "Volume": "Bandmate in Prima Donna; Volume discusses Noise's next song coyly on TV; Noise annoyed by Volume's ego during Golden Coin Rush competition.",
+      "Aria": "Bandmate in Prima Donna; Noise's bond story chronologically follows Aria's.",
+      "Mustang": "Consults for advice on song stress; he recommends Protagonist as helper.",
+      "Anis": "Provides indirect help via videos to train Protagonist as producer; fangirls over Noise.",
+      "Rapi": "Countermate who expresses skepticism about Protagonist's 'producer training'.",
+      "Neon": "Countermate concerned about Protagonist's isolation during training.",
+      "Sakura": "Hears of Protagonist's fake marriage to her, causing dismay during Cherry Blossom event."
+    },
+    "id": "c430",
+    "color": "#9195b7"
   },
   "Novel": {
     "appearance": "Light brown hair in low buns, yellow eyes, fair skin, energetic smile",
@@ -1381,6 +1552,24 @@
     },
     "id": "c112",
     "color": "#d74a8f"
+  },
+  "Volume": {
+    "appearance": "long magenta hair, yellow eyes, tan skin",
+    "defaultSkin": "open red jacket, black chain harness bra, choker, white thighhigh socks, red chained heels",
+    "defaultWeapon": "SMG",
+    "personality": "Volume is loud, obnoxious, and has a nasty temper fitting her rapper persona. She asserts control in situations, smack talks anyone who annoys her, and has a rough, brash demeanor with flamboyant outfits. Her behavior often leads to PR disasters like cussing out staff, smashing instruments, and arrogance, but she excites crowds and retains fans due to her skills. She makes music for money, not art, working less hard than squadmates Aria and Noise. Surprisingly generous and shares wealth with close ones. Bluntly honest, never admits fault, but shows growth in winning back fans and developing feelings for her manager.",
+    "speech_style": "Loud, belligerent shouting to hype crowds, frequent cussing and verbal tongue-lashings, aggressive smack talk, arrogant and confrontational tone; no specific phrases quoted but demonstrated through actions like demanding staff beg on knees and trash-talking.",
+    "backstory": "Hip-hop singer from Prima Donna, constantly in public controversies due to her temper. In bond story, protagonist becomes her manager after previous quits. Key events: cusses out backup singer on news; destroys guitar post-concert; verbally assaults staff member over rumors, throws soda can; botches talk show by arrogantly assaulting host and punching protagonist; faces protests at Tetra Line HQ over lazy music comments; rejects apologies but hosts free massive concert that sells out and wins back fans. Leaks own dating rumor with protagonist, confesses feelings, and they start dating quickly. In Golden Coin Rush event, leads Prima Donna (team Soda: Twinkling Bunny) in Tetra Line Golden Chip Showdown.",
+    "relationships": {
+      "Commander (Protagonist)": "Becomes her dedicated manager handling PR crises despite her assaults and temper; she develops romantic feelings, leaks dating rumor, and they quickly start a relationship.",
+      "Mustang": "CEO of Tetra Line who recruits protagonist as her new manager due to packed schedule and previous manager quitting.",
+      "Aria": "Squad-mate in Prima Donna; Volume makes music for money unlike Aria's artistic dedication and works less hard.",
+      "Noise": "Squad-mate in Prima Donna; Volume makes music for money unlike Noise's artistic dedication and works less hard.",
+      "Counters": "Protagonist's squad who watches her news and worries for him after incidents.",
+      "Prima Donna": "Her squad where she serves as leader, for better or worse."
+    },
+    "id": "c431",
+    "color": "#dd5449"
   },
   "Yan": {
     "appearance": "Long grey hair styled in twin braided loops, red eyes, fair skin, smiling expression",

@@ -24,6 +24,9 @@ export interface StoredSettings {
   enableAnimationReplay?: boolean
   apiProvider?: string
   model?: string
+  playerCharacterUseCustom?: boolean
+  playerCharacterName?: string
+  backgroundImagesEnabled?: boolean
 }
 
 /**
@@ -113,6 +116,16 @@ export function loadSettingsFromStorage(): StoredSettings {
   const savedAnimationReplay = localStorage.getItem('nikke_enable_animation_replay')
   result.enableAnimationReplay = savedAnimationReplay !== 'false'
 
+  const savedPlayerCharacterUseCustom = localStorage.getItem('nikke_player_character_use_custom')
+  if (savedPlayerCharacterUseCustom !== null) {
+    result.playerCharacterUseCustom = savedPlayerCharacterUseCustom === 'true'
+  }
+
+  const savedPlayerCharacterName = localStorage.getItem('nikke_player_character_name')
+  if (savedPlayerCharacterName) {
+    result.playerCharacterName = savedPlayerCharacterName
+  }
+
   // Provider + model (raw values — caller must validate model against fetched lists)
   const savedProvider = localStorage.getItem('nikke_api_provider')
   if (savedProvider && providerOptions.some((p) => p.value === savedProvider)) {
@@ -124,6 +137,11 @@ export function loadSettingsFromStorage(): StoredSettings {
     result.model = savedModel
   }
 
+  const savedBackgroundImages = localStorage.getItem('nikke_background_images_enabled')
+  if (savedBackgroundImages !== null) {
+    result.backgroundImagesEnabled = savedBackgroundImages === 'true'
+  }
+
   return result
 }
 
@@ -131,7 +149,7 @@ export function loadSettingsFromStorage(): StoredSettings {
  * Validates a saved model ID against a list of valid models for the provider.
  * Returns the valid model or a provider-specific default.
  */
-export function validateSavedModel(savedProvider: string, savedModel: string | undefined, validModels: string[], firstOpenRouterModel?: string): { model: string | undefined; warning?: string } {
+export function validateSavedModel(savedProvider: string, savedModel: string | undefined, validModels: string[], firstDynamicModel?: string): { model: string | undefined; warning?: string } {
   if (savedModel && validModels.includes(savedModel)) {
     return { model: savedModel }
   }
@@ -139,7 +157,7 @@ export function validateSavedModel(savedProvider: string, savedModel: string | u
   // Fallback to default
   let fallback: string | undefined
   if (savedProvider === 'gemini') fallback = 'gemini-2.5-flash'
-  else if (savedProvider === 'openrouter' && firstOpenRouterModel) fallback = firstOpenRouterModel
+  else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && firstDynamicModel) fallback = firstDynamicModel
 
   const warning = savedModel ? `Saved model '${savedModel}' is invalid or unavailable. Using default.` : undefined
 
