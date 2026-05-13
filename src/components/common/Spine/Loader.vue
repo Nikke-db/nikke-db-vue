@@ -30,6 +30,8 @@ let canvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
 let currentLoadId = 0 // Track active load requests
 const market = useMarket()
+const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
+const STORY_GEN_LOW_POWER_FRAME_MS = 1000 / 30
 
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
@@ -37,6 +39,44 @@ const spineViewport = {
   padRight: '0%',
   padTop: '0%',
   padBottom: '0%'
+}
+
+const isStoryGenLowPowerEnabled = () => {
+  if (typeof document === 'undefined') return false
+
+  return market.route.name === 'story-gen' &&
+         document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY] === 'true' &&
+         !market.live2d.isExportingAnimation
+}
+
+const applyStoryGenLowPowerThrottle = (player: any) => {
+  if (market.route.name !== 'story-gen' || !player || typeof player.drawFrame !== 'function' || player.__storyGenLowPowerWrapped) {
+    return
+  }
+
+  const originalDrawFrame = player.drawFrame.bind(player)
+  let lastFrameAt = 0
+
+  player.drawFrame = (requestNextFrame = true) => {
+    if (!requestNextFrame || !isStoryGenLowPowerEnabled()) {
+      return originalDrawFrame(requestNextFrame)
+    }
+
+    if (player.error || player.disposed) return
+
+    const now = performance.now()
+    if (lastFrameAt !== 0 && now - lastFrameAt < STORY_GEN_LOW_POWER_FRAME_MS) {
+      if (!player.stopRequestAnimationFrame) {
+        requestAnimationFrame(() => player.drawFrame())
+      }
+      return
+    }
+
+    lastFrameAt = now
+    return originalDrawFrame(requestNextFrame)
+  }
+
+  player.__storyGenLowPowerWrapped = true
 }
 
 onMounted(() => {
@@ -450,6 +490,7 @@ const spineLoader = () => {
           wrongfullyLoaded()
         },
       })
+      applyStoryGenLowPowerThrottle(spineCanvas)
       applyDefaultStyle2Canvas()
     }
   }
@@ -532,6 +573,7 @@ const customSpineLoader = () => {
   spineCanvasOptions[market.live2d.customLoader === 'skel' ? 'skelUrl' : 'jsonUrl'] = market.live2d.customSkel.title
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
+  applyStoryGenLowPowerThrottle(spineCanvas)
 }
 
 const getPathing = (extension: string) => {

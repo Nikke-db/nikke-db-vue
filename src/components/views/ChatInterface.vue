@@ -76,11 +76,11 @@
       </div>
 
       <div class="chat-input-area" style="gap: 6px">
-        <n-input v-model:value="userInput" type="textarea" :placeholder="apiKey || apiProvider === 'pollinations' || apiProvider === 'local' ? 'Type your message...' : 'Please enter API Key in settings'" :disabled="!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local'" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
-        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || (!apiKey && apiProvider !== 'pollinations' && apiProvider !== 'local')">Send</n-button>
+        <n-input v-model:value="userInput" type="textarea" :placeholder="isApiKeyMissing ? 'Please enter API Key in settings' : 'Type your message...'" :disabled="isApiKeyMissing" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
+        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing">Send</n-button>
         <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
-        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading">Retry</n-button>
-        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0">
+        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
+        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing">
           {{ waitingForNext ? 'Next' : 'Continue' }}
         </n-button>
       </div>
@@ -130,7 +130,7 @@
           <div v-if="showRosterList" class="story-character-list">
             <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
               <n-select class="story-character-select" :value="entry.selection" :options="availableRosterOptions" filterable placeholder="Character" @update:value="(val) => updateRosterSelection(entry, val as string)" />
-              <n-select v-if="parseSelectionValue(entry.selection)?.type === 'base'" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
+              <n-select v-if="getSkinOptionsForEntry(entry).length > 0" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
               <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
               <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
             </div>
@@ -163,6 +163,8 @@
             <n-checkbox v-model:checked="incorrectSpeakerLabelingToggle">Incorrect Speaker Labeling</n-checkbox>
             <n-checkbox v-model:checked="narrationAsDialogueToggle">Narration presented as dialogue</n-checkbox>
             <n-checkbox v-model:checked="wrongCharacterOnScreenToggle">Wrong character on screen</n-checkbox>
+            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="npcUsingCommanderHonorificsToggle">NPCs are using Commander's honorifics with me</n-checkbox>
+            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="commanderPresentButSilentToggle">Commander is present but not talking</n-checkbox>
           </div>
         </n-popover>
       </div>
@@ -177,46 +179,35 @@
     </div>
 
     <!-- NIKKE Mode Overlay -->
-    <transition name="fade">
-      <div v-if="chatMode === 'nikke' && nikkeOverlayVisible" class="nikke-chat-overlay" :class="{ passthrough: nikkeOverlayPassthrough }">
-        <div class="nikke-vignette"></div>
-
-        <!-- Stop Button for NIKKE Mode -->
-        <div class="nikke-overlay-controls">
-          <n-button type="error" circle @mousedown.stop="stopGeneration" @touchstart.stop="stopGeneration" title="Stop Generation">
-            <template #icon
-              ><n-icon><Close /></n-icon
-            ></template>
-          </n-button>
-        </div>
-
-        <div class="nikke-dialogue-container">
-          <div v-if="nikkeCurrentSpeaker" class="nikke-speaker-name">
-            <div class="nikke-speaker-indicator" :style="{ backgroundColor: nikkeSpeakerColor }"></div>
-            <span>{{ nikkeCurrentSpeaker }}</span>
-          </div>
-          <div class="nikke-dialogue-text">
-            {{ nikkeDisplayedText }}
-          </div>
-        </div>
-
-        <!-- Game Mode Choices Overlay -->
-        <transition name="fade">
-          <div v-if="gameChoices.length > 0" class="game-choices-overlay">
-            <div class="choices-container">
-              <div v-for="(choice, index) in gameChoices" :key="index" class="choice-btn" @click="handleGameChoice(choice)">
-                <div class="choice-marker"></div>
-                <span class="choice-text">{{ (choice.text || (choice as any).label || '').replace(/^["']|["']$/g, '') }}</span>
-              </div>
-            </div>
-          </div>
-        </transition>
-      </div>
-    </transition>
+    <NikkeChatOverlay
+      :chatMode="chatMode"
+      :nikkeOverlayVisible="nikkeOverlayVisible"
+      :nikkeOverlayPassthrough="nikkeOverlayPassthrough"
+      :nikkeCurrentSpeaker="nikkeCurrentSpeaker"
+      :nikkeDisplayedText="nikkeDisplayedText"
+      :nikkeSpeakerColor="nikkeSpeakerColor"
+      :gameChoices="gameChoices"
+      @stop="stopGeneration"
+      @game-choice="handleGameChoice"
+    />
 
     <n-drawer v-model:show="showSettings" width="300" placement="right">
       <n-drawer-content title="Settings">
         <n-form>
+          <n-form-item>
+            <template #label>
+              Advanced Settings
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>Toggle to show/hide advanced settings.</div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="showAdvancedSettings" />
+          </n-form-item>
           <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
           <n-divider />
           <n-form-item label="API Provider">
@@ -231,29 +222,14 @@
             <n-input v-model:value="apiKey" type="password" show-password-on="click" placeholder="Enter API Key" />
           </n-form-item>
           <n-alert type="info" style="margin-bottom: 12px" title=""> Your API key is stored locally in your browser's local storage, and it is never sent to Nikke-DB. </n-alert>
-          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> for a Secret key. </n-alert>
+          <n-alert v-if="apiProvider === 'pollinations'" type="info" style="margin-bottom: 12px" title=""> For Pollinations, register at <a href="https://enter.pollinations.ai" target="_blank">enter.pollinations.ai</a> to get a required API key. </n-alert>
           <n-alert type="warning" style="margin-bottom: 12px" title=""> Users are responsible for any possible cost using this functionality. </n-alert>
-          <n-alert type="warning" style="margin-bottom: 12px" title="">
-            Web search may incur additional costs. Enable 'Use Nikke-DB Knowledge' to reduce reliance on web search.
-            <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
-              <template #trigger>
-                <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                  <Help />
-                </n-icon>
-              </template>
-              <div>
-                <p>In order to ensure a better quality experience, the model will search the Goddess of Victory: NIKKE Wikia to gather certain details regarding the characters that are part of the scene, such as how they address the Commander, their personality, etc.</p>
-                <p>Web search is used on the first turn and when new characters are introduced. You can disable this by enabling "Use Nikke-DB Knowledge".</p>
-                <p>It is strongly suggested to check your provider's documentation and model page for information regarding possible costs.</p>
-                <p>It is also recommended to select a limit on your API key to prevent unexpected charges.</p>
-              </div>
-            </n-popover>
-          </n-alert>
+
           <n-form-item label="Model" v-if="apiProvider !== 'local'">
             <n-select v-model:value="model" :options="modelOptions" />
           </n-form-item>
 
-          <n-form-item v-if="reasoningEffortOptions.length > 0">
+          <n-form-item v-if="showAdvancedSettings && reasoningEffortOptions.length > 0">
             <template #label>
               Reasoning Effort
               <n-popover trigger="hover" placement="bottom">
@@ -275,7 +251,24 @@
 
           <h4 class="settings-section-header accent-green">AI Settings</h4>
           <n-divider />
-          <n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
+            <template #label>
+              Low-Context Mode <span style="font-size: smaller">(Not Recommended)</span>
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  This mode severely limits the AI's context by stripping backstory information and forcing aggressive summarization. It is <strong>only intended and recommended</strong> when using a model with a <strong>very small context window</strong> (e.g., 8K or 16K tokens), where even short sessions may exceed the limit.<br /><br />
+                  For models with larger context windows (32K+), this mode will unnecessarily degrade response quality.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="lowContextMode" />
+          </n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Tokens Usage
               <n-popover trigger="hover" placement="bottom">
@@ -288,17 +281,17 @@
                   Controls how often the story is summarized to save tokens. Will affect costs and speed.<br /><br />Does not affect the Save and Load functionality.<br /><br />
                   <strong>Low:</strong> Summarizes every 10 turns. Cost-efficient.<br />
                   <strong>Medium:</strong> Summarizes every 30 turns. Balanced.<br />
-                  <strong>High:</strong> Summarizes every 60 turns. Uses more tokens.<br />
-                  <strong>Goddess:</strong> Disables summarization and sends the full history to the model on every turn. This may result in higher costs and slower responses in time, but provides the best context for the AI.
+                  <strong>High:</strong> Summarizes every 60 turns. Not recommended.<br />
+                  <strong>Goddess:</strong> Disables summarization and sends the full history to the model on every turn. This may result in higher costs and slower responses in time, but with certain models it may provide the best context for the AI.
                 </div>
               </n-popover>
             </template>
-            <n-select v-model:value="tokenUsage" :options="tokenUsageOptions" />
+            <n-select v-model:value="tokenUsage" :options="tokenUsageOptions" :disabled="lowContextMode" :style="{ opacity: lowContextMode ? 0.5 : 1 }" />
           </n-form-item>
 
-          <n-form-item v-if="isDev">
+          <n-form-item v-if="showAdvancedSettings && isDev">
             <template #label>
-              Context Caching <span style="font-size: smaller">(Experimental)</span>
+              Context Caching
               <n-popover trigger="hover" placement="bottom">
                 <template #trigger>
                   <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
@@ -315,7 +308,7 @@
             <n-switch v-model:value="enableContextCaching" />
           </n-form-item>
 
-          <n-form-item v-if="tokenUsage !== 'goddess'">
+          <n-form-item v-if="showAdvancedSettings && tokenUsage !== 'goddess'">
             <template #label>
               Automatically Compact Summaries
               <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
@@ -330,35 +323,18 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="autoCompactSummaries" />
+            <n-switch v-model:value="autoCompactSummaries" :disabled="lowContextMode" :style="{ opacity: lowContextMode ? 0.5 : 1 }" />
           </n-form-item>
 
-          <n-form-item v-if="autoCompactSummaries && tokenUsage !== 'goddess'" label="Compact every N summarizations">
-            <n-select v-model:value="autoCompactFrequency" :options="compactFrequencyOptions" />
+          <n-form-item v-if="showAdvancedSettings && autoCompactSummaries && tokenUsage !== 'goddess'" label="Compact every N summarizations">
+            <n-select v-model:value="autoCompactFrequency" :options="compactFrequencyOptions" :disabled="lowContextMode" :style="{ opacity: lowContextMode ? 0.5 : 1 }" />
           </n-form-item>
           <n-divider />
 
           <h4 class="settings-section-header accent-light-blue">Knowledge & Search</h4>
           <n-divider />
-          <n-form-item>
-            <template #label>
-              Use Nikke-DB Knowledge <span style="font-size: smaller">(Recommended)</span>
-              <n-popover trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
-                    <Help />
-                  </n-icon>
-                </template>
-                <div>
-                  Uses Nikke-DB's built-in character knowledge when available instead of searching the web.<br /><br />
-                  Faster and saves API costs.
-                </div>
-              </n-popover>
-            </template>
-            <n-switch v-model:value="useLocalProfiles" :disabled="!isDev" />
-          </n-form-item>
 
-          <n-form-item v-if="useLocalProfiles">
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Allow Web Search Fallback <span style="font-size: smaller">(Recommended)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -386,9 +362,9 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Roleplay:</strong> Play as the Protagonist (the Commander). Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br /><br />
+                  <strong>Roleplay:</strong> Play as the Commander by default, or optionally as another supported character from Settings. Your input in the chatbox is treated as dialogue. Wrap your text in [] for actions and to steer the story.<br /><br />
                   <strong>Story:</strong> Automatically generates a story based on your input. It is strongly recommended to enter the names of the characters you want in the scene and its setting in the first prompt. While the story is being played out, you can send more prompts to steer the narrative in the direction you want, or click 'Continue' to advance.<br /><br />
-                  <strong>Game:</strong> Similar to Roleplay, but instead of typing in the chatbox, you are presented choices similarly to the videogame. You may still override the choices by typing your own after pressing the red X icon on the upper right corner.
+                  <strong>Game:</strong> Similar to Roleplay, but instead of typing in the chatbox, you are presented choices similarly to the videogame. You may still override the choices by typing your own after pressing the red X icon on the upper right corner. The active player character can also be changed from Settings before the session starts.
                 </div>
               </n-popover>
             </template>
@@ -398,6 +374,31 @@
               <n-radio-button value="game">Game</n-radio-button>
             </n-radio-group>
           </n-form-item>
+
+          <n-form-item v-if="mode !== 'story'">
+            <template #label>
+              Play As Different Character <span style="font-size: smaller">(Beta)</span>
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  If this is off, you play as the Commander (standard behaviour). If this is on, you can choose another character to control from the local profile database for Roleplay and Game modes.<br /><br />
+                  Once a session starts, this setting is locked until you reset or load another session. <br /><br />
+                  Please note that this feature is still in beta. You may experience issues such as NPCs interacting with your character using the Commander's honorifics and other unforeseen bugs. If you encounter any issues, please report them in the GitHub repo.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="useCustomPlayerCharacter" :disabled="playerCharacterSelectionLocked" />
+          </n-form-item>
+
+          <n-form-item v-if="mode !== 'story' && useCustomPlayerCharacter" label="Player Character">
+            <n-select v-model:value="selectedPlayerCharacterName" :options="playerCharacterOptions" filterable :disabled="playerCharacterSelectionLocked" placeholder="Select character" />
+          </n-form-item>
+
+          <n-alert v-if="mode !== 'story' && playerCharacterSelectionLocked" type="info" style="margin-bottom: 12px" title=""> Player character selection is locked for the current session. Reset or load another session to change it. </n-alert>
 
           <n-form-item v-if="mode !== 'story'">
             <template #label>
@@ -428,11 +429,11 @@
                   </n-icon>
                 </template>
                 <div v-if="realisticModeEnabled">
-                  In Realistic Mode, God Mode prevents the Commander from dying but does <strong>NOT</strong> prevent bad outcomes. The Commander can still lose fights, get injured, get captured, or fail — death is simply replaced with the nearest non-lethal outcome (e.g., captured, knocked unconscious, rescued).<br /><br />
+                  In Realistic Mode, God Mode prevents the active player character from dying but does <strong>NOT</strong> prevent bad outcomes. The active player character can still lose fights, get injured, get captured, or fail — death is simply replaced with the nearest non-lethal outcome (e.g., captured, knocked unconscious, rescued).<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
                 <div v-else>
-                  Prevents any action in the story from causing the Commander's death.<br /><br />
+                  Prevents any action in the story from causing the active player character's death.<br /><br />
                   Note that it is possible the model may still override this instruction. If this happens, simply delete the last messages of the story and try again.
                 </div>
               </n-popover>
@@ -443,7 +444,24 @@
 
           <h4 class="settings-section-header accent-red">Interface & Audio</h4>
           <n-divider />
-          <n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
+            <template #label>
+              Low Power Mode
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Caps the animations to 30 frames per second, forces Asset Quality to <strong>Low</strong> and disables Animation Replay.<br /><br />
+                  Useful for mobile devices to preserve battery and reduce heating.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="lowPowerMode" />
+          </n-form-item>
+          <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Asset Quality
               <n-popover trigger="hover" placement="bottom">
@@ -458,7 +476,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-radio-group v-model:value="assetQuality" name="assetqualitygroup">
+            <n-radio-group v-model:value="assetQuality" name="assetqualitygroup" :disabled="lowPowerMode" :style="{ opacity: lowPowerMode ? 0.5 : 1 }">
               <n-radio-button value="low">Low</n-radio-button>
               <n-radio-button value="high">High</n-radio-button>
             </n-radio-group>
@@ -520,7 +538,7 @@
             <n-switch v-model:value="market.live2d.yapEnabled" />
           </n-form-item>
 
-          <n-form-item>
+          <n-form-item :style="{ opacity: lowPowerMode ? 0.5 : 1 }">
             <template #label>
               Enable Animation Replay
               <n-popover trigger="hover" placement="bottom">
@@ -535,8 +553,37 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="enableAnimationReplay" />
+            <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode" />
           </n-form-item>
+            <n-form-item v-if="showAdvancedSettings">
+            <template #label>
+              Enable Background Images <span style="font-size: smaller">(Experimental)</span>
+              <n-popover trigger="hover" placement="bottom" style="max-width: 360px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Displays a background image behind the Spine character, automatically selected by the AI based on the current scene and location.<br /><br />
+                  <strong>Setup:</strong> Download the background image pack from the <em>Background Image Pack</em> button in the Live2D Viewer section, decompress the ZIP into a folder, then select that folder below.<br /><br />
+                  Files are stored locally in memory and not actually uploaded. They are discarded when the page is closed or the option is turned off.<br /><br />
+                  <strong style="color: #e88080">Warning:</strong> Enabling this increases memory and tokens usage while active.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode" :style="{ opacity: lowPowerMode ? 0.5 : 1 }" />
+          </n-form-item>
+          <template v-if="showAdvancedSettings && market.live2d.backgroundImagesEnabled && !lowPowerMode">
+            <n-form-item label="Background Folder">
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%">
+                <n-button size="small" @click="triggerFolderPicker">Select Folder</n-button>
+                <span v-if="backgroundFolderName" style="font-size: 12px; color: #aaa">{{ backgroundFolderName }} ({{ loadedBackgroundCount }}/{{ totalBackgroundCount }})</span>
+                <span v-else style="font-size: 12px; color: #888">No folder selected</span>
+              </div>
+            </n-form-item>
+            <input ref="folderInput" type="file" webkitdirectory style="display: none" @change="handleFolderSelection" />
+          </template>
 
           <n-form-item>
             <template #label>
@@ -603,121 +650,13 @@
 
     <input type="file" ref="fileInput" style="display: none" accept=".json" @change="handleFileUpload" />
 
-    <n-modal v-model:show="showGuide" :mask-closable="false" preset="card" title="Story/Roleplaying Generator Guide" style="width: 700px; max-width: 95vw">
-      <div class="guide-content">
-        <div v-if="guidePage === 1" class="guide-page">
-          <h3>🆕 What's New?</h3>
-          <div class="guide-section">
-            <ul>
-              <li>Added Realistic Mode for Roleplay and Game modes</li>
-              <li>Added Commander relationships with characters in the database, plus new characters</li>
-              <li>Improvements on almost all APIs, including Local</li>
-              <li>Significant under-the-hood fixes and improvements</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 2" class="guide-page">
-          <h3>🚀 Welcome to the Story Generator</h3>
-          <p>Create interactive stories or roleplay scenarios with Nikke characters using your preferred AI LLM.</p>
-
-          <div class="guide-section">
-            <h4>🔑 API Setup</h4>
-            <ul>
-              <li><strong>Providers:</strong> Supports <strong>Gemini</strong>, <strong>OpenRouter</strong>, <strong>Pollinations</strong>, and <strong>Local</strong> (OpenAI-compatible).</li>
-              <li><strong>Pollinations:</strong> Can be used without a key, but with limited models and rate limits.</li>
-              <li><strong>Privacy:</strong> Your API keys are stored <strong>locally</strong> in your browser and never sent to Nikke-DB.</li>
-              <li><strong>Cost:</strong> Be mindful of your provider's usage. Web search may incur extra costs. You are solely responsible for this.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 3" class="guide-page">
-          <h3>🎭 Interaction Modes</h3>
-          <div class="guide-section">
-            <ul>
-              <li>
-                <strong>Roleplay Mode:</strong> You play as the Commander. The AI controls the narrative.
-                <ul>
-                  <li>Use <code>[brackets]</code> for actions (e.g., <code>[I nod slowly]</code>).</li>
-                  <li>Type normally for dialogue (e.g., <code>Good work today, Rapi.</code>).</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Story Mode:</strong> You act as the director. The AI generates the narrative.
-                <ul>
-                  <li><strong>Tip:</strong> Start by defining the <strong>Setting</strong> and <strong>Characters</strong>.</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Game Mode:</strong> A NIKKE-like experience.
-                <ul>
-                  <li>The AI narrates, and you choose from generated options.</li>
-                  <li>You can still override choices by clicking the red X and then typing as you would in Roleplay Mode..</li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 4" class="guide-page">
-          <h3>✨ Immersive Features</h3>
-          <div class="guide-section">
-            <ul>
-              <li><strong>Yap Mode:</strong> Enables real-time lip-syncing for characters on screen.</li>
-              <li><strong>Text-to-Speech (TTS):</strong> Experimental support for <strong>AllTalk</strong>, <strong>GPT-SoVits</strong>, and <strong>Chatterbox</strong> for voiced dialogue.</li>
-              <li><strong>Animation Replay:</strong> Click on any message in the history to replay the character's animation and expression from that moment.</li>
-              <li><strong>Playback:</strong> Choose <strong>Auto</strong> for a continuous flow or <strong>Manual</strong> to advance at your own pace.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 5" class="guide-page">
-          <h3>🧠 Knowledge & Search</h3>
-          <div class="guide-section">
-            <ul>
-              <li><strong>Nikke-DB Knowledge:</strong> Uses built-in character profiles for better accuracy and lower costs.</li>
-              <li><strong>AI Memory:</strong> The AI can track <strong>Character Progression</strong>, updating personalities and relationships as the story develops.</li>
-              <li><strong>Web Search Fallback:</strong> If the AI doesn't know a character or event, it can search the web (supported by some OpenRouter models) or fetch from the Nikke Wiki.</li>
-              <li><strong>Local Models:</strong> Connect to your own local LLM server (like LM Studio or Ollama) via the <strong>Local</strong> provider.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div v-if="guidePage === 6" class="guide-page">
-          <h3>💡 Tips & Troubleshooting</h3>
-          <div class="guide-section">
-            <ul>
-              <li><strong>Problems? Button:</strong> Use this if the AI is misbehaving, such as showing garbled text, using wrong speech styles for characters, etc.</li>
-              <li><strong>Model Quality:</strong> The experience varies greatly between models. Larger models generally perform better. Avoid using models tuned for other tasks such as coding.</li>
-              <li><strong>Save/Load:</strong> Use the <strong>Save</strong> icon to download your session. You can resume it later by loading the file.</li>
-              <li><strong>Context Usage:</strong> Adjust "Tokens Usage" in settings to balance between speed and cost.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="guide-footer">
-          <div class="guide-steps">
-            <div v-for="p in 6" :key="p" class="guide-step" :class="{ active: guidePage === p }"></div>
-          </div>
-          <div class="guide-actions">
-            <n-button v-if="guidePage > 1" @click="guidePage--" style="margin-right: 10px">
-              <template #icon
-                ><n-icon><ChevronLeft /></n-icon
-              ></template>
-              Back
-            </n-button>
-            <n-button v-if="guidePage < 6" type="primary" @click="guidePage++">
-              Next
-              <template #icon
-                ><n-icon><ChevronRight /></n-icon
-              ></template>
-            </n-button>
-            <n-button v-else type="primary" @click="closeGuide">Got it!</n-button>
-          </div>
-        </div>
-      </div>
-    </n-modal>
+    <StoryGuideModal
+      :showGuide="showGuide"
+      :guidePage="guidePage"
+      @update:showGuide="showGuide = $event"
+      @update:guidePage="guidePage = $event"
+      @close="closeGuide"
+    />
   </div>
 </template>
 
@@ -725,27 +664,36 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, Close, ChevronLeft, ChevronRight, TextScale } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NModal, NSpin, NCheckbox, NTag } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
+import backgroundImagesList from '@/utils/json/backgroundImages.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
 import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, getAIErrorMessage, buildUserReminders, generateSystemPrompt as generateSystemPromptUtil, type ReminderToggleState } from '@/utils/chatUtils'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
+import { formatBackgroundFolderLoadFeedback, resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch, checkForSearchRequest as checkForSearchRequestUtil } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
-import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
-import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex } from '@/utils/sessionUtils'
+import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
+import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
+import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
+import NikkeChatOverlay from '@/components/common/StoryGenerator/NikkeChatOverlay.vue'
 import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
 const market = useMarket()
+
+const STORY_GEN_LOW_POWER_STORAGE_KEY = 'nikke_story_gen_low_power_mode'
+const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
+type AssetQualityMode = 'low' | 'high'
 
 const pendingGameChoiceText = ref<string | null>(null)
 const abortCurrentPlaybackForChoice = ref(false)
@@ -754,7 +702,6 @@ const abortCurrentPlaybackForChoice = ref(false)
 const showSettings = ref(false)
 const showGuide = ref(false)
 const guidePage = ref(1)
-const useLocalProfiles = ref(localStorage.getItem('nikke_use_local_profiles') !== 'false')
 const apiProvider = ref('openrouter')
 const apiKey = ref(localStorage.getItem('nikke_api_key') || '')
 const localUrl = ref(localStorage.getItem('nikke_local_url') || 'http://localhost:5001/v1')
@@ -762,9 +709,21 @@ const model = ref('')
 const mode = ref('game')
 const tokenUsage = ref('medium')
 const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
+const useCustomPlayerCharacter = ref(false)
+const selectedPlayerCharacterName = ref('')
 
 watch(reasoningEffort, (val) => {
   localStorage.setItem('nikke_reasoning_effort', val)
+})
+
+watch(useCustomPlayerCharacter, (enabled) => {
+  localStorage.setItem('nikke_player_character_use_custom', String(enabled))
+  if (enabled) ensureValidSelectedPlayerCharacter()
+})
+
+watch(selectedPlayerCharacterName, (name) => {
+  if (!name) return
+  localStorage.setItem('nikke_player_character_name', name)
 })
 
 const reasoningEffortOptions = computed(() => getReasoningEffortOptions(apiProvider.value))
@@ -792,10 +751,11 @@ const autoCompactSummaries = ref(true)
 const autoCompactFrequency = ref(4)
 const COMPACT_MIN_LENGTH = 1500
 const compactFrequencyOptions = [
+  { label: '2', value: 2 },
   { label: '3', value: 3 },
   { label: '4 (Default)', value: 4 },
   { label: '5', value: 5 },
-  { label: '10', value: 10 }
+  { label: '6', value: 6 }
 ]
 const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
@@ -814,9 +774,74 @@ const OVERLAP_TURNS = 3
 
 // Story/Roleplay character roster
 const characterCatalog = buildCharacterCatalog()
+validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
+const isCommanderProfileKey = (name: string) => {
+  const normalized = name.trim().toLowerCase()
+  return normalized === 'commander' || normalized.startsWith('commander (')
+}
+const playerCharacterProfileCatalog = {
+  ...(localCharacterProfiles as Record<string, any>),
+  ...(variantCharacterProfiles as Record<string, any>)
+}
+const playerCharacterProfileNames = Object.keys(playerCharacterProfileCatalog)
+  .filter((name) => !isCommanderProfileKey(name))
+  .sort((a, b) => a.localeCompare(b))
+const playerCharacterOptions = computed(() => playerCharacterProfileNames.map((name) => ({ label: name, value: name })))
+
+const findPlayerCharacterProfileKey = (name?: string | null): string | null => {
+  if (!name) return null
+  const normalized = name.trim().toLowerCase()
+  return playerCharacterProfileNames.find((key) => key.toLowerCase() === normalized) || null
+}
+
+const ensureValidSelectedPlayerCharacter = () => {
+  const resolvedKey = findPlayerCharacterProfileKey(selectedPlayerCharacterName.value)
+  if (resolvedKey) {
+    selectedPlayerCharacterName.value = resolvedKey
+    return
+  }
+
+  selectedPlayerCharacterName.value = playerCharacterProfileNames[0] || ''
+}
+
+const playerCharacterSelectionLocked = computed(() => chatHistory.value.some((msg) => msg.role === 'user' || msg.role === 'assistant'))
+const resolvedPlayerCharacterKey = computed(() => findPlayerCharacterProfileKey(selectedPlayerCharacterName.value))
+const selectedPlayerCharacterProfile = computed(() => {
+  const resolvedKey = resolvedPlayerCharacterKey.value
+  return resolvedKey ? playerCharacterProfileCatalog[resolvedKey] || null : null
+})
+const isCustomPlayerCharacterActive = computed(() => mode.value !== 'story' && useCustomPlayerCharacter.value && !!resolvedPlayerCharacterKey.value && !!selectedPlayerCharacterProfile.value)
+const activePlayerCharacterName = computed(() => (isCustomPlayerCharacterActive.value ? resolvedPlayerCharacterKey.value! : 'Commander'))
+const customPlayerSessionHasCommander = computed(() => {
+  if (!isCustomPlayerCharacterActive.value) return false
+
+  return chatHistory.value.some((msg) => msg.role === 'user' && isWholeWordPresent(msg.content, 'Commander'))
+})
+const playerCharacterAwareProfiles = computed<Record<string, any>>(() => {
+  const merged = { ...characterProfiles.value }
+
+  if (isCustomPlayerCharacterActive.value && resolvedPlayerCharacterKey.value && selectedPlayerCharacterProfile.value) {
+    const existingKey = Object.keys(merged).find((key) => key.toLowerCase() === resolvedPlayerCharacterKey.value!.toLowerCase())
+    if (!existingKey) {
+      merged[resolvedPlayerCharacterKey.value] = selectedPlayerCharacterProfile.value
+    }
+  }
+
+  if (customPlayerSessionHasCommander.value) {
+    const existingKey = Object.keys(merged).find((key) => key.toLowerCase() === 'commander')
+    if (!existingKey) {
+      const commanderProfile = (localCharacterProfiles as Record<string, any>).Commander
+      if (commanderProfile) {
+        merged.Commander = commanderProfile
+      }
+    }
+  }
+
+  return merged
+})
 
 const availableRosterOptions = computed(() => {
   return rosterOptions.value.map((option) => {
@@ -830,9 +855,26 @@ const availableRosterOptions = computed(() => {
 })
 
 // Settings
+const showAdvancedSettings = ref(true)
+watch(showAdvancedSettings, (val) => {
+  if (!val) reasoningEffort.value = 'default'
+})
+
+const lowContextMode = ref(false)
+const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
+const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
 const enableAnimationReplay = ref(false)
+const backgroundFolderName = ref('')
+const folderInput = ref<HTMLInputElement | null>(null)
+const loadedBackgroundCount = computed(() => market.live2d.backgroundImageMap.size)
+const totalBackgroundCount = computed(() => (backgroundImagesList as string[]).length)
 const selectedMessageIndex = ref<number | null>(null)
 const originalHQAssets = ref(true)
+const storyGenAssetQualityPreference = ref<AssetQualityMode>(localStorage.getItem('nikke_hq_assets') === 'false' ? 'low' : 'high')
+const previousAssetQualityBeforeLowPower = ref<AssetQualityMode | null>(null)
+const storyGenAnimationReplayPreference = ref(localStorage.getItem('nikke_enable_animation_replay') !== 'false')
+const previousAnimationReplayBeforeLowPower = ref<boolean | null>(null)
+const previousBackgroundImagesBeforeLowPower = ref<boolean | null>(null)
 
 // NIKKE Mode State
 const chatMode = ref(localStorage.getItem('nikke_chat_mode') || 'nikke')
@@ -990,17 +1032,16 @@ const resetChatLayout = () => initChatLayout(chatSize, chatPosition)
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
-  return getEffectiveCharacterProfiles(characterProfiles.value, characterProgression.value)
+  return getEffectiveCharacterProfiles(playerCharacterAwareProfiles.value, characterProgression.value)
 })
 const chatHistoryRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
 const pollinationsModels = ref<any[]>([])
+const openCodeGoModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
-
-if (!isDev) useLocalProfiles.value = true
 
 // AI Reminders state
 const showRemindersDropdown = ref(false)
@@ -1017,6 +1058,8 @@ const incorrectAnimationsPersist = ref(false)
 const incorrectSpeakerLabelingToggle = ref(false)
 const narrationAsDialogueToggle = ref(false)
 const wrongCharacterOnScreenToggle = ref(false)
+const npcUsingCommanderHonorificsToggle = ref(false)
+const commanderPresentButSilentToggle = ref(false)
 
 watch(invalidJsonPersist, (val) => {
   if (val) {
@@ -1061,18 +1104,24 @@ const modelOptions = computed(() => {
     return [
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
-      { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite-preview' },
+      { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite' },
       { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
       { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro-preview' }
     ]
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
+  } else if (apiProvider.value === 'opencode-go') {
+    return openCodeGoModels.value
   } else if (apiProvider.value === 'pollinations') {
     return pollinationsModels.value
   }
 
   return []
 })
+
+const providerRequiresApiKey = computed(() => apiProvider.value !== 'local')
+
+const isApiKeyMissing = computed(() => providerRequiresApiKey.value && !apiKey.value.trim())
 
 // Computed
 
@@ -1083,13 +1132,104 @@ const computedUsesPollinationsAutoFallback = computed(() => usesPollinationsAuto
 const computedWebSearchFallbackHelpText = computed(() => webSearchFallbackHelpText(computedUsesWikiFetch.value, computedUsesPollinationsAutoFallback.value))
 
 const isCompactSummaryDisabled = computed(() => {
-  return isLoading.value || tokenUsage.value === 'goddess' || summaryJustCompacted.value || storySummary.value.length < COMPACT_MIN_LENGTH || (summarizationSuccessCount.value === 0 && !storySummary.value)
+  return isApiKeyMissing.value || isLoading.value || tokenUsage.value === 'goddess' || summaryJustCompacted.value || storySummary.value.length < COMPACT_MIN_LENGTH || (summarizationSuccessCount.value === 0 && !storySummary.value)
 })
 
+const refreshPollinationsModels = async () => {
+  const trimmedApiKey = apiKey.value.trim()
+
+  if (!trimmedApiKey) {
+    pollinationsModels.value = []
+    if (apiProvider.value === 'pollinations') {
+      model.value = ''
+    }
+    return
+  }
+
+  pollinationsModels.value = await fetchPollinationsModels(trimmedApiKey)
+
+  const validModels = pollinationsModels.value.map((m) => m.value)
+  if (!model.value || !validModels.includes(model.value)) {
+    model.value = pollinationsModels.value[0]?.value || ''
+  }
+}
+
+const refreshOpenCodeGoModels = async () => {
+  openCodeGoModels.value = await fetchOpenCodeGoModels(apiKey.value.trim() || undefined)
+
+  const validModels = openCodeGoModels.value.map((m) => m.value)
+  if (!model.value || !validModels.includes(model.value)) {
+    model.value = openCodeGoModels.value[0]?.value || ''
+  }
+}
+
+const ensureApiKeyForCurrentProvider = () => {
+  if (!isApiKeyMissing.value) {
+    return true
+  }
+
+  showSettings.value = true
+  loadingStatus.value = 'Please enter API Key in settings.'
+  return false
+}
+
+const syncStoryGenLowPowerDataset = () => {
+  if (typeof document === 'undefined') return
+
+  if (lowPowerMode.value && market.route.name === 'story-gen') {
+    document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY] = 'true'
+  } else {
+    delete document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY]
+  }
+}
+
+const applyStoryGenAssetQuality = (quality: AssetQualityMode) => {
+  market.live2d.HQassets = quality === 'high'
+}
+
+const applyLowPowerModeState = (enabled: boolean) => {
+  syncStoryGenLowPowerDataset()
+
+  if (enabled) {
+    previousAssetQualityBeforeLowPower.value ??= storyGenAssetQualityPreference.value
+    previousAnimationReplayBeforeLowPower.value ??= storyGenAnimationReplayPreference.value
+    previousBackgroundImagesBeforeLowPower.value ??= market.live2d.backgroundImagesEnabled
+    applyStoryGenAssetQuality('low')
+    enableAnimationReplay.value = false
+    if (market.live2d.backgroundImagesEnabled) {
+      market.live2d.backgroundImagesEnabled = false
+      market.live2d.clearBackgroundImages()
+      backgroundFolderName.value = ''
+      localStorage.setItem('nikke_background_images_enabled', 'false')
+    }
+    return
+  }
+
+  const restoredQuality = previousAssetQualityBeforeLowPower.value ?? storyGenAssetQualityPreference.value
+  const restoredAnimationReplay = previousAnimationReplayBeforeLowPower.value ?? storyGenAnimationReplayPreference.value
+  const restoredBackgroundImages = previousBackgroundImagesBeforeLowPower.value ?? false
+  previousAssetQualityBeforeLowPower.value = null
+  previousAnimationReplayBeforeLowPower.value = null
+  previousBackgroundImagesBeforeLowPower.value = null
+  applyStoryGenAssetQuality(restoredQuality)
+  enableAnimationReplay.value = restoredAnimationReplay
+  market.live2d.backgroundImagesEnabled = restoredBackgroundImages
+  if (!restoredBackgroundImages) {
+    market.live2d.clearBackgroundImages()
+    backgroundFolderName.value = ''
+  }
+  localStorage.setItem('nikke_background_images_enabled', String(restoredBackgroundImages))
+}
+
 const assetQuality = computed({
-  get: () => (market.live2d.HQassets ? 'high' : 'low'),
+  get: (): AssetQualityMode => (lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value),
   set: (val: string) => {
-    market.live2d.HQassets = val === 'high'
+    const normalizedValue: AssetQualityMode = val === 'high' ? 'high' : 'low'
+    storyGenAssetQualityPreference.value = normalizedValue
+
+    if (!lowPowerMode.value) {
+      applyStoryGenAssetQuality(normalizedValue)
+    }
   }
 })
 
@@ -1130,6 +1270,16 @@ const ensureRosterEntry = (selection: string, skinId: string | undefined, source
     source
   }
   rosterRows.value.push(entry)
+
+  // Log animation overrides for the newly added character
+  const charId = getSelectedCharacterId(entry, characterCatalog)
+  if (charId) {
+    const overrides = getAnimationOverrides(charId)
+    if (overrides.length > 0) {
+      logDebug(`[Chat] Animation overrides for ${charId}:`, overrides)
+    }
+  }
+
   return entry
 }
 
@@ -1166,8 +1316,10 @@ const updateRosterSkin = (entry: StoryCharacterEntry, skinId: string) => {
 
 const getSkinOptionsForEntry = (entry: StoryCharacterEntry) => {
   const parsed = parseSelectionValue(entry.selection)
-  if (!parsed || parsed.type !== 'base') return []
-  return getSkinOptionsForBase(characterCatalog, parsed.baseName)
+  if (!parsed) return []
+  if (parsed.type === 'base') return getSkinOptionsForBase(characterCatalog, parsed.baseName)
+  if (parsed.type === 'variant') return getSkinOptionsForVariant(characterCatalog, parsed.variantId)
+  return []
 }
 
 const syncRosterFromProfiles = (names: string[], source: 'ai' | 'user') => {
@@ -1175,7 +1327,12 @@ const syncRosterFromProfiles = (names: string[], source: 'ai' | 'user') => {
     const selectionInfo = getSelectionForName(name, characterCatalog)
     if (!selectionInfo) continue
     const parsed = parseSelectionValue(selectionInfo.selection)
-    const skinId = selectionInfo.skinId || (parsed?.type === 'base' ? getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value : undefined)
+    let skinId = selectionInfo.skinId
+    if (!skinId && parsed?.type === 'base') {
+      skinId = getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value
+    } else if (!skinId && parsed?.type === 'variant') {
+      skinId = getSkinOptionsForVariant(characterCatalog, parsed.variantId)[0]?.value
+    }
     ensureRosterEntry(selectionInfo.selection, skinId, source)
   }
 }
@@ -1187,7 +1344,12 @@ const syncRosterFromPrompt = (prompt: string) => {
     const selectionInfo = getSelectionForName(characterCatalog.idToName[id] || id, characterCatalog)
     if (!selectionInfo) continue
     const parsed = parseSelectionValue(selectionInfo.selection)
-    const skinId = selectionInfo.skinId || (parsed?.type === 'base' ? getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value : undefined)
+    let skinId = selectionInfo.skinId
+    if (!skinId && parsed?.type === 'base') {
+      skinId = getSkinOptionsForBase(characterCatalog, parsed.baseName)[0]?.value
+    } else if (!skinId && parsed?.type === 'variant') {
+      skinId = getSkinOptionsForVariant(characterCatalog, parsed.variantId)[0]?.value
+    }
     ensureRosterEntry(selectionInfo.selection, skinId, 'user')
   }
 }
@@ -1206,23 +1368,14 @@ watch(chatMode, (newVal) => {
 watch(apiKey, async (newVal) => {
   localStorage.setItem('nikke_api_key', newVal)
   if (apiProvider.value === 'pollinations') {
-    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-    if (pollinationsModels.value.length > 0) {
-      model.value = pollinationsModels.value[0].value
-    }
+    await refreshPollinationsModels()
+  } else if (apiProvider.value === 'opencode-go') {
+    await refreshOpenCodeGoModels()
   }
 })
 
 watch(localUrl, (newVal) => {
   localStorage.setItem('nikke_local_url', newVal)
-})
-
-watch(useLocalProfiles, (newVal) => {
-  if (isDev || newVal) {
-    localStorage.setItem('nikke_use_local_profiles', String(newVal))
-  } else {
-    useLocalProfiles.value = true
-  }
 })
 
 watch(allowWebSearchFallback, (newVal) => {
@@ -1261,7 +1414,32 @@ watch(enableContextCaching, (newVal) => {
   localStorage.setItem('nikke_enable_context_caching', String(newVal))
 })
 
+watch(lowContextMode, (val) => {
+  if (val) {
+    lowContextModePrev.value = {
+      tokenUsage: tokenUsage.value,
+      autoCompactSummaries: autoCompactSummaries.value,
+      autoCompactFrequency: autoCompactFrequency.value
+    }
+    tokenUsage.value = 'low'
+    autoCompactSummaries.value = true
+    autoCompactFrequency.value = 2
+  } else {
+    tokenUsage.value = lowContextModePrev.value.tokenUsage
+    autoCompactSummaries.value = lowContextModePrev.value.autoCompactSummaries
+    autoCompactFrequency.value = lowContextModePrev.value.autoCompactFrequency
+  }
+})
+
+watch(lowPowerMode, (enabled) => {
+  localStorage.setItem(STORY_GEN_LOW_POWER_STORAGE_KEY, String(enabled))
+  applyLowPowerModeState(enabled)
+})
+
 watch(enableAnimationReplay, (newVal) => {
+  if (!lowPowerMode.value) {
+    storyGenAnimationReplayPreference.value = newVal
+  }
   localStorage.setItem('nikke_enable_animation_replay', String(newVal))
 })
 
@@ -1323,8 +1501,19 @@ watch(
 watch(
   () => market.live2d.HQassets,
   (newVal) => {
-    localStorage.setItem('nikke_hq_assets', String(newVal))
+    if (!lowPowerMode.value) {
+      const nextPreference: AssetQualityMode = newVal ? 'high' : 'low'
+      storyGenAssetQualityPreference.value = nextPreference
+      localStorage.setItem('nikke_hq_assets', String(newVal))
+    }
     market.live2d.triggerResetPlacement()
+  }
+)
+
+watch(
+  () => market.route.name,
+  () => {
+    syncStoryGenLowPowerDataset()
   }
 )
 
@@ -1358,6 +1547,9 @@ watch(apiProvider, async (newVal) => {
   // Reset model when provider changes
   if (apiProvider.value === 'gemini') {
     model.value = 'gemini-2.5-flash'
+  } else if (apiProvider.value === 'opencode-go') {
+    model.value = ''
+    await refreshOpenCodeGoModels()
   } else if (apiProvider.value === 'openrouter') {
     model.value = ''
     openRouterModels.value = await fetchOpenRouterModels()
@@ -1367,11 +1559,7 @@ watch(apiProvider, async (newVal) => {
     }
   } else if (apiProvider.value === 'pollinations') {
     model.value = ''
-    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-
-    if (pollinationsModels.value.length > 0) {
-      model.value = pollinationsModels.value[0].value
-    }
+    await refreshPollinationsModels()
   }
 })
 
@@ -1396,10 +1584,12 @@ const initializeSettings = async () => {
   // Load all simple settings from localStorage
   const stored = loadSettingsFromStorage()
 
+  storyGenAssetQualityPreference.value = stored.hqAssets === false ? 'low' : 'high'
+
   if (stored.mode !== undefined) mode.value = stored.mode
   if (stored.playbackMode !== undefined) playbackMode.value = stored.playbackMode
   if (stored.yapEnabled !== undefined) market.live2d.yapEnabled = stored.yapEnabled
-  if (stored.hqAssets !== undefined) market.live2d.HQassets = stored.hqAssets
+  applyStoryGenAssetQuality(lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value)
   if (stored.ttsEnabled !== undefined) ttsEnabled.value = stored.ttsEnabled
   if (stored.ttsEndpoint !== undefined) ttsEndpoint.value = stored.ttsEndpoint
   if (stored.ttsProvider !== undefined) ttsProvider.value = stored.ttsProvider
@@ -1410,43 +1600,69 @@ const initializeSettings = async () => {
   if (stored.enableContextCaching !== undefined) enableContextCaching.value = stored.enableContextCaching
   if (stored.autoCompactSummaries !== undefined) autoCompactSummaries.value = stored.autoCompactSummaries
   if (stored.autoCompactFrequency !== undefined) autoCompactFrequency.value = stored.autoCompactFrequency
-  if (stored.enableAnimationReplay !== undefined) enableAnimationReplay.value = stored.enableAnimationReplay
+  if (stored.playerCharacterUseCustom !== undefined) useCustomPlayerCharacter.value = stored.playerCharacterUseCustom
+  if (stored.playerCharacterName !== undefined) selectedPlayerCharacterName.value = stored.playerCharacterName
+  ensureValidSelectedPlayerCharacter()
+  if (stored.enableAnimationReplay !== undefined) {
+    storyGenAnimationReplayPreference.value = stored.enableAnimationReplay
+  }
+  enableAnimationReplay.value = lowPowerMode.value ? false : storyGenAnimationReplayPreference.value
+
+  if (stored.backgroundImagesEnabled !== undefined) {
+    market.live2d.backgroundImagesEnabled = stored.backgroundImagesEnabled
+  }
 
   // Provider + model (needs async model fetching)
   if (stored.apiProvider) {
     apiProvider.value = stored.apiProvider
 
-    if (stored.apiProvider === 'openrouter') {
-      openRouterModels.value = await fetchOpenRouterModels()
-    } else if (stored.apiProvider === 'pollinations') {
-      pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-    }
+    const validModels = await resolveProviderModelsForSessionRestore(
+      stored.apiProvider,
+      {
+        refreshOpenCodeGoModels,
+        refreshPollinationsModels,
+        fetchOpenRouterModels: async () => await fetchOpenRouterModels()
+      },
+      {
+        get openRouterModels() {
+          return openRouterModels.value
+        },
+        set openRouterModels(value) {
+          openRouterModels.value = value
+        },
+        get openCodeGoModels() {
+          return openCodeGoModels.value
+        },
+        set openCodeGoModels(value) {
+          openCodeGoModels.value = value
+        },
+        get pollinationsModels() {
+          return pollinationsModels.value
+        },
+        set pollinationsModels(value) {
+          pollinationsModels.value = value
+        }
+      }
+    )
 
-    let validModels: string[] = []
-    if (stored.apiProvider === 'gemini') {
-      validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
-    } else if (stored.apiProvider === 'openrouter') {
-      validModels = openRouterModels.value.map((m) => m.value)
-    } else if (stored.apiProvider === 'pollinations') {
-      validModels = pollinationsModels.value.map((m) => m.value)
+    if ((stored.apiProvider !== 'pollinations' && stored.apiProvider !== 'opencode-go') || validModels.length > 0) {
+      const fallbackModel = stored.apiProvider === 'openrouter' ? openRouterModels.value[0]?.value : openCodeGoModels.value[0]?.value
+      const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, fallbackModel)
+      if (validModel) model.value = validModel
+      if (warning) console.warn(warning)
     }
-
-    const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, openRouterModels.value.length > 0 ? openRouterModels.value[0].value : undefined)
-    if (validModel) model.value = validModel
-    if (warning) console.warn(warning)
   }
 
   // Ensure models are loaded for the current provider
-  if (apiProvider.value === 'openrouter' && openRouterModels.value.length === 0) {
+  if (apiProvider.value === 'opencode-go' && openCodeGoModels.value.length === 0) {
+    await refreshOpenCodeGoModels()
+  } else if (apiProvider.value === 'openrouter' && openRouterModels.value.length === 0) {
     openRouterModels.value = await fetchOpenRouterModels()
     if (openRouterModels.value.length > 0 && !model.value) {
       model.value = openRouterModels.value[0].value
     }
   } else if (apiProvider.value === 'pollinations' && pollinationsModels.value.length === 0) {
-    pollinationsModels.value = await fetchPollinationsModels(apiKey.value)
-    if (pollinationsModels.value.length > 0 && !model.value) {
-      model.value = pollinationsModels.value[0].value
-    }
+    await refreshPollinationsModels()
   }
 
   isRestoring.value = false
@@ -1491,9 +1707,12 @@ onMounted(() => {
       chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
     }
   })
+
+  syncStoryGenLowPowerDataset()
 })
 
 onUnmounted(() => {
+  delete document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY]
   market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
   unlockMobilePageScroll()
@@ -1538,6 +1757,10 @@ const saveSession = () => {
     summaryJustCompacted: summaryJustCompacted.value,
     mode: mode.value,
     rosterRows: rosterRows.value,
+    playerCharacter: {
+      useCustomCharacter: useCustomPlayerCharacter.value,
+      characterName: resolvedPlayerCharacterKey.value || undefined
+    },
     enableAnimationReplay: enableAnimationReplay.value,
     apiProvider: apiProvider.value,
     model: model.value,
@@ -1550,7 +1773,6 @@ const saveSession = () => {
     gptSovitsBasePath: gptSovitsBasePath.value,
     tokenUsage: tokenUsage.value,
     enableContextCaching: enableContextCaching.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     reasoningEffort: reasoningEffort.value,
     autoCompactSummaries: autoCompactSummaries.value,
@@ -1562,6 +1784,41 @@ const saveSession = () => {
 
 const triggerRestore = () => {
   fileInput.value?.click()
+}
+
+const triggerFolderPicker = () => {
+  folderInput.value?.click()
+}
+
+const handleFolderSelection = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+
+  market.live2d.clearBackgroundImages()
+
+  backgroundFolderName.value = input.files[0].webkitRelativePath.split('/')[0]
+
+  const loadResult = market.live2d.loadBackgroundImages(input.files)
+  const feedback = formatBackgroundFolderLoadFeedback({
+    folderName: backgroundFolderName.value,
+    matchCount: loadResult.matchCount,
+    aliasMatchCount: loadResult.aliasMatches.length,
+    unmatchedImageCount: loadResult.unmatchedImageFiles.length
+  })
+  for (const message of feedback.info) console.log(message)
+  for (const message of feedback.warnings) console.warn(message)
+
+  input.value = ''
+}
+
+const onBackgroundImagesToggle = (enabled: boolean) => {
+  if (enabled && lowPowerMode.value) return
+  market.live2d.backgroundImagesEnabled = enabled
+  localStorage.setItem('nikke_background_images_enabled', String(enabled))
+  if (!enabled) {
+    market.live2d.clearBackgroundImages()
+    backgroundFolderName.value = ''
+  }
 }
 
 const handleFileUpload = (event: Event) => {
@@ -1594,6 +1851,10 @@ const handleFileUpload = (event: Event) => {
         if (data.storySummary) {
           storySummary.value = data.storySummary
         }
+        const restoredPlayerCharacter = validatePlayerCharacterState(data.playerCharacter)
+        useCustomPlayerCharacter.value = restoredPlayerCharacter.useCustomCharacter
+        selectedPlayerCharacterName.value = restoredPlayerCharacter.characterName || selectedPlayerCharacterName.value
+        ensureValidSelectedPlayerCharacter()
         if (data.lastSummarizedIndex !== undefined) {
           lastSummarizedIndex.value = data.lastSummarizedIndex
         }
@@ -1609,40 +1870,57 @@ const handleFileUpload = (event: Event) => {
 
         // Restore Settings — build valid model list, then validate
         if (data.settings) {
-          // If the saved provider is openrouter, fetch models first
           const savedProvider = data.settings.apiProvider
-          if (savedProvider === 'openrouter') {
-            openRouterModels.value = await fetchOpenRouterModels()
-          }
-
-          let validModels: string[] = []
-          if (savedProvider === 'gemini') {
-            validModels = ['gemini-2.5-flash', 'gemini-2.5-pro']
-          } else if (savedProvider === 'openrouter') {
-            validModels = openRouterModels.value.map((m) => m.value)
-          }
+          const validModels = await resolveProviderModelsForSessionRestore(
+            savedProvider,
+            {
+              refreshOpenCodeGoModels,
+              refreshPollinationsModels,
+              fetchOpenRouterModels: async () => await fetchOpenRouterModels()
+            },
+            {
+              get openRouterModels() {
+                return openRouterModels.value
+              },
+              set openRouterModels(value) {
+                openRouterModels.value = value
+              },
+              get openCodeGoModels() {
+                return openCodeGoModels.value
+              },
+              set openCodeGoModels(value) {
+                openCodeGoModels.value = value
+              },
+              get pollinationsModels() {
+                return pollinationsModels.value
+              },
+              set pollinationsModels(value) {
+                pollinationsModels.value = value
+              }
+            }
+          )
 
           const validated = validateSessionSettings(data.settings, validModels)
-
-          // Apply validated settings to refs
-          if (validated.playbackMode !== undefined) playbackMode.value = validated.playbackMode
-          if (validated.yapEnabled !== undefined) market.live2d.yapEnabled = validated.yapEnabled
-          if (validated.ttsEnabled !== undefined) ttsEnabled.value = validated.ttsEnabled
-          if (validated.ttsEndpoint !== undefined) ttsEndpoint.value = validated.ttsEndpoint
-          if (validated.ttsProvider !== undefined) ttsProvider.value = validated.ttsProvider
-          if (validated.gptSovitsEndpoint !== undefined) gptSovitsEndpoint.value = validated.gptSovitsEndpoint
-          if (validated.gptSovitsBasePath !== undefined) gptSovitsBasePath.value = validated.gptSovitsBasePath
-          if (validated.tokenUsage !== undefined) tokenUsage.value = validated.tokenUsage
-          if (validated.enableContextCaching !== undefined) enableContextCaching.value = validated.enableContextCaching
-          if (validated.useLocalProfiles !== undefined) useLocalProfiles.value = validated.useLocalProfiles
-          if (validated.allowWebSearchFallback !== undefined) allowWebSearchFallback.value = validated.allowWebSearchFallback
-          if (validated.reasoningEffort !== undefined) reasoningEffort.value = validated.reasoningEffort
-          if (validated.autoCompactSummaries !== undefined) autoCompactSummaries.value = validated.autoCompactSummaries
-          if (validated.autoCompactFrequency !== undefined) autoCompactFrequency.value = validated.autoCompactFrequency
-          if (validated.apiProvider !== undefined) apiProvider.value = validated.apiProvider
-          if (validated.model !== undefined) model.value = validated.model
-          if (validated.modelWarning) {
-            chatHistory.value.push({ role: 'system', content: validated.modelWarning })
+          const modelWarning = applyValidatedSessionSettings({
+            validated,
+            playbackMode,
+            setYapEnabled: (value) => { market.live2d.yapEnabled = value },
+            ttsEnabled,
+            ttsEndpoint,
+            ttsProvider,
+            gptSovitsEndpoint,
+            gptSovitsBasePath,
+            tokenUsage,
+            enableContextCaching,
+            allowWebSearchFallback,
+            reasoningEffort,
+            autoCompactSummaries,
+            autoCompactFrequency,
+            apiProvider,
+            model
+          })
+          if (modelWarning) {
+            chatHistory.value.push({ role: 'system', content: modelWarning })
           }
         }
 
@@ -1721,6 +1999,7 @@ const flushPendingGameChoice = () => {
 
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
+  if (!ensureApiKeyForCurrentProvider()) return
 
   let text = userInput.value
 
@@ -1783,6 +2062,8 @@ const sendMessage = async () => {
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
     wrongSpeechStylesToggle.value = false
+    npcUsingCommanderHonorificsToggle.value = false
+    commanderPresentButSilentToggle.value = false
   }
 
   isLoading.value = false
@@ -1792,6 +2073,8 @@ const sendMessage = async () => {
 }
 
 const retryLastMessage = async () => {
+  if (!ensureApiKeyForCurrentProvider()) return
+
   // Remove the last system error message
   if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
     chatHistory.value.pop()
@@ -1850,6 +2133,8 @@ const retryLastMessage = async () => {
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
     wrongSpeechStylesToggle.value = false
+    npcUsingCommanderHonorificsToggle.value = false
+    commanderPresentButSilentToggle.value = false
   }
 
   isLoading.value = false
@@ -1910,6 +2195,7 @@ const nextAction = () => {
 
 const continueStory = async () => {
   if (isLoading.value) return
+  if (!ensureApiKeyForCurrentProvider()) return
 
   const text = mode.value === 'story' ? prompts.continue.story : prompts.continue.roleplay
   chatHistory.value.push({ role: 'user', content: text })
@@ -1971,6 +2257,8 @@ const continueStory = async () => {
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
     wrongSpeechStylesToggle.value = false
+    npcUsingCommanderHonorificsToggle.value = false
+    commanderPresentButSilentToggle.value = false
   }
 
   isLoading.value = false
@@ -1993,7 +2281,9 @@ const getUserReminders = (): string => {
     incorrectAnimationsPersist: { ref: incorrectAnimationsPersist },
     incorrectSpeakerLabeling: { ref: incorrectSpeakerLabelingToggle },
     narrationAsDialogue: { ref: narrationAsDialogueToggle },
-    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle }
+    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle },
+    npcUsingCommanderHonorifics: { ref: npcUsingCommanderHonorificsToggle },
+    commanderPresentButSilent: { ref: commanderPresentButSilentToggle }
   }
 
   const snapshot: ReminderToggleState = {
@@ -2008,10 +2298,15 @@ const getUserReminders = (): string => {
     incorrectAnimationsPersist: incorrectAnimationsPersist.value,
     incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle.value,
     narrationAsDialogue: narrationAsDialogueToggle.value,
-    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value
+    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value,
+    npcUsingCommanderHonorifics: npcUsingCommanderHonorificsToggle.value,
+    commanderPresentButSilent: commanderPresentButSilentToggle.value
   }
 
-  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>)
+  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>, {
+    playerCharacterName: activePlayerCharacterName.value,
+    customPlayerCharacterActive: isCustomPlayerCharacterActive.value
+  })
 
   for (const key of togglesToClear) {
     const entry = toggleMap[key]
@@ -2081,12 +2376,12 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   // Determine if this is the first turn (web search needed for initial characters)
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
 
-  // If using local profiles, we disable initial web search to force the "needs_search" flow
+  // Disable initial web search to force the "needs_search" flow
   // This allows us to check local JSON first before falling back to web search
-  const enableWebSearch = isFirstTurn && !useLocalProfiles.value
+  const enableWebSearch = false
 
-  // If using local profiles, pre-load profiles for any characters mentioned in the first prompt
-  if (isFirstTurn && useLocalProfiles.value && chatHistory.value.length > 0) {
+  // Pre-load profiles for any characters mentioned in the first prompt
+  if (isFirstTurn && chatHistory.value.length > 0) {
     const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
     syncRosterFromPrompt(firstPrompt)
     // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
@@ -2115,15 +2410,14 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
       }
     }
 
-    // Colon variants (e.g., "Anis: Sparkling Summer") are mutually exclusive with their
-    // base characters. If a variant is matched, drop the base name to avoid injecting both
-    // profiles into the system prompt and confusing the AI about which character to use.
-    const matchedVariantBases = new Set(foundNames.filter((n) => n.includes(':')).map((n) => n.split(':')[0].trim()))
-    const deduplicatedNames = foundNames.filter((name) => !(name.includes(':') === false && matchedVariantBases.has(name)))
-
-    if (deduplicatedNames.length > 0 && !isStopped.value) {
-      logDebug('[callAI] Pre-loading local profiles for:', deduplicatedNames)
-      await wrappedSearchForCharacters(deduplicatedNames)
+    // Both variant and base character profiles are now injected together. Variant
+    // profiles (e.g., "Anis: Star") carry variant-specific details, while base
+    // profiles (e.g., "Anis") provide complementary backstory and personality
+    // context. searchForCharacters will auto-inject base profiles for any
+    // variant names it encounters.
+    if (foundNames.length > 0 && !isStopped.value) {
+      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
+      await wrappedSearchForCharacters(foundNames)
     }
   }
 
@@ -2146,11 +2440,15 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
   // Build hidden honorifics instruction for first turn only
   // This is injected into the first user message but NOT saved to history
-  const buildHonorificsReminder = (): string => {
+  const buildFirstTurnReminder = (): string => {
     if (!isFirstTurn) return ''
 
+    if (isCustomPlayerCharacterActive.value) {
+      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
+    }
+
     // Get relevant honorifics from the characterHonorifics JSON
-    const knownNames = Object.keys(characterProfiles.value)
+    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
 
     if (knownNames.length === 0) return ''
 
@@ -2169,8 +2467,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   }
 
   // Helper to inject honorifics reminder into the last user message (first turn only)
-  const injectHonorificsReminder = (messages: any[]): any[] => {
-    const reminder = buildHonorificsReminder()
+  const injectFirstTurnReminder = (messages: any[]): any[] => {
+    const reminder = buildFirstTurnReminder()
 
     if (!reminder) return messages
 
@@ -2197,18 +2495,26 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
 
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to Gemini:', messages)
     response = await callGemini(messages, enableWebSearch)
+  } else if (apiProvider.value === 'opencode-go') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
+
+    logDebug('Sending to OpenCode Go:', messages)
+    response = await callOpenCodeGo(messages)
   } else if (apiProvider.value === 'openrouter') {
     // OpenRouter: Use standard OpenAI format with context in system prompt
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to OpenRouter:', messages)
     response = await callOpenRouter(messages, undefined, enableWebSearch)
@@ -2217,8 +2523,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to Pollinations:', messages)
     response = await callPollinations(messages, enableWebSearch)
@@ -2227,8 +2533,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
     let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject honorifics reminder for first turn (not saved to history)
-    messages = injectHonorificsReminder(messages)
+    // Inject first-turn reminder for prompt steering (not saved to history)
+    messages = injectFirstTurnReminder(messages)
 
     logDebug('Sending to Local:', messages)
     response = await callLocal(messages)
@@ -2262,6 +2568,7 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
 
 // Separate function to call AI without search (after character lookup)
 const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
+  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
   const systemPrompt = generateSystemPrompt(false)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
 
@@ -2275,25 +2582,71 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
   // Get user toggled reminders
   const reminders = getUserReminders()
 
+  const buildFirstTurnReminder = (): string => {
+    if (!isFirstTurn) return ''
+
+    if (isCustomPlayerCharacterActive.value) {
+      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
+    }
+
+    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
+    if (knownNames.length === 0) return ''
+
+    const honorificExamples: string[] = []
+    for (const name of knownNames) {
+      const honorific = getHonorific(name)
+      if (honorific && honorific !== 'Commander') {
+        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
+      }
+    }
+
+    if (honorificExamples.length === 0) return ''
+    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
+  }
+
+  const injectFirstTurnReminder = (messages: any[]): any[] => {
+    const reminder = buildFirstTurnReminder()
+    if (!reminder) return messages
+
+    const result = [...messages]
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (result[i].role === 'user') {
+        result[i] = { ...result[i], content: result[i].content + reminder }
+        break
+      }
+    }
+
+    return result
+  }
+
   // Tumbling window summarization + context/history preparation
   const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAIWithoutSearch]')
   contextMsg = updatedContextMsg
 
   if (apiProvider.value === 'gemini') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callGemini(messages, false)
+  } else if (apiProvider.value === 'opencode-go') {
+    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
+    return await callOpenCodeGo(messages)
   } else if (apiProvider.value === 'openrouter') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callOpenRouter(messages, undefined, false)
   } else if (apiProvider.value === 'pollinations') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callPollinations(messages, false)
   } else if (apiProvider.value === 'local') {
     const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    const messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+    messages = injectFirstTurnReminder(messages)
     return await callLocal(messages)
   }
 
@@ -2303,7 +2656,7 @@ const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> =>
 // Check if the AI response contains a search request for unknown characters
 const checkForSearchRequest = async (response: string, userPrompt: string = ''): Promise<string[] | null> => {
   return checkForSearchRequestUtil(response, userPrompt, {
-    characterProfiles: characterProfiles.value,
+    characterProfiles: playerCharacterAwareProfiles.value,
     characterCatalog,
     apiProvider: apiProvider.value,
     allowWebSearchFallback: allowWebSearchFallback.value
@@ -2317,18 +2670,19 @@ const checkForSearchRequest = async (response: string, userPrompt: string = ''):
 
 // Wrapper functions for web search
 const wrappedSearchForCharactersWithNativeSearch = async (characterNames: string[]) => {
-  return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
+  return searchForCharactersWithNativeSearch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations, callOpenCodeGo)
 }
 
 const wrappedSearchForCharactersViaWikiFetch = async (characterNames: string[]) => {
-  return searchForCharactersViaWikiFetch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations)
+  return searchForCharactersViaWikiFetch(characterNames, characterProfiles.value, apiProvider.value, callGemini, callOpenRouter, callPollinations, callOpenCodeGo)
 }
 
 const wrappedSearchForCharacters = async (characterNames: string[]) => {
-  return searchForCharacters(characterNames, characterProfiles.value, useLocalProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
+  return searchForCharacters(characterNames, characterProfiles.value, allowWebSearchFallback.value, apiProvider.value, model.value, loadingStatus, setRandomLoadingMessage, wrappedSearchForCharactersWithNativeSearch, wrappedSearchForCharactersViaWikiFetch)
 }
 
 const generateSystemPrompt = (enableWebSearch: boolean) => {
+  const isBgReady = market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0
   return generateSystemPromptUtil({
     enableWebSearch,
     effectiveCharacterProfiles: effectiveCharacterProfiles.value,
@@ -2337,7 +2691,15 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     mode: mode.value,
     godModeEnabled: godModeEnabled.value,
     realisticModeEnabled: realisticModeEnabled.value,
-    characterCatalog
+    lowContextMode: lowContextMode.value,
+    characterCatalog,
+    currentUserPrompt: lastPrompt.value,
+    chatHistory: chatHistory.value,
+    playerCharacterName: activePlayerCharacterName.value,
+    customPlayerCharacterActive: isCustomPlayerCharacterActive.value,
+    backgroundImagesEnabled: isBgReady,
+    backgroundImageMap: isBgReady ? market.live2d.backgroundImageMap : undefined,
+    currentBackgroundFilename: isBgReady ? market.live2d.currentBackground : undefined
   })
 }
 
@@ -2346,7 +2708,6 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     model: model.value,
     apiKey: apiKey.value,
     enableContextCaching: enableContextCaching.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     modeIsGame: mode.value === 'game',
     enableWebSearch,
@@ -2361,7 +2722,6 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
   return await callGeminiImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
@@ -2373,12 +2733,21 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
   return await callPollinationsImpl(messages, {
     model: model.value,
     apiKey: apiKey.value,
-    useLocalProfiles: useLocalProfiles.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     modeIsGame: mode.value === 'game',
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
     enableContextCaching: enableContextCaching.value,
+    signal: activeAbortController?.signal
+  })
+}
+
+const callOpenCodeGo = async (messages: any[]) => {
+  return await callOpenCodeGoImpl(messages, {
+    model: model.value,
+    apiKey: apiKey.value,
+    modeIsGame: mode.value === 'game',
+    reasoningEffort: reasoningEffort.value,
     signal: activeAbortController?.signal
   })
 }
@@ -2591,7 +2960,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
     const unique = Array.from(new Set(requested))
 
     return unique.filter((name) => {
-      if (characterProfiles.value[name] || name.toLowerCase() === 'commander') return false
+      const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((key) => key.toLowerCase() === name.toLowerCase())
+      if (existingKey || name.toLowerCase() === 'commander') return false
       const inUserPrompt = userPrompt && isWholeWordPresent(userPrompt, name)
       const inGeneratedText = allGeneratedText && isWholeWordPresent(allGeneratedText, name)
       return !!(inUserPrompt || inGeneratedText)
@@ -2707,7 +3077,7 @@ const executeAction = async (data: any) => {
 
   // Normalize legacy/misused profile updates (e.g., DeepSeek using characterProfile/memory) so they
   // cannot overwrite existing profiles and instead become characterProgression updates.
-  data = normalizeAiActionCharacterData(data, characterProfiles.value)
+  data = normalizeAiActionCharacterData(data, playerCharacterAwareProfiles.value)
 
   if (data.memory) {
     logDebug('[AI Memory Update - New Characters Only]:', data.memory)
@@ -2715,29 +3085,40 @@ const executeAction = async (data: any) => {
 
     for (const [charName, profile] of Object.entries(data.memory)) {
       // 1. Check if already in active profiles (Case-Insensitive)
-      const existingKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
 
       if (existingKey) {
         logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
         continue
       }
 
-      // 2. Check if in LOCAL profiles (if enabled) - ENFORCE READ-ONLY FROM DB
-      if (useLocalProfiles.value) {
-        const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const resolvedKey = variantKey || localKey
-        if (resolvedKey) {
-          logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
+      // 2. Check local profiles - ENFORCE READ-ONLY FROM DB
+      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const resolvedKey = variantKey || localKey
+      if (resolvedKey) {
+        logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
 
-          const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
-          // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
-          newProfiles[charName] = {
-            ...localProfile,
-            id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
-          }
-          continue
+        const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
+        // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
+        newProfiles[charName] = {
+          ...localProfile,
+          id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
         }
+
+        // When a variant is loaded, also inject the base profile for context
+        if (variantKey && charName.includes(':')) {
+          const baseName = charName.split(':')[0].trim()
+          const alreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (!alreadyKnown && !newProfiles[baseName]) {
+            const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+            if (baseKey) {
+              newProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
+              logDebug(`[AI Memory] Also loading base profile for variant "${charName}": ${baseName}`)
+            }
+          }
+        }
+        continue
       }
 
       if (typeof profile === 'object' && profile !== null) {
@@ -2791,7 +3172,7 @@ const executeAction = async (data: any) => {
 
     for (const [charName, progression] of Object.entries(data.characterProgression)) {
       // Find target profile (Case-Insensitive) in BASE profiles.
-      const targetKey = Object.keys(characterProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const targetKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
       const resolvedKey = targetKey || charName
 
       if (typeof progression === 'object' && progression !== null) {
@@ -2849,6 +3230,23 @@ const executeAction = async (data: any) => {
     }
   }
 
+  // Apply background image if specified
+  if (data.background && market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0) {
+    const backgroundSelection = resolveAiBackgroundSelection({
+      background: data.background,
+      availableFilenames: market.live2d.backgroundImageMap.keys()
+    })
+
+    if (backgroundSelection.action === 'clear') {
+      market.live2d.clearActiveBackground()
+    } else if (backgroundSelection.action === 'apply') {
+      const applied = backgroundSelection.filename ? market.live2d.applyBackground(backgroundSelection.filename) : false
+      if (!applied) {
+        console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
+      }
+    }
+  }
+
   // Prepare character update promise
   const characterUpdatePromise = (async () => {
     if (data.character) {
@@ -2864,9 +3262,9 @@ const executeAction = async (data: any) => {
           data.character = resolvedRosterId
           effectiveCharId = resolvedRosterId
         }
-        // Force 'none' if in Story Mode and character is Commander
-        if (mode.value === 'story' && (data.character.toLowerCase().includes('commander') || data.character === 'c000')) {
-          logDebug('[Chat] Hiding Commander sprite in Story Mode')
+        // Force 'none' if character is Commander
+        if (data.character.toLowerCase().includes('commander') || data.character === 'c000') {
+          logDebug('[Chat] Hiding Commander sprite')
           market.live2d.isVisible = false
         } else {
           // Find character object
@@ -2874,6 +3272,54 @@ const executeAction = async (data: any) => {
           const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
 
           if (charObj) {
+            // Auto-load character profile from local JSON if not already known.
+            // This ensures profiles are injected into the system prompt for future
+            // turns even when the AI omits `needs_search` and `memory` blocks.
+            const charName = charObj.name
+            const profileAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
+              (k) => k.toLowerCase() === charName.toLowerCase()
+            )
+            if (!profileAlreadyKnown) {
+              const localKey = Object.keys(localCharacterProfiles).find(
+                (k) => k.toLowerCase() === charName.toLowerCase()
+              )
+              const variantKey = Object.keys(variantCharacterProfiles).find(
+                (k) => k.toLowerCase() === charName.toLowerCase()
+              )
+              const resolvedKey = variantKey || localKey
+              if (resolvedKey) {
+                const sourceProfile = variantKey
+                  ? (variantCharacterProfiles as Record<string, any>)[resolvedKey]
+                  : (localCharacterProfiles as Record<string, any>)[resolvedKey]
+                const newEntry = {
+                  ...sourceProfile,
+                  id: sourceProfile.id || charObj.id
+                }
+                characterProfiles.value = { ...characterProfiles.value, [charName]: newEntry }
+                logDebug(`[Chat] Auto-loaded local profile for new character: ${charName} (${charObj.id})`)
+
+                if (variantKey && charName.includes(':')) {
+                  const baseName = charName.split(':')[0].trim()
+                  const baseAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
+                    (k) => k.toLowerCase() === baseName.toLowerCase()
+                  )
+                  if (!baseAlreadyKnown) {
+                    const baseProfileKey = Object.keys(localCharacterProfiles).find(
+                      (k) => k.toLowerCase() === baseName.toLowerCase()
+                    )
+                    if (baseProfileKey) {
+                      characterProfiles.value = {
+                        ...characterProfiles.value,
+                        [baseName]: { ...(localCharacterProfiles as Record<string, any>)[baseProfileKey] }
+                      }
+                      logDebug(`[Chat] Also auto-loaded base profile for variant: ${baseName}`)
+                    }
+                  }
+                }
+                syncRosterFromProfiles([charName], 'ai')
+              }
+            }
+
             // Ensure visible
             logDebug('[Chat] Setting visibility to true')
             market.live2d.isVisible = true
@@ -2929,7 +3375,14 @@ const executeAction = async (data: any) => {
     const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
     const normalized = isForbidden ? 'idle' : requested
     logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
-    market.live2d.current_animation = normalized
+
+    // Apply animation override reverse lookup (replaced name -> original Spine name)
+    const animCharId = effectiveCharId || market.live2d.current_id
+    const resolvedAnim = resolveAnimationOverride(animCharId, normalized)
+    if (resolvedAnim !== normalized) {
+      logDebug(`[Chat] Animation override applied: ${normalized} -> ${resolvedAnim} for ${animCharId}`)
+    }
+    market.live2d.current_animation = resolvedAnim
   }
 
   // Speaking
@@ -3141,6 +3594,8 @@ const resetSession = () => {
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
 
   if (confirmed) {
+    // Resetting the story should not keep the previous visual scene pinned to the
+    // page background, so clear any active blob URL even if the pack stays loaded.
     chatHistory.value = []
     characterProfiles.value = {}
     characterProgression.value = {}
@@ -3154,9 +3609,12 @@ const resetSession = () => {
     isLoadedSession.value = false
     lastPrompt.value = ''
     market.live2d.isVisible = false
+    market.live2d.current_id = 'c010'
+    market.live2d.clearActiveBackground()
     selectedMessageIndex.value = null
     nikkeOverlayVisible.value = false
     rosterRows.value = []
+    ensureValidSelectedPlayerCharacter()
   }
 }
 
@@ -3243,7 +3701,7 @@ const performCompaction = async (): Promise<boolean> => {
 }
 
 const handleCompactSummary = async () => {
-  if (isCompactSummaryDisabled.value) return
+  if (isCompactSummaryDisabled.value || !ensureApiKeyForCurrentProvider()) return
 
   isLoading.value = true
   activeAbortController = new AbortController()
