@@ -13,6 +13,7 @@
               @stoppreview="(key: string, i: number) => stopPreview(key, i)"
               :searchQuery="props.searchQuery"
               :colors="props.colors"
+              :preview-color="commonColor"
           />
         </template>
       </template>
@@ -23,15 +24,41 @@
 <script setup lang="ts">
 
 import { useMarket } from '@/stores/market'
-import type { AttachmentInterface, AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
+import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
 import AttachmentEditorListItem from '@/components/common/Spine/Tools/AttachmentEditorListItem.vue'
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const market = useMarket()
+let intervalId = null as any
 
 onMounted(() => {
-  // console.log(market.live2d.attachments)
+  intervalId = commonPreviewInterval()
 })
+
+onUnmounted(() => {
+  clearInterval(intervalId)
+})
+
+let commonColor = ref({
+  r: 1,
+  b: 1,
+  g: 1,
+  a: 1
+})
+
+const commonPreviewInterval = () => {
+  return setInterval(() => {
+    const r = commonColor.value.r === 1 || commonColor.value.b === 2 ? 2 : 0
+    const g = commonColor.value.r === 2 ? 2 : 0
+    const b = commonColor.value.g === 2 ? 2 : 0
+    commonColor.value = {
+      r: r,
+      g: g,
+      b: b,
+      a: 1
+    }
+  }, 250)
+}
 
 const props = defineProps<{
   searchQuery: string,

@@ -29,37 +29,30 @@ const props = defineProps<{
   index: number,
   subIndex: number,
   item: AttachmentItemInterface,
-  searchQuery: string
+  searchQuery: string,
+  previewColor: { r: number, g: number, b: number, a: number },
 }>()
 
 const market = useMarket()
 
 const isAttachmentChecked = ref(false)
 
-let selectionIntervalId: any = null
+// let selectionIntervalId: any = null
 let selectionColorBackup: { r: number; g: number; b: number; a: number } | null = null
 
 const startSelectionCycle = () => {
-  if (selectionIntervalId !== null) return
   const colorRef = market.live2d.attachments[props.index]?.[props.item.name]?.color
   if (!colorRef) return
-  selectionColorBackup = { ...colorRef }
-  let phase = 'r'
-  selectionIntervalId = setInterval(() => {
-    const colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
-    if (!colorObj) return
-    colorObj.r = phase === 'r' ? 2 : 0
-    colorObj.g = phase === 'g' ? 2 : 0
-    colorObj.b = phase === 'b' ? 2 : 0
-    colorObj.a = 1
-    phase = phase === 'r' ? 'g' : phase === 'g' ? 'b' : 'r'
-  }, 250)
+  if (selectionColorBackup === null) selectionColorBackup = { ...colorRef }
+  let colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
+  if (!colorObj) return
+  colorObj.r = props.previewColor.r
+  colorObj.g = props.previewColor.g
+  colorObj.b = props.previewColor.b
+  colorObj.a = props.previewColor.a
 }
 
 const stopSelectionCycle = (restore = true) => {
-  if (selectionIntervalId === null) return
-  clearInterval(selectionIntervalId)
-  selectionIntervalId = null
   if (restore && selectionColorBackup) {
     const colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
     if (colorObj) Object.assign(colorObj, selectionColorBackup)
@@ -67,21 +60,35 @@ const stopSelectionCycle = (restore = true) => {
   selectionColorBackup = null
 }
 
-watch(isAttachmentChecked, (checked) => {
-  if (checked && market.live2d.clickToSelectMode) {
+watch(() => props.previewColor, () => {
+  if (isAttachmentChecked.value && market.live2d.clickToSelectMode) {
+    startSelectionCycle()
+  } else {
+    stopSelectionCycle()
+  }
+
+  if (market.live2d.clickToSelectMode && isAttachmentChecked.value) {
     startSelectionCycle()
   } else {
     stopSelectionCycle()
   }
 })
 
-watch(() => market.live2d.clickToSelectMode, (enabled) => {
-  if (enabled && isAttachmentChecked.value) {
-    startSelectionCycle()
-  } else {
-    stopSelectionCycle()
-  }
-})
+// watch(isAttachmentChecked, (checked) => {
+//   if (checked && market.live2d.clickToSelectMode) {
+//     startSelectionCycle()
+//   } else {
+//     stopSelectionCycle()
+//   }
+// })
+//
+// watch(() => market.live2d.clickToSelectMode, (enabled) => {
+//   if (enabled && isAttachmentChecked.value) {
+//     startSelectionCycle()
+//   } else {
+//     stopSelectionCycle()
+//   }
+// })
 
 onUnmounted(() => {
   stopSelectionCycle()
@@ -121,6 +128,9 @@ watch(() => market.live2d.selectAttachments, () => {
 watch(() => market.live2d.updateAttachments, () => {
   if (isAttachmentChecked.value) {
     emits('updateAttachment', props.item.name, props.index)
+    const colorRef = market.live2d.attachments[props.index]?.[props.item.name]?.color
+    if (!colorRef) return
+    selectionColorBackup = { ...colorRef }
   }
 })
 
