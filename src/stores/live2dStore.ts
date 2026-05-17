@@ -211,8 +211,6 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c583':
       case 'c620':
         return 'bg'
-      case 'c441':
-        return 'acc+bg' // merged acc & bg skins of Avista, by Bingle
       default:
         return 'default'
     }
