@@ -126,6 +126,17 @@
           <div class="story-character-inline-header">
             <n-button size="small" type="primary" @click="showRosterList = !showRosterList">Characters</n-button>
             <n-button v-if="showRosterList" size="small" type="success" @click="addRosterRow">+</n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button size="small" type="primary" @click="showPresetsModal = true" :disabled="isLoading">
+                  <template #icon>
+                    <n-icon><Bookmark /></n-icon>
+                  </template>
+                </n-button>
+              </template>
+              Presets
+            </n-tooltip>
+            <n-button v-if="rosterRows.length > 0 && showRosterList" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
           </div>
           <div v-if="showRosterList" class="story-character-list">
             <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
@@ -134,8 +145,58 @@
               <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
               <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
             </div>
+            <div v-if="showSavingPresetInput" class="story-character-row compact save-preset-row">
+              <n-input v-model:value="savingPresetName" size="small" placeholder="Preset name..." @keydown.enter="confirmSavePreset" style="flex: 1" />
+              <n-button size="tiny" type="primary" @click="confirmSavePreset" :disabled="!savingPresetName.trim()">Save</n-button>
+              <n-button size="tiny" @click="cancelSavePreset">Cancel</n-button>
+            </div>
           </div>
         </div>
+        <n-modal v-model:show="showPresetsModal" preset="card" title="Roster Presets" style="max-width: 500px">
+          <div v-if="presets.length === 0" style="text-align: center; padding: 20px; color: #888">
+            No presets saved yet. Add characters to the roster and click <strong>Save as preset</strong> to create one.
+          </div>
+          <div v-else class="presets-list">
+            <div v-for="preset in presets" :key="preset.id" class="preset-item">
+              <div class="preset-info">
+                <div class="preset-name-row">
+                  <span v-if="editingPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
+                  <n-input v-else v-model:value="editingPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmRename(preset.id)" />
+                  <span class="preset-meta">{{ preset.roster.length }} character(s) &middot; {{ formatPresetDate(preset.createdAt) }}</span>
+                </div>
+                <div class="preset-chars">
+                  <span v-for="(entry, i) in preset.roster.slice(0, 5)" :key="entry.key" class="preset-char-tag">{{ getPresetCharName(entry) }}<span v-if="i < Math.min(preset.roster.length, 5) - 1">, </span></span>
+                  <span v-if="preset.roster.length > 5" class="preset-char-more">+{{ preset.roster.length - 5 }} more</span>
+                </div>
+              </div>
+              <div class="preset-actions">
+                <n-button size="tiny" type="primary" @click="loadPreset(preset)">Load</n-button>
+                <n-button size="tiny" @click="startRename(preset)">{{ editingPresetId === preset.id ? 'Cancel' : 'Rename' }}</n-button>
+                <n-popconfirm @positive-click="deletePresetConfirm(preset.id)">
+                  <template #trigger>
+                    <n-button size="tiny" type="error" @click="deletePresetTarget = preset.id">Delete</n-button>
+                  </template>
+                  Delete preset "{{ preset.name }}"?
+                </n-popconfirm>
+              </div>
+            </div>
+          </div>
+          <template v-if="presets.length >= 10" #header-extra>
+            <n-tag type="warning" size="small">Full (10/10)</n-tag>
+          </template>
+          <template #footer>
+            <div class="presets-footer">
+              <n-button size="small" @click="exportAllPresets" :disabled="presets.length === 0">Export All</n-button>
+              <n-button size="small" @click="triggerPresetImport">Import</n-button>
+            </div>
+            <n-alert v-if="presetImportWarning" type="warning" closable style="margin-top: 12px" @close="presetImportWarning = ''">
+              {{ presetImportWarning }}
+            </n-alert>
+            <n-alert v-if="presetImportSuccess" type="success" closable style="margin-top: 12px" @close="presetImportSuccess = ''">
+              {{ presetImportSuccess }}
+            </n-alert>
+          </template>
+        </n-modal>
         <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
           <template #trigger>
             <n-button type="info" size="small" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
@@ -649,6 +710,7 @@
     </n-drawer>
 
     <input type="file" ref="fileInput" style="display: none" accept=".json" @change="handleFileUpload" />
+    <input type="file" ref="presetFileInput" style="display: none" accept=".json" @change="handlePresetFileUpload" />
 
     <StoryGuideModal
       :showGuide="showGuide"
@@ -664,8 +726,8 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag, NModal, NPopconfirm } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
@@ -683,6 +745,7 @@ import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/util
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { loadPresets, createPreset, deletePreset as deletePresetUtil, renamePreset as renamePresetUtil, exportAllPresets as exportAllPresetsUtil, importPresetsFromFile, type PresetEntry } from '@/utils/presetUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
@@ -777,6 +840,16 @@ const characterCatalog = buildCharacterCatalog()
 validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
+const showPresetsModal = ref(false)
+const presets = ref<PresetEntry[]>([])
+const editingPresetId = ref<string | null>(null)
+const editingPresetName = ref('')
+const deletePresetTarget = ref<string | null>(null)
+const presetImportWarning = ref('')
+const presetImportSuccess = ref('')
+const presetFileInput = ref<HTMLInputElement | null>(null)
+const showSavingPresetInput = ref(false)
+const savingPresetName = ref('')
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
 const isCommanderProfileKey = (name: string) => {
   const normalized = name.trim().toLowerCase()
@@ -1352,6 +1425,116 @@ const syncRosterFromPrompt = (prompt: string) => {
     }
     ensureRosterEntry(selectionInfo.selection, skinId, 'user')
   }
+}
+
+// --- Preset Management ---
+
+const formatPresetDate = (timestamp: number) => {
+  const d = new Date(timestamp)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const getPresetCharName = (entry: StoryCharacterEntry) => {
+  const parsed = parseSelectionValue(entry.selection)
+  if (!parsed) return 'Unknown'
+  if (parsed.type === 'base') return parsed.baseName
+  const variant = characterCatalog.variants.find((v) => v.id === parsed.variantId)
+  return variant ? variant.name.split(':')[0].trim() : parsed.variantId
+}
+
+const refreshPresetList = () => {
+  presets.value = loadPresets()
+}
+
+const saveRosterAsPreset = () => {
+  showSavingPresetInput.value = true
+  savingPresetName.value = ''
+}
+
+const confirmSavePreset = () => {
+  const name = savingPresetName.value.trim()
+  if (!name) return
+  createPreset(name, rosterRows.value)
+  showSavingPresetInput.value = false
+  savingPresetName.value = ''
+  refreshPresetList()
+}
+
+const cancelSavePreset = () => {
+  showSavingPresetInput.value = false
+  savingPresetName.value = ''
+}
+
+const loadPreset = (preset: PresetEntry) => {
+  if (!preset || !preset.roster) return
+  rosterRows.value = [...preset.roster]
+  showPresetsModal.value = false
+}
+
+const startRename = (preset: PresetEntry) => {
+  if (editingPresetId.value === preset.id) {
+    editingPresetId.value = null
+    editingPresetName.value = ''
+    return
+  }
+  editingPresetId.value = preset.id
+  editingPresetName.value = preset.name
+}
+
+const confirmRename = (id: string) => {
+  const name = editingPresetName.value.trim()
+  if (!name) {
+    editingPresetId.value = null
+    editingPresetName.value = ''
+    return
+  }
+  renamePresetUtil(id, name)
+  editingPresetId.value = null
+  editingPresetName.value = ''
+  refreshPresetList()
+}
+
+const deletePresetConfirm = (id: string) => {
+  deletePresetUtil(id)
+  deletePresetTarget.value = null
+  refreshPresetList()
+}
+
+watch(showPresetsModal, (val) => {
+  if (val) {
+    refreshPresetList()
+    presetImportWarning.value = ''
+    presetImportSuccess.value = ''
+    editingPresetId.value = null
+    editingPresetName.value = ''
+    deletePresetTarget.value = null
+  }
+})
+
+const triggerPresetImport = () => {
+  presetFileInput.value?.click()
+}
+
+const exportAllPresets = () => exportAllPresetsUtil()
+
+const handlePresetFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  try {
+    const result = await importPresetsFromFile(file)
+    refreshPresetList()
+    if (result.merged > 0) {
+      presetImportSuccess.value = `Imported ${result.merged} preset(s).`
+    }
+    if (result.warnings.length > 0) {
+      presetImportWarning.value = result.warnings.join('\n')
+    }
+  } catch (e: any) {
+    presetImportWarning.value = e?.message || 'Failed to import presets.'
+    presetImportSuccess.value = ''
+  }
+  target.value = ''
 }
 
 // Watchers
@@ -4022,128 +4205,6 @@ const handleCompactSummary = async () => {
   font-size: 0.9em;
 }
 
-.nikke-chat-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9000;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  pointer-events: auto;
-  user-select: none;
-  box-sizing: border-box;
-  /* Support iOS safe area insets */
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.nikke-chat-overlay.passthrough {
-  pointer-events: none;
-}
-
-.nikke-overlay-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10003;
-  display: flex;
-  align-items: center;
-  pointer-events: auto;
-
-  @media (max-width: 1024px) {
-    top: 10px;
-    right: 10px;
-  }
-}
-
-.nikke-vignette {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
-  pointer-events: none;
-}
-
-.nikke-dialogue-container {
-  position: relative;
-  width: 100%;
-  pointer-events: auto;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-  padding: 60px 10% 80px 10%;
-  color: white;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  /* Allow interaction (scroll/touch) so mobile devices can scroll overflowing text */
-  pointer-events: auto;
-  box-sizing: border-box;
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
-
-  @media (max-width: 1024px) {
-    padding: 40px 5% 60px 5%;
-    min-height: 150px;
-    max-height: calc(100vh - 60px);
-  }
-
-  @media (max-width: 834px) {
-    padding: 30px 4% 50px 4%;
-    min-height: 120px;
-    max-height: calc(100vh - 50px);
-  }
-}
-
-.nikke-speaker-name {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.6em;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-
-  @media (max-width: 1024px) {
-    font-size: 1.2em;
-    margin-bottom: 8px;
-  }
-}
-
-.nikke-speaker-indicator {
-  width: 6px;
-  height: 1.2em;
-  background-color: #ffeb3b;
-  box-shadow: 0 0 10px rgba(255, 235, 59, 0.4);
-}
-
-.nikke-dialogue-text {
-  font-size: 1.4em;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  max-width: 1400px;
-  font-weight: 400;
-  word-break: break-word;
-  max-width: calc(100% - 40px);
-
-  @media (max-width: 1024px) {
-    font-size: 1.1em;
-    line-height: 1.4;
-  }
-
-  @media (max-width: 834px) {
-    font-size: 1em;
-    line-height: 1.35;
-  }
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -4470,5 +4531,80 @@ const handleCompactSummary = async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.preset-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  .preset-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+
+    .preset-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .preset-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #e0e0e0;
+      }
+
+      .preset-meta {
+        font-size: 11px;
+        color: #888;
+        white-space: nowrap;
+      }
+    }
+
+    .preset-chars {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.4;
+
+      .preset-char-more {
+        color: #777;
+        font-style: italic;
+      }
+    }
+  }
+
+  .preset-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+}
+
+.presets-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-preset-row {
+  border-top: 1px solid var(--n-border-color);
+  padding-top: 6px;
+  margin-top: 2px;
 }
 </style>
