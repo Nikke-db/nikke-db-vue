@@ -263,7 +263,98 @@ const onWheel = (e: WheelEvent) => {
 }
 
 const SPINE_DEFAULT_MIX = 0.25
+const MAX_SPINE_LOAD_RETRIES = 1
 let spinePlayer: any = null
+
+const getActiveSpinePlayer = () => {
+  if (!spinePlayer || !spineCanvas || spinePlayer !== spineCanvas) return null
+  if (spinePlayer.disposed || spinePlayer.error || !spinePlayer.animationState) return null
+  return spinePlayer
+}
+
+const clearSpineReferences = (player?: any) => {
+  if (!player || spineCanvas === player) {
+    spineCanvas = null
+  }
+
+  if (!player || spinePlayer === player) {
+    spinePlayer = null
+  }
+}
+
+const disposeSpineInstance = (player: any, context: string) => {
+  if (!player) return
+
+  try {
+    player.dispose()
+  } catch (e) {
+    console.warn(`[Loader] Error disposing ${context}:`, e)
+  }
+
+  clearSpineReferences(player)
+}
+
+const handleSpineLoadFailure = ({
+  loadId,
+  retryAttempt,
+  requestedCharacterId,
+  requestedPose,
+  requestedSkelUrl,
+  requestedAtlasUrl,
+  stage,
+  message,
+  player,
+  details
+}: {
+  loadId: number
+  retryAttempt: number
+  requestedCharacterId: string
+  requestedPose: string
+  requestedSkelUrl: string
+  requestedAtlasUrl: string
+  stage: string
+  message?: string
+  player?: any
+  details?: Record<string, any>
+}) => {
+  if (loadId !== currentLoadId) {
+    logDebug(`[Loader] Ignoring stale ${stage} failure for ${requestedCharacterId}`)
+    return
+  }
+
+  const assetErrors = typeof player?.assetManager?.getErrors === 'function'
+    ? player.assetManager.getErrors()
+    : undefined
+
+  console.error('[Loader] Spine load failed:', {
+    characterId: requestedCharacterId,
+    pose: requestedPose,
+    skelUrl: requestedSkelUrl,
+    atlasUrl: requestedAtlasUrl,
+    stage,
+    message,
+    assetErrors,
+    ...details
+  })
+
+  if (player) {
+    disposeSpineInstance(player, `${stage} failure`)
+  } else {
+    clearSpineReferences()
+  }
+
+  if (retryAttempt < MAX_SPINE_LOAD_RETRIES) {
+    console.warn(`[Loader] Retrying Spine load for ${requestedCharacterId} (${retryAttempt + 1}/${MAX_SPINE_LOAD_RETRIES})`)
+    window.setTimeout(() => {
+      if (loadId !== currentLoadId) return
+      spineLoader(retryAttempt + 1)
+    }, 150)
+    return
+  }
+
+  wrongfullyLoaded()
+  market.live2d.triggerFinishedLoading()
+}
 
 const resetAttachmentColors = (player: any) => {
   if (!player?.animationState?.data?.skeletonData?.defaultSkin?.attachments) return
@@ -360,12 +451,14 @@ const resolveAnimation = (requested: string, available: string[]): string | null
 }
 
 watch(() => market.live2d.current_animation, (newAnim) => {
-  if (spinePlayer && newAnim) {
+  const activePlayer = getActiveSpinePlayer()
+
+  if (activePlayer && newAnim) {
     try {
       const resolvedAnim = resolveAnimation(newAnim, market.live2d.animations)
 
       if (resolvedAnim) {
-        spinePlayer.animationState.setAnimation(0, resolvedAnim, true)
+        activePlayer.animationState.setAnimation(0, resolvedAnim, true)
       } else {
         console.warn(`Animation ${newAnim} not found and no fallback discovered.`)
       }
@@ -375,7 +468,7 @@ watch(() => market.live2d.current_animation, (newAnim) => {
   }
 })
 
-const spineLoader = () => {
+const spineLoader = (retryAttempt = 0) => {
   if (!market.live2d.current_id) {
     logDebug('[Loader] No current_id set, skipping load.')
     return
@@ -383,8 +476,12 @@ const spineLoader = () => {
 
   currentLoadId++
   const thisLoadId = currentLoadId
+  const requestedCharacterId = market.live2d.current_id
+  const requestedPose = market.live2d.current_pose
 
   const skelUrl = getPathing('skel')
+  const atlasUrl = getPathing('atlas')
+  const requestedSkin = market.live2d.getSkin()
   const request = new XMLHttpRequest()
 
   request.responseType = 'arraybuffer'
@@ -396,8 +493,21 @@ const spineLoader = () => {
       return
     }
 
-    if (request.status !== 200) {
-      console.error('Failed to load skel file:', request.statusText)
+    if (request.status !== 200 || !request.response) {
+      handleSpineLoadFailure({
+        loadId: thisLoadId,
+        retryAttempt,
+        requestedCharacterId,
+        requestedPose,
+        requestedSkelUrl: skelUrl,
+        requestedAtlasUrl: atlasUrl,
+        stage: 'skeleton request',
+        message: 'Failed to load skel file.',
+        details: {
+          status: request.status,
+          statusText: request.statusText
+        }
+      })
       return
     }
 
@@ -429,23 +539,30 @@ const spineLoader = () => {
       }
 
       spineCanvas = new usedSpine.SpinePlayer('player-container', {
-        skelUrl: market.live2d.current_id,
+        skelUrl: requestedCharacterId,
         rawDataURIs: {
-          [market.live2d.current_id]: skelURL,
+          [requestedCharacterId]: skelURL,
         },
-        atlasUrl: getPathing('atlas'),
+        atlasUrl,
         animation: getDefaultAnimation(),
-        skin: market.live2d.getSkin(),
+        skin: requestedSkin,
         showControls: market.route.name !== 'story-gen',
         backgroundColor: '#00000000',
         alpha: true,
         premultipliedAlpha: true,
-        mipmaps: market.live2d.current_pose === 'fb' ? true : false,
+        mipmaps: requestedPose === 'fb' ? true : false,
         debug: false,
         preserveDrawingBuffer: true,
         viewport: spineViewport,
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
+          if (thisLoadId !== currentLoadId || player.disposed) {
+            logDebug(`[Loader] Ignoring stale success callback for ${requestedCharacterId}`)
+            if (!player.disposed) {
+              disposeSpineInstance(player, 'stale success callback')
+            }
+            return
+          }
 
           spinePlayer = player
           resetAttachmentColors(player)
@@ -472,6 +589,10 @@ const spineLoader = () => {
 
             // Force set animation with a slight delay to ensure player is ready
             setTimeout(() => {
+              if (thisLoadId !== currentLoadId || player !== getActiveSpinePlayer()) {
+                return
+              }
+
               try {
                 player.animationState.setAnimation(0, resolvedAnim, true)
                 player.play()
@@ -486,8 +607,18 @@ const spineLoader = () => {
           market.live2d.triggerFinishedLoading()
           successfullyLoaded()
         },
-        error: () => {
-          wrongfullyLoaded()
+        error: (player: any, message?: string) => {
+          handleSpineLoadFailure({
+            loadId: thisLoadId,
+            retryAttempt,
+            requestedCharacterId,
+            requestedPose,
+            requestedSkelUrl: skelUrl,
+            requestedAtlasUrl: atlasUrl,
+            stage: 'asset manager',
+            message,
+            player
+          })
         },
       })
       applyStoryGenLowPowerThrottle(spineCanvas)
@@ -706,12 +837,9 @@ watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
 
 watch(() => market.live2d.customLoad, () => {
   if (spineCanvas) {
-    try {
-      spineCanvas.dispose()
-    } catch (e) {
-      console.warn('[Loader] Error disposing spineCanvas for customLoad:', e)
-    }
-    spineCanvas = null
+    disposeSpineInstance(spineCanvas, 'spineCanvas for customLoad')
+  } else {
+    clearSpineReferences()
   }
   market.load.beginLoad()
   customSpineLoader()
@@ -851,12 +979,9 @@ async function exportAnimationFrames(timestamp: number) {
 const loadSpineAfterWatcher = () => {
   if (market.live2d.canLoadSpine) {
     if (spineCanvas) {
-      try {
-        spineCanvas.dispose()
-      } catch (e) {
-        console.warn('[Loader] Error disposing spineCanvas:', e)
-      }
-      spineCanvas = null
+      disposeSpineInstance(spineCanvas, 'spineCanvas')
+    } else {
+      clearSpineReferences()
     }
     market.load.beginLoad()
     spineLoader()

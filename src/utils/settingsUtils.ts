@@ -156,7 +156,7 @@ export function validateSavedModel(savedProvider: string, savedModel: string | u
 
   // Fallback to default
   let fallback: string | undefined
-  if (savedProvider === 'gemini') fallback = 'gemini-2.5-flash'
+  if (savedProvider === 'gemini') fallback = 'gemini-3.5-flash'
   else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && firstDynamicModel) fallback = firstDynamicModel
 
   const warning = savedModel ? `Saved model '${savedModel}' is invalid or unavailable. Using default.` : undefined

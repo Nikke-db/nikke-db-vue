@@ -262,7 +262,7 @@ export async function resolveProviderModelsForSessionRestore(
   }
 
   if (provider === 'gemini') {
-    return ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview']
+    return ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview']
   }
 
   return []
@@ -397,7 +397,7 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
       result.model = savedModel
     } else {
       // Fallback to default
-      if (savedProvider === 'gemini') result.model = 'gemini-2.5-flash'
+      if (savedProvider === 'gemini') result.model = 'gemini-3.5-flash'
       else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && validModels.length > 0) result.model = validModels[0]
 
       if (savedModel) {

@@ -1178,6 +1178,7 @@ const modelOptions = computed(() => {
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
       { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite' },
+      { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
       { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
       { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro-preview' }
     ]
@@ -1729,7 +1730,7 @@ watch(apiProvider, async (newVal) => {
 
   // Reset model when provider changes
   if (apiProvider.value === 'gemini') {
-    model.value = 'gemini-2.5-flash'
+    model.value = 'gemini-3.5-flash'
   } else if (apiProvider.value === 'opencode-go') {
     model.value = ''
     await refreshOpenCodeGoModels()
