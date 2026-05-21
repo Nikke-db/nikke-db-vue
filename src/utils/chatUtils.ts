@@ -6,6 +6,7 @@ import { parseSelectionValue, type StoryCharacterEntry, type CharacterCatalog } 
 import { getBackgroundPromptScenes, getCurrentBackgroundPromptState } from '@/utils/backgroundUtils'
 import { resolveRelevantLocations, getFilteredLocationsForAI } from '@/utils/storyLocationUtils'
 import { findCharacterByName, findCharacterIdByName, findCharacterByIdOrName, hasMeaningfulAnimation, NON_DUPLICATED_FIELDS, getHonorific } from '@/utils/characterLookupUtils'
+import { resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 
 // Re-exports from extracted modules
 export { AIError, getAIErrorMessage, logDebug } from '@/utils/errorUtils'
@@ -1340,6 +1341,28 @@ export const replayMessage = async (msg: any, index: number, ctx: ReplayContext)
     const charObj = findCharacterByIdOrName(msg.character)
     if (charObj) {
       ctx.market.live2d.change_current_spine(charObj)
+    }
+  }
+
+  if (msg.character && msg.character !== 'none') {
+    ctx.market.live2d.isVisible = true
+  } else if (msg.character === 'none') {
+    ctx.market.live2d.isVisible = false
+  }
+
+  if (msg.background && ctx.market.live2d.backgroundImagesEnabled && ctx.market.live2d.backgroundImageMap.size > 0) {
+    const backgroundSelection = resolveAiBackgroundSelection({
+      background: msg.background,
+      availableFilenames: ctx.market.live2d.backgroundImageMap.keys()
+    })
+
+    if (backgroundSelection.action === 'clear') {
+      ctx.market.live2d.clearActiveBackground()
+    } else if (backgroundSelection.action === 'apply') {
+      const applied = backgroundSelection.filename ? ctx.market.live2d.applyBackground(backgroundSelection.filename) : false
+      if (!applied) {
+        console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
+      }
     }
   }
 

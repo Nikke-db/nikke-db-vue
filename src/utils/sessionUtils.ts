@@ -13,6 +13,7 @@ export interface ChatMessage {
   character?: string
   speaking?: boolean
   text?: string
+  background?: string | { key: string; variant?: string }
 }
 
 export interface SessionSettings {

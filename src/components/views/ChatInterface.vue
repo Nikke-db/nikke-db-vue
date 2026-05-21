@@ -823,7 +823,7 @@ const compactFrequencyOptions = [
 const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
-const chatHistory = ref<{ role: string; content: string; animation?: string; character?: string; speaking?: boolean; text?: string }[]>([])
+const chatHistory = ref<{ role: string; content: string; animation?: string; character?: string; speaking?: boolean; text?: string; background?: string | { key: string; variant?: string } }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const characterProgression = ref<Record<string, any>>({})
 const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
@@ -3692,7 +3692,8 @@ const executeAction = async (data: any) => {
       animation: market.live2d.current_animation,
       character: effectiveCharId,
       speaking: data.speaking,
-      text: data.text
+      text: data.text,
+      background: data.background
     })
     scrollToBottom()
   } else if (chatMode.value === 'nikke') {
