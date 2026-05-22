@@ -85,6 +85,12 @@
         </n-button>
       </div>
 
+      <div v-if="showSavingFirstTurnInput" class="save-first-turn-row">
+        <n-input v-model:value="savingFirstTurnName" size="small" placeholder="Preset name..." @keydown.enter="confirmSaveFirstTurnPreset" style="flex: 1" />
+        <n-button size="tiny" type="primary" @click="confirmSaveFirstTurnPreset" :disabled="!savingFirstTurnName.trim()">Save</n-button>
+        <n-button size="tiny" @click="cancelSaveFirstTurnPreset">Cancel</n-button>
+      </div>
+
       <div class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
         <n-tooltip trigger="hover">
           <template #trigger>
@@ -137,6 +143,7 @@
               Presets
             </n-tooltip>
             <n-button v-if="rosterRows.length > 0 && showRosterList" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
+            <n-button v-if="userInput.trim() && chatHistory.length === 0" size="small" type="info" @click="saveFirstTurnAsPreset">Save first turn</n-button>
           </div>
           <div v-if="showRosterList" class="story-character-list">
             <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
@@ -152,49 +159,94 @@
             </div>
           </div>
         </div>
-        <n-modal v-model:show="showPresetsModal" preset="card" title="Roster Presets" style="max-width: 500px">
-          <div v-if="presets.length === 0" style="text-align: center; padding: 20px; color: #888">
-            No presets saved yet. Add characters to the roster and click <strong>Save as preset</strong> to create one.
-          </div>
-          <div v-else class="presets-list">
-            <div v-for="preset in presets" :key="preset.id" class="preset-item">
-              <div class="preset-info">
-                <div class="preset-name-row">
-                  <span v-if="editingPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
-                  <n-input v-else v-model:value="editingPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmRename(preset.id)" />
-                  <span class="preset-meta">{{ preset.roster.length }} character(s) &middot; {{ formatPresetDate(preset.createdAt) }}</span>
-                </div>
-                <div class="preset-chars">
-                  <span v-for="(entry, i) in preset.roster.slice(0, 5)" :key="entry.key" class="preset-char-tag">{{ getPresetCharName(entry) }}<span v-if="i < Math.min(preset.roster.length, 5) - 1">, </span></span>
-                  <span v-if="preset.roster.length > 5" class="preset-char-more">+{{ preset.roster.length - 5 }} more</span>
+        <n-modal v-model:show="showPresetsModal" preset="card" title="Presets" style="max-width: 500px">
+          <n-tabs v-model:value="activePresetTab" type="segment" animated>
+            <n-tab-pane name="roster" tab="Roster">
+              <div v-if="presets.length === 0" style="text-align: center; padding: 20px; color: #888">
+                No roster presets saved yet. Add characters to the roster and click <strong>Save as preset</strong> to create one.
+              </div>
+              <div v-else class="presets-list">
+                <div v-for="preset in presets" :key="preset.id" class="preset-item">
+                  <div class="preset-info">
+                    <div class="preset-name-row">
+                      <span v-if="editingPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
+                      <n-input v-else v-model:value="editingPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmRename(preset.id)" />
+                      <span class="preset-meta">{{ preset.roster.length }} character(s) &middot; {{ formatPresetDate(preset.createdAt) }}</span>
+                    </div>
+                    <div class="preset-chars">
+                      <span v-for="(entry, i) in preset.roster.slice(0, 5)" :key="entry.key" class="preset-char-tag">{{ getPresetCharName(entry) }}<span v-if="i < Math.min(preset.roster.length, 5) - 1">, </span></span>
+                      <span v-if="preset.roster.length > 5" class="preset-char-more">+{{ preset.roster.length - 5 }} more</span>
+                    </div>
+                  </div>
+                  <div class="preset-actions">
+                    <n-button size="tiny" type="primary" @click="loadPreset(preset)">Load</n-button>
+                    <n-button size="tiny" @click="startRename(preset)">{{ editingPresetId === preset.id ? 'Cancel' : 'Rename' }}</n-button>
+                    <n-popconfirm @positive-click="deletePresetConfirm(preset.id)">
+                      <template #trigger>
+                        <n-button size="tiny" type="error" @click="deletePresetTarget = preset.id">Delete</n-button>
+                      </template>
+                      Delete preset "{{ preset.name }}"?
+                    </n-popconfirm>
+                  </div>
                 </div>
               </div>
-              <div class="preset-actions">
-                <n-button size="tiny" type="primary" @click="loadPreset(preset)">Load</n-button>
-                <n-button size="tiny" @click="startRename(preset)">{{ editingPresetId === preset.id ? 'Cancel' : 'Rename' }}</n-button>
-                <n-popconfirm @positive-click="deletePresetConfirm(preset.id)">
-                  <template #trigger>
-                    <n-button size="tiny" type="error" @click="deletePresetTarget = preset.id">Delete</n-button>
-                  </template>
-                  Delete preset "{{ preset.name }}"?
-                </n-popconfirm>
+            </n-tab-pane>
+            <n-tab-pane name="firstTurn" tab="First Turn">
+              <div v-if="firstTurnPresets.length === 0" style="text-align: center; padding: 20px; color: #888">
+                No first turn presets saved yet. Type your opening message and click <strong>Save as first turn</strong> to create one.
               </div>
-            </div>
-          </div>
-          <template v-if="presets.length >= 10" #header-extra>
+              <div v-else class="presets-list">
+                <div v-for="preset in firstTurnPresets" :key="preset.id" class="preset-item">
+                  <div class="preset-info">
+                    <div class="preset-name-row">
+                      <span v-if="editingFirstTurnPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
+                      <n-input v-else v-model:value="editingFirstTurnPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmFirstTurnRename(preset.id)" />
+                      <span class="preset-meta">{{ formatPresetDate(preset.createdAt) }}</span>
+                    </div>
+                    <div class="preset-message-preview">{{ preset.message.length > 120 ? preset.message.slice(0, 120) + '...' : preset.message }}</div>
+                  </div>
+                  <div class="preset-actions">
+                    <n-button size="tiny" type="primary" @click="loadFirstTurnPreset(preset)">Load</n-button>
+                    <n-button size="tiny" @click="startFirstTurnRename(preset)">{{ editingFirstTurnPresetId === preset.id ? 'Cancel' : 'Rename' }}</n-button>
+                    <n-popconfirm @positive-click="deleteFirstTurnPresetConfirm(preset.id)">
+                      <template #trigger>
+                        <n-button size="tiny" type="error" @click="deleteFirstTurnPresetTarget = preset.id">Delete</n-button>
+                      </template>
+                      Delete preset "{{ preset.name }}"?
+                    </n-popconfirm>
+                  </div>
+                </div>
+              </div>
+            </n-tab-pane>
+          </n-tabs>
+          <template v-if="(activePresetTab === 'roster' && presets.length >= 10) || (activePresetTab === 'firstTurn' && firstTurnPresets.length >= 10)" #header-extra>
             <n-tag type="warning" size="small">Full (10/10)</n-tag>
           </template>
           <template #footer>
-            <div class="presets-footer">
-              <n-button size="small" @click="exportAllPresets" :disabled="presets.length === 0">Export All</n-button>
-              <n-button size="small" @click="triggerPresetImport">Import</n-button>
-            </div>
-            <n-alert v-if="presetImportWarning" type="warning" closable style="margin-top: 12px" @close="presetImportWarning = ''">
-              {{ presetImportWarning }}
-            </n-alert>
-            <n-alert v-if="presetImportSuccess" type="success" closable style="margin-top: 12px" @close="presetImportSuccess = ''">
-              {{ presetImportSuccess }}
-            </n-alert>
+            <template v-if="activePresetTab === 'roster'">
+              <div class="presets-footer">
+                <n-button size="small" @click="exportAllPresets" :disabled="presets.length === 0">Export All</n-button>
+                <n-button size="small" @click="triggerPresetImport">Import</n-button>
+              </div>
+              <n-alert v-if="presetImportWarning" type="warning" closable style="margin-top: 12px" @close="presetImportWarning = ''">
+                {{ presetImportWarning }}
+              </n-alert>
+              <n-alert v-if="presetImportSuccess" type="success" closable style="margin-top: 12px" @close="presetImportSuccess = ''">
+                {{ presetImportSuccess }}
+              </n-alert>
+            </template>
+            <template v-else>
+              <div class="presets-footer">
+                <n-button size="small" @click="exportAllFirstTurnPresets" :disabled="firstTurnPresets.length === 0">Export All</n-button>
+                <n-button size="small" @click="triggerFirstTurnPresetImport">Import</n-button>
+              </div>
+              <n-alert v-if="firstTurnPresetImportWarning" type="warning" closable style="margin-top: 12px" @close="firstTurnPresetImportWarning = ''">
+                {{ firstTurnPresetImportWarning }}
+              </n-alert>
+              <n-alert v-if="firstTurnPresetImportSuccess" type="success" closable style="margin-top: 12px" @close="firstTurnPresetImportSuccess = ''">
+                {{ firstTurnPresetImportSuccess }}
+              </n-alert>
+            </template>
           </template>
         </n-modal>
         <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
@@ -711,6 +763,7 @@
 
     <input type="file" ref="fileInput" style="display: none" accept=".json" @change="handleFileUpload" />
     <input type="file" ref="presetFileInput" style="display: none" accept=".json" @change="handlePresetFileUpload" />
+    <input type="file" ref="firstTurnPresetFileInput" style="display: none" accept=".json" @change="handleFirstTurnPresetFileUpload" />
 
     <StoryGuideModal
       :showGuide="showGuide"
@@ -746,6 +799,7 @@ import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from 
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 import { loadPresets, createPreset, deletePreset as deletePresetUtil, renamePreset as renamePresetUtil, exportAllPresets as exportAllPresetsUtil, importPresetsFromFile, type PresetEntry } from '@/utils/presetUtils'
+import { loadFirstTurnPresets, createFirstTurnPreset, deleteFirstTurnPreset as deleteFirstTurnPresetUtil, renameFirstTurnPreset as renameFirstTurnPresetUtil, exportAllFirstTurnPresets as exportAllFirstTurnPresetsUtil, importFirstTurnPresetsFromFile, type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
@@ -850,6 +904,16 @@ const presetImportSuccess = ref('')
 const presetFileInput = ref<HTMLInputElement | null>(null)
 const showSavingPresetInput = ref(false)
 const savingPresetName = ref('')
+const activePresetTab = ref('roster')
+const firstTurnPresets = ref<FirstTurnPresetEntry[]>([])
+const editingFirstTurnPresetId = ref<string | null>(null)
+const editingFirstTurnPresetName = ref('')
+const deleteFirstTurnPresetTarget = ref<string | null>(null)
+const firstTurnPresetImportWarning = ref('')
+const firstTurnPresetImportSuccess = ref('')
+const firstTurnPresetFileInput = ref<HTMLInputElement | null>(null)
+const showSavingFirstTurnInput = ref(false)
+const savingFirstTurnName = ref('')
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
 const isCommanderProfileKey = (name: string) => {
   const normalized = name.trim().toLowerCase()
@@ -1504,11 +1568,18 @@ const deletePresetConfirm = (id: string) => {
 watch(showPresetsModal, (val) => {
   if (val) {
     refreshPresetList()
+    refreshFirstTurnPresetList()
     presetImportWarning.value = ''
     presetImportSuccess.value = ''
+    firstTurnPresetImportWarning.value = ''
+    firstTurnPresetImportSuccess.value = ''
     editingPresetId.value = null
     editingPresetName.value = ''
+    editingFirstTurnPresetId.value = null
+    editingFirstTurnPresetName.value = ''
     deletePresetTarget.value = null
+    deleteFirstTurnPresetTarget.value = null
+    activePresetTab.value = 'roster'
   }
 })
 
@@ -1534,6 +1605,92 @@ const handlePresetFileUpload = async (event: Event) => {
   } catch (e: any) {
     presetImportWarning.value = e?.message || 'Failed to import presets.'
     presetImportSuccess.value = ''
+  }
+  target.value = ''
+}
+
+// --- First Turn Preset Management ---
+
+const refreshFirstTurnPresetList = () => {
+  firstTurnPresets.value = loadFirstTurnPresets()
+}
+
+const saveFirstTurnAsPreset = () => {
+  showSavingFirstTurnInput.value = true
+  savingFirstTurnName.value = ''
+}
+
+const confirmSaveFirstTurnPreset = () => {
+  const name = savingFirstTurnName.value.trim()
+  if (!name || !userInput.value.trim()) return
+  createFirstTurnPreset(name, userInput.value)
+  showSavingFirstTurnInput.value = false
+  savingFirstTurnName.value = ''
+  refreshFirstTurnPresetList()
+}
+
+const cancelSaveFirstTurnPreset = () => {
+  showSavingFirstTurnInput.value = false
+  savingFirstTurnName.value = ''
+}
+
+const loadFirstTurnPreset = (preset: FirstTurnPresetEntry) => {
+  if (!preset || !preset.message) return
+  userInput.value = preset.message
+  showPresetsModal.value = false
+}
+
+const startFirstTurnRename = (preset: FirstTurnPresetEntry) => {
+  if (editingFirstTurnPresetId.value === preset.id) {
+    editingFirstTurnPresetId.value = null
+    editingFirstTurnPresetName.value = ''
+    return
+  }
+  editingFirstTurnPresetId.value = preset.id
+  editingFirstTurnPresetName.value = preset.name
+}
+
+const confirmFirstTurnRename = (id: string) => {
+  const name = editingFirstTurnPresetName.value.trim()
+  if (!name) {
+    editingFirstTurnPresetId.value = null
+    editingFirstTurnPresetName.value = ''
+    return
+  }
+  renameFirstTurnPresetUtil(id, name)
+  editingFirstTurnPresetId.value = null
+  editingFirstTurnPresetName.value = ''
+  refreshFirstTurnPresetList()
+}
+
+const deleteFirstTurnPresetConfirm = (id: string) => {
+  deleteFirstTurnPresetUtil(id)
+  deleteFirstTurnPresetTarget.value = null
+  refreshFirstTurnPresetList()
+}
+
+const triggerFirstTurnPresetImport = () => {
+  firstTurnPresetFileInput.value?.click()
+}
+
+const exportAllFirstTurnPresets = () => exportAllFirstTurnPresetsUtil()
+
+const handleFirstTurnPresetFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  try {
+    const result = await importFirstTurnPresetsFromFile(file)
+    refreshFirstTurnPresetList()
+    if (result.merged > 0) {
+      firstTurnPresetImportSuccess.value = `Imported ${result.merged} preset(s).`
+    }
+    if (result.warnings.length > 0) {
+      firstTurnPresetImportWarning.value = result.warnings.join('\n')
+    }
+  } catch (e: any) {
+    firstTurnPresetImportWarning.value = e?.message || 'Failed to import presets.'
+    firstTurnPresetImportSuccess.value = ''
   }
   target.value = ''
 }
@@ -3686,6 +3843,21 @@ const executeAction = async (data: any) => {
       }
     }
 
+    let storedBackground = data.background
+    if (storedBackground && market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0) {
+      const storedSelection = resolveAiBackgroundSelection({
+        background: storedBackground,
+        availableFilenames: market.live2d.backgroundImageMap.keys()
+      })
+      if (storedSelection.action === 'keep') {
+        storedBackground = market.live2d.currentBackground || undefined
+      } else if (storedSelection.action === 'clear') {
+        storedBackground = 'none'
+      } else if (storedSelection.action === 'apply' && storedSelection.filename) {
+        storedBackground = storedSelection.filename
+      }
+    }
+
     chatHistory.value.push({
       role: 'assistant',
       content: content,
@@ -3693,7 +3865,7 @@ const executeAction = async (data: any) => {
       character: effectiveCharId,
       speaking: data.speaking,
       text: data.text,
-      background: data.background
+      background: storedBackground
     })
     scrollToBottom()
   } else if (chatMode.value === 'nikke') {
@@ -4608,5 +4780,21 @@ const handleCompactSummary = async () => {
   border-top: 1px solid var(--n-border-color);
   padding-top: 6px;
   margin-top: 2px;
+}
+
+.save-first-turn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--n-border-color);
+  padding: 6px 8px;
+  margin: 0 8px;
+}
+
+.preset-message-preview {
+  font-size: 11px;
+  color: #999;
+  line-height: 1.4;
+  word-break: break-word;
 }
 </style>
