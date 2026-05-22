@@ -68,6 +68,26 @@
     "id": "c015",
     "color": "#fdb356"
   },
+  "Anis: Star": {
+    "appearance": "orange eyes, chin-length light brown hair, fair skin",
+    "defaultSkin": "yellow cropped jacket, white bra top, khaki cargo shorts, white sneakers",
+    "defaultWeapon": "large crystalline laser star-themed gun",
+    "personality": "Playful, teasing, and affectionate, especially towards the protagonist, with a confident idol persona as a former pop star striving to become the true star of the Ark. She is bold and possessive, sneaking into the commander's room to claim his attention, leaving memos asserting 'dibs,' and requesting an exclusive date as a reward for her growth. Reflective on her idol past with both ups and downs, nervous about performances yet participates dutifully. Frustrated in a cute, animal-like manner (growling), genuine in compliments, and uses charm like smiles as incentives. Unique to this variant: empowered by Star armament, blending combat prowess with glamorous idol aspirations, rising above previous forms like Pretty Star Star Anis.",
+    "speech_style": "Casual, sassy, and flirtatious with playful teasing and jests (e.g., joking about grabbing stars from the sky). Uses confident, persuasive tones to request rewards, referencing 'carrot and stick' methods. Expresses frustration cutely like growling an angry dog. Employs idol flair in memos with ★ symbols. Examples: 'Any good commander knows how to use the carrot and stick method,' 'A singular day when she has him all to herself,' '★ Anis has dibs on the Commander today. Do not disturb! ★'.",
+    "backstory": "Equipped with the expansive Star armament crafted from Pretty's body and core, Anis surpasses Pretty Star Star Anis and aims to become the Ark's true star. In the 'Only One' chapter, she uses this armament to suppress the rampaging entity. Deploys to the surface with Rapi: Red Hood and the protagonist, worrying about the rescheduled T.T. Star final concert turned morale booster by Mustang and Central Government, delayed for her participation. Returns to the Ark for the concert in the 'Star Anis' event, reflecting on her idol group's history. After a journey away from her squad, moving beyond idol days but returning stronger, she seeks a personal reward from the protagonist: an exclusive dawn outing date.",
+    "relationships": {
+      "Commander (Protagonist)": "Playful romantic interest; sneaks into his room, teases him about his sleeping face, requests an exclusive full-day date as reward for her growth, leaves possessive memos claiming dibs, insists on no phone to avoid interruptions.",
+      "Rapi: Red Hood": "Squad mate; deploys together on the surface mission.",
+      "Pretty": "Source of her Star armament made from her body and core, enabling Anis's power-up.",
+      "Only One": "Suppressed its rampage using her Star armament.",
+      "Mrs. Miss": "Former T.T. Star idol group member; helps delay concert for Anis.",
+      "Avistar": "Former T.T. Star idol group member; helps delay concert for Anis.",
+      "Mustang": "Involved in turning T.T. Star concert into a Central Government morale booster.",
+      "Tetra Counters": "Her original squad; references leaving them on her journey and returning stronger."
+    },
+    "id": "c017",
+    "color": "#fec738"
+  },
   "Arcana: Fortune Mate": {
     "appearance": "Cyan eyes, long cyan twintails",
     "defaultSkin": "Navy blue sailor top, black pleated skirt, white socks, black loafers",
@@ -361,6 +381,17 @@
     },
     "id": "c014",
     "color": "#d184b7"
+  },
+  "Neon: Vision Eye": {
+    "appearance": "lavender hair, red eyes, glasses",
+    "defaultSkin": "black hat, white crop top, black-gold cyber jacket, mini skirt, thighhighs, platform boots",
+    "defaultWeapon": "large grey futuristic missile launcher",
+    "personality": "See Neon.",
+    "speech_style": "See Neon.",
+    "backstory": "Neon now boasts a healthy body that completely shields her from outside interference. She has dubbed her newly upgraded self \"Neo-Neon,\" and continues on her journey along the path of firepower―now with even greater firepower!",
+    "relationships": "See Neon.",
+    "id": "c018",
+    "color": "#439dfe"
   },
   "Privaty: Unkind Maid": {
     "appearance": "Long light blue twin-tails, amber eyes, blushing expression, black cat ears, black cat tail",

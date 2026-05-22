@@ -1,0 +1,161 @@
+{
+  "Crown Kingdom": [
+    "CrownKingdomCastleBedroom_d.png",
+    "CrownKingdomCastleBedroom_n.png",
+    "CrownKingdomCastleDiningRoom_d.png",
+    "CrownKingdomCastleDiningRoom_n.png",
+    "CrownKingdomCastleFrontYard_d.png",
+    "CrownKingdomCastleFrontYard_n.png",
+    "CrownKingdomCastleFrontYard_s.png",
+    "CrownKingdomCastleGate_d.png",
+    "CrownKingdomCastleGate_n.png",
+    "CrownKingdomCastleGate_s.png",
+    "CrownKingdomCastlePanorama_d.png",
+    "CrownKingdomCastlePanorama_n.png",
+    "CrownKingdomCastlePanorama_s.png"
+  ],
+  "The Ark": [
+    "Ark.png",
+    "ArkCleanIndoor.png",
+    "ArkRuinIndoor.png",
+    "Ark_02.png",
+    "Corridor.png",
+    "Elevator.png",
+    "ElevatorOut.png",
+    "BriefingRoom.png",
+    "CommanderRoom.png",
+    "CommanderRoom_n.png",
+    "NikkeCorridor.png",
+    "NikkeRoom.png",
+    "EnikkRoom.png",
+    "MissilisOffice.png",
+    "Office.png"
+  ],
+  "The Outpost": [
+    "OutpostOut.png",
+    "TemporaryCamp.png",
+    "TemporaryCamp_r.png",
+    "TrainingField.png"
+  ],
+  "Flower Park": [
+    "FlowerGarden.png",
+    "FlowerRoad.png",
+    "Park.png",
+    "Park_n.png"
+  ],
+  "Amusement Park": [
+    "AmusementPark.png",
+    "Winter_AmusementPark.png",
+    "Winter_AmusementPark_n.png",
+    "CoinRushDrinkZone.png",
+    "CoinRushGameZone.png",
+    "CoinRushIndoor.png",
+    "CoinRushMainHall.png",
+    "Stage.png"
+  ],
+  "Guest Camp": [
+    "TemporaryCamp.png",
+    "TemporaryCamp_r.png",
+    "RestArea.png"
+  ],
+  "Observatory": [
+    "AirView.png",
+    "APillar.png"
+  ],
+  "Police Station": [
+    "Police.png"
+  ],
+  "Hotel": [
+    "Hotel.png",
+    "Hotel_n.png",
+    "Lobby.png"
+  ],
+  "Maid Cafe": [
+    "MaidCafe.png",
+    "Cafe.png",
+    "Cafe_n.png"
+  ],
+  "Toy Store": [
+    "ToyShop.png"
+  ],
+  "Train Station": [
+    "Station.png",
+    "Station_n.png",
+    "AZXIn.png"
+  ],
+  "Workshop": [
+    "Workshop.png",
+    "MachineRoom.png"
+  ],
+  "Armory": [
+    "Armory.png"
+  ],
+  "Generator": [
+    "GiantParticleCannon.png"
+  ],
+  "Trendy Bar": [
+    "Bar.png",
+    "PiratePub.png"
+  ],
+  "Library": [
+    "Library.png"
+  ],
+  "Hospital": [
+    "Hospital.png",
+    "Hospital_n.png"
+  ],
+  "Cafe Sweety": [
+    "Cafe.png",
+    "Cafe_n.png"
+  ],
+  "Theater": [
+    "Theater.png"
+  ],
+  "Seedy Club": [
+    "Mafiaoffice.png",
+    "Bar.png"
+  ],
+  "Courthouse": [
+    "WhiteHouse.png"
+  ],
+  "Church": [
+    "Church.png"
+  ],
+  "Clothing Store": [
+    "ClothingStore.png"
+  ],
+  "Shopping Mall": [
+    "ShoppingMall.png",
+    "ShoppingStreet_d.png",
+    "ShoppingStreet_n.png"
+  ],
+  "Radio Tower": [
+    "HarmonyCube.png"
+  ],
+  "Goddess of Victory statue": [
+    "GoddessOfVictory.png",
+    "GoddessOfVictory_n.png",
+    "WingOfVictory.png",
+    "WingOfVictory_n.png",
+    "Square.png"
+  ],
+  "Fitness Club": [
+    "Gym.png",
+    "dancepracticeroom.png"
+  ],
+  "Wasteland": [
+    "WasteLand_01.png",
+    "WasteLand_01_n.png",
+    "WasteLand_02.png",
+    "WasteLand_02_n.png",
+    "WasteLand_03.png",
+    "WasteLand_04.png",
+    "Wasteland_03_n.png"
+  ],
+  "Eden": [
+    "Eden.png",
+    "EdenIndoor.png",
+    "EdenLobby.png",
+    "SecretGarden.png"
+  ]
+}

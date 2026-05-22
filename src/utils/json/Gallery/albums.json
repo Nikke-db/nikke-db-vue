@@ -85,6 +85,10 @@
       "text": "From the Sky, From the Land"
     },
     {
+      "name": "album_field_18",
+      "text": "At Last"
+    },
+    {
       "name": "album_lastkingdom_01",
       "text": "Last Kingdom"
     },
@@ -183,6 +187,18 @@
     {
       "name": "album_2x2love_01",
       "text": "2x2 LOVE"
+    },
+    {
+      "name": "album_bemystar_01",
+      "text": "Be My Star"
+    },
+    {
+      "name": "album_staranis_01",
+      "text": "Star Anis"
+    },
+    {
+      "name": "album_tracingthestars_01",
+      "text": "Tracing The Stars"
     }
   ]
 }

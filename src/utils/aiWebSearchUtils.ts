@@ -7,7 +7,7 @@ import { cleanWikiContent, parseAIResponse, isWholeWordPresent } from '@/utils/c
 import { getSelectionForName, parseSelectionValue, type CharacterCatalog } from '@/utils/storyCharacterUtils'
 
 // Web search state
-export const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') === 'true')
+export const allowWebSearchFallback = ref(localStorage.getItem('nikke_allow_web_search_fallback') !== 'false')
 
 // Constants
 export const NATIVE_SEARCH_PREFIXES = ['openai/', 'anthropic/', 'perplexity/', 'x-ai/']
@@ -17,7 +17,7 @@ export const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
 // Helper functions
 export const hasNativeSearch = (modelId: string) => NATIVE_SEARCH_PREFIXES.some((prefix) => modelId.startsWith(prefix))
 
-export const usesWikiFetch = (apiProvider: string, model: string) => apiProvider === 'openrouter' && !hasNativeSearch(model)
+export const usesWikiFetch = (apiProvider: string, model: string) => (apiProvider === 'openrouter' && !hasNativeSearch(model)) || apiProvider === 'opencode-go'
 
 export const usesPollinationsAutoFallback = (apiProvider: string, model: string) => {
   if (apiProvider !== 'pollinations') return false
@@ -69,7 +69,7 @@ export const fetchWikiContent = async (characterName: string): Promise<string | 
   }
 }
 
-export const searchForCharactersViaWikiFetch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function): Promise<void> => {
+export const searchForCharactersViaWikiFetch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function, callOpenCodeGo: Function): Promise<void> => {
   logDebug('[searchForCharactersViaWikiFetch] Fetching wiki pages for:', characterNames)
 
   for (const name of characterNames) {
@@ -101,6 +101,8 @@ export const searchForCharactersViaWikiFetch = async (characterNames: string[], 
 
         if (apiProvider === 'gemini') {
           result = await callGemini(messages, false)
+        } else if (apiProvider === 'opencode-go') {
+          result = await callOpenCodeGo(messages)
         } else if (apiProvider === 'openrouter') {
           result = await callOpenRouter(messages, false)
         } else if (apiProvider === 'pollinations') {
@@ -151,7 +153,7 @@ export const searchForCharactersViaWikiFetch = async (characterNames: string[], 
   }
 }
 
-export const searchForCharactersWithNativeSearch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function): Promise<void> => {
+export const searchForCharactersWithNativeSearch = async (characterNames: string[], characterProfiles: Record<string, any>, apiProvider: string, callGemini: Function, callOpenRouter: Function, callPollinations: Function, callOpenCodeGo: Function): Promise<void> => {
   logDebug('[searchForCharactersWithNativeSearch] Searching for:', characterNames)
 
   for (const name of characterNames) {
@@ -179,6 +181,8 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
 
         if (apiProvider === 'gemini') {
           result = await callGemini(messages, true)
+        } else if (apiProvider === 'opencode-go') {
+          result = await callOpenCodeGo(messages)
         } else if (apiProvider === 'openrouter') {
           result = await callOpenRouter(messages, true)
         } else if (apiProvider === 'pollinations') {
@@ -228,43 +232,51 @@ export const searchForCharactersWithNativeSearch = async (characterNames: string
   }
 }
 
-export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, useLocalProfiles: boolean, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<boolean> => {
+export const searchForCharacters = async (characterNames: string[], characterProfiles: Record<string, any>, allowWebSearchFallback: boolean, apiProvider: string, model: string, loadingStatus: any, setRandomLoadingMessage: Function, searchForCharactersWithNativeSearch: Function, searchForCharactersViaWikiFetch: Function): Promise<boolean> => {
   logDebug('[searchForCharacters] Searching for:', characterNames)
 
-  if (useLocalProfiles) {
-    loadingStatus.value = 'Searching for characters in the database...'
-  } else {
-    loadingStatus.value = 'Searching the web for characters...'
-  }
+  loadingStatus.value = 'Searching for characters in the database...'
 
   let charsToSearch = [...characterNames]
 
-  // Check local profiles first if enabled
-  if (useLocalProfiles) {
-    const remainingChars: string[] = []
+  // Check local profiles first
+  const remainingChars: string[] = []
 
-    for (const name of charsToSearch) {
-      // Case-insensitive lookup in local profiles
-      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
-      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
-      const resolvedKey = variantKey || localKey
+  for (const name of charsToSearch) {
+    // Case-insensitive lookup in local profiles
+    const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
+    const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === name.toLowerCase())
+    const resolvedKey = variantKey || localKey
 
-      if (resolvedKey) {
-        const profile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
-        // Use the name requested by the AI as the key, but the data from the local profile
-        characterProfiles[name] = {
-          ...profile,
-          // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
-          id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
-        }
-        logDebug(`[searchForCharacters] Found local profile for ${name}`)
-      } else {
-        remainingChars.push(name)
+    if (resolvedKey) {
+      const profile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
+      // Use the name requested by the AI as the key, but the data from the local profile
+      characterProfiles[name] = {
+        ...profile,
+        // Ensure ID is present (it is in the JSON, but fallback to l2d list just in case)
+        id: profile.id || l2d.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id
       }
-    }
+      logDebug(`[searchForCharacters] Found local profile for ${name}`)
 
-    charsToSearch = remainingChars
+      // When a variant profile (e.g., "Anis: Star") is loaded, also inject the
+      // base character profile (e.g., "Anis") for context — it contains backstory
+      // and personality data that complements the variant-specific information.
+      if (variantKey && name.includes(':')) {
+        const baseName = name.split(':')[0].trim()
+        if (!characterProfiles[baseName]) {
+          const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (baseKey) {
+            characterProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
+            logDebug(`[searchForCharacters] Also loaded base profile for variant "${name}": ${baseName}`)
+          }
+        }
+      }
+    } else {
+      remainingChars.push(name)
+    }
   }
+
+  charsToSearch = remainingChars
 
   if (charsToSearch.length === 0) {
     logDebug('[searchForCharacters] All characters found locally.')
@@ -273,7 +285,7 @@ export const searchForCharacters = async (characterNames: string[], characterPro
   }
 
   // If fallback is disabled, stop here
-  if (useLocalProfiles && !allowWebSearchFallback) {
+  if (!allowWebSearchFallback) {
     logDebug('[searchForCharacters] Web search fallback disabled. Skipping search for:', charsToSearch)
     setRandomLoadingMessage()
     return false
@@ -295,6 +307,11 @@ export const searchForCharacters = async (characterNames: string[], characterPro
       // For models without native search, fetch wiki pages directly and have the model summarize
       await searchForCharactersViaWikiFetch(charsToSearch)
     }
+    return true
+  }
+
+  if (apiProvider === 'opencode-go') {
+    await searchForCharactersViaWikiFetch(charsToSearch)
     return true
   }
 

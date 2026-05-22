@@ -162,6 +162,7 @@ import story8 from '@/utils/json/Gallery/story8.json'
 import story9 from '@/utils/json/Gallery/story9.json'
 import story10 from '@/utils/json/Gallery/story10.json'
 import story11 from '@/utils/json/Gallery/story11.json'
+import story12 from '@/utils/json/Gallery/story12.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -224,6 +225,8 @@ import liecauserecoil from '@/utils/json/Gallery/liecauserecoil.json'
 import twoxtwolove from '@/utils/json/Gallery/2x2love.json'
 import foolmetalpanic from '@/utils/json/Gallery/foolmetalpanic.json'
 import chocolateplease from '@/utils/json/Gallery/chocolateplease.json'
+import staranis from '@/utils/json/Gallery/staranis.json'
+import bsideidol from '@/utils/json/Gallery/bsideidol.json'
 
 
 const market = useMarket()
@@ -248,7 +251,8 @@ const buttonListStory = [
   { data: story8 },
   { data: story9 },
   { data: story10 },
-  { data: story11 }
+  { data: story11 },
+  { data: story12 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [
@@ -309,7 +313,9 @@ const buttonListEvents = [
   { data: liecauserecoil },
   { data: twoxtwolove },
   { data: foolmetalpanic },
-  { data: chocolateplease }
+  { data: chocolateplease },
+  { data: staranis },
+  { data: bsideidol }
 ] as buttonInterface[]
 
 const buttonListOther = [

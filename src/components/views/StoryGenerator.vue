@@ -20,6 +20,13 @@ market.live2d.current_pose = 'fb'
 
 onUnmounted(() => {
   document.body.style.backgroundColor = theme.BACKGROUND_COLOR
+  document.body.style.backgroundImage = 'none'
+  document.body.style.backgroundSize = ''
+  document.body.style.backgroundPosition = ''
+  document.body.style.backgroundRepeat = ''
+  document.body.style.backgroundAttachment = ''
+
+  market.live2d.clearBackgroundImages()
 })
 
 onBeforeRouteLeave(() => {

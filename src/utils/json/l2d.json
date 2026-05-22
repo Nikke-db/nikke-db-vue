@@ -1056,6 +1056,10 @@
     "id": "c412"
   },
   {
+    "name": "Trina Natural White",
+    "id": "c412_01"
+  },
+  {
     "name": "Noise",
     "id": "c430"
   },
@@ -1192,11 +1196,11 @@
     "id": "c513_02"
   },
   {
-    "name": "Grave the Great (GraGre)",
+    "name": "Grave",
     "id": "c514"
   },
   {
-    "name": "Grave the Great (GraGre) Beatiful You",
+    "name": "Grave Beatiful You",
     "id": "c514_01"
   },
   {
@@ -1288,9 +1292,12 @@
     "id": "c600"
   },
   {
+    "name": "Mint Fresh Mint",
+    "id": "c600_01"
+  },
+  {
     "name": "Mint",
-    "id": "c600_01",
-    "f": "c600_01"
+    "id": "c600_02"
   },
   {
     "name": "Prika",
@@ -1300,6 +1307,10 @@
     "name": "Prika",
     "id": "c601_01",
     "f": "c601_01"
+  },
+  {
+    "name": "Prika",
+    "id": "c601_02"
   },
   {
     "name": "Mekami Shifty",
@@ -1530,7 +1541,7 @@
     "id": "c850_03"
   },
   {
-    "name": "Raven Keyhole Dress",
+    "name": "Raven",
     "id": "c851"
   },
   {
@@ -2368,6 +2379,16 @@
     "name": "Good World",
     "id": "goodworld",
     "f": "EventScene_goodworld_01"
+  },
+  {
+    "name": "Star Anis",
+    "id": "staranis",
+    "f": "EventScene_staranis_03"
+  },
+  {
+    "name": "B Side Idol",
+    "id": "bsideidol",
+    "f": "EventScene_bsideidol_01"
   },
   {
     "name": "Smol Ade",
