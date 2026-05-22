@@ -60,35 +60,29 @@ const stopSelectionCycle = (restore = true) => {
   selectionColorBackup = null
 }
 
-watch(() => props.previewColor, () => {
-  if (isAttachmentChecked.value && market.live2d.clickToSelectMode) {
-    startSelectionCycle()
-  } else {
-    stopSelectionCycle()
-  }
+const shouldPreviewSelection = () => {
+  return isAttachmentChecked.value && market.live2d.clickToSelectMode
+}
 
-  if (market.live2d.clickToSelectMode && isAttachmentChecked.value) {
+const syncSelectionCycle = () => {
+  if (shouldPreviewSelection()) {
     startSelectionCycle()
   } else {
     stopSelectionCycle()
   }
+}
+
+watch(() => props.previewColor, () => {
+  if (shouldPreviewSelection()) startSelectionCycle()
 })
 
-// watch(isAttachmentChecked, (checked) => {
-//   if (checked && market.live2d.clickToSelectMode) {
-//     startSelectionCycle()
-//   } else {
-//     stopSelectionCycle()
-//   }
-// })
-//
-// watch(() => market.live2d.clickToSelectMode, (enabled) => {
-//   if (enabled && isAttachmentChecked.value) {
-//     startSelectionCycle()
-//   } else {
-//     stopSelectionCycle()
-//   }
-// })
+watch(isAttachmentChecked, () => {
+  syncSelectionCycle()
+})
+
+watch(() => market.live2d.clickToSelectMode, () => {
+  syncSelectionCycle()
+})
 
 onUnmounted(() => {
   stopSelectionCycle()
@@ -127,19 +121,22 @@ watch(() => market.live2d.selectAttachments, () => {
 
 watch(() => market.live2d.updateAttachments, () => {
   if (isAttachmentChecked.value) {
+    stopSelectionCycle(false)
     emits('updateAttachment', props.item.name, props.index)
     const colorRef = market.live2d.attachments[props.index]?.[props.item.name]?.color
     if (!colorRef) return
     selectionColorBackup = { ...colorRef }
+    if (shouldPreviewSelection()) startSelectionCycle()
   }
 })
 
 watch(() => market.live2d.hideSelectedLayers, () => {
   if (isAttachmentChecked.value) {
     // Stop cycling colors, otherwise the attachment will continue flashing and won't be properly hidden
-    stopSelectionCycle(false) 
+    stopSelectionCycle(false)
     selectionColorBackup = null
     market.live2d.attachments[props.index][props.item.name].color.a = 0
+    isAttachmentChecked.value = false
     market.live2d.triggerApplyAttachments()
   }
 })

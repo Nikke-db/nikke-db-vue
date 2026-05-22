@@ -66,7 +66,7 @@ const props = defineProps<{
 }>()
 
 const updateAttachments = (key: string, index: number) => {
-  market.live2d.attachments[index][key].color = props.colors
+  market.live2d.attachments[index][key].color = { ...props.colors }
   market.live2d.triggerApplyAttachments()
 }
 
