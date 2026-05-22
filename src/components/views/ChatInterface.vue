@@ -144,7 +144,7 @@
               </n-tooltip>
               <n-tooltip trigger="hover">
                 <template #trigger>
-                  <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary">
+                  <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary || isLoading">
                     <template #icon>
                       <n-icon><Document /></n-icon>
                     </template>
