@@ -37,7 +37,7 @@
 
             <div class="click-select-row">
               <n-switch v-model:value="market.live2d.clickToSelectMode" size="small"/>
-              <span class="click-select-label">Click to select layer</span>
+              <span class="click-select-label">Select and preview multiple layers with mouse & clicks</span>
             </div>
 
             <n-input type="text" v-model:value="searchQuery" placeholder="Search for an attachment name" clearable/>
