@@ -141,8 +141,18 @@
                 </n-button>
               </template>
               Presets
-            </n-tooltip>
-            <n-button v-if="rosterRows.length > 0 && showRosterList" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
+              </n-tooltip>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary">
+                    <template #icon>
+                      <n-icon><Document /></n-icon>
+                    </template>
+                  </n-button>
+                </template>
+                View/Edit Story Summary
+              </n-tooltip>
+              <n-button v-if="rosterRows.length > 0 && showRosterList" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
             <n-button v-if="userInput.trim() && chatHistory.length === 0" size="small" type="info" @click="saveFirstTurnAsPreset">Save first turn</n-button>
           </div>
           <div v-if="showRosterList" class="story-character-list">
@@ -247,6 +257,22 @@
                 {{ firstTurnPresetImportSuccess }}
               </n-alert>
             </template>
+          </template>
+        </n-modal>
+        <n-modal v-model:show="showSummaryModal" preset="card" title="Story Summary" style="max-width: 600px">
+          <n-form-item label="Current Summary">
+            <n-input
+              v-model:value="editableSummary"
+              type="textarea"
+              :rows="12"
+              placeholder="No summary yet..."
+            />
+          </n-form-item>
+          <template #footer>
+            <n-space justify="end">
+              <n-button @click="cancelSummaryEdit">Cancel</n-button>
+              <n-button type="primary" @click="saveSummaryEdit">Save</n-button>
+            </n-space>
           </template>
         </n-modal>
         <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
@@ -779,7 +805,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag, NModal, NPopconfirm } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -895,6 +921,8 @@ validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
 const showPresetsModal = ref(false)
+const showSummaryModal = ref(false)
+const editableSummary = ref('')
 const presets = ref<PresetEntry[]>([])
 const editingPresetId = ref<string | null>(null)
 const editingPresetName = ref('')
@@ -2342,7 +2370,7 @@ const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
   if (!ensureApiKeyForCurrentProvider()) return
 
-  let text = userInput.value
+  let text = sanitizeText(userInput.value)
 
   syncRosterFromPrompt(text)
 
@@ -4077,6 +4105,34 @@ const handleCompactSummary = async () => {
       loadingStatus.value = ''
     }, 2000)
   }
+}
+
+const sanitizeText = (text: string): string => {
+  let sanitized = text.replace(/<[^>]*>/g, '')
+  const ALLOWED_CONTROLS = new Set(['\t', '\n', '\r'])
+  sanitized = sanitized.split('').filter((c) => {
+    const code = c.charCodeAt(0)
+    return code > 0x1F || ALLOWED_CONTROLS.has(c)
+  }).join('')
+  sanitized = sanitized.trim()
+  return sanitized
+}
+
+const openSummaryModal = () => {
+  editableSummary.value = storySummary.value
+  showSummaryModal.value = true
+}
+
+const cancelSummaryEdit = () => {
+  showSummaryModal.value = false
+  editableSummary.value = ''
+}
+
+const saveSummaryEdit = () => {
+  const sanitized = sanitizeText(editableSummary.value)
+  storySummary.value = sanitized
+  showSummaryModal.value = false
+  editableSummary.value = ''
 }
 </script>
 
