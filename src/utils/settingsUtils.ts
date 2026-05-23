@@ -27,6 +27,7 @@ export interface StoredSettings {
   playerCharacterUseCustom?: boolean
   playerCharacterName?: string
   backgroundImagesEnabled?: boolean
+  mobileOptimizations?: boolean
 }
 
 /**
@@ -140,6 +141,11 @@ export function loadSettingsFromStorage(): StoredSettings {
   const savedBackgroundImages = localStorage.getItem('nikke_background_images_enabled')
   if (savedBackgroundImages !== null) {
     result.backgroundImagesEnabled = savedBackgroundImages === 'true'
+  }
+
+  const savedMobileOptimizations = localStorage.getItem('nikke_story_gen_mobile_optimizations')
+  if (savedMobileOptimizations !== null) {
+    result.mobileOptimizations = savedMobileOptimizations === 'true'
   }
 
   return result

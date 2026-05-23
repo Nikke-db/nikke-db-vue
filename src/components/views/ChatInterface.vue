@@ -414,6 +414,23 @@
             </template>
             <n-switch v-model:value="showAdvancedSettings" />
           </n-form-item>
+          <n-form-item>
+            <template #label>
+              Mobile Optimizations
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Automatically disables animations, backgrounds, and text-to-speech to improve performance on mobile devices.<br /><br />
+                  Also enables <strong>Low Power Mode</strong> and forces the <strong>NIKKE</strong> chat interface.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="mobileOptimizations" />
+          </n-form-item>
           <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
           <n-divider />
           <n-form-item label="API Provider">
@@ -650,7 +667,7 @@
 
           <h4 class="settings-section-header accent-red">Interface & Audio</h4>
           <n-divider />
-          <n-form-item v-if="showAdvancedSettings">
+          <n-form-item v-if="showAdvancedSettings" :style="{ opacity: mobileOptimizations ? 0.5 : 1 }">
             <template #label>
               Low Power Mode
               <n-popover trigger="hover" placement="bottom">
@@ -665,7 +682,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="lowPowerMode" />
+            <n-switch v-model:value="lowPowerMode" :disabled="mobileOptimizations" />
           </n-form-item>
           <n-form-item v-if="showAdvancedSettings">
             <template #label>
@@ -688,7 +705,7 @@
             </n-radio-group>
           </n-form-item>
 
-          <n-form-item>
+          <n-form-item :style="{ opacity: mobileOptimizations ? 0.5 : 1 }">
             <template #label>
               Chat Mode
               <n-popover trigger="hover" placement="bottom">
@@ -698,13 +715,13 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode.<br /><br />
+                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode or Mobile Optimizations.<br /><br />
                   <strong>NIKKE:</strong> Interface looks much more similar to the videogame, with overlay text and typewriter effects.
                 </div>
               </n-popover>
             </template>
             <n-radio-group v-model:value="chatMode" name="chatmodegroup">
-              <n-radio-button :disabled="mode === 'game'" value="classic">Classic</n-radio-button>
+              <n-radio-button :disabled="mode === 'game' || mobileOptimizations" value="classic">Classic</n-radio-button>
               <n-radio-button value="nikke">NIKKE</n-radio-button>
             </n-radio-group>
           </n-form-item>
@@ -744,7 +761,7 @@
             <n-switch v-model:value="market.live2d.yapEnabled" />
           </n-form-item>
 
-          <n-form-item :style="{ opacity: lowPowerMode ? 0.5 : 1 }">
+          <n-form-item :style="{ opacity: (lowPowerMode || mobileOptimizations) ? 0.5 : 1 }">
             <template #label>
               Enable Animation Replay
               <n-popover trigger="hover" placement="bottom">
@@ -759,7 +776,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode" />
+            <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode || mobileOptimizations" />
           </n-form-item>
             <n-form-item v-if="showAdvancedSettings">
             <template #label>
@@ -778,7 +795,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode" :style="{ opacity: lowPowerMode ? 0.5 : 1 }" />
+            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode || mobileOptimizations" :style="{ opacity: (lowPowerMode || mobileOptimizations) ? 0.5 : 1 }" />
           </n-form-item>
           <template v-if="showAdvancedSettings && market.live2d.backgroundImagesEnabled && !lowPowerMode">
             <n-form-item label="Background Folder">
@@ -791,7 +808,7 @@
             <input ref="folderInput" type="file" webkitdirectory style="display: none" @change="handleFolderSelection" />
           </template>
 
-          <n-form-item>
+          <n-form-item :style="{ opacity: mobileOptimizations ? 0.5 : 1 }">
             <template #label>
               Text to Speech <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -807,7 +824,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="ttsEnabled" />
+            <n-switch v-model:value="ttsEnabled" :disabled="mobileOptimizations" />
           </n-form-item>
 
           <n-form-item label="TTS Provider" v-if="ttsEnabled">
@@ -905,6 +922,7 @@ const isCompactMobile = computed(() => market.globalParams.isMobileCompact)
 
 const STORY_GEN_LOW_POWER_STORAGE_KEY = 'nikke_story_gen_low_power_mode'
 const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
+const STORY_GEN_MOBILE_OPTIMIZATIONS_KEY = 'nikke_story_gen_mobile_optimizations'
 type AssetQualityMode = 'low' | 'high'
 
 const pendingGameChoiceText = ref<string | null>(null)
@@ -1097,6 +1115,12 @@ watch(showAdvancedSettings, (val) => {
 const lowContextMode = ref(false)
 const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
 const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
+const mobileOptimizations = ref(localStorage.getItem(STORY_GEN_MOBILE_OPTIMIZATIONS_KEY) === 'true')
+const mobileOptimizationsPrev = ref({
+  lowPowerMode: false,
+  ttsEnabled: false,
+  chatMode: 'nikke' as string
+})
 const enableAnimationReplay = ref(false)
 const backgroundFolderName = ref('')
 const folderInput = ref<HTMLInputElement | null>(null)
@@ -1456,6 +1480,28 @@ const applyLowPowerModeState = (enabled: boolean) => {
   localStorage.setItem('nikke_background_images_enabled', String(restoredBackgroundImages))
 }
 
+const applyMobileOptimizationsState = (enabled: boolean) => {
+  if (enabled) {
+    mobileOptimizationsPrev.value = {
+      lowPowerMode: lowPowerMode.value,
+      ttsEnabled: ttsEnabled.value,
+      chatMode: chatMode.value
+    }
+    lowPowerMode.value = true
+    ttsEnabled.value = false
+    chatMode.value = 'nikke'
+  } else {
+    chatMode.value = mobileOptimizationsPrev.value.chatMode
+    ttsEnabled.value = mobileOptimizationsPrev.value.ttsEnabled
+    lowPowerMode.value = mobileOptimizationsPrev.value.lowPowerMode
+    mobileOptimizationsPrev.value = {
+      lowPowerMode: false,
+      ttsEnabled: false,
+      chatMode: 'nikke'
+    }
+  }
+}
+
 const assetQuality = computed({
   get: (): AssetQualityMode => (lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value),
   set: (val: string) => {
@@ -1794,9 +1840,7 @@ const handleFirstTurnPresetFileUpload = async (event: Event) => {
 
 // Watchers
 watch(chatMode, (newVal) => {
-  // Prevent selecting Classic while in Game mode
-  if (newVal === 'classic' && mode.value === 'game') {
-    // If we're in game mode, force NIKKE mode instead
+  if (newVal === 'classic' && (mode.value === 'game' || mobileOptimizations.value)) {
     chatMode.value = 'nikke'
     return
   }
@@ -1870,12 +1914,21 @@ watch(lowContextMode, (val) => {
 })
 
 watch(lowPowerMode, (enabled) => {
+  if (!enabled && mobileOptimizations.value) {
+    lowPowerMode.value = true
+    return
+  }
   localStorage.setItem(STORY_GEN_LOW_POWER_STORAGE_KEY, String(enabled))
   applyLowPowerModeState(enabled)
 })
 
+watch(mobileOptimizations, (enabled) => {
+  localStorage.setItem(STORY_GEN_MOBILE_OPTIMIZATIONS_KEY, String(enabled))
+  applyMobileOptimizationsState(enabled)
+})
+
 watch(enableAnimationReplay, (newVal) => {
-  if (!lowPowerMode.value) {
+  if (!lowPowerMode.value && !mobileOptimizations.value) {
     storyGenAnimationReplayPreference.value = newVal
   }
   localStorage.setItem('nikke_enable_animation_replay', String(newVal))
@@ -1886,6 +1939,10 @@ watch(playbackMode, (newVal) => {
 })
 
 watch(ttsEnabled, (newVal) => {
+  if (newVal && mobileOptimizations.value) {
+    ttsEnabled.value = false
+    return
+  }
   localStorage.setItem('nikke_tts_enabled', String(newVal))
 })
 
@@ -2027,8 +2084,8 @@ const initializeSettings = async () => {
   if (stored.mode !== undefined) mode.value = stored.mode
   if (stored.playbackMode !== undefined) playbackMode.value = stored.playbackMode
   if (stored.yapEnabled !== undefined) market.live2d.yapEnabled = stored.yapEnabled
-  applyStoryGenAssetQuality(lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value)
-  if (stored.ttsEnabled !== undefined) ttsEnabled.value = stored.ttsEnabled
+  applyStoryGenAssetQuality((lowPowerMode.value || mobileOptimizations.value) ? 'low' : storyGenAssetQualityPreference.value)
+  if (stored.ttsEnabled !== undefined && !mobileOptimizations.value) ttsEnabled.value = stored.ttsEnabled
   if (stored.ttsEndpoint !== undefined) ttsEndpoint.value = stored.ttsEndpoint
   if (stored.ttsProvider !== undefined) ttsProvider.value = stored.ttsProvider
   if (stored.gptSovitsEndpoint !== undefined) gptSovitsEndpoint.value = stored.gptSovitsEndpoint
@@ -2044,9 +2101,9 @@ const initializeSettings = async () => {
   if (stored.enableAnimationReplay !== undefined) {
     storyGenAnimationReplayPreference.value = stored.enableAnimationReplay
   }
-  enableAnimationReplay.value = lowPowerMode.value ? false : storyGenAnimationReplayPreference.value
+  enableAnimationReplay.value = (lowPowerMode.value || mobileOptimizations.value) ? false : storyGenAnimationReplayPreference.value
 
-  if (stored.backgroundImagesEnabled !== undefined) {
+  if (stored.backgroundImagesEnabled !== undefined && !mobileOptimizations.value) {
     market.live2d.backgroundImagesEnabled = stored.backgroundImagesEnabled
   }
 
@@ -2101,6 +2158,12 @@ const initializeSettings = async () => {
     }
   } else if (apiProvider.value === 'pollinations' && pollinationsModels.value.length === 0) {
     await refreshPollinationsModels()
+  }
+
+  if (mobileOptimizations.value) {
+    ttsEnabled.value = false
+    chatMode.value = 'nikke'
+    lowPowerMode.value = true
   }
 
   isRestoring.value = false
@@ -2260,7 +2323,7 @@ const handleFolderSelection = (event: Event) => {
 }
 
 const onBackgroundImagesToggle = (enabled: boolean) => {
-  if (enabled && lowPowerMode.value) return
+  if (enabled && (lowPowerMode.value || mobileOptimizations.value)) return
   market.live2d.backgroundImagesEnabled = enabled
   localStorage.setItem('nikke_background_images_enabled', String(enabled))
   if (!enabled) {
