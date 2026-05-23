@@ -124,24 +124,24 @@ let initialScale = 0.5
 
 const handlePinch = (e: TouchEvent) => {
   if (!filterDomEvents(e) || e.touches.length !== 2 || initialDistance === 0) return
-  
+
   const touch1 = e.touches[0]
   const touch2 = e.touches[1]
   const currentDistance = Math.sqrt(
-    Math.pow(touch2.clientX - touch1.clientX, 2) + 
+    Math.pow(touch2.clientX - touch1.clientX, 2) +
     Math.pow(touch2.clientY - touch1.clientY, 2)
   )
-  
+
   const scaleFactor = currentDistance / initialDistance
   transformScale = initialScale * scaleFactor
-  
+
   // Clamp scale between reasonable bounds
   transformScale = Math.max(0.1, Math.min(3, transformScale))
-  
+
   if (canvas) {
     canvas.style.transform = 'scale(' + transformScale + ')'
   }
-  
+
   // Prevent page zoom during pinch
   if (e.cancelable) e.preventDefault()
 }
@@ -213,7 +213,7 @@ const onTouchMove = (e: TouchEvent) => {
     if (e.cancelable) e.preventDefault()
     return
   }
-  
+
   if (move && canvas && market.route.name === 'story-gen') {
     // Only prevent default for single touch drag, allow multi-touch for pinch zoom
     if (e.touches.length === 1 && e.cancelable) {
@@ -790,7 +790,7 @@ watch(() => market.globalParams.isMobile, (e) => {
     canvas && setCanvasStyleMobile()
   } else {
     applyDefaultStyle2Canvas()
-    centerForPC()
+    centerCanvas()
   }
 })
 
@@ -1008,7 +1008,7 @@ const applyDefaultStyle2Canvas = () => {
       canvas.style.top = '0px'
       transformScale = market.live2d.HQassets ? 0.18 : 0.5
       market.globalParams.showMobileHeader()
-      centerForPC()
+      centerCanvas()
     }
   }, 50)
 }
@@ -1017,13 +1017,24 @@ const setCanvasStyleMobile = () => {
   if (!canvas) return
 
   if (market.route.name === 'story-gen') {
-    canvas.style.height = '70vh'
-    canvas.style.width = 'auto'
-    canvas.style.position = 'absolute'
-    canvas.style.top = '0px'
-    canvas.style.transform = 'scale(0.7)'
-    transformScale = 0.7
-    centerForPC()
+    const isCompact = market.globalParams.isMobileCompact
+    if (isCompact) {
+      // Compact mode: slightly larger scale for better visibility on phones
+      canvas.style.height = '70vh'
+      canvas.style.width = 'auto'
+      canvas.style.position = 'absolute'
+      canvas.style.top = '0px'
+      canvas.style.transform = 'scale(0.85)'
+      transformScale = 0.85
+    } else {
+      canvas.style.height = '70vh'
+      canvas.style.width = 'auto'
+      canvas.style.position = 'absolute'
+      canvas.style.top = '0px'
+      canvas.style.transform = 'scale(0.7)'
+      transformScale = 0.7
+    }
+    centerCanvas()
   } else {
     // L2D (visualiser) - use production behavior
     canvas.style.height = '90vh'
@@ -1037,10 +1048,20 @@ const checkMobile = () => {
   return market.globalParams.isMobile ? true : false
 }
 
-const centerForPC = () => {
+const centerCanvas = () => {
   const canvas_width = canvas ? canvas.offsetWidth : 0
+  const canvas_height = canvas ? canvas.offsetHeight : 0
   const viewport_width = window.innerWidth
+  const viewport_height = window.innerHeight
+
+  // Center the element box (the scaled visual content stays centered
+  // because transform: scale() scales from the element's center by default).
   canvas && (canvas.style.left = (viewport_width - canvas_width) / 2 + 'px')
+
+  // On mobile story-gen, also center vertically so the character isn't anchored to the top edge
+  if (checkMobile() && market.route.name === 'story-gen' && canvas) {
+    canvas.style.top = (viewport_height - canvas_height) / 2 + 'px'
+  }
 }
 
 const filterDomEvents = (event: any) => {

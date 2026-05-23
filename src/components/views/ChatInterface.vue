@@ -1,5 +1,8 @@
 <template>
-  <div class="chat-interface">
+  <div
+    class="chat-interface"
+    :class="{ 'compact-mobile': isCompactMobile }"
+  >
     <n-button class="settings-btn" circle @click="showSettings = true">
       <template #icon>
         <n-icon><Settings /></n-icon>
@@ -76,13 +79,49 @@
       </div>
 
       <div class="chat-input-area" style="gap: 6px">
-        <n-input v-model:value="userInput" type="textarea" :placeholder="isApiKeyMissing ? 'Please enter API Key in settings' : 'Type your message...'" :disabled="isApiKeyMissing" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
-        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing">Send</n-button>
-        <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
-        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
-        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing">
-          {{ waitingForNext ? 'Next' : 'Continue' }}
-        </n-button>
+        <n-input v-model:value="userInput" type="textarea" :placeholder="isApiKeyMissing ? 'Please enter API Key in settings' : 'Type your message...'" :disabled="isApiKeyMissing" :autosize="{ minRows: 1, maxRows: 3 }" @keydown.enter.prevent="handleEnter" />
+        <template v-if="!isCompactMobile">
+          <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing">Send</n-button>
+          <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
+          <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing">
+            {{ waitingForNext ? 'Next' : 'Continue' }}
+          </n-button>
+          <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
+        </template>
+        <template v-else>
+          <div class="mobile-btn-row">
+            <n-button type="primary" size="tiny" circle @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing" title="Send" aria-label="Send message">
+              <template #icon><n-icon><Send /></n-icon></template>
+            </n-button>
+            <n-button type="error" size="tiny" circle @click="stopGeneration" v-if="isLoading" title="Stop" aria-label="Stop generation">
+              <template #icon><n-icon><Stop /></n-icon></template>
+            </n-button>
+            <n-button type="success" size="tiny" circle @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing" title="Continue" aria-label="Continue">
+              <template #icon><n-icon><Play /></n-icon></template>
+            </n-button>
+            <n-button type="warning" size="tiny" circle @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing" title="Retry" aria-label="Retry">
+              <template #icon><n-icon><Renew /></n-icon></template>
+            </n-button>
+            <n-button type="error" size="tiny" circle @click="resetSession" :disabled="isLoading || chatHistory.length === 0" title="Reset Session" aria-label="Reset session">
+              <template #icon><n-icon><Reset /></n-icon></template>
+            </n-button>
+            <n-popover trigger="click" placement="top" style="max-width: 240px">
+              <template #trigger>
+                <n-button size="tiny" quaternary circle title="More" aria-label="More actions" aria-haspopup="true">
+                  <template #icon><n-icon><OverflowMenuHorizontal /></n-icon></template>
+                </n-button>
+              </template>
+              <div class="mobile-overflow-menu" style="display: flex; flex-direction: column; gap: 6px">
+                <n-button size="small" type="error" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" block>Save</n-button>
+                <n-button size="small" type="warning" @click="triggerRestore" :disabled="isLoading" block>Load</n-button>
+                <n-button size="small" type="info" @click="handleCompactSummary" :disabled="isCompactSummaryDisabled" block>Compaction</n-button>
+                <n-button size="small" type="primary" @click="showRosterList = !showRosterList" block>Characters</n-button>
+                <n-button size="small" type="primary" @click="showPresetsModal = true" :disabled="isLoading" block>Presets</n-button>
+                <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary || isLoading" block>Story Summary</n-button>
+              </div>
+            </n-popover>
+          </div>
+        </template>
       </div>
 
       <div v-if="showSavingFirstTurnInput" class="save-first-turn-row">
@@ -91,7 +130,7 @@
         <n-button size="tiny" @click="cancelSaveFirstTurnPreset">Cancel</n-button>
       </div>
 
-      <div class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
+      <div v-if="!isCompactMobile" class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
@@ -169,7 +208,66 @@
             </div>
           </div>
         </div>
-        <n-modal v-model:show="showPresetsModal" preset="card" title="Presets" style="max-width: 500px">
+        <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
+          <template #trigger>
+            <n-button type="info" size="small" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
+              <template #icon>
+                <n-icon><Help /></n-icon>
+              </template>
+              Problems?
+            </n-button>
+          </template>
+          <div class="problems-popover-content">
+            <div class="problems-popover-header">Inject one or more reminders to the model for the next turn:</div>
+            <div class="problems-popover-row">
+              <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
+              <n-checkbox v-model:checked="invalidJsonAuto" size="small">Auto</n-checkbox>
+              <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
+            </div>
+            <div class="problems-popover-row">
+              <n-checkbox v-model:checked="incorrectAnimationsToggle">Incorrect or Lazy Animations</n-checkbox>
+              <n-checkbox v-model:checked="incorrectAnimationsPersist" size="small">Persist</n-checkbox>
+            </div>
+            <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
+            <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
+            <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
+            <n-checkbox v-if="mode !== 'story'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
+            <n-checkbox v-model:checked="incorrectSpeakerLabelingToggle">Incorrect Speaker Labeling</n-checkbox>
+            <n-checkbox v-model:checked="narrationAsDialogueToggle">Narration presented as dialogue</n-checkbox>
+            <n-checkbox v-model:checked="wrongCharacterOnScreenToggle">Wrong character on screen</n-checkbox>
+            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="npcUsingCommanderHonorificsToggle">NPCs are using Commander's honorifics with me</n-checkbox>
+            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="commanderPresentButSilentToggle">Commander is present but not talking</n-checkbox>
+          </div>
+        </n-popover>
+      </div>
+
+      <!-- Compact mobile roster list (rendered outside .session-controls so overflow-menu toggle works) -->
+      <div v-if="isCompactMobile && showRosterList" class="session-controls compact-roster" :style="{ '--chat-width': chatSize.width + 'px' }">
+        <div class="story-character-inline">
+          <div class="story-character-inline-header">
+            <n-button size="small" type="primary" @click="showRosterList = !showRosterList">Characters</n-button>
+            <n-button size="small" type="success" @click="addRosterRow">+</n-button>
+            <n-button v-if="rosterRows.length > 0" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
+            <n-button v-if="userInput.trim() && chatHistory.length === 0" size="small" type="info" @click="saveFirstTurnAsPreset">Save first turn</n-button>
+          </div>
+          <div class="story-character-list">
+            <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
+              <n-select class="story-character-select" :value="entry.selection" :options="availableRosterOptions" filterable placeholder="Character" @update:value="(val) => updateRosterSelection(entry, val as string)" />
+              <n-select v-if="getSkinOptionsForEntry(entry).length > 0" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
+              <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
+              <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
+            </div>
+            <div v-if="showSavingPresetInput" class="story-character-row compact save-preset-row">
+              <n-input v-model:value="savingPresetName" size="small" placeholder="Preset name..." @keydown.enter="confirmSavePreset" style="flex: 1" />
+              <n-button size="tiny" type="primary" @click="confirmSavePreset" :disabled="!savingPresetName.trim()">Save</n-button>
+              <n-button size="tiny" @click="cancelSavePreset">Cancel</n-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modals always rendered so overflow-menu buttons can trigger them -->
+      <n-modal v-model:show="showPresetsModal" preset="card" title="Presets" style="max-width: 500px">
           <n-tabs v-model:value="activePresetTab" type="segment" animated>
             <n-tab-pane name="roster" tab="Roster">
               <div v-if="presets.length === 0" style="text-align: center; padding: 20px; color: #888">
@@ -275,38 +373,6 @@
             </n-space>
           </template>
         </n-modal>
-        <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
-          <template #trigger>
-            <n-button type="info" size="small" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
-              <template #icon>
-                <n-icon><Help /></n-icon>
-              </template>
-              Problems?
-            </n-button>
-          </template>
-          <div class="problems-popover-content">
-            <div class="problems-popover-header">Inject one or more reminders to the model for the next turn:</div>
-            <div class="problems-popover-row">
-              <n-checkbox v-model:checked="invalidJsonToggle">Invalid JSON Schema</n-checkbox>
-              <n-checkbox v-model:checked="invalidJsonAuto" size="small">Auto</n-checkbox>
-              <n-checkbox v-model:checked="invalidJsonPersist" size="small">Persist</n-checkbox>
-            </div>
-            <div class="problems-popover-row">
-              <n-checkbox v-model:checked="incorrectAnimationsToggle">Incorrect or Lazy Animations</n-checkbox>
-              <n-checkbox v-model:checked="incorrectAnimationsPersist" size="small">Persist</n-checkbox>
-            </div>
-            <n-checkbox v-model:checked="honorificsToggle">Incorrect Honorifics</n-checkbox>
-            <n-checkbox v-model:checked="narrationAndDialogueNotSplitToggle">Narration and Dialogue Not Split</n-checkbox>
-            <n-checkbox v-model:checked="wrongSpeechStylesToggle">Using Wrong Speech Styles</n-checkbox>
-            <n-checkbox v-if="mode !== 'story'" v-model:checked="aiControllingUserToggle">AI Is Controlling Me</n-checkbox>
-            <n-checkbox v-model:checked="incorrectSpeakerLabelingToggle">Incorrect Speaker Labeling</n-checkbox>
-            <n-checkbox v-model:checked="narrationAsDialogueToggle">Narration presented as dialogue</n-checkbox>
-            <n-checkbox v-model:checked="wrongCharacterOnScreenToggle">Wrong character on screen</n-checkbox>
-            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="npcUsingCommanderHonorificsToggle">NPCs are using Commander's honorifics with me</n-checkbox>
-            <n-checkbox v-if="isCustomPlayerCharacterActive" v-model:checked="commanderPresentButSilentToggle">Commander is present but not talking</n-checkbox>
-          </div>
-        </n-popover>
-      </div>
 
       <!-- Resize Handles -->
       <div class="resize-handle nw" @mousedown="startResize($event, 'nw')" @touchstart="startResize($event, 'nw')"></div>
@@ -319,6 +385,7 @@
 
     <!-- NIKKE Mode Overlay -->
     <NikkeChatOverlay
+      :class="{ 'compact-mobile': isCompactMobile }"
       :chatMode="chatMode"
       :nikkeOverlayVisible="nikkeOverlayVisible"
       :nikkeOverlayPassthrough="nikkeOverlayPassthrough"
@@ -805,7 +872,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document, OverflowMenuHorizontal, Send, Stop, Play } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag, NModal, NPopconfirm } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -833,6 +900,8 @@ import NikkeChatOverlay from '@/components/common/StoryGenerator/NikkeChatOverla
 import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
 
 const market = useMarket()
+
+const isCompactMobile = computed(() => market.globalParams.isMobileCompact)
 
 const STORY_GEN_LOW_POWER_STORAGE_KEY = 'nikke_story_gen_low_power_mode'
 const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
@@ -1193,7 +1262,7 @@ const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY
 
 // Wrapper so the template doesn't need to pass Refs directly (auto-unwrap in templates
 // would pass plain objects instead of Ref<WindowSize> / Ref<WindowPosition>).
-const resetChatLayout = () => initChatLayout(chatSize, chatPosition)
+const resetChatLayout = () => initChatLayout(chatSize, chatPosition, isCompactMobile.value)
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
@@ -2048,11 +2117,22 @@ const { startDrag } = createDragHandlers({ chatPosition, chatSize, isDragging, d
 const { startResize } = createResizeHandlers({ chatPosition, chatSize, isResizing, resizeDirection, resizeStart })
 const { restoreViewportZoom, preventMobileZoomOnThisView, lockMobilePageScroll, unlockMobilePageScroll } = createViewportHandlers()
 
+const handleResize = () => {
+  // Ensure window stays in bounds on resize and re-layout if compact mode changes
+  const { innerWidth, innerHeight } = window
+  if (chatPosition.value.x + chatSize.value.width > innerWidth) {
+    chatPosition.value.x = Math.max(0, innerWidth - chatSize.value.width)
+  }
+  if (chatPosition.value.y + chatSize.value.height > innerHeight) {
+    chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
+  }
+}
+
 onMounted(() => {
   originalHQAssets.value = market.live2d.HQassets
   checkGuide()
   initializeSettings()
-  initChatLayout(chatSize, chatPosition)
+  initChatLayout(chatSize, chatPosition, isCompactMobile.value)
   window.addEventListener('beforeunload', handleBeforeUnload)
 
   preventMobileZoomOnThisView()
@@ -2066,15 +2146,13 @@ onMounted(() => {
   document.addEventListener('mousemove', onNikkeGlobalMove as any)
   document.addEventListener('mouseup', onNikkeGlobalEnd as any)
 
-  window.addEventListener('resize', () => {
-    // Ensure window stays in bounds on resize
-    const { innerWidth, innerHeight } = window
-    if (chatPosition.value.x + chatSize.value.width > innerWidth) {
-      chatPosition.value.x = Math.max(0, innerWidth - chatSize.value.width)
-    }
-    if (chatPosition.value.y + chatSize.value.height > innerHeight) {
-      chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
-    }
+  window.addEventListener('resize', handleResize)
+
+  // Re-layout when compact mode toggles (device rotation, resize across threshold)
+  watch(isCompactMobile, () => {
+    window.setTimeout(() => {
+      resetChatLayout()
+    }, 100)
   })
 
   syncStoryGenLowPowerDataset()
@@ -2084,6 +2162,7 @@ onUnmounted(() => {
   delete document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY]
   market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener('resize', handleResize)
   unlockMobilePageScroll()
   restoreViewportZoom()
 
@@ -4852,5 +4931,77 @@ const saveSummaryEdit = () => {
   color: #999;
   line-height: 1.4;
   word-break: break-word;
+}
+
+/* ── Compact Mobile Tweaks (chatbox stays draggable & transparent) ── */
+
+.chat-interface.compact-mobile {
+  .settings-btn,
+  .help-btn,
+  .reset-btn {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 1002;
+  }
+
+  .help-btn {
+    right: 52px;
+  }
+
+  .reset-btn {
+    right: 96px;
+  }
+
+  .chat-history {
+    padding: 6px 8px;
+
+    .message {
+      max-width: 92%;
+      padding: 6px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+  }
+
+  .chat-input-area {
+    padding: 6px 8px;
+    gap: 6px;
+    flex-direction: column;
+    align-items: stretch;
+
+    .n-input {
+      width: 100%;
+      flex: none;
+      order: 1;
+    }
+
+    :deep(.n-input__textarea) {
+      min-height: 36px;
+      max-height: 90px;
+    }
+
+    .mobile-btn-row {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      justify-content: flex-end;
+      align-items: center;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      order: 2;
+
+      .n-button {
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.mobile-overflow-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
 }
 </style>

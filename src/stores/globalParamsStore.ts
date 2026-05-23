@@ -3,7 +3,10 @@ import { defineStore } from 'pinia'
 
 export const useGlobalParamsStore = defineStore('globalParams', () => {
   const isMobile = ref(true)
-  const isMobileHeaderVisibile = ref(true)
+  const isMobileHeaderVisible = ref(true)
+
+  // Compact mode: small screens (phones) where the UI needs a dedicated mobile layout
+  const isMobileCompact = ref(false)
 
   const setMobile = () => {
     isMobile.value = true
@@ -13,19 +16,25 @@ export const useGlobalParamsStore = defineStore('globalParams', () => {
     isMobile.value = false
   }
 
+  const setMobileCompact = (value: boolean) => {
+    isMobileCompact.value = value
+  }
+
   const hideMobileHeader = () => {
-    isMobileHeaderVisibile.value = false
+    isMobileHeaderVisible.value = false
   }
 
   const showMobileHeader = () => {
-    isMobileHeaderVisibile.value = true
+    isMobileHeaderVisible.value = true
   }
 
   return {
     isMobile,
     setMobile,
     setComputer,
-    isMobileHeaderVisibile,
+    isMobileCompact,
+    setMobileCompact,
+    isMobileHeaderVisible,
     hideMobileHeader,
     showMobileHeader
   }
