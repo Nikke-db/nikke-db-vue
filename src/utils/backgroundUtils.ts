@@ -159,6 +159,28 @@ const BACKGROUND_SCENE_OVERRIDES: Record<string, BackgroundSceneOverride> = {
   Workshop: { locations: ['Workshop'] }
 }
 
+const TYPO_ALIAS_MAP: Record<string, string> = {
+  'CrownCasltePanorama_d.png': 'CrownKingdomCastlePanorama_d.png',
+  'CrownCasltePanorama_n.png': 'CrownKingdomCastlePanorama_n.png',
+  'CrownCasltePanorama_s.png': 'CrownKingdomCastlePanorama_s.png',
+  'Crowncastlebedroom_d.png': 'CrownKingdomCastleBedroom_d.png',
+  'Crowncastlebedroom_n.png': 'CrownKingdomCastleBedroom_n.png',
+  'CrownCastleDiningRoom_d.png': 'CrownKingdomCastleDiningRoom_d.png',
+  'CrownCastleDiningRoom_n.png': 'CrownKingdomCastleDiningRoom_n.png',
+  'CrownCastleFrontYard_d.png': 'CrownKingdomCastleFrontYard_d.png',
+  'CrownCastleFrontYard_n.png': 'CrownKingdomCastleFrontYard_n.png',
+  'CrownCastleFrontYard_s.png': 'CrownKingdomCastleFrontYard_s.png',
+  'CrownCastleGate_d.png': 'CrownKingdomCastleGate_d.png',
+  'CrownCastleGate_n.png': 'CrownKingdomCastleGate_n.png',
+  'CrownCastleGate_s.png': 'CrownKingdomCastleGate_s.png'
+}
+
+// Case-insensitive lookup map built from TYPO_ALIAS_MAP at module load.
+const typoAliasMapNormalized = new Map<string, string>()
+for (const [key, value] of Object.entries(TYPO_ALIAS_MAP)) {
+  typoAliasMapNormalized.set(key.toLowerCase(), value)
+}
+
 const canonicalFilenames = backgroundImagesList as string[]
 
 const stripExtension = (filename: string): string => filename.replace(/\.[^.]+$/, '')
@@ -259,6 +281,16 @@ for (const canonicalFilename of canonicalFilenames) {
 const sceneCatalogEntries = Array.from(sceneCatalogByKey.values())
 const sceneByNormalizedKey = new Map(sceneCatalogEntries.map((scene) => [normalizeToken(scene.key), scene]))
 const sceneByNormalizedLabel = new Map(sceneCatalogEntries.map((scene) => [normalizeToken(scene.label), scene]))
+
+// Dev-only validation: ensure all TYPO_ALIAS_MAP values resolve to known canonical filenames.
+if (import.meta.env.DEV) {
+  const canonicalSet = new Set(canonicalFilenames)
+  for (const [typo, canonical] of Object.entries(TYPO_ALIAS_MAP)) {
+    if (!canonicalSet.has(canonical)) {
+      console.warn(`[backgroundUtils] TYPO_ALIAS_MAP value '${canonical}' (for '${typo}') is not a canonical filename`)
+    }
+  }
+}
 
 const getAvailableScenes = (availableFilenames: Iterable<string>): AvailableBackgroundScene[] => {
   const availableByKey = new Map<string, BackgroundSceneCatalogEntry>()
@@ -412,6 +444,9 @@ const getFuzzyCanonicalMatch = (uploadedFilename: string): string | undefined =>
 }
 
 export const resolveCanonicalBackgroundFilename = (uploadedFilename: string): string | undefined => {
+  const typoAlias = typoAliasMapNormalized.get(uploadedFilename.toLowerCase())
+  if (typoAlias) return typoAlias
+
   const exactMatch = canonicalByLowercase.get(uploadedFilename.toLowerCase())
   if (exactMatch) return exactMatch
 

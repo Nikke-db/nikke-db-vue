@@ -3,6 +3,14 @@
 
 import { tokenUsageOptions, providerOptions } from '@/utils/llmUtils'
 
+// --- Shared localStorage keys ---
+
+/** localStorage key for the mobile-optimizations toggle. */
+export const MOBILE_OPTIMIZATIONS_STORAGE_KEY = 'nikke_story_gen_mobile_optimizations'
+
+/** localStorage key for persisting the previous state before mobile optimizations was enabled. */
+export const MOBILE_OPTIMIZATIONS_PREV_KEY = 'nikke_story_gen_mobile_optimizations_prev'
+
 // --- Types ---
 
 /** All settings that can be loaded from localStorage. */
@@ -143,7 +151,7 @@ export function loadSettingsFromStorage(): StoredSettings {
     result.backgroundImagesEnabled = savedBackgroundImages === 'true'
   }
 
-  const savedMobileOptimizations = localStorage.getItem('nikke_story_gen_mobile_optimizations')
+  const savedMobileOptimizations = localStorage.getItem(MOBILE_OPTIMIZATIONS_STORAGE_KEY)
   if (savedMobileOptimizations !== null) {
     result.mobileOptimizations = savedMobileOptimizations === 'true'
   }

@@ -667,7 +667,7 @@
 
           <h4 class="settings-section-header accent-red">Interface & Audio</h4>
           <n-divider />
-          <n-form-item v-if="showAdvancedSettings" :style="{ opacity: mobileOptimizations ? 0.5 : 1 }">
+          <n-form-item v-if="showAdvancedSettings" :style="{ opacity: mobileOptimizationsDim }">
             <template #label>
               Low Power Mode
               <n-popover trigger="hover" placement="bottom">
@@ -705,7 +705,7 @@
             </n-radio-group>
           </n-form-item>
 
-          <n-form-item :style="{ opacity: mobileOptimizations ? 0.5 : 1 }">
+          <n-form-item :style="{ opacity: mobileOptimizationsDim }">
             <template #label>
               Chat Mode
               <n-popover trigger="hover" placement="bottom">
@@ -761,7 +761,7 @@
             <n-switch v-model:value="market.live2d.yapEnabled" />
           </n-form-item>
 
-          <n-form-item :style="{ opacity: (lowPowerMode || mobileOptimizations) ? 0.5 : 1 }">
+          <n-form-item :style="{ opacity: lowPowerOrMobileDim }">
             <template #label>
               Enable Animation Replay
               <n-popover trigger="hover" placement="bottom">
@@ -795,7 +795,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode || mobileOptimizations" :style="{ opacity: (lowPowerMode || mobileOptimizations) ? 0.5 : 1 }" />
+            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode || mobileOptimizations" :style="{ opacity: lowPowerOrMobileDim }" />
           </n-form-item>
           <template v-if="showAdvancedSettings && market.live2d.backgroundImagesEnabled && !lowPowerMode">
             <n-form-item label="Background Folder">
@@ -808,7 +808,7 @@
             <input ref="folderInput" type="file" webkitdirectory style="display: none" @change="handleFolderSelection" />
           </template>
 
-          <n-form-item :style="{ opacity: mobileOptimizations ? 0.5 : 1 }">
+          <n-form-item :style="{ opacity: mobileOptimizationsDim }">
             <template #label>
               Text to Speech <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -914,15 +914,18 @@ import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverr
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
 import NikkeChatOverlay from '@/components/common/StoryGenerator/NikkeChatOverlay.vue'
-import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
+import { loadSettingsFromStorage, validateSavedModel, MOBILE_OPTIMIZATIONS_STORAGE_KEY, MOBILE_OPTIMIZATIONS_PREV_KEY } from '@/utils/settingsUtils'
 
 const market = useMarket()
 
 const isCompactMobile = computed(() => market.globalParams.isMobileCompact)
 
+// Computed opacity values for settings controlled by mobile optimizations / low power mode
+const mobileOptimizationsDim = computed(() => mobileOptimizations.value ? 0.5 : 1)
+const lowPowerOrMobileDim = computed(() => (lowPowerMode.value || mobileOptimizations.value) ? 0.5 : 1)
+
 const STORY_GEN_LOW_POWER_STORAGE_KEY = 'nikke_story_gen_low_power_mode'
 const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
-const STORY_GEN_MOBILE_OPTIMIZATIONS_KEY = 'nikke_story_gen_mobile_optimizations'
 type AssetQualityMode = 'low' | 'high'
 
 const pendingGameChoiceText = ref<string | null>(null)
@@ -1115,12 +1118,11 @@ watch(showAdvancedSettings, (val) => {
 const lowContextMode = ref(false)
 const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
 const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
-const mobileOptimizations = ref(localStorage.getItem(STORY_GEN_MOBILE_OPTIMIZATIONS_KEY) === 'true')
-const mobileOptimizationsPrev = ref({
-  lowPowerMode: false,
-  ttsEnabled: false,
-  chatMode: 'nikke' as string
-})
+const mobileOptimizations = ref(localStorage.getItem(MOBILE_OPTIMIZATIONS_STORAGE_KEY) === 'true')
+// Prevents applyLowPowerModeState from running twice when mobile optimizations
+// forces lowPowerMode (the watcher fires, but applyMobileOptimizationsState
+// already explicitly called applyLowPowerModeState).
+const isMobileDrivingLowPower = ref(false)
 const enableAnimationReplay = ref(false)
 const backgroundFolderName = ref('')
 const folderInput = ref<HTMLInputElement | null>(null)
@@ -1480,25 +1482,41 @@ const applyLowPowerModeState = (enabled: boolean) => {
   localStorage.setItem('nikke_background_images_enabled', String(restoredBackgroundImages))
 }
 
+const loadMobileOptimizationsPrev = (): { lowPowerMode: boolean; ttsEnabled: boolean; chatMode: string } | null => {
+  try {
+    const raw = localStorage.getItem(MOBILE_OPTIMIZATIONS_PREV_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 const applyMobileOptimizationsState = (enabled: boolean) => {
   if (enabled) {
-    mobileOptimizationsPrev.value = {
+    // Persist current values so they survive page reloads
+    localStorage.setItem(MOBILE_OPTIMIZATIONS_PREV_KEY, JSON.stringify({
       lowPowerMode: lowPowerMode.value,
       ttsEnabled: ttsEnabled.value,
       chatMode: chatMode.value
-    }
+    }))
+    isMobileDrivingLowPower.value = true
     lowPowerMode.value = true
     ttsEnabled.value = false
     chatMode.value = 'nikke'
+    // Explicitly apply low-power side effects — don't rely on the watcher
+    applyLowPowerModeState(true)
+    isMobileDrivingLowPower.value = false
   } else {
-    chatMode.value = mobileOptimizationsPrev.value.chatMode
-    ttsEnabled.value = mobileOptimizationsPrev.value.ttsEnabled
-    lowPowerMode.value = mobileOptimizationsPrev.value.lowPowerMode
-    mobileOptimizationsPrev.value = {
-      lowPowerMode: false,
-      ttsEnabled: false,
-      chatMode: 'nikke'
+    const prev = loadMobileOptimizationsPrev()
+    localStorage.removeItem(MOBILE_OPTIMIZATIONS_PREV_KEY)
+    if (prev) {
+      chatMode.value = prev.chatMode
+      ttsEnabled.value = prev.ttsEnabled
+      lowPowerMode.value = prev.lowPowerMode
     }
+    // Explicitly restore low-power state. Even if lowPowerMode didn't change
+    // (so the watcher won't fire), we still need to restore asset quality, etc.
+    applyLowPowerModeState(prev?.lowPowerMode ?? false)
   }
 }
 
@@ -1914,6 +1932,7 @@ watch(lowContextMode, (val) => {
 })
 
 watch(lowPowerMode, (enabled) => {
+  if (isMobileDrivingLowPower.value) return
   if (!enabled && mobileOptimizations.value) {
     lowPowerMode.value = true
     return
@@ -1923,7 +1942,7 @@ watch(lowPowerMode, (enabled) => {
 })
 
 watch(mobileOptimizations, (enabled) => {
-  localStorage.setItem(STORY_GEN_MOBILE_OPTIMIZATIONS_KEY, String(enabled))
+  localStorage.setItem(MOBILE_OPTIMIZATIONS_STORAGE_KEY, String(enabled))
   applyMobileOptimizationsState(enabled)
 })
 
@@ -2161,9 +2180,7 @@ const initializeSettings = async () => {
   }
 
   if (mobileOptimizations.value) {
-    ttsEnabled.value = false
-    chatMode.value = 'nikke'
-    lowPowerMode.value = true
+    applyMobileOptimizationsState(true)
   }
 
   isRestoring.value = false
