@@ -51,7 +51,7 @@
       </div>
 
       <div class="chat-history" ref="chatHistoryRef">
-        <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), selected: selectedMessageIndex === index }]" @click="msg.role !== 'user' ? replayMessage(msg, index) : null">
+        <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), selected: selectedMessageIndex === index }]" @click="!isLoading && msg.role !== 'user' ? replayMessage(msg, index) : null">
           <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
           <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role === 'assistant'" class="message-top-actions" style="right: 0; left: auto">
             <n-button size="tiny" circle type="warning" @click.stop="regenerateResponse" title="Retry this message">
