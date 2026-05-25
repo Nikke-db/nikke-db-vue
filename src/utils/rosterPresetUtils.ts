@@ -87,6 +87,10 @@ export function deletePreset(id: string): void {
   savePresets(presets.filter((p) => p.id !== id))
 }
 
+export function deleteAllPresets(): void {
+  localStorage.removeItem(PRESETS_STORAGE_KEY)
+}
+
 export function renamePreset(id: string, name: string): void {
   const presets = loadPresets()
   const preset = presets.find((p) => p.id === id)

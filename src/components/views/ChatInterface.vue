@@ -274,6 +274,14 @@
                 No roster presets saved yet. Add characters to the roster and click <strong>Save as preset</strong> to create one.
               </div>
               <div v-else class="presets-list">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 4px;">
+                  <n-popconfirm @positive-click="deleteAllPresetsConfirm">
+                    <template #trigger>
+                      <n-button size="tiny" type="error" quaternary>Delete All</n-button>
+                    </template>
+                    Delete all roster presets? This action cannot be undone.
+                  </n-popconfirm>
+                </div>
                 <div v-for="preset in presets" :key="preset.id" class="preset-item">
                   <div class="preset-info">
                     <div class="preset-name-row">
@@ -304,6 +312,14 @@
                 No first turn presets saved yet. Type your opening message and click <strong>Save as first turn</strong> to create one.
               </div>
               <div v-else class="presets-list">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 4px;">
+                  <n-popconfirm @positive-click="deleteAllFirstTurnPresetsConfirm">
+                    <template #trigger>
+                      <n-button size="tiny" type="error" quaternary>Delete All</n-button>
+                    </template>
+                    Delete all first turn presets? This action cannot be undone.
+                  </n-popconfirm>
+                </div>
                 <div v-for="preset in firstTurnPresets" :key="preset.id" class="preset-item">
                   <div class="preset-info">
                     <div class="preset-name-row">
@@ -312,6 +328,13 @@
                       <span class="preset-meta">{{ formatPresetDate(preset.createdAt) }}</span>
                     </div>
                     <div class="preset-message-preview">{{ preset.message.length > 120 ? preset.message.slice(0, 120) + '...' : preset.message }}</div>
+                    <div v-if="preset.playAsDifferentCharacter && preset.playerCharacterName" style="font-size: 11px; color: #888; margin-top: 2px;">
+                      Play as: {{ preset.playerCharacterName }}
+                    </div>
+                    <div v-if="preset.roster && preset.roster.length > 0" class="preset-chars">
+                      <span v-for="(entry, i) in preset.roster.slice(0, 5)" :key="entry.key" class="preset-char-tag">{{ getPresetCharName(entry) }}<span v-if="i < Math.min(preset.roster.length, 5) - 1">, </span></span>
+                      <span v-if="preset.roster.length > 5" class="preset-char-more">+{{ preset.roster.length - 5 }} more</span>
+                    </div>
                   </div>
                   <div class="preset-actions">
                     <n-button size="tiny" type="primary" @click="loadFirstTurnPreset(preset)">Load</n-button>
@@ -424,8 +447,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  Automatically disables animations, backgrounds, and text-to-speech to improve performance on mobile devices.<br /><br />
-                  Also enables <strong>Low Power Mode</strong> and forces the <strong>NIKKE</strong> chat interface.
+                  Automatically enables Low Power Mode, disables text-to-speech and forces NIKKE visual mode to improve performance on mobile devices.
                 </div>
               </n-popover>
             </template>
@@ -715,7 +737,7 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode or Mobile Optimizations.<br /><br />
+                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode or if Mobile Optimizations are enabled.<br /><br />
                   <strong>NIKKE:</strong> Interface looks much more similar to the videogame, with overlay text and typewriter effects.
                 </div>
               </n-popover>
@@ -908,8 +930,8 @@ import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/util
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
-import { loadPresets, createPreset, deletePreset as deletePresetUtil, renamePreset as renamePresetUtil, exportAllPresets as exportAllPresetsUtil, importPresetsFromFile, type PresetEntry } from '@/utils/presetUtils'
-import { loadFirstTurnPresets, createFirstTurnPreset, deleteFirstTurnPreset as deleteFirstTurnPresetUtil, renameFirstTurnPreset as renameFirstTurnPresetUtil, exportAllFirstTurnPresets as exportAllFirstTurnPresetsUtil, importFirstTurnPresetsFromFile, type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
+import { loadPresets, createPreset, deletePreset as deletePresetUtil, deleteAllPresets as deleteAllPresetsUtil, renamePreset as renamePresetUtil, exportAllPresets as exportAllPresetsUtil, importPresetsFromFile, type PresetEntry } from '@/utils/rosterPresetUtils'
+import { loadFirstTurnPresets, createFirstTurnPreset, deleteFirstTurnPreset as deleteFirstTurnPresetUtil, deleteAllFirstTurnPresets as deleteAllFirstTurnPresetsUtil, renameFirstTurnPreset as renameFirstTurnPresetUtil, exportAllFirstTurnPresets as exportAllFirstTurnPresetsUtil, importFirstTurnPresetsFromFile, type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
@@ -1726,6 +1748,11 @@ const deletePresetConfirm = (id: string) => {
   refreshPresetList()
 }
 
+const deleteAllPresetsConfirm = () => {
+  deleteAllPresetsUtil()
+  refreshPresetList()
+}
+
 watch(showPresetsModal, (val) => {
   if (val) {
     refreshPresetList()
@@ -1784,7 +1811,13 @@ const saveFirstTurnAsPreset = () => {
 const confirmSaveFirstTurnPreset = () => {
   const name = savingFirstTurnName.value.trim()
   if (!name || !userInput.value.trim()) return
-  createFirstTurnPreset(name, userInput.value)
+  createFirstTurnPreset(
+    name,
+    userInput.value,
+    isCustomPlayerCharacterActive.value,
+    isCustomPlayerCharacterActive.value ? resolvedPlayerCharacterKey.value! : undefined,
+    rosterRows.value
+  )
   showSavingFirstTurnInput.value = false
   savingFirstTurnName.value = ''
   refreshFirstTurnPresetList()
@@ -1798,6 +1831,21 @@ const cancelSaveFirstTurnPreset = () => {
 const loadFirstTurnPreset = (preset: FirstTurnPresetEntry) => {
   if (!preset || !preset.message) return
   userInput.value = preset.message
+  if (preset.playAsDifferentCharacter && preset.playerCharacterName) {
+    useCustomPlayerCharacter.value = true
+    selectedPlayerCharacterName.value = preset.playerCharacterName
+    ensureValidSelectedPlayerCharacter()
+    if (!findPlayerCharacterProfileKey(selectedPlayerCharacterName.value)) {
+      useCustomPlayerCharacter.value = false
+      selectedPlayerCharacterName.value = ''
+    }
+  } else {
+    useCustomPlayerCharacter.value = false
+    selectedPlayerCharacterName.value = ''
+  }
+  if (preset.roster && Array.isArray(preset.roster) && preset.roster.length > 0) {
+    rosterRows.value = [...preset.roster]
+  }
   showPresetsModal.value = false
 }
 
@@ -1827,6 +1875,11 @@ const confirmFirstTurnRename = (id: string) => {
 const deleteFirstTurnPresetConfirm = (id: string) => {
   deleteFirstTurnPresetUtil(id)
   deleteFirstTurnPresetTarget.value = null
+  refreshFirstTurnPresetList()
+}
+
+const deleteAllFirstTurnPresetsConfirm = () => {
+  deleteAllFirstTurnPresetsUtil()
   refreshFirstTurnPresetList()
 }
 
