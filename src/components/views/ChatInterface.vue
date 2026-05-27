@@ -908,7 +908,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, type Ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
 import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document, OverflowMenuHorizontal, Send, Stop, Play } from '@vicons/carbon'
@@ -920,7 +920,11 @@ import backgroundImagesList from '@/utils/json/backgroundImages.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, getAIErrorMessage, buildUserReminders, generateSystemPrompt as generateSystemPromptUtil, type ReminderToggleState } from '@/utils/chatUtils'
+import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, generateSystemPrompt as generateSystemPromptUtil } from '@/utils/chatUtils'
+import { executeAiTurn } from '@/utils/chatRetryUtils'
+import { dispatchToProvider, buildFirstTurnHonorificsReminder, injectFirstTurnReminder, type ProviderCallFunctions } from '@/utils/chatAiCaller'
+import { useStoryReminders } from '@/composables/useStoryReminders'
+import { usePresets } from '@/composables/usePresets'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { formatBackgroundFolderLoadFeedback, resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
@@ -930,8 +934,8 @@ import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/util
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
-import { loadPresets, createPreset, deletePreset as deletePresetUtil, deleteAllPresets as deleteAllPresetsUtil, renamePreset as renamePresetUtil, exportAllPresets as exportAllPresetsUtil, importPresetsFromFile, type PresetEntry } from '@/utils/rosterPresetUtils'
-import { loadFirstTurnPresets, createFirstTurnPreset, deleteFirstTurnPreset as deleteFirstTurnPresetUtil, deleteAllFirstTurnPresets as deleteAllFirstTurnPresetsUtil, renameFirstTurnPreset as renameFirstTurnPresetUtil, exportAllFirstTurnPresets as exportAllFirstTurnPresetsUtil, importFirstTurnPresetsFromFile, type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
+import { type PresetEntry } from '@/utils/rosterPresetUtils'
+import { type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
@@ -1032,28 +1036,51 @@ const characterCatalog = buildCharacterCatalog()
 validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
-const showPresetsModal = ref(false)
 const showSummaryModal = ref(false)
 const editableSummary = ref('')
-const presets = ref<PresetEntry[]>([])
-const editingPresetId = ref<string | null>(null)
-const editingPresetName = ref('')
-const deletePresetTarget = ref<string | null>(null)
-const presetImportWarning = ref('')
-const presetImportSuccess = ref('')
-const presetFileInput = ref<HTMLInputElement | null>(null)
-const showSavingPresetInput = ref(false)
-const savingPresetName = ref('')
-const activePresetTab = ref('roster')
-const firstTurnPresets = ref<FirstTurnPresetEntry[]>([])
-const editingFirstTurnPresetId = ref<string | null>(null)
-const editingFirstTurnPresetName = ref('')
-const deleteFirstTurnPresetTarget = ref<string | null>(null)
-const firstTurnPresetImportWarning = ref('')
-const firstTurnPresetImportSuccess = ref('')
-const firstTurnPresetFileInput = ref<HTMLInputElement | null>(null)
-const showSavingFirstTurnInput = ref(false)
-const savingFirstTurnName = ref('')
+const {
+  showPresetsModal,
+  activePresetTab,
+  presets,
+  editingPresetId,
+  editingPresetName,
+  deletePresetTarget,
+  presetImportWarning,
+  presetImportSuccess,
+  presetFileInput,
+  showSavingPresetInput,
+  savingPresetName,
+  firstTurnPresets,
+  editingFirstTurnPresetId,
+  editingFirstTurnPresetName,
+  deleteFirstTurnPresetTarget,
+  firstTurnPresetImportWarning,
+  firstTurnPresetImportSuccess,
+  firstTurnPresetFileInput,
+  showSavingFirstTurnInput,
+  savingFirstTurnName,
+  formatPresetDate,
+  getPresetCharName,
+  saveRosterAsPreset,
+  confirmSavePreset: confirmSavePresetRaw,
+  cancelSavePreset,
+  startRename,
+  confirmRename,
+  deletePresetConfirm,
+  deleteAllPresetsConfirm,
+  triggerPresetImport,
+  exportAllPresets,
+  handlePresetFileUpload,
+  confirmSaveFirstTurnPreset: confirmSaveFirstTurnPresetRaw,
+  cancelSaveFirstTurnPreset,
+  startFirstTurnRename,
+  confirmFirstTurnRename,
+  deleteFirstTurnPresetConfirm,
+  deleteAllFirstTurnPresetsConfirm,
+  triggerFirstTurnPresetImport,
+  exportAllFirstTurnPresets,
+  handleFirstTurnPresetFileUpload
+} = usePresets(characterCatalog)
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
 const isCommanderProfileKey = (name: string) => {
   const normalized = name.trim().toLowerCase()
@@ -1325,51 +1352,26 @@ const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
 
-// AI Reminders state
-const showRemindersDropdown = ref(false)
-const invalidJsonToggle = ref(false)
-const invalidJsonPersist = ref(false)
-const invalidJsonAuto = ref(true)
-const emptyActionsRetry = ref(false)
-const honorificsToggle = ref(false)
-const aiControllingUserToggle = ref(false)
-const narrationAndDialogueNotSplitToggle = ref(false)
-const wrongSpeechStylesToggle = ref(false)
-const incorrectAnimationsToggle = ref(false)
-const incorrectAnimationsPersist = ref(false)
-const incorrectSpeakerLabelingToggle = ref(false)
-const narrationAsDialogueToggle = ref(false)
-const wrongCharacterOnScreenToggle = ref(false)
-const npcUsingCommanderHonorificsToggle = ref(false)
-const commanderPresentButSilentToggle = ref(false)
-
-watch(invalidJsonPersist, (val) => {
-  if (val) {
-    invalidJsonToggle.value = true
-    invalidJsonAuto.value = false
-  }
-})
-
-watch(invalidJsonToggle, (val) => {
-  if (val) {
-    invalidJsonAuto.value = false
-  }
-  if (!val) {
-    invalidJsonPersist.value = false
-  }
-})
-
-watch(incorrectAnimationsPersist, (val) => {
-  if (val) {
-    incorrectAnimationsToggle.value = true
-  }
-})
-
-watch(incorrectAnimationsToggle, (val) => {
-  if (!val) {
-    incorrectAnimationsPersist.value = false
-  }
-})
+const {
+  showRemindersDropdown,
+  invalidJsonToggle,
+  invalidJsonPersist,
+  invalidJsonAuto,
+  emptyActionsRetry,
+  honorificsToggle,
+  aiControllingUserToggle,
+  narrationAndDialogueNotSplitToggle,
+  wrongSpeechStylesToggle,
+  incorrectAnimationsToggle,
+  incorrectAnimationsPersist,
+  incorrectSpeakerLabelingToggle,
+  narrationAsDialogueToggle,
+  wrongCharacterOnScreenToggle,
+  npcUsingCommanderHonorificsToggle,
+  commanderPresentButSilentToggle,
+  getUserReminders: getUserRemindersFromComposable,
+  clearRemindersAfterSuccess
+} = useStoryReminders()
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -1675,157 +1677,24 @@ const syncRosterFromPrompt = (prompt: string) => {
   }
 }
 
-// --- Preset Management ---
-
-const formatPresetDate = (timestamp: number) => {
-  const d = new Date(timestamp)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-const getPresetCharName = (entry: StoryCharacterEntry) => {
-  const parsed = parseSelectionValue(entry.selection)
-  if (!parsed) return 'Unknown'
-  if (parsed.type === 'base') return parsed.baseName
-  const variant = characterCatalog.variants.find((v) => v.id === parsed.variantId)
-  return variant ? variant.name.split(':')[0].trim() : parsed.variantId
-}
-
-const refreshPresetList = () => {
-  presets.value = loadPresets()
-}
-
-const saveRosterAsPreset = () => {
-  showSavingPresetInput.value = true
-  savingPresetName.value = ''
-}
-
-const confirmSavePreset = () => {
-  const name = savingPresetName.value.trim()
-  if (!name) return
-  createPreset(name, rosterRows.value)
-  showSavingPresetInput.value = false
-  savingPresetName.value = ''
-  refreshPresetList()
-}
-
-const cancelSavePreset = () => {
-  showSavingPresetInput.value = false
-  savingPresetName.value = ''
-}
-
-const loadPreset = (preset: PresetEntry) => {
-  if (!preset || !preset.roster) return
-  rosterRows.value = [...preset.roster]
-  showPresetsModal.value = false
-}
-
-const startRename = (preset: PresetEntry) => {
-  if (editingPresetId.value === preset.id) {
-    editingPresetId.value = null
-    editingPresetName.value = ''
-    return
-  }
-  editingPresetId.value = preset.id
-  editingPresetName.value = preset.name
-}
-
-const confirmRename = (id: string) => {
-  const name = editingPresetName.value.trim()
-  if (!name) {
-    editingPresetId.value = null
-    editingPresetName.value = ''
-    return
-  }
-  renamePresetUtil(id, name)
-  editingPresetId.value = null
-  editingPresetName.value = ''
-  refreshPresetList()
-}
-
-const deletePresetConfirm = (id: string) => {
-  deletePresetUtil(id)
-  deletePresetTarget.value = null
-  refreshPresetList()
-}
-
-const deleteAllPresetsConfirm = () => {
-  deleteAllPresetsUtil()
-  refreshPresetList()
-}
-
-watch(showPresetsModal, (val) => {
-  if (val) {
-    refreshPresetList()
-    refreshFirstTurnPresetList()
-    presetImportWarning.value = ''
-    presetImportSuccess.value = ''
-    firstTurnPresetImportWarning.value = ''
-    firstTurnPresetImportSuccess.value = ''
-    editingPresetId.value = null
-    editingPresetName.value = ''
-    editingFirstTurnPresetId.value = null
-    editingFirstTurnPresetName.value = ''
-    deletePresetTarget.value = null
-    deleteFirstTurnPresetTarget.value = null
-    activePresetTab.value = 'roster'
-  }
-})
-
-const triggerPresetImport = () => {
-  presetFileInput.value?.click()
-}
-
-const exportAllPresets = () => exportAllPresetsUtil()
-
-const handlePresetFileUpload = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const file = target.files[0]
-  try {
-    const result = await importPresetsFromFile(file)
-    refreshPresetList()
-    if (result.merged > 0) {
-      presetImportSuccess.value = `Imported ${result.merged} preset(s).`
-    }
-    if (result.warnings.length > 0) {
-      presetImportWarning.value = result.warnings.join('\n')
-    }
-  } catch (e: any) {
-    presetImportWarning.value = e?.message || 'Failed to import presets.'
-    presetImportSuccess.value = ''
-  }
-  target.value = ''
-}
-
-// --- First Turn Preset Management ---
-
-const refreshFirstTurnPresetList = () => {
-  firstTurnPresets.value = loadFirstTurnPresets()
-}
+const confirmSavePreset = () => confirmSavePresetRaw(rosterRows.value)
 
 const saveFirstTurnAsPreset = () => {
   showSavingFirstTurnInput.value = true
   savingFirstTurnName.value = ''
 }
 
-const confirmSaveFirstTurnPreset = () => {
-  const name = savingFirstTurnName.value.trim()
-  if (!name || !userInput.value.trim()) return
-  createFirstTurnPreset(
-    name,
-    userInput.value,
-    isCustomPlayerCharacterActive.value,
-    isCustomPlayerCharacterActive.value ? resolvedPlayerCharacterKey.value! : undefined,
-    rosterRows.value
-  )
-  showSavingFirstTurnInput.value = false
-  savingFirstTurnName.value = ''
-  refreshFirstTurnPresetList()
-}
+const confirmSaveFirstTurnPreset = () => confirmSaveFirstTurnPresetRaw(
+  userInput.value,
+  isCustomPlayerCharacterActive.value,
+  resolvedPlayerCharacterKey.value,
+  rosterRows.value
+)
 
-const cancelSaveFirstTurnPreset = () => {
-  showSavingFirstTurnInput.value = false
-  savingFirstTurnName.value = ''
+const loadPreset = (preset: PresetEntry) => {
+  if (!preset || !preset.roster) return
+  rosterRows.value = [...preset.roster]
+  showPresetsModal.value = false
 }
 
 const loadFirstTurnPreset = (preset: FirstTurnPresetEntry) => {
@@ -1847,66 +1716,6 @@ const loadFirstTurnPreset = (preset: FirstTurnPresetEntry) => {
     rosterRows.value = [...preset.roster]
   }
   showPresetsModal.value = false
-}
-
-const startFirstTurnRename = (preset: FirstTurnPresetEntry) => {
-  if (editingFirstTurnPresetId.value === preset.id) {
-    editingFirstTurnPresetId.value = null
-    editingFirstTurnPresetName.value = ''
-    return
-  }
-  editingFirstTurnPresetId.value = preset.id
-  editingFirstTurnPresetName.value = preset.name
-}
-
-const confirmFirstTurnRename = (id: string) => {
-  const name = editingFirstTurnPresetName.value.trim()
-  if (!name) {
-    editingFirstTurnPresetId.value = null
-    editingFirstTurnPresetName.value = ''
-    return
-  }
-  renameFirstTurnPresetUtil(id, name)
-  editingFirstTurnPresetId.value = null
-  editingFirstTurnPresetName.value = ''
-  refreshFirstTurnPresetList()
-}
-
-const deleteFirstTurnPresetConfirm = (id: string) => {
-  deleteFirstTurnPresetUtil(id)
-  deleteFirstTurnPresetTarget.value = null
-  refreshFirstTurnPresetList()
-}
-
-const deleteAllFirstTurnPresetsConfirm = () => {
-  deleteAllFirstTurnPresetsUtil()
-  refreshFirstTurnPresetList()
-}
-
-const triggerFirstTurnPresetImport = () => {
-  firstTurnPresetFileInput.value?.click()
-}
-
-const exportAllFirstTurnPresets = () => exportAllFirstTurnPresetsUtil()
-
-const handleFirstTurnPresetFileUpload = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const file = target.files[0]
-  try {
-    const result = await importFirstTurnPresetsFromFile(file)
-    refreshFirstTurnPresetList()
-    if (result.merged > 0) {
-      firstTurnPresetImportSuccess.value = `Imported ${result.merged} preset(s).`
-    }
-    if (result.warnings.length > 0) {
-      firstTurnPresetImportWarning.value = result.warnings.join('\n')
-    }
-  } catch (e: any) {
-    firstTurnPresetImportWarning.value = e?.message || 'Failed to import presets.'
-    firstTurnPresetImportSuccess.value = ''
-  }
-  target.value = ''
 }
 
 // Watchers
@@ -2578,150 +2387,49 @@ const flushPendingGameChoice = () => {
   setTimeout(attemptFlush, 0)
 }
 
+const buildAiTurnContext = (logTag: string) => ({
+  isLoading,
+  isGenerating,
+  isStopped,
+  showRetry,
+  chatHistory,
+  getActiveAbortController: () => activeAbortController,
+  setActiveAbortController: (ctrl: AbortController | null) => { activeAbortController = ctrl },
+  setRandomLoadingMessage,
+  scrollToBottom,
+  callAI,
+  processAIResponse,
+  clearRemindersAfterSuccess,
+  flushPendingGameChoice,
+  logTag
+})
+
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
   if (!ensureApiKeyForCurrentProvider()) return
 
-  let text = sanitizeText(userInput.value)
+  const text = sanitizeText(userInput.value)
 
   syncRosterFromPrompt(text)
 
   userInput.value = ''
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
-  isLoading.value = true
-  isGenerating.value = true
-  setRandomLoadingMessage()
-  isStopped.value = false
-  activeAbortController = new AbortController()
-  showRetry.value = false
   lastPrompt.value = text
 
-  let attempts = 0
-  const maxAttempts = 3
-  let success = false
-
-  while (attempts < maxAttempts && !success && !isStopped.value) {
-    attempts++
-    try {
-      const response = await callAI(attempts > 1)
-
-      if (!isStopped.value) {
-        await processAIResponse(response)
-        success = true
-      }
-    } catch (error: any) {
-      // Silently swallow AbortError — the user pressed Stop
-      if (error.name === 'AbortError') {
-        logDebug('[sendMessage] Fetch aborted by user.')
-
-        break
-      }
-
-      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
-        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
-
-        continue
-      }
-
-      console.error('AI Error:', error)
-      showRetry.value = true
-      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
-
-      break
-    }
-  }
-
-  if (success) {
-    if (!invalidJsonPersist.value) {
-      invalidJsonToggle.value = false
-    }
-    if (!incorrectAnimationsPersist.value) {
-      incorrectAnimationsToggle.value = false
-    }
-    honorificsToggle.value = false
-    narrationAndDialogueNotSplitToggle.value = false
-    aiControllingUserToggle.value = false
-    wrongSpeechStylesToggle.value = false
-    npcUsingCommanderHonorificsToggle.value = false
-    commanderPresentButSilentToggle.value = false
-  }
-
-  isLoading.value = false
-  scrollToBottom()
-
-  flushPendingGameChoice()
+  await executeAiTurn(buildAiTurnContext('sendMessage'))
 }
 
 const retryLastMessage = async () => {
   if (!ensureApiKeyForCurrentProvider()) return
 
-  // Remove the last system error message
   if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
     chatHistory.value.pop()
   }
 
   scrollToBottom()
-  isLoading.value = true
-  isGenerating.value = true
-  setRandomLoadingMessage()
-  isStopped.value = false
-  activeAbortController = new AbortController()
-  showRetry.value = false
 
-  let attempts = 0
-  const maxAttempts = 3
-  let success = false
-
-  while (attempts < maxAttempts && !success && !isStopped.value) {
-    attempts++
-    try {
-      const response = await callAI(attempts > 1)
-
-      if (!isStopped.value) {
-        await processAIResponse(response)
-        success = true
-      }
-    } catch (error: any) {
-      // Silently swallow AbortError — the user pressed Stop
-      if (error.name === 'AbortError') {
-        logDebug('[retryLastMessage] Fetch aborted by user.')
-        break
-      }
-
-      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
-        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
-
-        continue
-      }
-
-      console.error('AI Error:', error)
-      showRetry.value = true
-      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
-
-      break
-    }
-  }
-
-  if (success) {
-    if (!invalidJsonPersist.value) {
-      invalidJsonToggle.value = false
-    }
-    if (!incorrectAnimationsPersist.value) {
-      incorrectAnimationsToggle.value = false
-    }
-    honorificsToggle.value = false
-    narrationAndDialogueNotSplitToggle.value = false
-    aiControllingUserToggle.value = false
-    wrongSpeechStylesToggle.value = false
-    npcUsingCommanderHonorificsToggle.value = false
-    commanderPresentButSilentToggle.value = false
-  }
-
-  isLoading.value = false
-  scrollToBottom()
-
-  flushPendingGameChoice()
+  await executeAiTurn(buildAiTurnContext('retryLastMessage'))
 }
 
 const regenerateResponse = async () => {
@@ -2780,118 +2488,38 @@ const continueStory = async () => {
 
   const text = mode.value === 'story' ? prompts.continue.story : prompts.continue.roleplay
   chatHistory.value.push({ role: 'user', content: text })
-
   scrollToBottom()
-
-  isLoading.value = true
-  isGenerating.value = true
-  setRandomLoadingMessage()
-
-  isStopped.value = false
-  activeAbortController = new AbortController()
-  showRetry.value = false
   lastPrompt.value = text
 
-  let attempts = 0
-  const maxAttempts = 3
-  let success = false
-
-  while (attempts < maxAttempts && !success && !isStopped.value) {
-    attempts++
-
-    try {
-      const response = await callAI(attempts > 1)
-
-      if (!isStopped.value) {
-        await processAIResponse(response)
-        success = true
-      }
-    } catch (error: any) {
-      // Silently swallow AbortError — the user pressed Stop
-      if (error.name === 'AbortError') {
-        logDebug('[continueStory] Fetch aborted by user.')
-        break
-      }
-
-      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
-        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
-
-        continue
-      }
-
-      console.error('AI Error:', error)
-      showRetry.value = true
-      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
-
-      break
-    }
-  }
-
-  if (success) {
-    if (!invalidJsonPersist.value) {
-      invalidJsonToggle.value = false
-    }
-    if (!incorrectAnimationsPersist.value) {
-      incorrectAnimationsToggle.value = false
-    }
-    honorificsToggle.value = false
-    narrationAndDialogueNotSplitToggle.value = false
-    aiControllingUserToggle.value = false
-    wrongSpeechStylesToggle.value = false
-    npcUsingCommanderHonorificsToggle.value = false
-    commanderPresentButSilentToggle.value = false
-  }
-
-  isLoading.value = false
-  scrollToBottom()
-
-  flushPendingGameChoice()
+  await executeAiTurn(buildAiTurnContext('continueStory'))
 }
 
-// Helper to get user-toggled reminders string
 const getUserReminders = (): string => {
-  const toggleMap: Record<string, { ref: any; persist?: any }> = {
-    invalidJson: { ref: invalidJsonToggle, persist: invalidJsonPersist },
-    invalidJsonPersist: { ref: invalidJsonPersist },
-    emptyActionsRetry: { ref: emptyActionsRetry },
-    honorifics: { ref: honorificsToggle },
-    narrationAndDialogueNotSplit: { ref: narrationAndDialogueNotSplitToggle },
-    aiControllingUser: { ref: aiControllingUserToggle },
-    wrongSpeechStyles: { ref: wrongSpeechStylesToggle },
-    incorrectAnimations: { ref: incorrectAnimationsToggle, persist: incorrectAnimationsPersist },
-    incorrectAnimationsPersist: { ref: incorrectAnimationsPersist },
-    incorrectSpeakerLabeling: { ref: incorrectSpeakerLabelingToggle },
-    narrationAsDialogue: { ref: narrationAsDialogueToggle },
-    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle },
-    npcUsingCommanderHonorifics: { ref: npcUsingCommanderHonorificsToggle },
-    commanderPresentButSilent: { ref: commanderPresentButSilentToggle }
-  }
-
-  const snapshot: ReminderToggleState = {
-    invalidJson: invalidJsonToggle.value,
-    invalidJsonPersist: invalidJsonPersist.value,
-    emptyActionsRetry: emptyActionsRetry.value,
-    honorifics: honorificsToggle.value,
-    narrationAndDialogueNotSplit: narrationAndDialogueNotSplitToggle.value,
-    aiControllingUser: aiControllingUserToggle.value,
-    wrongSpeechStyles: wrongSpeechStylesToggle.value,
-    incorrectAnimations: incorrectAnimationsToggle.value,
-    incorrectAnimationsPersist: incorrectAnimationsPersist.value,
-    incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle.value,
-    narrationAsDialogue: narrationAsDialogueToggle.value,
-    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value,
-    npcUsingCommanderHonorifics: npcUsingCommanderHonorificsToggle.value,
-    commanderPresentButSilent: commanderPresentButSilentToggle.value
-  }
-
-  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>, {
+  const { text, togglesToClear } = getUserRemindersFromComposable(mode.value, prompts.reminders as Record<string, string>, {
     playerCharacterName: activePlayerCharacterName.value,
     customPlayerCharacterActive: isCustomPlayerCharacterActive.value
   })
 
+  const toggleMap: Record<string, Ref<boolean>> = {
+    invalidJson: invalidJsonToggle,
+    invalidJsonPersist: invalidJsonPersist,
+    emptyActionsRetry: emptyActionsRetry,
+    honorifics: honorificsToggle,
+    narrationAndDialogueNotSplit: narrationAndDialogueNotSplitToggle,
+    aiControllingUser: aiControllingUserToggle,
+    wrongSpeechStyles: wrongSpeechStylesToggle,
+    incorrectAnimations: incorrectAnimationsToggle,
+    incorrectAnimationsPersist: incorrectAnimationsPersist,
+    incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle,
+    narrationAsDialogue: narrationAsDialogueToggle,
+    wrongCharacterOnScreen: wrongCharacterOnScreenToggle,
+    npcUsingCommanderHonorifics: npcUsingCommanderHonorificsToggle,
+    commanderPresentButSilent: commanderPresentButSilentToggle
+  }
+
   for (const key of togglesToClear) {
     const entry = toggleMap[key]
-    if (entry?.ref) entry.ref.value = false
+    if (entry) entry.value = false
   }
 
   return text
@@ -2953,57 +2581,16 @@ const runTumblingWindowSummarization = async (contextMsg: string, logTag: string
   }
 }
 
-const callAI = async (isRetry: boolean = false): Promise<string> => {
-  // Determine if this is the first turn (web search needed for initial characters)
+const getProviderCalls = (): ProviderCallFunctions => ({
+  callGemini,
+  callOpenRouter,
+  callPollinations,
+  callOpenCodeGo,
+  callLocal
+})
+
+const buildPromptAndDispatch = async (isRetry: boolean, enableWebSearch: boolean, logTag: string): Promise<string> => {
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
-
-  // Disable initial web search to force the "needs_search" flow
-  // This allows us to check local JSON first before falling back to web search
-  const enableWebSearch = false
-
-  // Pre-load profiles for any characters mentioned in the first prompt
-  if (isFirstTurn && chatHistory.value.length > 0) {
-    const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
-    syncRosterFromPrompt(firstPrompt)
-    // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
-    const localNames = Object.keys(localCharacterProfiles)
-    const variantNames = Object.keys(variantCharacterProfiles)
-    const knownNames = [...localNames, ...variantNames]
-    const foundNames = knownNames.filter((name) => isWholeWordPresent(firstPrompt, name))
-
-    // Also load profiles for characters in the roster (both base and variants)
-    for (const entry of rosterRows.value) {
-      const selection = parseSelectionValue(entry.selection)
-      if (!selection) continue
-
-      if (selection.type === 'variant') {
-        // For variants, use the full variant name
-        const variantName = characterCatalog.idToName[selection.variantId]
-        if (variantName && !foundNames.includes(variantName)) {
-          foundNames.push(variantName)
-        }
-      } else if (selection.type === 'base') {
-        // For base characters, use the base name
-        const baseName = selection.baseName
-        if (baseName && !foundNames.includes(baseName)) {
-          foundNames.push(baseName)
-        }
-      }
-    }
-
-    // Both variant and base character profiles are now injected together. Variant
-    // profiles (e.g., "Anis: Star") carry variant-specific details, while base
-    // profiles (e.g., "Anis") provide complementary backstory and personality
-    // context. searchForCharacters will auto-inject base profiles for any
-    // variant names it encounters.
-    if (foundNames.length > 0 && !isStopped.value) {
-      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
-      await wrappedSearchForCharacters(foundNames)
-    }
-  }
-
-  logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
-
   const systemPrompt = generateSystemPrompt(enableWebSearch)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
 
@@ -3012,130 +2599,80 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     needsJsonReminder.value = false
   }
 
-  // Add current context
   let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
 
-  // Tumbling window summarization + context/history preparation
-  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAI]')
+  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, `[${logTag}]`)
   contextMsg = updatedContextMsg
 
-  // Build hidden honorifics instruction for first turn only
-  // This is injected into the first user message but NOT saved to history
-  const buildFirstTurnReminder = (): string => {
-    if (!isFirstTurn) return ''
-
-    if (isCustomPlayerCharacterActive.value) {
-      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
-    }
-
-    // Get relevant honorifics from the characterHonorifics JSON
-    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
-
-    if (knownNames.length === 0) return ''
-
-    const honorificExamples: string[] = []
-    for (const name of knownNames) {
-      const honorific = getHonorific(name)
-
-      if (honorific && honorific !== 'Commander') {
-        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
-      }
-    }
-
-    if (honorificExamples.length === 0) return ''
-
-    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
-  }
-
-  // Helper to inject honorifics reminder into the last user message (first turn only)
-  const injectFirstTurnReminder = (messages: any[]): any[] => {
-    const reminder = buildFirstTurnReminder()
-
-    if (!reminder) return messages
-
-    // Find the last user message and append the reminder
-    const result = [...messages]
-    for (let i = result.length - 1; i >= 0; i--) {
-      if (result[i].role === 'user') {
-        result[i] = { ...result[i], content: result[i].content + reminder }
-
-        break
-      }
-    }
-
-    return result
-  }
-
-  let response: string
-
-  // Get user toggled reminders
   const reminders = getUserReminders()
+  const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
-  if (apiProvider.value === 'gemini') {
-    // Gemini: Merge context into system prompt to avoid confusion at the end of history
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+  let messages: any[] = [
+    { role: 'system', content: fullSystemPrompt },
+    ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+  ]
 
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
+  const firstTurnReminder = buildFirstTurnHonorificsReminder(
+    isFirstTurn,
+    isCustomPlayerCharacterActive.value,
+    activePlayerCharacterName.value,
+    Object.keys(playerCharacterAwareProfiles.value),
+    getHonorific,
+    prompts.reminders as Record<string, string>
+  )
+  messages = injectFirstTurnReminder(messages, firstTurnReminder)
 
-    logDebug('Sending to Gemini:', messages)
-    response = await callGemini(messages, enableWebSearch)
-  } else if (apiProvider.value === 'opencode-go') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+  return await dispatchToProvider(apiProvider.value, messages, enableWebSearch, getProviderCalls())
+}
 
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
+const callAI = async (isRetry: boolean = false): Promise<string> => {
+  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
+  const enableWebSearch = false
 
-    logDebug('Sending to OpenCode Go:', messages)
-    response = await callOpenCodeGo(messages)
-  } else if (apiProvider.value === 'openrouter') {
-    // OpenRouter: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+  if (isFirstTurn && chatHistory.value.length > 0) {
+    const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
+    syncRosterFromPrompt(firstPrompt)
+    const localNames = Object.keys(localCharacterProfiles)
+    const variantNames = Object.keys(variantCharacterProfiles)
+    const knownNames = [...localNames, ...variantNames]
+    const foundNames = knownNames.filter((name) => isWholeWordPresent(firstPrompt, name))
 
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
+    for (const entry of rosterRows.value) {
+      const selection = parseSelectionValue(entry.selection)
+      if (!selection) continue
 
-    logDebug('Sending to OpenRouter:', messages)
-    response = await callOpenRouter(messages, undefined, enableWebSearch)
-  } else if (apiProvider.value === 'pollinations') {
-    // Pollinations: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+      if (selection.type === 'variant') {
+        const variantName = characterCatalog.idToName[selection.variantId]
+        if (variantName && !foundNames.includes(variantName)) {
+          foundNames.push(variantName)
+        }
+      } else if (selection.type === 'base') {
+        const baseName = selection.baseName
+        if (baseName && !foundNames.includes(baseName)) {
+          foundNames.push(baseName)
+        }
+      }
+    }
 
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
-
-    logDebug('Sending to Pollinations:', messages)
-    response = await callPollinations(messages, enableWebSearch)
-  } else if (apiProvider.value === 'local') {
-    // Local: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
-
-    logDebug('Sending to Local:', messages)
-    response = await callLocal(messages)
-  } else {
-    throw new Error('Unknown API provider')
+    if (foundNames.length > 0 && !isStopped.value) {
+      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
+      await wrappedSearchForCharacters(foundNames)
+    }
   }
 
-  // Check if the model needs to search for new characters
+  logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
+
+  const response = await buildPromptAndDispatch(isRetry, enableWebSearch, 'callAI')
+
   if (isStopped.value) return response
 
   const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
 
   if (searchRequest && searchRequest.length > 0 && !isStopped.value) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
-    // Perform search for unknown characters
     const webSearchPerformed = await wrappedSearchForCharacters(searchRequest)
     setRandomLoadingMessage()
 
-    // Only regenerate if web search was actually performed
-    // If all characters were found locally, the original response is still valid
     if (webSearchPerformed && !isStopped.value) {
       logDebug('[callAI] Web search was performed, regenerating response...')
       return await callAIWithoutSearch(isRetry)
@@ -3147,91 +2684,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   return response
 }
 
-// Separate function to call AI without search (after character lookup)
 const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
-  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
-  const systemPrompt = generateSystemPrompt(false)
-  let retryInstruction = isRetry ? prompts.reminders.retry : ''
-
-  if (needsJsonReminder.value) {
-    retryInstruction += prompts.reminders.json
-    needsJsonReminder.value = false
-  }
-
-  let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
-
-  // Get user toggled reminders
-  const reminders = getUserReminders()
-
-  const buildFirstTurnReminder = (): string => {
-    if (!isFirstTurn) return ''
-
-    if (isCustomPlayerCharacterActive.value) {
-      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
-    }
-
-    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
-    if (knownNames.length === 0) return ''
-
-    const honorificExamples: string[] = []
-    for (const name of knownNames) {
-      const honorific = getHonorific(name)
-      if (honorific && honorific !== 'Commander') {
-        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
-      }
-    }
-
-    if (honorificExamples.length === 0) return ''
-    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
-  }
-
-  const injectFirstTurnReminder = (messages: any[]): any[] => {
-    const reminder = buildFirstTurnReminder()
-    if (!reminder) return messages
-
-    const result = [...messages]
-    for (let i = result.length - 1; i >= 0; i--) {
-      if (result[i].role === 'user') {
-        result[i] = { ...result[i], content: result[i].content + reminder }
-        break
-      }
-    }
-
-    return result
-  }
-
-  // Tumbling window summarization + context/history preparation
-  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAIWithoutSearch]')
-  contextMsg = updatedContextMsg
-
-  if (apiProvider.value === 'gemini') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callGemini(messages, false)
-  } else if (apiProvider.value === 'opencode-go') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callOpenCodeGo(messages)
-  } else if (apiProvider.value === 'openrouter') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callOpenRouter(messages, undefined, false)
-  } else if (apiProvider.value === 'pollinations') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callPollinations(messages, false)
-  } else if (apiProvider.value === 'local') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callLocal(messages)
-  }
-
-  throw new Error('Unknown API provider')
+  return await buildPromptAndDispatch(isRetry, false, 'callAIWithoutSearch')
 }
 
 // Check if the AI response contains a search request for unknown characters
@@ -3631,169 +3085,115 @@ const getBaseCharacterName = (id: string): string | null => {
   return getBaseCharacterDisplayName(id, market.live2d.current_id, rosterRows.value, characterCatalog)
 }
 
-const executeAction = async (data: any) => {
-  logDebug('Executing Action:', data)
+const processMemoryBlock = (memory: Record<string, any>) => {
+  logDebug('[AI Memory Update - New Characters Only]:', memory)
+  const newProfiles: Record<string, any> = {}
 
-  // Always reset yapping state to ensure the watcher triggers for the new turn
-  market.live2d.isYapping = false
-  await new Promise((r) => setTimeout(r, 100))
+  for (const [charName, profile] of Object.entries(memory)) {
+    const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+    if (existingKey) {
+      logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
+      continue
+    }
 
-  // Log debug info
-  if (data.debug_info) {
-    logDebug('[AI Debug Info]:', data.debug_info)
-  }
+    const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const resolvedKey = variantKey || localKey
+    if (resolvedKey) {
+      logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
+      const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
+      newProfiles[charName] = {
+        ...localProfile,
+        id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
+      }
 
-  // Compatibility Fix: Map legacy/hallucinated 'characterProfile' or 'characterProfiles' to 'memory'
-  // This ensures they are treated as NEW character definitions and IGNORED if the character already exists.
-  if (data.characterProfile || data.characterProfiles) {
-    const legacyData = data.characterProfile || data.characterProfiles
-    logDebug('[AI Compatibility] Remapping characterProfile/s to memory (Read-Only for existing):', legacyData)
+      if (variantKey && charName.includes(':')) {
+        const baseName = charName.split(':')[0].trim()
+        const alreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
+        if (!alreadyKnown && !newProfiles[baseName]) {
+          const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (baseKey) {
+            newProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
+            logDebug(`[AI Memory] Also loading base profile for variant "${charName}": ${baseName}`)
+          }
+        }
+      }
+      continue
+    }
 
-    if (!data.memory) {
-      data.memory = legacyData
+    if (typeof profile === 'object' && profile !== null) {
+      const cleanedProfile = { ...(profile as any) }
+      delete (cleanedProfile as any).honorific_for_commander
+      delete (cleanedProfile as any).honorific_to_commander
+      delete (cleanedProfile as any).honorific
+
+      if (cleanedProfile.relationships && typeof cleanedProfile.relationships === 'object') {
+        const relationships = { ...cleanedProfile.relationships }
+        delete (relationships as any).Commander
+        delete (relationships as any).commander
+        cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
+      }
+
+      const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+      if (char) cleanedProfile.id = char.id
+
+      const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const localProf = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
+      const variantProf = variantColorKey ? (variantCharacterProfiles as any)[variantColorKey] : null
+      const colorSource = variantProf || localProf
+      if (colorSource?.color) cleanedProfile.color = colorSource.color
+
+      newProfiles[charName] = cleanedProfile
     } else {
-      data.memory = { ...data.memory, ...legacyData }
+      newProfiles[charName] = profile
     }
   }
 
-  // Normalize legacy/misused profile updates (e.g., DeepSeek using characterProfile/memory) so they
-  // cannot overwrite existing profiles and instead become characterProgression updates.
-  data = normalizeAiActionCharacterData(data, playerCharacterAwareProfiles.value)
+  if (Object.keys(newProfiles).length > 0) {
+    characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
+    syncRosterFromProfiles(Object.keys(newProfiles), 'ai')
+  }
+}
 
-  if (data.memory) {
-    logDebug('[AI Memory Update - New Characters Only]:', data.memory)
-    const newProfiles: Record<string, any> = {}
+const processCharacterProgressionBlock = (progression: Record<string, any>) => {
+  logDebug('[AI Character Progression]:', progression)
+  const updatedProgression = { ...characterProgression.value }
+  let hasUpdates = false
 
-    for (const [charName, profile] of Object.entries(data.memory)) {
-      // 1. Check if already in active profiles (Case-Insensitive)
-      const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+  for (const [charName, prog] of Object.entries(progression)) {
+    const targetKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const resolvedKey = targetKey || charName
 
-      if (existingKey) {
-        logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
-        continue
+    if (typeof prog === 'object' && prog !== null) {
+      const updates = prog as any
+      const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object' ? (updatedProgression as any)[resolvedKey] : {}
+
+      if (updates.personality) {
+        current.personality = updates.personality
+        hasUpdates = true
       }
 
-      // 2. Check local profiles - ENFORCE READ-ONLY FROM DB
-      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-      const resolvedKey = variantKey || localKey
-      if (resolvedKey) {
-        logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
-
-        const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
-        // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
-        newProfiles[charName] = {
-          ...localProfile,
-          id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
-        }
-
-        // When a variant is loaded, also inject the base profile for context
-        if (variantKey && charName.includes(':')) {
-          const baseName = charName.split(':')[0].trim()
-          const alreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
-          if (!alreadyKnown && !newProfiles[baseName]) {
-            const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
-            if (baseKey) {
-              newProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
-              logDebug(`[AI Memory] Also loading base profile for variant "${charName}": ${baseName}`)
-            }
-          }
-        }
-        continue
+      if (updates.relationships && typeof updates.relationships === 'object') {
+        current.relationships = { ...(current.relationships || {}), ...(updates.relationships || {}) }
+        hasUpdates = true
       }
 
-      if (typeof profile === 'object' && profile !== null) {
-        const cleanedProfile = { ...(profile as any) }
-        delete (cleanedProfile as any).honorific_for_commander
-        delete (cleanedProfile as any).honorific_to_commander
-        delete (cleanedProfile as any).honorific
-
-        // Filter Commander out of relationships if present
-        if (cleanedProfile.relationships && typeof cleanedProfile.relationships === 'object') {
-          const relationships = { ...cleanedProfile.relationships }
-          delete (relationships as any).Commander
-          delete (relationships as any).commander
-          cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
-        }
-
-        // Add id from l2d.json if available
-        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-        if (char) {
-          cleanedProfile.id = char.id
-        }
-
-        // Lookup color from local profiles even if full profile isn't used.
-        // Variant color takes priority over base character color.
-        const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const localProfile = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
-        const variantProfile = variantColorKey ? (variantCharacterProfiles as any)[variantColorKey] : null
-        const colorSource = variantProfile || localProfile
-        if (colorSource?.color) {
-          cleanedProfile.color = colorSource.color
-        }
-
-        newProfiles[charName] = cleanedProfile
-      } else {
-        newProfiles[charName] = profile
+      if (updates.speech_style) {
+        logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${resolvedKey}'`)
       }
-    }
 
-    if (Object.keys(newProfiles).length > 0) {
-      characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
-      syncRosterFromProfiles(Object.keys(newProfiles), 'ai')
+      ;(updatedProgression as any)[resolvedKey] = current
     }
   }
 
-  // Handle 'characterProgression' - For EXISTING characters (Personality/Relationships ONLY)
-  if (data.characterProgression) {
-    logDebug('[AI Character Progression]:', data.characterProgression)
-    const updatedProgression = { ...characterProgression.value }
-    let hasUpdates = false
+  if (hasUpdates) characterProgression.value = updatedProgression
+}
 
-    for (const [charName, progression] of Object.entries(data.characterProgression)) {
-      // Find target profile (Case-Insensitive) in BASE profiles.
-      const targetKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
-      const resolvedKey = targetKey || charName
-
-      if (typeof progression === 'object' && progression !== null) {
-        const updates = progression as any
-        const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object' ? (updatedProgression as any)[resolvedKey] : {}
-
-        if (updates.personality) {
-          current.personality = updates.personality
-          hasUpdates = true
-        }
-
-        if (updates.relationships && typeof updates.relationships === 'object') {
-          // NOTE: We allow "Commander" here as a dynamic relationship/attitude field.
-          current.relationships = {
-            ...(current.relationships || {}),
-            ...(updates.relationships || {})
-          }
-          hasUpdates = true
-        }
-
-        // CRITICAL: Explicitly IGNORE speech_style updates
-        if (updates.speech_style) {
-          logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${resolvedKey}'`)
-        }
-
-        ;(updatedProgression as any)[resolvedKey] = current
-      }
-    }
-
-    if (hasUpdates) {
-      characterProgression.value = updatedProgression
-    }
-  }
-
-  // Resolve Character ID EARLY to ensure TTS gets the right name
+const resolveEffectiveCharId = (data: any): string => {
   let effectiveCharId = data.character
 
-  // Handle 'current' character resolution and speaker detection
   if (effectiveCharId === 'current') {
-    // Check for speaker override in text
     const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
     if (speakerMatch) {
       const speakerName = speakerMatch[1].trim()
@@ -3801,7 +3201,6 @@ const executeAction = async (data: any) => {
       if (charObj && charObj.id !== market.live2d.current_id) {
         logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
         effectiveCharId = charObj.id
-        // Update data.character so subsequent logic uses the new ID
         data.character = effectiveCharId
       } else {
         effectiveCharId = market.live2d.current_id
@@ -3811,331 +3210,197 @@ const executeAction = async (data: any) => {
     }
   }
 
-  // Apply background image if specified
-  if (data.background && market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0) {
-    const backgroundSelection = resolveAiBackgroundSelection({
-      background: data.background,
-      availableFilenames: market.live2d.backgroundImageMap.keys()
-    })
+  return effectiveCharId
+}
 
-    if (backgroundSelection.action === 'clear') {
-      market.live2d.clearActiveBackground()
-    } else if (backgroundSelection.action === 'apply') {
-      const applied = backgroundSelection.filename ? market.live2d.applyBackground(backgroundSelection.filename) : false
-      if (!applied) {
-        console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
-      }
-    }
+const applyActionBackground = (background: any) => {
+  if (!background || !market.live2d.backgroundImagesEnabled || market.live2d.backgroundImageMap.size === 0) return
+
+  const backgroundSelection = resolveAiBackgroundSelection({
+    background,
+    availableFilenames: market.live2d.backgroundImageMap.keys()
+  })
+
+  if (backgroundSelection.action === 'clear') {
+    market.live2d.clearActiveBackground()
+  } else if (backgroundSelection.action === 'apply') {
+    const applied = backgroundSelection.filename ? market.live2d.applyBackground(backgroundSelection.filename) : false
+    if (!applied) console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
+  }
+}
+
+const playActionAnimation = (data: any, effectiveCharId: string) => {
+  if (!data.animation) return
+
+  const requested = String(data.animation).trim()
+  const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
+  const normalized = isForbidden ? 'idle' : requested
+  logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
+
+  const animCharId = effectiveCharId || market.live2d.current_id
+  const resolvedAnim = resolveAnimationOverride(animCharId, normalized)
+  if (resolvedAnim !== normalized) {
+    logDebug(`[Chat] Animation override applied: ${normalized} -> ${resolvedAnim} for ${animCharId}`)
+  }
+  market.live2d.current_animation = resolvedAnim
+}
+
+const startYap = (data: any): number => {
+  if (!data.speaking || ttsEnabled.value) return 0
+
+  logDebug('Starting yap')
+  if (yapTimeoutId) {
+    clearTimeout(yapTimeoutId)
+    yapTimeoutId = null
   }
 
-  // Prepare character update promise
-  const characterUpdatePromise = (async () => {
-    if (data.character) {
-      // Handle 'none' character
-      if (data.character === 'none') {
-        logDebug('[Chat] Hiding character sprite')
-        market.live2d.isVisible = false
-      }
-      // Handle specific character switch (including resolved 'current')
-      else {
-        const resolvedRosterId = resolveCharacterIdFromInput(data.character, rosterRows.value, characterCatalog)
-        if (resolvedRosterId) {
-          data.character = resolvedRosterId
-          effectiveCharId = resolvedRosterId
-        }
-        // Force 'none' if character is Commander
-        if (data.character.toLowerCase().includes('commander') || data.character === 'c000') {
-          logDebug('[Chat] Hiding Commander sprite')
-          market.live2d.isVisible = false
-        } else {
-          // Find character object
-          // Case-insensitive search for name or ID
-          const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
+  market.live2d.isYapping = true
+  let yapDuration = 3000
+  if (data.text) yapDuration = calculateYapDuration(data.text)
+  else if (data.duration) yapDuration = data.duration
 
-          if (charObj) {
-            // Auto-load character profile from local JSON if not already known.
-            // This ensures profiles are injected into the system prompt for future
-            // turns even when the AI omits `needs_search` and `memory` blocks.
-            const charName = charObj.name
-            const profileAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
-              (k) => k.toLowerCase() === charName.toLowerCase()
-            )
-            if (!profileAlreadyKnown) {
-              const localKey = Object.keys(localCharacterProfiles).find(
-                (k) => k.toLowerCase() === charName.toLowerCase()
-              )
-              const variantKey = Object.keys(variantCharacterProfiles).find(
-                (k) => k.toLowerCase() === charName.toLowerCase()
-              )
-              const resolvedKey = variantKey || localKey
-              if (resolvedKey) {
-                const sourceProfile = variantKey
-                  ? (variantCharacterProfiles as Record<string, any>)[resolvedKey]
-                  : (localCharacterProfiles as Record<string, any>)[resolvedKey]
-                const newEntry = {
-                  ...sourceProfile,
-                  id: sourceProfile.id || charObj.id
-                }
-                characterProfiles.value = { ...characterProfiles.value, [charName]: newEntry }
-                logDebug(`[Chat] Auto-loaded local profile for new character: ${charName} (${charObj.id})`)
+  logDebug(`Yap duration calculated: ${yapDuration}ms`)
 
-                if (variantKey && charName.includes(':')) {
-                  const baseName = charName.split(':')[0].trim()
-                  const baseAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
-                    (k) => k.toLowerCase() === baseName.toLowerCase()
-                  )
-                  if (!baseAlreadyKnown) {
-                    const baseProfileKey = Object.keys(localCharacterProfiles).find(
-                      (k) => k.toLowerCase() === baseName.toLowerCase()
-                    )
-                    if (baseProfileKey) {
-                      characterProfiles.value = {
-                        ...characterProfiles.value,
-                        [baseName]: { ...(localCharacterProfiles as Record<string, any>)[baseProfileKey] }
-                      }
-                      logDebug(`[Chat] Also auto-loaded base profile for variant: ${baseName}`)
-                    }
-                  }
-                }
-                syncRosterFromProfiles([charName], 'ai')
-              }
-            }
+  yapTimeoutId = setTimeout(() => {
+    if (market.live2d.isYapping) {
+      logDebug('Auto-stopping yap based on text length')
+      market.live2d.isYapping = false
+    }
+    yapTimeoutId = null
+  }, yapDuration)
 
-            // Ensure visible
-            logDebug('[Chat] Setting visibility to true')
-            market.live2d.isVisible = true
+  return yapDuration
+}
 
-            // Check if character is already active to avoid unnecessary reload
-            if (charObj.id === market.live2d.current_id) {
-              logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
-              // Force visibility update again just in case
-              market.live2d.isVisible = true
-            } else {
-              logDebug(`[Chat] Switching character to: ${data.character}`)
-              const previousPlacement = captureSpineCanvasPlacement()
-              const previousLoadTime = market.live2d.finishedLoading
-              market.live2d.change_current_spine(charObj)
+const buildCharacterUpdatePromise = async (data: any, effectiveCharId: string): Promise<string> => {
+  if (!data.character) return effectiveCharId
 
-              // Wait for load to complete
-              logDebug('[Chat] Waiting for character load...')
-              await new Promise<void>((r) => {
-                const unwatch = watch(
-                  () => market.live2d.finishedLoading,
-                  (newVal) => {
-                    if (newVal > previousLoadTime) {
-                      logDebug('[Chat] Character loaded.')
-                      unwatch()
-                      // Add a small delay to ensure the spine player is fully ready to accept new tracks
-                      setTimeout(r, 100)
-                    }
-                  }
-                )
-                // Safety timeout
-                setTimeout(() => {
-                  unwatch()
-                  r()
-                }, 10000)
-              })
+  if (data.character === 'none') {
+    logDebug('[Chat] Hiding character sprite')
+    market.live2d.isVisible = false
+    return effectiveCharId
+  }
 
-              // Restore the user's zoom/position after switching characters.
-              await restoreSpineCanvasPlacement(previousPlacement)
-            }
-          } else {
-            console.warn(`[Chat] Character not found: ${data.character}`)
+  const resolvedRosterId = resolveCharacterIdFromInput(data.character, rosterRows.value, characterCatalog)
+  if (resolvedRosterId) {
+    data.character = resolvedRosterId
+    effectiveCharId = resolvedRosterId
+  }
+
+  if (data.character.toLowerCase().includes('commander') || data.character === 'c000') {
+    logDebug('[Chat] Hiding Commander sprite')
+    market.live2d.isVisible = false
+    return effectiveCharId
+  }
+
+  const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
+  if (!charObj) {
+    console.warn(`[Chat] Character not found: ${data.character}`)
+    return effectiveCharId
+  }
+
+  const charName = charObj.name
+  const profileAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+  if (!profileAlreadyKnown) {
+    const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const resolvedKey = variantKey || localKey
+    if (resolvedKey) {
+      const sourceProfile = variantKey
+        ? (variantCharacterProfiles as Record<string, any>)[resolvedKey]
+        : (localCharacterProfiles as Record<string, any>)[resolvedKey]
+      characterProfiles.value = { ...characterProfiles.value, [charName]: { ...sourceProfile, id: sourceProfile.id || charObj.id } }
+      logDebug(`[Chat] Auto-loaded local profile for new character: ${charName} (${charObj.id})`)
+
+      if (variantKey && charName.includes(':')) {
+        const baseName = charName.split(':')[0].trim()
+        const baseAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
+        if (!baseAlreadyKnown) {
+          const baseProfileKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (baseProfileKey) {
+            characterProfiles.value = { ...characterProfiles.value, [baseName]: { ...(localCharacterProfiles as Record<string, any>)[baseProfileKey] } }
+            logDebug(`[Chat] Also auto-loaded base profile for variant: ${baseName}`)
           }
         }
       }
+      syncRosterFromProfiles([charName], 'ai')
     }
-  })()
-
-  // Play Animation
-  if (data.animation) {
-    const requested = String(data.animation).trim()
-    // Never let AI drive internal talk tracks; they are handled by yapping/TTS logic.
-    // Also prevents Loader fuzzy-matching 'talk' -> 'talk_end'.
-    const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
-    const normalized = isForbidden ? 'idle' : requested
-    logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
-
-    // Apply animation override reverse lookup (replaced name -> original Spine name)
-    const animCharId = effectiveCharId || market.live2d.current_id
-    const resolvedAnim = resolveAnimationOverride(animCharId, normalized)
-    if (resolvedAnim !== normalized) {
-      logDebug(`[Chat] Animation override applied: ${normalized} -> ${resolvedAnim} for ${animCharId}`)
-    }
-    market.live2d.current_animation = resolvedAnim
   }
 
-  // Speaking
-  let calculatedYapDuration = 0
+  logDebug('[Chat] Setting visibility to true')
+  market.live2d.isVisible = true
 
-  if (data.speaking && !ttsEnabled.value) {
-    logDebug('Starting yap')
+  if (charObj.id === market.live2d.current_id) {
+    logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
+    market.live2d.isVisible = true
+  } else {
+    logDebug(`[Chat] Switching character to: ${data.character}`)
+    const previousPlacement = captureSpineCanvasPlacement()
+    const previousLoadTime = market.live2d.finishedLoading
+    market.live2d.change_current_spine(charObj)
 
-    // Clear previous timeout if exists
-    if (yapTimeoutId) {
-      clearTimeout(yapTimeoutId)
-      yapTimeoutId = null
-    }
-
-    market.live2d.isYapping = true
-
-    // Calculate yap duration based on text length
-    // Approx 60ms per character + 300ms base (Slightly faster than reading speed for natural feel)
-    let yapDuration = 3000
-
-    if (data.text) {
-      yapDuration = calculateYapDuration(data.text)
-    } else if (data.duration) {
-      yapDuration = data.duration
-    }
-    calculatedYapDuration = yapDuration
-
-    logDebug(`Yap duration calculated: ${yapDuration}ms`)
-
-    // Auto-stop yap after calculated duration
-    yapTimeoutId = setTimeout(() => {
-      if (market.live2d.isYapping) {
-        logDebug('Auto-stopping yap based on text length')
-        market.live2d.isYapping = false
-      }
-      yapTimeoutId = null
-    }, yapDuration)
-  }
-
-  // Add text to chat
-  if (data.text) {
-    let content = data.text
-
-    if (chatMode.value === 'nikke') {
-      nikkeCurrentText.value = data.text
-      // Use base character name (not skin variant) for NIKKE overlay
-      const baseName = data.speaking ? getBaseCharacterName(effectiveCharId) || '' : ''
-      nikkeCurrentSpeaker.value = baseName
-
-      // Get color from character profile (try full name first for variants, then fall back to base name)
-      const fullName = getCharacterName(effectiveCharId) || baseName
-      const profile = effectiveCharacterProfiles.value[fullName] || effectiveCharacterProfiles.value[baseName]
-      const localProfile = (localCharacterProfiles as Record<string, any>)[fullName] || (localCharacterProfiles as Record<string, any>)[baseName]
-      const variantProfile = (variantCharacterProfiles as Record<string, any>)[fullName] || (variantCharacterProfiles as Record<string, any>)[baseName]
-      nikkeSpeakerColor.value = variantProfile?.color || localProfile?.color || profile?.color || '#ffffff'
-
-      startTypewriter(data.text)
-
-      // Wait for BOTH typewriter AND character load
-      await Promise.all([
-        characterUpdatePromise,
-        new Promise<void>((resolve) => {
-          const check = setInterval(() => {
-            if (!isTyping.value) {
-              clearInterval(check)
-              resolve()
-            }
-          }, 100)
-        })
-      ])
-    } else {
-      // In classic mode, we still want to wait for character load before proceeding
-      await characterUpdatePromise
-    }
-
-    // Add speaker name if speaking
-    if (data.speaking) {
-      let name = null
-
-      if (effectiveCharId === 'commander') {
-        // Commander speaking - use properly capitalized name
-        name = 'Commander'
-      } else if (effectiveCharId === 'none') {
-        // In Story Mode, 'none' with speaking means a non-roster NPC is speaking.
-        // Try to extract the speaker name from the text itself (e.g. "Guard: Halt!" or "**Guard:** Halt!").
-        if (mode.value === 'story') {
-          const speakerLabelMatch = content.match(/^\s*(?:\*\*\s*)?([^*:]+?)(?:\s*\*\*)?\s*:\s*/)
-          if (speakerLabelMatch) {
-            // The text already has a speaker label — use it as the name and don't prepend another
-            name = speakerLabelMatch[1].trim()
+    logDebug('[Chat] Waiting for character load...')
+    await new Promise<void>((r) => {
+      const unwatch = watch(
+        () => market.live2d.finishedLoading,
+        (newVal) => {
+          if (newVal > previousLoadTime) {
+            logDebug('[Chat] Character loaded.')
+            unwatch()
+            setTimeout(r, 100)
           }
-          // If no speaker label found, name stays null — no label will be prepended
         }
-      } else {
-        // Use base character name (not skin variant) for display
-        name = getBaseCharacterName(effectiveCharId)
-      }
-
-      if (name) {
-        // Trigger TTS
-        if (ttsEnabled.value) {
-          playTTS(data.text, name, market)
-        }
-
-        // Check if the text already starts with the name to avoid duplication
-        // We check for "Name:", "**Name:**", "Name :", etc.
-        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
-
-        // Also check for ANY bolded name at the start (e.g. "**Chime:**") to prevent double naming
-        // if the AI messed up the character ID but got the text right.
-        const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
-
-        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
-          content = `**${name}:** ${content}`
-        }
-      }
-    }
-
-    let storedBackground = data.background
-    if (storedBackground && market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0) {
-      const storedSelection = resolveAiBackgroundSelection({
-        background: storedBackground,
-        availableFilenames: market.live2d.backgroundImageMap.keys()
-      })
-      if (storedSelection.action === 'keep') {
-        storedBackground = market.live2d.currentBackground || undefined
-      } else if (storedSelection.action === 'clear') {
-        storedBackground = 'none'
-      } else if (storedSelection.action === 'apply' && storedSelection.filename) {
-        storedBackground = storedSelection.filename
-      }
-    }
-
-    chatHistory.value.push({
-      role: 'assistant',
-      content: content,
-      animation: market.live2d.current_animation,
-      character: effectiveCharId,
-      speaking: data.speaking,
-      text: data.text,
-      background: storedBackground
+      )
+      setTimeout(() => { unwatch(); r() }, 10000)
     })
-    scrollToBottom()
-  } else if (chatMode.value === 'nikke') {
-    // Clear text but keep overlay visible for animations/switches
-    nikkeCurrentText.value = ''
-    nikkeDisplayedText.value = ''
-    nikkeCurrentSpeaker.value = ''
+
+    await restoreSpineCanvasPlacement(previousPlacement)
   }
 
-  // Handle Game Mode Choices
+  return effectiveCharId
+}
+
+const resolveSpeakerName = (effectiveCharId: string, content: string): string | null => {
+  if (effectiveCharId === 'commander') return 'Commander'
+
+  if (effectiveCharId === 'none') {
+    if (mode.value === 'story') {
+      const speakerLabelMatch = content.match(/^\s*(?:\*\*\s*)?([^*:]+?)(?:\s*\*\*)?\s*:\s*/)
+      return speakerLabelMatch ? speakerLabelMatch[1].trim() : null
+    }
+    return null
+  }
+
+  return getBaseCharacterName(effectiveCharId)
+}
+
+const resolveStoredBackground = (background: any): any => {
+  if (!background || !market.live2d.backgroundImagesEnabled || market.live2d.backgroundImageMap.size === 0) return background
+
+  const storedSelection = resolveAiBackgroundSelection({
+    background,
+    availableFilenames: market.live2d.backgroundImageMap.keys()
+  })
+  if (storedSelection.action === 'keep') return market.live2d.currentBackground || undefined
+  if (storedSelection.action === 'clear') return 'none'
+  if (storedSelection.action === 'apply' && storedSelection.filename) return storedSelection.filename
+  return background
+}
+
+const handlePlaybackWait = async (data: any, calculatedYapDuration: number) => {
   if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
     logDebug('[Chat] Game Mode Choices detected:', data.choices)
     pendingGameChoices.value = data.choices
     choicesAwaitingReveal.value = true
     loadingStatus.value = 'Click to show choices...'
-    waitingForNext.value = true // Pause auto-advance
+    waitingForNext.value = true
 
-    // Wait for user selection
-    await new Promise<void>((r) => {
-      nextActionResolver = r
-    })
+    await new Promise<void>((r) => { nextActionResolver = r })
 
-    // Clear choices after selection (handled in handleGameChoice)
     gameChoices.value = []
     pendingGameChoices.value = []
     choicesAwaitingReveal.value = false
-
-    // IMPORTANT: Do not continue into manual/auto playback waits after a choice.
-    // The selected choice will be queued and sent as the next user turn.
-    return
+    return true
   }
 
   const duration = data.duration || 3000
@@ -4144,33 +3409,16 @@ const executeAction = async (data: any) => {
     loadingStatus.value = 'Click Next to advance...'
     logDebug('Waiting for user input (Manual Mode)')
     waitingForNext.value = true
-    await new Promise<void>((r) => {
-      nextActionResolver = r
-    })
-    // Stop yapping when moving to next (just in case)
+    await new Promise<void>((r) => { nextActionResolver = r })
     if (data.speaking) {
       market.live2d.isYapping = false
-      if (yapTimeoutId) {
-        clearTimeout(yapTimeoutId)
-        yapTimeoutId = null
-      }
+      if (yapTimeoutId) { clearTimeout(yapTimeoutId); yapTimeoutId = null }
     }
   } else {
     loadingStatus.value = '...'
-    // Auto Mode
-    // If text is long, ensure we wait long enough to read it
     let autoDuration = Math.max(duration, 2000)
-
-    if (data.text) {
-      // Reading speed approx 50ms per char + base
-      const readDuration = data.text.length * 50 + 1500
-      autoDuration = Math.max(autoDuration, readDuration)
-    }
-
-    // Ensure we wait at least 2 seconds after yapping finishes
-    if (data.speaking && calculatedYapDuration > 0) {
-      autoDuration = Math.max(autoDuration, calculatedYapDuration + 2000)
-    }
+    if (data.text) autoDuration = Math.max(autoDuration, data.text.length * 50 + 1500)
+    if (data.speaking && calculatedYapDuration > 0) autoDuration = Math.max(autoDuration, calculatedYapDuration + 2000)
 
     logDebug(`Waiting for ${autoDuration}ms (Auto Mode)`)
     await new Promise<void>((resolve) => {
@@ -4183,6 +3431,103 @@ const executeAction = async (data: any) => {
       }, autoDuration)
     })
   }
+
+  return false
+}
+
+const executeAction = async (data: any) => {
+  logDebug('Executing Action:', data)
+
+  market.live2d.isYapping = false
+  await new Promise((r) => setTimeout(r, 100))
+
+  if (data.debug_info) logDebug('[AI Debug Info]:', data.debug_info)
+
+  if (data.characterProfile || data.characterProfiles) {
+    const legacyData = data.characterProfile || data.characterProfiles
+    logDebug('[AI Compatibility] Remapping characterProfile/s to memory (Read-Only for existing):', legacyData)
+    data.memory = data.memory ? { ...data.memory, ...legacyData } : legacyData
+  }
+
+  data = normalizeAiActionCharacterData(data, playerCharacterAwareProfiles.value)
+
+  if (data.memory) processMemoryBlock(data.memory)
+  if (data.characterProgression) processCharacterProgressionBlock(data.characterProgression)
+
+  let effectiveCharId = resolveEffectiveCharId(data)
+  applyActionBackground(data.background)
+
+  const characterUpdatePromise = buildCharacterUpdatePromise(data, effectiveCharId).then((resolvedId) => {
+    effectiveCharId = resolvedId
+  })
+
+  playActionAnimation(data, effectiveCharId)
+  const calculatedYapDuration = startYap(data)
+
+  if (data.text) {
+    let content = data.text
+
+    if (chatMode.value === 'nikke') {
+      nikkeCurrentText.value = data.text
+      const baseName = data.speaking ? getBaseCharacterName(effectiveCharId) || '' : ''
+      nikkeCurrentSpeaker.value = baseName
+
+      const fullName = getCharacterName(effectiveCharId) || baseName
+      const profile = effectiveCharacterProfiles.value[fullName] || effectiveCharacterProfiles.value[baseName]
+      const localProfile = (localCharacterProfiles as Record<string, any>)[fullName] || (localCharacterProfiles as Record<string, any>)[baseName]
+      const variantProfile = (variantCharacterProfiles as Record<string, any>)[fullName] || (variantCharacterProfiles as Record<string, any>)[baseName]
+      nikkeSpeakerColor.value = variantProfile?.color || localProfile?.color || profile?.color || '#ffffff'
+
+      startTypewriter(data.text)
+
+      await Promise.all([
+        characterUpdatePromise,
+        new Promise<void>((resolve) => {
+          const check = setInterval(() => {
+            if (!isTyping.value) { clearInterval(check); resolve() }
+          }, 100)
+        })
+      ])
+    } else {
+      await characterUpdatePromise
+    }
+
+    if (data.speaking) {
+      const name = resolveSpeakerName(effectiveCharId, content)
+      if (name) {
+        if (ttsEnabled.value) playTTS(data.text, name, market)
+
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
+        const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
+
+        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
+          content = `**${name}:** ${content}`
+        }
+      }
+    }
+
+    chatHistory.value.push({
+      role: 'assistant',
+      content,
+      animation: market.live2d.current_animation,
+      character: effectiveCharId,
+      speaking: data.speaking,
+      text: data.text,
+      background: resolveStoredBackground(data.background)
+    })
+    scrollToBottom()
+  } else if (chatMode.value === 'nikke') {
+    nikkeCurrentText.value = ''
+    nikkeDisplayedText.value = ''
+    nikkeCurrentSpeaker.value = ''
+    await characterUpdatePromise
+  } else {
+    await characterUpdatePromise
+  }
+
+  const wasChoice = await handlePlaybackWait(data, calculatedYapDuration)
+  if (wasChoice) return
 }
 
 const resetSession = () => {
