@@ -11,6 +11,7 @@ export interface FirstTurnPresetEntry {
   playAsDifferentCharacter?: boolean
   playerCharacterName?: string
   roster?: StoryCharacterEntry[]
+  sessionType?: 'roleplay' | 'story' | 'game'
 }
 
 export interface FirstTurnImportResult {
@@ -71,7 +72,7 @@ function saveFirstTurnPresets(presets: FirstTurnPresetEntry[]): void {
   localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(limited))
 }
 
-export function createFirstTurnPreset(name: string, message: string, playAsDifferentCharacter?: boolean, playerCharacterName?: string, roster?: StoryCharacterEntry[]): FirstTurnPresetEntry {
+export function createFirstTurnPreset(name: string, message: string, playAsDifferentCharacter?: boolean, playerCharacterName?: string, roster?: StoryCharacterEntry[], sessionType?: 'roleplay' | 'story' | 'game'): FirstTurnPresetEntry {
   const presets = loadFirstTurnPresets()
   const entry: FirstTurnPresetEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -85,6 +86,9 @@ export function createFirstTurnPreset(name: string, message: string, playAsDiffe
   }
   if (roster && roster.length > 0) {
     entry.roster = [...roster]
+  }
+  if (sessionType) {
+    entry.sessionType = sessionType
   }
   presets.unshift(entry)
   saveFirstTurnPresets(presets)
@@ -217,6 +221,9 @@ export async function importFirstTurnPresetsFromFile(file: File): Promise<FirstT
         }
         if (validRoster) {
           presetEntry.roster = validRoster
+        }
+        if (item.sessionType && (item.sessionType === 'roleplay' || item.sessionType === 'story' || item.sessionType === 'game')) {
+          presetEntry.sessionType = item.sessionType
         }
 
         const existingIndex = existing.findIndex(

@@ -325,7 +325,7 @@
                     <div class="preset-name-row">
                       <span v-if="editingFirstTurnPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
                       <n-input v-else v-model:value="editingFirstTurnPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmFirstTurnRename(preset.id)" />
-                      <span class="preset-meta">{{ formatPresetDate(preset.createdAt) }}</span>
+                      <span class="preset-meta"><template v-if="preset.sessionType">{{ formatSessionType(preset.sessionType) }} &middot; </template>{{ formatPresetDate(preset.createdAt) }}</span>
                     </div>
                     <div class="preset-message-preview">{{ preset.message.length > 120 ? preset.message.slice(0, 120) + '...' : preset.message }}</div>
                     <div v-if="preset.playAsDifferentCharacter && preset.playerCharacterName" style="font-size: 11px; color: #888; margin-top: 2px;">
@@ -1060,6 +1060,7 @@ const {
   showSavingFirstTurnInput,
   savingFirstTurnName,
   formatPresetDate,
+  formatSessionType,
   getPresetCharName,
   saveRosterAsPreset,
   confirmSavePreset: confirmSavePresetRaw,
@@ -1688,7 +1689,8 @@ const confirmSaveFirstTurnPreset = () => confirmSaveFirstTurnPresetRaw(
   userInput.value,
   isCustomPlayerCharacterActive.value,
   resolvedPlayerCharacterKey.value,
-  rosterRows.value
+  rosterRows.value,
+  mode.value as 'roleplay' | 'story' | 'game'
 )
 
 const loadPreset = (preset: PresetEntry) => {

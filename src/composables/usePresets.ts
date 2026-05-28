@@ -37,6 +37,13 @@ export function usePresets(catalog: CharacterCatalog) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
+  const formatSessionType = (sessionType?: string) => {
+    if (sessionType === 'roleplay') return 'Roleplay'
+    if (sessionType === 'story') return 'Story'
+    if (sessionType === 'game') return 'Game'
+    return ''
+  }
+
   const getPresetCharName = (entry: StoryCharacterEntry) => {
     const parsed = parseSelectionValue(entry.selection)
     if (!parsed) return 'Unknown'
@@ -133,7 +140,8 @@ export function usePresets(catalog: CharacterCatalog) {
     userInput: string,
     isCustomPlayer: boolean,
     playerCharacterKey: string | null,
-    rosterRows: StoryCharacterEntry[]
+    rosterRows: StoryCharacterEntry[],
+    sessionType?: 'roleplay' | 'story' | 'game'
   ) => {
     const name = savingFirstTurnName.value.trim()
     if (!name || !userInput.trim()) return
@@ -142,7 +150,8 @@ export function usePresets(catalog: CharacterCatalog) {
       userInput,
       isCustomPlayer,
       isCustomPlayer && playerCharacterKey ? playerCharacterKey : undefined,
-      rosterRows
+      rosterRows,
+      sessionType
     )
     showSavingFirstTurnInput.value = false
     savingFirstTurnName.value = ''
@@ -251,6 +260,7 @@ export function usePresets(catalog: CharacterCatalog) {
     showSavingFirstTurnInput,
     savingFirstTurnName,
     formatPresetDate,
+    formatSessionType,
     getPresetCharName,
     refreshPresetList,
     refreshFirstTurnPresetList,
