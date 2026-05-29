@@ -2135,6 +2135,7 @@ const resetCharacterPlacement = () => {
 const deleteLastMessage = () => {
   if (chatHistory.value.length > 0) {
     chatHistory.value.pop()
+    clearGameChoiceState()
   }
 }
 
@@ -2226,6 +2227,9 @@ const handleFileUpload = (event: Event) => {
         const data = JSON.parse(content)
 
         isRestoring.value = true
+        clearGameChoiceState()
+        nikkeOverlayVisible.value = false
+        selectedMessageIndex.value = null
 
         if (data.chatHistory && Array.isArray(data.chatHistory)) {
           chatHistory.value = reconstructChatHistory(data.chatHistory, getCharacterName)
@@ -2363,6 +2367,22 @@ const scrollToBottom = () => {
   })
 }
 
+const clearGameChoiceState = ({ resolvePendingWait = false }: { resolvePendingWait?: boolean } = {}) => {
+  const pendingResolver = nextActionResolver
+
+  nextActionResolver = null
+  waitingForNext.value = false
+  gameChoices.value = []
+  pendingGameChoices.value = []
+  choicesAwaitingReveal.value = false
+  pendingGameChoiceText.value = null
+  abortCurrentPlaybackForChoice.value = false
+
+  if (resolvePendingWait && pendingResolver) {
+    pendingResolver()
+  }
+}
+
 // If a Game Mode choice was selected during playback, queue and send it once the
 // current request finishes. This must be called from any function that drives
 // an AI turn (sendMessage/continueStory/retryLastMessage), otherwise the choice
@@ -2409,6 +2429,7 @@ const buildAiTurnContext = (logTag: string) => ({
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
   if (!ensureApiKeyForCurrentProvider()) return
+  if (gameChoices.value.length > 0 || pendingGameChoices.value.length > 0 || choicesAwaitingReveal.value) return
 
   const text = sanitizeText(userInput.value)
 
@@ -2424,6 +2445,8 @@ const sendMessage = async () => {
 
 const retryLastMessage = async () => {
   if (!ensureApiKeyForCurrentProvider()) return
+
+  clearGameChoiceState()
 
   if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
     chatHistory.value.pop()
@@ -2461,12 +2484,8 @@ const stopGeneration = () => {
     stopTypewriter()
   }
 
-  // If we are waiting for user input (Manual mode), cancel that wait so the loop can exit
-  if (nextActionResolver) {
-    nextActionResolver()
-    nextActionResolver = null
-    waitingForNext.value = false
-  }
+  // Cancel any pending choice/manual wait before the old turn can arm stale state.
+  clearGameChoiceState({ resolvePendingWait: true })
 }
 
 const nextAction = () => {
@@ -2487,6 +2506,8 @@ const nextAction = () => {
 const continueStory = async () => {
   if (isLoading.value) return
   if (!ensureApiKeyForCurrentProvider()) return
+
+  clearGameChoiceState()
 
   const text = mode.value === 'story' ? prompts.continue.story : prompts.continue.roleplay
   chatHistory.value.push({ role: 'user', content: text })
@@ -3390,6 +3411,10 @@ const resolveStoredBackground = (background: any): any => {
 }
 
 const handlePlaybackWait = async (data: any, calculatedYapDuration: number) => {
+  if (isStopped.value) {
+    return false
+  }
+
   if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
     logDebug('[Chat] Game Mode Choices detected:', data.choices)
     pendingGameChoices.value = data.choices
@@ -3538,6 +3563,8 @@ const resetSession = () => {
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
 
   if (confirmed) {
+    clearGameChoiceState()
+
     // Resetting the story should not keep the previous visual scene pinned to the
     // page background, so clear any active blob URL even if the pack stays loaded.
     chatHistory.value = []
