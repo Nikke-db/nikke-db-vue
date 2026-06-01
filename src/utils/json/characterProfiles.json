@@ -914,6 +914,22 @@
     "id": "c141",
     "color": "#3b3b3b"
   },
+  "Mint": {
+    "appearance": "long black hair, green eyes",
+    "defaultSkin": "white cat crop top, blue plaid skirt, fishnet tights, platform shoes",
+    "defaultWeapon": "",
+    "personality": "Ambitious and prideful leader of T.T. Star with strong self-love and mental fortitude; appears confident and teasing but can become flustered or pout when challenged; determined to expand beyond singing into acting and prove her talents despite initial lack of skill; values self-care and image maintenance highly.",
+    "speech_style": "Teasing and confident; mixes boastful declarations with sheepish admissions or whining when embarrassed; uses intimate terms like \"babe\" during acting practice; often frames statements around her status as a perfect idol.",
+    "backstory": "Survivor of the riot following Pretty's assassination at a concert, becoming a Tetra Line Nikke; formed T.T. Star idol group with Anis and Prika, later continuing as a duo with Prika after Anis's retirement; in Chapter 38 contacts Anis for a reunion performance; pursues acting opportunity via drama audition, training intensively with the protagonist through method acting and cohabitation to improve her skills.",
+    "relationships": {
+      "Anis": "Former T.T. Star group member; helped reunite for a final performance before Anis's retirement.",
+      "Prika": "Current duo partner in Twinkle Twin Star; initially skeptical of Mint's acting ambitions but supportive as a teammate.",
+      "Commander (Protagonist)": "Acting practice partner during her drama audition preparation; she teases him relentlessly while relying on his help for immersion and improvement.",
+      "Avistar": "Fellow idol who participated in discussions about Mint's acting proposal and expressed doubts about her talent."
+    },
+    "id": "c600",
+    "color": "#538fdf"
+  },
   "Miranda": {
     "appearance": "Long wavy light brown hair in twintails, red eyes, fair skin",
     "defaultSkin": "Navy blue cropped ACPU uniform, peaked cap, pleated miniskirt, thigh-high socks, combat boots with red laces, exposed midriff",

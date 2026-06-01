@@ -323,8 +323,7 @@
                 <div v-for="preset in firstTurnPresets" :key="preset.id" class="preset-item">
                   <div class="preset-info">
                     <div class="preset-name-row">
-                      <span v-if="editingFirstTurnPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
-                      <n-input v-else v-model:value="editingFirstTurnPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmFirstTurnRename(preset.id)" />
+                      <span class="preset-name">{{ preset.name }}</span>
                       <span class="preset-meta"><template v-if="preset.sessionType">{{ formatSessionType(preset.sessionType) }} &middot; </template>{{ formatPresetDate(preset.createdAt) }}</span>
                     </div>
                     <div class="preset-message-preview">{{ preset.message.length > 120 ? preset.message.slice(0, 120) + '...' : preset.message }}</div>
@@ -338,7 +337,7 @@
                   </div>
                   <div class="preset-actions">
                     <n-button size="tiny" type="primary" @click="loadFirstTurnPreset(preset)">Load</n-button>
-                    <n-button size="tiny" @click="startFirstTurnRename(preset)">{{ editingFirstTurnPresetId === preset.id ? 'Cancel' : 'Rename' }}</n-button>
+                    <n-button size="tiny" type="info" @click="openFirstTurnEditModal(preset)">Edit</n-button>
                     <n-popconfirm @positive-click="deleteFirstTurnPresetConfirm(preset.id)">
                       <template #trigger>
                         <n-button size="tiny" type="error" @click="deleteFirstTurnPresetTarget = preset.id">Delete</n-button>
@@ -393,6 +392,54 @@
             <n-space justify="end">
               <n-button @click="cancelSummaryEdit">Cancel</n-button>
               <n-button type="primary" @click="saveSummaryEdit">Save</n-button>
+            </n-space>
+          </template>
+        </n-modal>
+        <n-modal v-model:show="showFirstTurnEditModal" preset="card" title="Edit First Turn Preset" style="max-width: 600px">
+          <n-form class="first-turn-edit-modal-form" :show-feedback="false" label-placement="top" :model="firstTurnEditForm">
+            <n-form-item label="Preset Name" path="name">
+              <n-input
+                v-model:value="firstTurnEditForm.name"
+                placeholder="Preset name..."
+                @keydown.enter="confirmFirstTurnEdit"
+              />
+            </n-form-item>
+            <n-form-item label="Mode" path="sessionType">
+              <n-radio-group v-model:value="firstTurnEditForm.sessionType" name="first-turn-edit-mode">
+                <n-radio-button value="roleplay">Roleplay</n-radio-button>
+                <n-radio-button value="story">Story</n-radio-button>
+                <n-radio-button value="game">Game</n-radio-button>
+              </n-radio-group>
+            </n-form-item>
+            <n-form-item label="Play As Different Character" path="playAsDifferentCharacter">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <n-switch v-model:value="firstTurnEditForm.playAsDifferentCharacter" />
+                <span style="font-size: 11px; color: #888">
+                  {{ firstTurnEditForm.playAsDifferentCharacter ? 'Playing as a custom character' : 'Playing as the Commander' }}
+                </span>
+              </div>
+            </n-form-item>
+            <n-form-item v-if="firstTurnEditForm.playAsDifferentCharacter" label="Player Character" path="playerCharacterName">
+              <n-select
+                v-model:value="firstTurnEditForm.playerCharacterName"
+                :options="playerCharacterOptions"
+                filterable
+                placeholder="Select character"
+              />
+            </n-form-item>
+            <n-form-item label="First Prompt" path="message" :style="{ marginBottom: 0 }">
+              <n-input
+                v-model:value="firstTurnEditForm.message"
+                type="textarea"
+                :rows="6"
+                placeholder="Opening message..."
+              />
+            </n-form-item>
+          </n-form>
+          <template #footer>
+            <n-space justify="end">
+              <n-button @click="cancelFirstTurnEdit">Cancel</n-button>
+              <n-button type="primary" :disabled="!firstTurnEditForm.message.trim() || !firstTurnEditForm.name.trim()" @click="confirmFirstTurnEdit">Save</n-button>
             </n-space>
           </template>
         </n-modal>
@@ -1051,8 +1098,6 @@ const {
   showSavingPresetInput,
   savingPresetName,
   firstTurnPresets,
-  editingFirstTurnPresetId,
-  editingFirstTurnPresetName,
   deleteFirstTurnPresetTarget,
   firstTurnPresetImportWarning,
   firstTurnPresetImportSuccess,
@@ -1074,8 +1119,7 @@ const {
   handlePresetFileUpload,
   confirmSaveFirstTurnPreset: confirmSaveFirstTurnPresetRaw,
   cancelSaveFirstTurnPreset,
-  startFirstTurnRename,
-  confirmFirstTurnRename,
+  updateFirstTurnPresetEntry,
   deleteFirstTurnPresetConfirm,
   deleteAllFirstTurnPresetsConfirm,
   triggerFirstTurnPresetImport,
@@ -1718,6 +1762,80 @@ const loadFirstTurnPreset = (preset: FirstTurnPresetEntry) => {
     rosterRows.value = [...preset.roster]
   }
   showPresetsModal.value = false
+}
+
+interface FirstTurnEditForm {
+  name: string
+  message: string
+  sessionType: 'roleplay' | 'story' | 'game'
+  playAsDifferentCharacter: boolean
+  playerCharacterName: string
+}
+
+const showFirstTurnEditModal = ref(false)
+const editingFirstTurnPresetId = ref<string | null>(null)
+const firstTurnEditForm = ref<FirstTurnEditForm>({
+  name: '',
+  message: '',
+  sessionType: 'roleplay',
+  playAsDifferentCharacter: false,
+  playerCharacterName: ''
+})
+
+const resetFirstTurnEditForm = () => {
+  firstTurnEditForm.value = {
+    name: '',
+    message: '',
+    sessionType: 'roleplay',
+    playAsDifferentCharacter: false,
+    playerCharacterName: ''
+  }
+  editingFirstTurnPresetId.value = null
+}
+
+const openFirstTurnEditModal = (preset: FirstTurnPresetEntry) => {
+  if (!preset) return
+  editingFirstTurnPresetId.value = preset.id
+  firstTurnEditForm.value = {
+    name: preset.name,
+    message: preset.message,
+    sessionType: preset.sessionType || 'roleplay',
+    playAsDifferentCharacter: !!preset.playAsDifferentCharacter,
+    playerCharacterName: preset.playerCharacterName || ''
+  }
+  showFirstTurnEditModal.value = true
+}
+
+const confirmFirstTurnEdit = () => {
+  const id = editingFirstTurnPresetId.value
+  if (!id) return
+  const form = firstTurnEditForm.value
+  const trimmedName = form.name.trim()
+  const trimmedMessage = form.message.trim()
+  if (!trimmedMessage || !trimmedName) return
+  const updates: Parameters<typeof updateFirstTurnPresetEntry>[1] = {
+    name: trimmedName,
+    message: trimmedMessage,
+    sessionType: form.sessionType
+  }
+  if (form.playAsDifferentCharacter) {
+    const resolvedKey = findPlayerCharacterProfileKey(form.playerCharacterName)
+    if (!resolvedKey) {
+      market.message.getMessage().warning('Selected player character is not in the profile database. Save as Commander instead.')
+    }
+    updates.playAsDifferentCharacter = true
+    updates.playerCharacterName = resolvedKey || form.playerCharacterName.trim()
+  } else {
+    updates.playAsDifferentCharacter = false
+  }
+  updateFirstTurnPresetEntry(id, updates)
+  showFirstTurnEditModal.value = false
+  resetFirstTurnEditForm()
+}
+
+const cancelFirstTurnEdit = () => {
+  showFirstTurnEditModal.value = false
+  resetFirstTurnEditForm()
 }
 
 // Watchers
@@ -4438,6 +4556,12 @@ const saveSummaryEdit = () => {
   color: #999;
   line-height: 1.4;
   word-break: break-word;
+}
+
+.first-turn-edit-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 /* ── Compact Mobile Tweaks (chatbox stays draggable & transparent) ── */

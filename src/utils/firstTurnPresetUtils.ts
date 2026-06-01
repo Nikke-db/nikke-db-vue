@@ -100,17 +100,40 @@ export function deleteFirstTurnPreset(id: string): void {
   saveFirstTurnPresets(presets.filter((p) => p.id !== id))
 }
 
-export function deleteAllFirstTurnPresets(): void {
-  localStorage.removeItem(PRESETS_STORAGE_KEY)
-}
+export type FirstTurnPresetUpdate = Partial<
+  Pick<FirstTurnPresetEntry, 'name' | 'message' | 'sessionType' | 'playAsDifferentCharacter' | 'playerCharacterName'>
+>
 
-export function renameFirstTurnPreset(id: string, name: string): void {
+export function updateFirstTurnPreset(id: string, updates: FirstTurnPresetUpdate): void {
   const presets = loadFirstTurnPresets()
   const preset = presets.find((p) => p.id === id)
-  if (preset) {
-    preset.name = name.trim()
-    saveFirstTurnPresets(presets)
+  if (!preset) return
+  if (typeof updates.name === 'string') {
+    const trimmed = updates.name.trim()
+    if (trimmed) preset.name = trimmed
   }
+  if (typeof updates.message === 'string') preset.message = updates.message
+  if (updates.sessionType && (updates.sessionType === 'roleplay' || updates.sessionType === 'story' || updates.sessionType === 'game')) {
+    preset.sessionType = updates.sessionType
+  }
+  if (typeof updates.playAsDifferentCharacter === 'boolean') {
+    if (updates.playAsDifferentCharacter) {
+      preset.playAsDifferentCharacter = true
+      if (typeof updates.playerCharacterName === 'string' && updates.playerCharacterName.trim()) {
+        preset.playerCharacterName = updates.playerCharacterName.trim()
+      }
+    } else {
+      preset.playAsDifferentCharacter = false
+      preset.playerCharacterName = undefined
+    }
+  } else if (typeof updates.playerCharacterName === 'string' && updates.playerCharacterName.trim()) {
+    preset.playerCharacterName = updates.playerCharacterName.trim()
+  }
+  saveFirstTurnPresets(presets)
+}
+
+export function deleteAllFirstTurnPresets(): void {
+  localStorage.removeItem(PRESETS_STORAGE_KEY)
 }
 
 export function exportAllFirstTurnPresets(): void {

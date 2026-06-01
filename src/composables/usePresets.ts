@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 import { loadPresets, createPreset, deletePreset as deletePresetUtil, deleteAllPresets as deleteAllPresetsUtil, renamePreset as renamePresetUtil, exportAllPresets as exportAllPresetsUtil, importPresetsFromFile, type PresetEntry } from '@/utils/rosterPresetUtils'
-import { loadFirstTurnPresets, createFirstTurnPreset, deleteFirstTurnPreset as deleteFirstTurnPresetUtil, deleteAllFirstTurnPresets as deleteAllFirstTurnPresetsUtil, renameFirstTurnPreset as renameFirstTurnPresetUtil, exportAllFirstTurnPresets as exportAllFirstTurnPresetsUtil, importFirstTurnPresetsFromFile, type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
+import { loadFirstTurnPresets, createFirstTurnPreset, deleteFirstTurnPreset as deleteFirstTurnPresetUtil, deleteAllFirstTurnPresets as deleteAllFirstTurnPresetsUtil, exportAllFirstTurnPresets as exportAllFirstTurnPresetsUtil, importFirstTurnPresetsFromFile, updateFirstTurnPreset as updateFirstTurnPresetUtil, type FirstTurnPresetEntry, type FirstTurnPresetUpdate } from '@/utils/firstTurnPresetUtils'
 import { parseSelectionValue, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 interface CharacterCatalog {
@@ -23,8 +23,6 @@ export function usePresets(catalog: CharacterCatalog) {
   const savingPresetName = ref('')
 
   const firstTurnPresets = ref<FirstTurnPresetEntry[]>([])
-  const editingFirstTurnPresetId = ref<string | null>(null)
-  const editingFirstTurnPresetName = ref('')
   const deleteFirstTurnPresetTarget = ref<string | null>(null)
   const firstTurnPresetImportWarning = ref('')
   const firstTurnPresetImportSuccess = ref('')
@@ -163,26 +161,8 @@ export function usePresets(catalog: CharacterCatalog) {
     savingFirstTurnName.value = ''
   }
 
-  const startFirstTurnRename = (preset: FirstTurnPresetEntry) => {
-    if (editingFirstTurnPresetId.value === preset.id) {
-      editingFirstTurnPresetId.value = null
-      editingFirstTurnPresetName.value = ''
-      return
-    }
-    editingFirstTurnPresetId.value = preset.id
-    editingFirstTurnPresetName.value = preset.name
-  }
-
-  const confirmFirstTurnRename = (id: string) => {
-    const name = editingFirstTurnPresetName.value.trim()
-    if (!name) {
-      editingFirstTurnPresetId.value = null
-      editingFirstTurnPresetName.value = ''
-      return
-    }
-    renameFirstTurnPresetUtil(id, name)
-    editingFirstTurnPresetId.value = null
-    editingFirstTurnPresetName.value = ''
+  const updateFirstTurnPresetEntry = (id: string, updates: FirstTurnPresetUpdate) => {
+    updateFirstTurnPresetUtil(id, updates)
     refreshFirstTurnPresetList()
   }
 
@@ -230,8 +210,6 @@ export function usePresets(catalog: CharacterCatalog) {
       firstTurnPresetImportSuccess.value = ''
       editingPresetId.value = null
       editingPresetName.value = ''
-      editingFirstTurnPresetId.value = null
-      editingFirstTurnPresetName.value = ''
       deletePresetTarget.value = null
       deleteFirstTurnPresetTarget.value = null
       activePresetTab.value = 'roster'
@@ -251,8 +229,6 @@ export function usePresets(catalog: CharacterCatalog) {
     showSavingPresetInput,
     savingPresetName,
     firstTurnPresets,
-    editingFirstTurnPresetId,
-    editingFirstTurnPresetName,
     deleteFirstTurnPresetTarget,
     firstTurnPresetImportWarning,
     firstTurnPresetImportSuccess,
@@ -277,8 +253,7 @@ export function usePresets(catalog: CharacterCatalog) {
     saveFirstTurnAsPreset,
     confirmSaveFirstTurnPreset,
     cancelSaveFirstTurnPreset,
-    startFirstTurnRename,
-    confirmFirstTurnRename,
+    updateFirstTurnPresetEntry,
     deleteFirstTurnPresetConfirm,
     deleteAllFirstTurnPresetsConfirm,
     triggerFirstTurnPresetImport,

@@ -34,7 +34,7 @@ const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
-const OPENROUTER_MODEL = 'x-ai/grok-4.1-fast'
+const OPENROUTER_MODEL = 'x-ai/grok-4.3'
 const POLLINATIONS_MODELS = ['grok', 'grok-large', 'claude-fast']
 const RATE_LIMIT_MS = parseInt(process.env.RATE_LIMIT_MS) || 2000
 
