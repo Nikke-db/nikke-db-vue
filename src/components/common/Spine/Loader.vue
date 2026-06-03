@@ -263,7 +263,10 @@ const onWheel = (e: WheelEvent) => {
 }
 
 const SPINE_DEFAULT_MIX = 0.25
-const MAX_SPINE_LOAD_RETRIES = 1
+const MAX_SPINE_LOAD_RETRIES = 3
+const SPINE_RETRY_DELAYS = [1000, 3000, 5000]
+const XHR_TIMEOUT_MS = 15000
+const SPINE_PLAYER_TIMEOUT_MS = 20000
 let spinePlayer: any = null
 
 const getActiveSpinePlayer = () => {
@@ -344,11 +347,12 @@ const handleSpineLoadFailure = ({
   }
 
   if (retryAttempt < MAX_SPINE_LOAD_RETRIES) {
-    console.warn(`[Loader] Retrying Spine load for ${requestedCharacterId} (${retryAttempt + 1}/${MAX_SPINE_LOAD_RETRIES})`)
+    const delay = SPINE_RETRY_DELAYS[retryAttempt] ?? SPINE_RETRY_DELAYS[SPINE_RETRY_DELAYS.length - 1]
+    console.warn(`[Loader] Retrying Spine load for ${requestedCharacterId} (${retryAttempt + 1}/${MAX_SPINE_LOAD_RETRIES}) in ${delay}ms`)
     window.setTimeout(() => {
       if (loadId !== currentLoadId) return
       spineLoader(retryAttempt + 1)
-    }, 150)
+    }, delay)
     return
   }
 
@@ -485,8 +489,23 @@ const spineLoader = (retryAttempt = 0) => {
   const request = new XMLHttpRequest()
 
   request.responseType = 'arraybuffer'
+  request.timeout = XHR_TIMEOUT_MS
   request.open('GET', skelUrl, true)
   request.send()
+  request.ontimeout = () => {
+    if (thisLoadId !== currentLoadId) return
+    handleSpineLoadFailure({
+      loadId: thisLoadId,
+      retryAttempt,
+      requestedCharacterId,
+      requestedPose,
+      requestedSkelUrl: skelUrl,
+      requestedAtlasUrl: atlasUrl,
+      stage: 'skeleton request',
+      message: `XHR timed out after ${XHR_TIMEOUT_MS}ms.`,
+      details: { timedOut: true }
+    })
+  }
   request.onloadend = () => {
     if (thisLoadId !== currentLoadId) {
       logDebug('[Loader] Ignoring stale load request')
@@ -538,6 +557,24 @@ const spineLoader = (retryAttempt = 0) => {
         usedSpine = spine41
       }
 
+      // Guard flag + safety timeout: SpinePlayer has no built-in timeout for atlas/texture fetches,
+      // so we force a failure if neither success nor error fires within SPINE_PLAYER_TIMEOUT_MS.
+      let playerSettled = false
+      const playerTimeoutId = window.setTimeout(() => {
+        if (playerSettled || thisLoadId !== currentLoadId) return
+        playerSettled = true
+        handleSpineLoadFailure({
+          loadId: thisLoadId,
+          retryAttempt,
+          requestedCharacterId,
+          requestedPose,
+          requestedSkelUrl: skelUrl,
+          requestedAtlasUrl: atlasUrl,
+          stage: 'asset manager',
+          message: `SpinePlayer timed out after ${SPINE_PLAYER_TIMEOUT_MS}ms (atlas/texture fetch hung).`
+        })
+      }, SPINE_PLAYER_TIMEOUT_MS)
+
       spineCanvas = new usedSpine.SpinePlayer('player-container', {
         skelUrl: requestedCharacterId,
         rawDataURIs: {
@@ -556,6 +593,17 @@ const spineLoader = (retryAttempt = 0) => {
         viewport: spineViewport,
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
+          // Late arrival after our safety timeout fired — discard this player.
+          if (playerSettled) {
+            logDebug(`[Loader] Ignoring success callback after timeout for ${requestedCharacterId}`)
+            if (!player.disposed) {
+              disposeSpineInstance(player, 'post-timeout success callback')
+            }
+            return
+          }
+          playerSettled = true
+          clearTimeout(playerTimeoutId)
+
           if (thisLoadId !== currentLoadId || player.disposed) {
             logDebug(`[Loader] Ignoring stale success callback for ${requestedCharacterId}`)
             if (!player.disposed) {
@@ -608,6 +656,13 @@ const spineLoader = (retryAttempt = 0) => {
           successfullyLoaded()
         },
         error: (player: any, message?: string) => {
+          if (playerSettled) {
+            logDebug(`[Loader] Ignoring error callback after timeout for ${requestedCharacterId}`)
+            return
+          }
+          playerSettled = true
+          clearTimeout(playerTimeoutId)
+
           handleSpineLoadFailure({
             loadId: thisLoadId,
             retryAttempt,
