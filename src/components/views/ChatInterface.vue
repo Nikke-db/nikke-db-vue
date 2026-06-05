@@ -349,8 +349,8 @@
               </div>
             </n-tab-pane>
           </n-tabs>
-          <template v-if="(activePresetTab === 'roster' && presets.length >= 10) || (activePresetTab === 'firstTurn' && firstTurnPresets.length >= 10)" #header-extra>
-            <n-tag type="warning" size="small">Full (10/10)</n-tag>
+          <template v-if="(activePresetTab === 'roster' && presets.length >= ROSTER_MAX_PRESETS) || (activePresetTab === 'firstTurn' && firstTurnPresets.length >= FIRST_TURN_MAX_PRESETS)" #header-extra>
+            <n-tag type="warning" size="small">Full ({{ activePresetTab === 'roster' ? presets.length : firstTurnPresets.length }}/{{ activePresetTab === 'roster' ? ROSTER_MAX_PRESETS : FIRST_TURN_MAX_PRESETS }})</n-tag>
           </template>
           <template #footer>
             <template v-if="activePresetTab === 'roster'">
@@ -981,8 +981,8 @@ import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/util
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
-import { type PresetEntry } from '@/utils/rosterPresetUtils'
-import { type FirstTurnPresetEntry } from '@/utils/firstTurnPresetUtils'
+import { type PresetEntry, MAX_PRESETS as ROSTER_MAX_PRESETS } from '@/utils/rosterPresetUtils'
+import { type FirstTurnPresetEntry, MAX_PRESETS as FIRST_TURN_MAX_PRESETS } from '@/utils/firstTurnPresetUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'

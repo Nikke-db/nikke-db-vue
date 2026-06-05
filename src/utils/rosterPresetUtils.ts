@@ -1,7 +1,7 @@
 import { type StoryCharacterEntry, type CharacterCatalog, buildCharacterCatalog } from '@/utils/storyCharacterUtils'
 
 const PRESETS_STORAGE_KEY = 'nikke_roster_presets'
-const MAX_PRESETS = 10
+export const MAX_PRESETS = 10
 
 export interface PresetEntry {
   id: string
