@@ -8,13 +8,25 @@
  *
  * Usage:
  *   node scripts/updateBackstories.js
- *   node scripts/updateBackstories.js --no-skip-existing    # Re-process all characters
- *   node scripts/updateBackstories.js --skip-preview         # In update mode, save without confirmation
+ *   node scripts/updateBackstories.js --no-skip-existing           # Re-process all characters
+ *   node scripts/updateBackstories.js --skip-preview                # In update mode, save without confirmation
+ *   node scripts/updateBackstories.js --mode update --update-scope all --provider gemini --skip-preview
+ *   node scripts/updateBackstories.js --mode create --char-name "New Nikke" --target-file base --force --provider openrouter
+ *   node scripts/updateBackstories.js --mode base --shard 1/4 --non-interactive --json-output
  *
  * Options:
  *   --no-skip-existing    Process characters even if they already have data (default: skip existing)
- *   --skip-preview        In "Update characters' backstories" mode, save changes immediately without
- *                         showing a preview and asking for confirmation (default: show preview)
+ *   --skip-preview        In update mode, save without showing preview (default: show preview)
+ *   --non-interactive     Disable all interactive prompts; requires --mode and other mode-specific flags
+ *   --mode <name>         Set mode: base, variants, visual, create, commander, or update
+ *   --char-name <name>    Character name for create mode or --update-scope single
+ *   --target-file <name>  Target JSON file for create mode: base (default) or variants
+ *   --update-scope <name> Scope for update mode: single (requires --char-name) or all (default)
+ *   --provider <name>     API provider: gemini, openrouter, or pollinations
+ *   --pollinations-model  Pollinations model: grok (default), grok-large, or claude-fast
+ *   --force               Skip overwrite confirmation in create mode
+ *   --json-output         Print machine-readable JSON result on the last line
+ *   --shard <N>/<M>       Process only shard N of M (1-indexed) for parallel agent execution
  *
  * Environment Variables:
  *   GEMINI_API_KEY - Your Gemini API key
@@ -41,9 +53,50 @@ const RATE_LIMIT_MS = parseInt(process.env.RATE_LIMIT_MS) || 2000
 const PROFILES_BASE_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfiles.json')
 const PROFILES_VARIANTS_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfilesVariants.json')
 
+function getArgValue(flag) {
+  const idx = process.argv.indexOf(flag)
+  if (idx === -1 || idx + 1 >= process.argv.length) return null
+  const val = process.argv[idx + 1]
+  if (val.startsWith('--')) return null
+  return val
+}
+
+function parseShard() {
+  const val = getArgValue('--shard')
+  if (!val) return null
+  const parts = val.split('/')
+  if (parts.length !== 2) return null
+  const index = parseInt(parts[0], 10)
+  const total = parseInt(parts[1], 10)
+  if (isNaN(index) || isNaN(total) || index < 1 || total < 1 || index > total) return null
+  return { index: index - 1, total }
+}
+
+function applyShard(characters) {
+  if (!CLI_SHARD) return { characters, total: characters.length }
+  const chunkSize = Math.ceil(characters.length / CLI_SHARD.total)
+  const start = CLI_SHARD.index * chunkSize
+  const end = Math.min(start + chunkSize, characters.length)
+  const shardChars = characters.slice(start, end)
+  console.log(`[Shard ${CLI_SHARD.index + 1}/${CLI_SHARD.total}] Processing ${shardChars.length} of ${characters.length} characters (indices ${start}-${end - 1})`)
+  return { characters: shardChars, total: shardChars.length }
+}
+
 const args = process.argv.slice(2)
-const SKIP_EXISTING = !args.includes('--no-skip-existing') // Default: true (skip existing)
-const SKIP_PREVIEW = args.includes('--skip-preview') // For update mode: save without confirmation
+const SKIP_EXISTING = !args.includes('--no-skip-existing')
+const SKIP_PREVIEW = args.includes('--skip-preview')
+const NON_INTERACTIVE = args.includes('--non-interactive') || !process.stdin.isTTY
+const CLI_MODE = getArgValue('--mode')
+const CLI_CHAR_NAME = getArgValue('--char-name')
+const CLI_TARGET_FILE = getArgValue('--target-file')
+const CLI_UPDATE_SCOPE = getArgValue('--update-scope')
+const CLI_PROVIDER = getArgValue('--provider')
+const CLI_POLLINATIONS_MODEL = getArgValue('--pollinations-model')
+const CLI_FORCE = args.includes('--force')
+const CLI_JSON_OUTPUT = args.includes('--json-output')
+const CLI_SHARD = parseShard()
+
+let FINAL_STATS = null
 
 // Mode and paths
 let MODE = 'base' // 'base', 'variants', 'visual', 'create', 'commander', or 'update'
@@ -908,6 +961,28 @@ function parseApiResponse(text, characterName, modeOverride = null) {
 
 // Select mode (base, variants, visual, create, commander, or update)
 async function selectMode() {
+  if (CLI_MODE) {
+    const validModes = ['base', 'variants', 'visual', 'create', 'commander', 'update']
+    if (!validModes.includes(CLI_MODE)) {
+      console.error(`Error: Invalid --mode "${CLI_MODE}". Must be: ${validModes.join(', ')}`)
+      process.exit(1)
+    }
+    MODE = CLI_MODE
+    if (MODE === 'variants') {
+      PROFILES_PATH = PROFILES_VARIANTS_PATH
+    } else {
+      PROFILES_PATH = PROFILES_BASE_PATH
+    }
+    console.log(`Selected: ${MODE} mode\n`)
+    return
+  }
+
+  if (NON_INTERACTIVE) {
+    console.error('Error: --mode is required when running non-interactively')
+    console.error('Usage: --mode <base|variants|visual|create|commander|update>')
+    process.exit(1)
+  }
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -955,6 +1030,26 @@ async function selectMode() {
 
 // Prompt for new character name and target file (create mode only)
 async function selectNewCharacter() {
+  if (CLI_CHAR_NAME) {
+    CREATE_CHAR_NAME = CLI_CHAR_NAME
+    if (CLI_TARGET_FILE === 'variants') {
+      CREATE_PROFILES_PATH = PROFILES_VARIANTS_PATH
+    } else if (CLI_TARGET_FILE === 'base' || !CLI_TARGET_FILE) {
+      CREATE_PROFILES_PATH = PROFILES_BASE_PATH
+    } else {
+      console.error(`Error: Invalid --target-file "${CLI_TARGET_FILE}". Must be "base" or "variants".`)
+      process.exit(1)
+    }
+    const fileLabel = CREATE_PROFILES_PATH === PROFILES_BASE_PATH ? 'characterProfiles.json' : 'characterProfilesVariants.json'
+    console.log(`Creating "${CREATE_CHAR_NAME}" in ${fileLabel}\n`)
+    return
+  }
+
+  if (NON_INTERACTIVE) {
+    console.error('Error: --char-name is required for create mode when running non-interactively')
+    process.exit(1)
+  }
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -997,6 +1092,47 @@ async function selectNewCharacter() {
 
 // Prompt for update target: single character or all characters (update mode only)
 async function selectUpdateTarget() {
+  if (CLI_UPDATE_SCOPE) {
+    if (CLI_UPDATE_SCOPE === 'single') {
+      if (!CLI_CHAR_NAME) {
+        console.error('Error: --char-name is required when --update-scope is "single"')
+        process.exit(1)
+      }
+      let foundInBase = false
+      let foundInVariants = false
+      try {
+        const baseData = JSON.parse(fs.readFileSync(PROFILES_BASE_PATH, 'utf8'))
+        foundInBase = CLI_CHAR_NAME in baseData
+      } catch (e) { /* ignore */ }
+      try {
+        const variantsData = JSON.parse(fs.readFileSync(PROFILES_VARIANTS_PATH, 'utf8'))
+        foundInVariants = CLI_CHAR_NAME in variantsData
+      } catch (e) { /* ignore */ }
+      if (!foundInBase && !foundInVariants) {
+        console.error(`Error: "${CLI_CHAR_NAME}" not found in either characterProfiles.json or characterProfilesVariants.json.`)
+        process.exit(1)
+      }
+      UPDATE_SCOPE = 'single'
+      UPDATE_CHAR_NAME = CLI_CHAR_NAME
+      const fileLabel = foundInBase ? 'characterProfiles.json' : 'characterProfilesVariants.json'
+      console.log(`Updating backstory for "${CLI_CHAR_NAME}" (found in ${fileLabel})\n`)
+      return
+    } else if (CLI_UPDATE_SCOPE === 'all') {
+      UPDATE_SCOPE = 'all'
+      console.log('Updating backstories for all characters in both JSON files\n')
+      return
+    } else {
+      console.error(`Error: Invalid --update-scope "${CLI_UPDATE_SCOPE}". Must be "single" or "all".`)
+      process.exit(1)
+    }
+  }
+
+  if (NON_INTERACTIVE) {
+    UPDATE_SCOPE = 'all'
+    console.log('Updating backstories for all characters in both JSON files (default for non-interactive)\n')
+    return
+  }
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -1064,6 +1200,23 @@ async function selectUpdateTarget() {
 
 // Select Pollinations model
 async function selectPollinationsModel() {
+  if (CLI_POLLINATIONS_MODEL) {
+    const validModels = POLLINATIONS_MODELS
+    if (!validModels.includes(CLI_POLLINATIONS_MODEL)) {
+      console.error(`Error: Invalid --pollinations-model "${CLI_POLLINATIONS_MODEL}". Must be: ${validModels.join(', ')}`)
+      process.exit(1)
+    }
+    POLLINATIONS_MODEL = CLI_POLLINATIONS_MODEL
+    console.log(`Selected Pollinations model: ${POLLINATIONS_MODEL}\n`)
+    return
+  }
+
+  if (NON_INTERACTIVE) {
+    POLLINATIONS_MODEL = POLLINATIONS_MODELS[0]
+    console.log(`Selected Pollinations model: ${POLLINATIONS_MODEL} (default for non-interactive)\n`)
+    return
+  }
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -1121,6 +1274,23 @@ async function selectProvider() {
     })
   }
 
+  // If --provider is specified, validate and use it
+  if (CLI_PROVIDER) {
+    const selectedProvider = availableProviders.find((p) => p.key === CLI_PROVIDER)
+    if (!selectedProvider) {
+      const availableKeys = availableProviders.map((p) => p.key).join(', ') || 'none'
+      console.error(`Error: --provider "${CLI_PROVIDER}" is not available.`)
+      console.error(`Set the corresponding API key env var, or choose from: ${availableKeys}`)
+      process.exit(1)
+    }
+    API_PROVIDER = CLI_PROVIDER
+    console.log(`Using ${getProviderDisplayName()} API (--provider flag)`)
+    if (API_PROVIDER === 'pollinations') {
+      await selectPollinationsModel()
+    }
+    return
+  }
+
   // If only one key is available, use it automatically
   if (availableProviders.length === 1) {
     const selectedProvider = availableProviders[0]
@@ -1132,6 +1302,13 @@ async function selectProvider() {
     }
 
     return
+  }
+
+  if (NON_INTERACTIVE) {
+    const availableKeys = availableProviders.map((p) => p.key).join(', ')
+    console.error('Error: --provider is required when multiple API keys are set and running non-interactively')
+    console.error(`Available: ${availableKeys}`)
+    process.exit(1)
   }
 
   const rl = readline.createInterface({
@@ -1249,22 +1426,29 @@ async function createNewEntry() {
   if (charName in profiles) {
     console.warn(`\nWarning: "${charName}" already exists in ${fileLabel}.`)
 
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    })
-
-    const answer = await new Promise((resolve) => {
-      rl.question('Overwrite the existing entry? (y/N): ', (input) => {
-        resolve(input.trim().toLowerCase())
+    if (CLI_FORCE) {
+      console.log('--force specified, overwriting...\n')
+    } else if (NON_INTERACTIVE) {
+      console.error(`Error: "${charName}" already exists. Use --force to overwrite.`)
+      process.exit(1)
+    } else {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
       })
-    })
 
-    rl.close()
+      const answer = await new Promise((resolve) => {
+        rl.question('Overwrite the existing entry? (y/N): ', (input) => {
+          resolve(input.trim().toLowerCase())
+        })
+      })
 
-    if (answer !== 'y' && answer !== 'yes') {
-      console.log('Aborted. No changes made.')
-      return
+      rl.close()
+
+      if (answer !== 'y' && answer !== 'yes') {
+        console.log('Aborted. No changes made.')
+        return
+      }
     }
 
     console.log('Proceeding to overwrite...\n')
@@ -1355,10 +1539,14 @@ async function processProfilesFile(filePath, fileLabel) {
     return { successCount: 0, failCount: 0, skippedCount: 0, total: 0 }
   }
 
-  const characters = Object.keys(profiles)
-  const total = characters.length
+  const allCharacters = Object.keys(profiles)
+  const { characters, total } = applyShard(allCharacters)
 
-  console.log(`Found ${total} characters to process`)
+  if (CLI_SHARD) {
+    console.log(`Found ${allCharacters.length} characters total, processing ${total} in this shard`)
+  } else {
+    console.log(`Found ${total} characters to process`)
+  }
   console.log('')
 
   // Statistics
@@ -1501,11 +1689,15 @@ async function processCommanderRelationships() {
       continue
     }
 
-    const characters = Object.keys(profiles)
-    const total = characters.length
+    const allCharacters = Object.keys(profiles)
+    const { characters, total } = applyShard(allCharacters)
     totalStats.total += total
 
-    console.log(`Found ${total} characters to scan`)
+    if (CLI_SHARD) {
+      console.log(`Found ${allCharacters.length} characters total, scanning ${total} in this shard`)
+    } else {
+      console.log(`Found ${total} characters to scan`)
+    }
     console.log('')
 
     let successCount = 0
@@ -1628,11 +1820,15 @@ async function processBackstoryUpdates() {
       continue
     }
 
-    const characters = fileInfo.characters || Object.keys(profiles)
-    const total = characters.length
+    const allCharacters = fileInfo.characters || Object.keys(profiles)
+    const { characters, total } = applyShard(allCharacters)
     totalStats.total += total
 
-    console.log(`Found ${total} characters to process`)
+    if (CLI_SHARD) {
+      console.log(`Found ${allCharacters.length} characters total, processing ${total} in this shard`)
+    } else {
+      console.log(`Found ${total} characters to process`)
+    }
     console.log('')
 
     let successCount = 0
@@ -1857,12 +2053,14 @@ async function main() {
   if (MODE === 'create') {
     // Create mode: single character, all fields
     await createNewEntry()
+    FINAL_STATS = { created: true, charName: CREATE_CHAR_NAME, targetFile: CREATE_PROFILES_PATH === PROFILES_VARIANTS_PATH ? 'characterProfilesVariants.json' : 'characterProfiles.json' }
     return
   }
 
   if (MODE === 'commander') {
     // Commander mode: scan both files and fill missing Commander relationships
     const totalStats = await processCommanderRelationships()
+    FINAL_STATS = totalStats
 
     console.log('')
     console.log('='.repeat(60))
@@ -1880,6 +2078,7 @@ async function main() {
   if (MODE === 'update') {
     // Update mode: compare and merge backstories with wiki content
     const totalStats = await processBackstoryUpdates()
+    FINAL_STATS = totalStats
 
     console.log('')
     console.log('='.repeat(60))
@@ -1914,6 +2113,8 @@ async function main() {
   }
 
   // Summary
+  FINAL_STATS = totalStats
+
   console.log('')
   console.log('='.repeat(60))
   console.log('Update Complete!')
@@ -1933,7 +2134,27 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error('Fatal error:', e)
-  process.exit(1)
-})
+function emitJsonResult() {
+  if (!CLI_JSON_OUTPUT) return
+  const result = {
+    status: 'ok',
+    mode: MODE || CLI_MODE,
+    provider: API_PROVIDER,
+    pollinationsModel: POLLINATIONS_MODEL || null,
+    shard: CLI_SHARD ? { index: CLI_SHARD.index + 1, total: CLI_SHARD.total } : null,
+    stats: FINAL_STATS || {}
+  }
+  console.log(`\n__JSON_RESULT__\n${JSON.stringify(result)}`)
+}
+
+main()
+  .then(() => {
+    emitJsonResult()
+  })
+  .catch((e) => {
+    console.error('Fatal error:', e)
+    if (CLI_JSON_OUTPUT) {
+      console.log(`\n__JSON_RESULT__\n${JSON.stringify({ status: 'error', error: e.message })}`)
+    }
+    process.exit(1)
+  })
