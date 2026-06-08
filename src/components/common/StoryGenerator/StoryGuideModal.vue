@@ -5,13 +5,11 @@
         <h3>🆕 What's New?</h3>
         <div class="guide-section">
           <ul>
-            <li>Added the ability to play as different characters (Beta)</li>
-            <li>Added the ability to use dynamically-changing background images</li>
-            <li>Added OpenCode Go as a new AI provider</li>
-            <li>Improved lore awareness with location profiles</li>
-            <li>Added a Low-Context Mode for very small models</li>
-            <li>Added a Low Power Mode for mobile devices, low-end hardware or to save battery life</li>
-            <li>Improved Settings UI and many other significant under-the-hood enhancements</li>
+            <li>Added the ability to store presets</li>
+            <li>Significantly improved mobile experience</li>
+            <li>Major under-the-hood enhancements</li>
+            <li>Added support for Gemini 3.5 Flash (Gemini API and others)</li>
+            <li>Updated internal database</li>
           </ul>
         </div>
       </div>
