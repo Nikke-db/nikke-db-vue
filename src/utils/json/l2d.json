@@ -1305,8 +1305,7 @@
   },
   {
     "name": "Prika",
-    "id": "c601_01",
-    "f": "c601_01"
+    "id": "c601_01"
   },
   {
     "name": "Prika",
@@ -2389,6 +2388,11 @@
     "name": "B Side Idol",
     "id": "bsideidol",
     "f": "EventScene_bsideidol_01"
+  },
+  {
+    "name": "Bitter Spice",
+    "id": "bitterspice",
+    "f": "EventScene_bitterspice_01"
   },
   {
     "name": "Smol Ade",

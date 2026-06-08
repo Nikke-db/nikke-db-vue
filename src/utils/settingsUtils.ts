@@ -3,6 +3,14 @@
 
 import { tokenUsageOptions, providerOptions } from '@/utils/llmUtils'
 
+// --- Shared localStorage keys ---
+
+/** localStorage key for the mobile-optimizations toggle. */
+export const MOBILE_OPTIMIZATIONS_STORAGE_KEY = 'nikke_story_gen_mobile_optimizations'
+
+/** localStorage key for persisting the previous state before mobile optimizations was enabled. */
+export const MOBILE_OPTIMIZATIONS_PREV_KEY = 'nikke_story_gen_mobile_optimizations_prev'
+
 // --- Types ---
 
 /** All settings that can be loaded from localStorage. */
@@ -27,6 +35,7 @@ export interface StoredSettings {
   playerCharacterUseCustom?: boolean
   playerCharacterName?: string
   backgroundImagesEnabled?: boolean
+  mobileOptimizations?: boolean
 }
 
 /**
@@ -142,6 +151,11 @@ export function loadSettingsFromStorage(): StoredSettings {
     result.backgroundImagesEnabled = savedBackgroundImages === 'true'
   }
 
+  const savedMobileOptimizations = localStorage.getItem(MOBILE_OPTIMIZATIONS_STORAGE_KEY)
+  if (savedMobileOptimizations !== null) {
+    result.mobileOptimizations = savedMobileOptimizations === 'true'
+  }
+
   return result
 }
 
@@ -156,7 +170,7 @@ export function validateSavedModel(savedProvider: string, savedModel: string | u
 
   // Fallback to default
   let fallback: string | undefined
-  if (savedProvider === 'gemini') fallback = 'gemini-2.5-flash'
+  if (savedProvider === 'gemini') fallback = 'gemini-3.5-flash'
   else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && firstDynamicModel) fallback = firstDynamicModel
 
   const warning = savedModel ? `Saved model '${savedModel}' is invalid or unavailable. Using default.` : undefined
