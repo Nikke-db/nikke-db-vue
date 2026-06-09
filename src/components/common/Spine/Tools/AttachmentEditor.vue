@@ -20,9 +20,7 @@
             <RouterLink :to="{ name: 'layerEditor' }" @click="market.live2d.triggerShowUI()">
               <n-a class="drawer-subtitle">Quick Tutorial</n-a>
             </RouterLink> <br/>
-            Make em bald, make em clothless, you do you and I don't care. <br/>
-            This feature can be laggy on shitty hardware. Beware. I don't care. <br/>
-            Found a layer/attachment that doesn't behave as intended? HMU ASAP.
+            Make em bald, make em clothless, you do you and I don't care.
           </span>
         </template>
 

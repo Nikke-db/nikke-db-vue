@@ -674,5 +674,9 @@
   {
     "date": "May 31st 2026",
     "update": "Live2d: Updated Prika Sprites. might need a cache clear similar to Mint ( thanks SU for messing up the character IDs). Also added Bitter Spice event CG."
+  },
+  {
+    "date": "June 9th 2026 (tba true date on prod)",
+    "update": "Live2d: Added an new toggle for the layer editor that allows to preview multiple layer and use your mouse to more easily select the content you wish to select. A new chapter have been add to the \"how to\" of the layer editor, please give it a read. Thanks napronap on GitHub for the tool."
   }
 ]
