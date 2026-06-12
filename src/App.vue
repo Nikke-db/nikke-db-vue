@@ -4,10 +4,25 @@
     class="scrollBarMargin"
     :class="checkMobile() ? 'mobileScroll' : ''"
   >
-    <Header v-show="!isChibiMobile()"/>
+    <Header v-show="showHeader"/>
     <RouterView />
-    <Footer v-show="!isL2d() && !isChibiMobile()" />
+    <Footer v-show="showFooter" />
     <!-- <div v-if="market.globalParams.isMobile" class="fakeFooter"></div> -->
+
+    <!-- Toggle to show/hide the site header on mobile story-gen -->
+    <n-button
+      v-if="isStoryGenMobile"
+      class="header-toggle-btn"
+      circle
+      size="small"
+      :type="market.globalParams.isMobileHeaderVisible ? 'primary' : 'default'"
+      @click="toggleHeader"
+      :title="market.globalParams.isMobileHeaderVisible ? 'Hide site header' : 'Show site header'"
+    >
+      <template #icon>
+        <n-icon><Menu /></n-icon>
+      </template>
+    </n-button>
   </n-scrollbar>
 </template>
 
@@ -15,10 +30,11 @@
 import { RouterView } from 'vue-router'
 import Header from '@/components/common/Header/HeaderSelector.vue'
 import Footer from '@/components/common/Footer/Footer.vue'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useMarket } from '@/stores/market'
 import { useLoadingBar } from 'naive-ui'
 import { useMessage } from 'naive-ui'
+import { Menu } from '@vicons/carbon'
 
 const market = useMarket()
 const loadingBar = useLoadingBar()
@@ -31,6 +47,35 @@ const isL2d = () => {
 }
 const isChibiMobile = () => {
   return checkMobile() && market.route.name === 'chibi'
+}
+
+const isStoryGenMobile = computed(() => {
+  return market.globalParams.isMobile && market.route.name === 'story-gen'
+})
+
+const showHeader = computed(() => {
+  if (isChibiMobile()) return false
+  if (isStoryGenMobile.value) return market.globalParams.isMobileHeaderVisible
+  return true
+})
+
+const showFooter = computed(() => {
+  return !isL2d() && !isChibiMobile()
+})
+
+// Auto-hide the generic header when entering story-gen on mobile
+watch(isStoryGenMobile, (val) => {
+  if (val) {
+    market.globalParams.hideMobileHeader()
+  }
+})
+
+const toggleHeader = () => {
+  if (market.globalParams.isMobileHeaderVisible) {
+    market.globalParams.hideMobileHeader()
+  } else {
+    market.globalParams.showMobileHeader()
+  }
 }
 
 market.message.setMessage(useMessage())
@@ -169,5 +214,12 @@ blockquote.twitter-tweet a:focus {
   .n-switch__checked, .n-switch__unchecked {
     color: @main-dark-theme !important;
   }
+}
+
+.header-toggle-btn {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2001;
 }
 </style>

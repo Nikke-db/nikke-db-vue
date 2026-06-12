@@ -124,24 +124,24 @@ let initialScale = 0.5
 
 const handlePinch = (e: TouchEvent) => {
   if (!filterDomEvents(e) || e.touches.length !== 2 || initialDistance === 0) return
-  
+
   const touch1 = e.touches[0]
   const touch2 = e.touches[1]
   const currentDistance = Math.sqrt(
-    Math.pow(touch2.clientX - touch1.clientX, 2) + 
+    Math.pow(touch2.clientX - touch1.clientX, 2) +
     Math.pow(touch2.clientY - touch1.clientY, 2)
   )
-  
+
   const scaleFactor = currentDistance / initialDistance
   transformScale = initialScale * scaleFactor
-  
+
   // Clamp scale between reasonable bounds
   transformScale = Math.max(0.1, Math.min(3, transformScale))
-  
+
   if (canvas) {
     canvas.style.transform = 'scale(' + transformScale + ')'
   }
-  
+
   // Prevent page zoom during pinch
   if (e.cancelable) e.preventDefault()
 }
@@ -213,7 +213,7 @@ const onTouchMove = (e: TouchEvent) => {
     if (e.cancelable) e.preventDefault()
     return
   }
-  
+
   if (move && canvas && market.route.name === 'story-gen') {
     // Only prevent default for single touch drag, allow multi-touch for pinch zoom
     if (e.touches.length === 1 && e.cancelable) {
@@ -263,7 +263,131 @@ const onWheel = (e: WheelEvent) => {
 }
 
 const SPINE_DEFAULT_MIX = 0.25
+const MAX_SPINE_LOAD_RETRIES = 3
+const SPINE_RETRY_DELAYS = [1000, 3000, 5000]
+const XHR_TIMEOUT_MS = 15000
+const SPINE_PLAYER_TIMEOUT_MS = 20000
 let spinePlayer: any = null
+
+const getActiveSpinePlayer = () => {
+  if (!spinePlayer || !spineCanvas || spinePlayer !== spineCanvas) return null
+  if (spinePlayer.disposed || spinePlayer.error || !spinePlayer.animationState) return null
+  return spinePlayer
+}
+
+const clearSpineReferences = (player?: any) => {
+  if (!player || spineCanvas === player) {
+    spineCanvas = null
+  }
+
+  if (!player || spinePlayer === player) {
+    spinePlayer = null
+  }
+}
+
+const forceRemovePlayerDom = () => {
+  const container = document.getElementById('player-container')
+  if (!container) return
+
+  const canvases = container.querySelectorAll('.spine-player-canvas')
+  canvases.forEach((c) => c.remove())
+
+  const controls = container.querySelectorAll('.spine-player-controls')
+  controls.forEach((c) => c.remove())
+
+  canvas = null
+}
+
+const disposeSpineInstance = (player: any, context: string) => {
+  if (!player) return
+
+  try {
+    if (player.stopRequestAnimationFrame) {
+      player.stopRequestAnimationFrame = true
+    }
+  } catch (_) { /* ignore */ }
+
+  try {
+    if (player.assetManager && typeof player.assetManager.dispose === 'function') {
+      player.assetManager.dispose()
+    }
+  } catch (_) { /* ignore */ }
+
+  try {
+    if (!player.disposed) {
+      player.dispose()
+    }
+  } catch (e) {
+    console.warn(`[Loader] Error disposing ${context}:`, e)
+  }
+
+  clearSpineReferences(player)
+  forceRemovePlayerDom()
+}
+
+const handleSpineLoadFailure = ({
+  loadId,
+  retryAttempt,
+  requestedCharacterId,
+  requestedPose,
+  requestedSkelUrl,
+  requestedAtlasUrl,
+  stage,
+  message,
+  player,
+  details
+}: {
+  loadId: number
+  retryAttempt: number
+  requestedCharacterId: string
+  requestedPose: string
+  requestedSkelUrl: string
+  requestedAtlasUrl: string
+  stage: string
+  message?: string
+  player?: any
+  details?: Record<string, any>
+}) => {
+  if (loadId !== currentLoadId) {
+    logDebug(`[Loader] Ignoring stale ${stage} failure for ${requestedCharacterId}`)
+    return
+  }
+
+  const assetErrors = typeof player?.assetManager?.getErrors === 'function'
+    ? player.assetManager.getErrors()
+    : undefined
+
+  console.error('[Loader] Spine load failed:', {
+    characterId: requestedCharacterId,
+    pose: requestedPose,
+    skelUrl: requestedSkelUrl,
+    atlasUrl: requestedAtlasUrl,
+    stage,
+    message,
+    assetErrors,
+    ...details
+  })
+
+  if (player) {
+    disposeSpineInstance(player, `${stage} failure`)
+  } else {
+    clearSpineReferences()
+    forceRemovePlayerDom()
+  }
+
+  if (retryAttempt < MAX_SPINE_LOAD_RETRIES) {
+    const delay = SPINE_RETRY_DELAYS[retryAttempt] ?? SPINE_RETRY_DELAYS[SPINE_RETRY_DELAYS.length - 1]
+    console.warn(`[Loader] Retrying Spine load for ${requestedCharacterId} (${retryAttempt + 1}/${MAX_SPINE_LOAD_RETRIES}) in ${delay}ms`)
+    window.setTimeout(() => {
+      if (loadId !== currentLoadId) return
+      spineLoader(retryAttempt + 1)
+    }, delay)
+    return
+  }
+
+  wrongfullyLoaded()
+  market.live2d.triggerFinishedLoading()
+}
 
 const resetAttachmentColors = (player: any) => {
   if (!player?.animationState?.data?.skeletonData?.defaultSkin?.attachments) return
@@ -360,12 +484,14 @@ const resolveAnimation = (requested: string, available: string[]): string | null
 }
 
 watch(() => market.live2d.current_animation, (newAnim) => {
-  if (spinePlayer && newAnim) {
+  const activePlayer = getActiveSpinePlayer()
+
+  if (activePlayer && newAnim) {
     try {
       const resolvedAnim = resolveAnimation(newAnim, market.live2d.animations)
 
       if (resolvedAnim) {
-        spinePlayer.animationState.setAnimation(0, resolvedAnim, true)
+        activePlayer.animationState.setAnimation(0, resolvedAnim, true)
       } else {
         console.warn(`Animation ${newAnim} not found and no fallback discovered.`)
       }
@@ -375,7 +501,7 @@ watch(() => market.live2d.current_animation, (newAnim) => {
   }
 })
 
-const spineLoader = () => {
+const spineLoader = (retryAttempt = 0) => {
   if (!market.live2d.current_id) {
     logDebug('[Loader] No current_id set, skipping load.')
     return
@@ -383,21 +509,53 @@ const spineLoader = () => {
 
   currentLoadId++
   const thisLoadId = currentLoadId
+  const requestedCharacterId = market.live2d.current_id
+  const requestedPose = market.live2d.current_pose
 
   const skelUrl = getPathing('skel')
+  const atlasUrl = getPathing('atlas')
+  const requestedSkin = market.live2d.getSkin()
   const request = new XMLHttpRequest()
 
   request.responseType = 'arraybuffer'
+  request.timeout = XHR_TIMEOUT_MS
   request.open('GET', skelUrl, true)
   request.send()
+  request.ontimeout = () => {
+    if (thisLoadId !== currentLoadId) return
+    handleSpineLoadFailure({
+      loadId: thisLoadId,
+      retryAttempt,
+      requestedCharacterId,
+      requestedPose,
+      requestedSkelUrl: skelUrl,
+      requestedAtlasUrl: atlasUrl,
+      stage: 'skeleton request',
+      message: `XHR timed out after ${XHR_TIMEOUT_MS}ms.`,
+      details: { timedOut: true }
+    })
+  }
   request.onloadend = () => {
     if (thisLoadId !== currentLoadId) {
       logDebug('[Loader] Ignoring stale load request')
       return
     }
 
-    if (request.status !== 200) {
-      console.error('Failed to load skel file:', request.statusText)
+    if (request.status !== 200 || !request.response) {
+      handleSpineLoadFailure({
+        loadId: thisLoadId,
+        retryAttempt,
+        requestedCharacterId,
+        requestedPose,
+        requestedSkelUrl: skelUrl,
+        requestedAtlasUrl: atlasUrl,
+        stage: 'skeleton request',
+        message: 'Failed to load skel file.',
+        details: {
+          status: request.status,
+          statusText: request.statusText
+        }
+      })
       return
     }
 
@@ -428,24 +586,65 @@ const spineLoader = () => {
         usedSpine = spine41
       }
 
+      // Guard flag + safety timeout: SpinePlayer has no built-in timeout for atlas/texture fetches,
+      // so we force a failure if neither success nor error fires within SPINE_PLAYER_TIMEOUT_MS.
+      let playerSettled = false
+      const playerTimeoutId = window.setTimeout(() => {
+        if (playerSettled || thisLoadId !== currentLoadId) return
+        playerSettled = true
+        
+        // CRITICAL: Pass the spineCanvas instance so it gets properly disposed
+        // The SpinePlayer is still alive and trying to load - we must kill it
+        const hungPlayer = spineCanvas
+        handleSpineLoadFailure({
+          loadId: thisLoadId,
+          retryAttempt,
+          requestedCharacterId,
+          requestedPose,
+          requestedSkelUrl: skelUrl,
+          requestedAtlasUrl: atlasUrl,
+          stage: 'asset manager',
+          message: `SpinePlayer timed out after ${SPINE_PLAYER_TIMEOUT_MS}ms (atlas/texture fetch hung).`,
+          player: hungPlayer
+        })
+      }, SPINE_PLAYER_TIMEOUT_MS)
+
       spineCanvas = new usedSpine.SpinePlayer('player-container', {
-        skelUrl: market.live2d.current_id,
+        skelUrl: requestedCharacterId,
         rawDataURIs: {
-          [market.live2d.current_id]: skelURL,
+          [requestedCharacterId]: skelURL,
         },
-        atlasUrl: getPathing('atlas'),
+        atlasUrl,
         animation: getDefaultAnimation(),
-        skin: market.live2d.getSkin(),
+        skin: requestedSkin,
         showControls: market.route.name !== 'story-gen',
         backgroundColor: '#00000000',
         alpha: true,
         premultipliedAlpha: true,
-        mipmaps: market.live2d.current_pose === 'fb' ? true : false,
+        mipmaps: requestedPose === 'fb' ? true : false,
         debug: false,
         preserveDrawingBuffer: true,
         viewport: spineViewport,
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
+          // Late arrival after our safety timeout fired — discard this player.
+          if (playerSettled) {
+            logDebug(`[Loader] Ignoring success callback after timeout for ${requestedCharacterId}`)
+            if (!player.disposed) {
+              disposeSpineInstance(player, 'post-timeout success callback')
+            }
+            return
+          }
+          playerSettled = true
+          clearTimeout(playerTimeoutId)
+
+          if (thisLoadId !== currentLoadId || player.disposed) {
+            logDebug(`[Loader] Ignoring stale success callback for ${requestedCharacterId}`)
+            if (!player.disposed) {
+              disposeSpineInstance(player, 'stale success callback')
+            }
+            return
+          }
 
           spinePlayer = player
           resetAttachmentColors(player)
@@ -472,6 +671,10 @@ const spineLoader = () => {
 
             // Force set animation with a slight delay to ensure player is ready
             setTimeout(() => {
+              if (thisLoadId !== currentLoadId || player !== getActiveSpinePlayer()) {
+                return
+              }
+
               try {
                 player.animationState.setAnimation(0, resolvedAnim, true)
                 player.play()
@@ -486,8 +689,25 @@ const spineLoader = () => {
           market.live2d.triggerFinishedLoading()
           successfullyLoaded()
         },
-        error: () => {
-          wrongfullyLoaded()
+        error: (player: any, message?: string) => {
+          if (playerSettled) {
+            logDebug(`[Loader] Ignoring error callback after timeout for ${requestedCharacterId}`)
+            return
+          }
+          playerSettled = true
+          clearTimeout(playerTimeoutId)
+
+          handleSpineLoadFailure({
+            loadId: thisLoadId,
+            retryAttempt,
+            requestedCharacterId,
+            requestedPose,
+            requestedSkelUrl: skelUrl,
+            requestedAtlasUrl: atlasUrl,
+            stage: 'asset manager',
+            message,
+            player
+          })
         },
       })
       applyStoryGenLowPowerThrottle(spineCanvas)
@@ -659,7 +879,7 @@ watch(() => market.globalParams.isMobile, (e) => {
     canvas && setCanvasStyleMobile()
   } else {
     applyDefaultStyle2Canvas()
-    centerForPC()
+    centerCanvas()
   }
 })
 
@@ -706,12 +926,10 @@ watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
 
 watch(() => market.live2d.customLoad, () => {
   if (spineCanvas) {
-    try {
-      spineCanvas.dispose()
-    } catch (e) {
-      console.warn('[Loader] Error disposing spineCanvas for customLoad:', e)
-    }
-    spineCanvas = null
+    disposeSpineInstance(spineCanvas, 'spineCanvas for customLoad')
+  } else {
+    clearSpineReferences()
+    forceRemovePlayerDom()
   }
   market.load.beginLoad()
   customSpineLoader()
@@ -851,12 +1069,10 @@ async function exportAnimationFrames(timestamp: number) {
 const loadSpineAfterWatcher = () => {
   if (market.live2d.canLoadSpine) {
     if (spineCanvas) {
-      try {
-        spineCanvas.dispose()
-      } catch (e) {
-        console.warn('[Loader] Error disposing spineCanvas:', e)
-      }
-      spineCanvas = null
+      disposeSpineInstance(spineCanvas, 'spineCanvas')
+    } else {
+      clearSpineReferences()
+      forceRemovePlayerDom()
     }
     market.load.beginLoad()
     spineLoader()
@@ -883,7 +1099,7 @@ const applyDefaultStyle2Canvas = () => {
       canvas.style.top = '0px'
       transformScale = market.live2d.HQassets ? 0.18 : 0.5
       market.globalParams.showMobileHeader()
-      centerForPC()
+      centerCanvas()
     }
   }, 50)
 }
@@ -892,13 +1108,24 @@ const setCanvasStyleMobile = () => {
   if (!canvas) return
 
   if (market.route.name === 'story-gen') {
-    canvas.style.height = '70vh'
-    canvas.style.width = 'auto'
-    canvas.style.position = 'absolute'
-    canvas.style.top = '0px'
-    canvas.style.transform = 'scale(0.7)'
-    transformScale = 0.7
-    centerForPC()
+    const isCompact = market.globalParams.isMobileCompact
+    if (isCompact) {
+      // Compact mode: slightly larger scale for better visibility on phones
+      canvas.style.height = '70vh'
+      canvas.style.width = 'auto'
+      canvas.style.position = 'absolute'
+      canvas.style.top = '0px'
+      canvas.style.transform = 'scale(0.85)'
+      transformScale = 0.85
+    } else {
+      canvas.style.height = '70vh'
+      canvas.style.width = 'auto'
+      canvas.style.position = 'absolute'
+      canvas.style.top = '0px'
+      canvas.style.transform = 'scale(0.7)'
+      transformScale = 0.7
+    }
+    centerCanvas()
   } else {
     // L2D (visualiser) - use production behavior
     canvas.style.height = '90vh'
@@ -912,10 +1139,20 @@ const checkMobile = () => {
   return market.globalParams.isMobile ? true : false
 }
 
-const centerForPC = () => {
+const centerCanvas = () => {
   const canvas_width = canvas ? canvas.offsetWidth : 0
+  const canvas_height = canvas ? canvas.offsetHeight : 0
   const viewport_width = window.innerWidth
+  const viewport_height = window.innerHeight
+
+  // Center the element box (the scaled visual content stays centered
+  // because transform: scale() scales from the element's center by default).
   canvas && (canvas.style.left = (viewport_width - canvas_width) / 2 + 'px')
+
+  // On mobile story-gen, also center vertically so the character isn't anchored to the top edge
+  if (checkMobile() && market.route.name === 'story-gen' && canvas) {
+    canvas.style.top = (viewport_height - canvas_height) / 2 + 'px'
+  }
 }
 
 const filterDomEvents = (event: any) => {

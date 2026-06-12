@@ -1,5 +1,8 @@
 <template>
-  <div class="chat-interface">
+  <div
+    class="chat-interface"
+    :class="{ 'compact-mobile': isCompactMobile }"
+  >
     <n-button class="settings-btn" circle @click="showSettings = true">
       <template #icon>
         <n-icon><Settings /></n-icon>
@@ -48,7 +51,7 @@
       </div>
 
       <div class="chat-history" ref="chatHistoryRef">
-        <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), selected: selectedMessageIndex === index }]" @click="msg.role !== 'user' ? replayMessage(msg, index) : null">
+        <div v-for="(msg, index) in chatHistory" :key="index" :class="['message', msg.role, { 'replay-enabled': enableAnimationReplay && msg.role !== 'user' && (msg.animation || msg.character), selected: selectedMessageIndex === index }]" @click="!isLoading && msg.role !== 'user' ? replayMessage(msg, index) : null">
           <div class="message-content" v-html="renderMarkdown(msg.content)"></div>
           <div v-if="index === chatHistory.length - 1 && !isLoading && msg.role === 'assistant'" class="message-top-actions" style="right: 0; left: auto">
             <n-button size="tiny" circle type="warning" @click.stop="regenerateResponse" title="Retry this message">
@@ -76,16 +79,58 @@
       </div>
 
       <div class="chat-input-area" style="gap: 6px">
-        <n-input v-model:value="userInput" type="textarea" :placeholder="isApiKeyMissing ? 'Please enter API Key in settings' : 'Type your message...'" :disabled="isApiKeyMissing" :autosize="{ minRows: 1, maxRows: 4 }" @keydown.enter.prevent="handleEnter" />
-        <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing">Send</n-button>
-        <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
-        <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
-        <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing">
-          {{ waitingForNext ? 'Next' : 'Continue' }}
-        </n-button>
+        <n-input v-model:value="userInput" type="textarea" :placeholder="isApiKeyMissing ? 'Please enter API Key in settings' : 'Type your message...'" :disabled="isApiKeyMissing" :autosize="{ minRows: 1, maxRows: 3 }" @keydown.enter.prevent="handleEnter" />
+        <template v-if="!isCompactMobile">
+          <n-button type="primary" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing">Send</n-button>
+          <n-button type="error" @click="stopGeneration" v-if="isLoading">Stop</n-button>
+          <n-button type="success" @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing">
+            {{ waitingForNext ? 'Next' : 'Continue' }}
+          </n-button>
+          <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
+        </template>
+        <template v-else>
+          <div class="mobile-btn-row">
+            <n-button type="primary" size="tiny" circle @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing" title="Send" aria-label="Send message">
+              <template #icon><n-icon><Send /></n-icon></template>
+            </n-button>
+            <n-button type="error" size="tiny" circle @click="stopGeneration" v-if="isLoading" title="Stop" aria-label="Stop generation">
+              <template #icon><n-icon><Stop /></n-icon></template>
+            </n-button>
+            <n-button type="success" size="tiny" circle @click="nextAction" v-if="(waitingForNext || !isLoading) && chatHistory.length > 0" :disabled="isApiKeyMissing" title="Continue" aria-label="Continue">
+              <template #icon><n-icon><Play /></n-icon></template>
+            </n-button>
+            <n-button type="warning" size="tiny" circle @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing" title="Retry" aria-label="Retry">
+              <template #icon><n-icon><Renew /></n-icon></template>
+            </n-button>
+            <n-button type="error" size="tiny" circle @click="resetSession" :disabled="isLoading || chatHistory.length === 0" title="Reset Session" aria-label="Reset session">
+              <template #icon><n-icon><Reset /></n-icon></template>
+            </n-button>
+            <n-popover trigger="click" placement="top" style="max-width: 240px">
+              <template #trigger>
+                <n-button size="tiny" quaternary circle title="More" aria-label="More actions" aria-haspopup="true">
+                  <template #icon><n-icon><OverflowMenuHorizontal /></n-icon></template>
+                </n-button>
+              </template>
+              <div class="mobile-overflow-menu" style="display: flex; flex-direction: column; gap: 6px">
+                <n-button size="small" type="error" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" block>Save</n-button>
+                <n-button size="small" type="warning" @click="triggerRestore" :disabled="isLoading" block>Load</n-button>
+                <n-button size="small" type="info" @click="handleCompactSummary" :disabled="isCompactSummaryDisabled" block>Compaction</n-button>
+                <n-button size="small" type="primary" @click="showRosterList = !showRosterList" block>Characters</n-button>
+                <n-button size="small" type="primary" @click="showPresetsModal = true" :disabled="isLoading" block>Presets</n-button>
+                <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary || isLoading" block>Story Summary</n-button>
+              </div>
+            </n-popover>
+          </div>
+        </template>
       </div>
 
-      <div class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
+      <div v-if="showSavingFirstTurnInput" class="save-first-turn-row">
+        <n-input v-model:value="savingFirstTurnName" size="small" placeholder="Preset name..." @keydown.enter="confirmSaveFirstTurnPreset" style="flex: 1" />
+        <n-button size="tiny" type="primary" @click="confirmSaveFirstTurnPreset" :disabled="!savingFirstTurnName.trim()">Save</n-button>
+        <n-button size="tiny" @click="cancelSaveFirstTurnPreset">Cancel</n-button>
+      </div>
+
+      <div v-if="!isCompactMobile" class="session-controls" :style="{ '--chat-width': chatSize.width + 'px' }">
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-button type="error" size="small" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" :style="{ opacity: chatHistory.length === 0 || isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
@@ -126,6 +171,28 @@
           <div class="story-character-inline-header">
             <n-button size="small" type="primary" @click="showRosterList = !showRosterList">Characters</n-button>
             <n-button v-if="showRosterList" size="small" type="success" @click="addRosterRow">+</n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button size="small" type="primary" @click="showPresetsModal = true" :disabled="isLoading">
+                  <template #icon>
+                    <n-icon><Bookmark /></n-icon>
+                  </template>
+                </n-button>
+              </template>
+              Presets
+              </n-tooltip>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary || isLoading">
+                    <template #icon>
+                      <n-icon><Document /></n-icon>
+                    </template>
+                  </n-button>
+                </template>
+                View/Edit Story Summary
+              </n-tooltip>
+              <n-button v-if="rosterRows.length > 0 && showRosterList" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
+            <n-button v-if="userInput.trim() && chatHistory.length === 0" size="small" type="info" @click="saveFirstTurnAsPreset">Save first turn</n-button>
           </div>
           <div v-if="showRosterList" class="story-character-list">
             <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
@@ -133,6 +200,11 @@
               <n-select v-if="getSkinOptionsForEntry(entry).length > 0" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
               <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
               <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
+            </div>
+            <div v-if="showSavingPresetInput" class="story-character-row compact save-preset-row">
+              <n-input v-model:value="savingPresetName" size="small" placeholder="Preset name..." @keydown.enter="confirmSavePreset" style="flex: 1" />
+              <n-button size="tiny" type="primary" @click="confirmSavePreset" :disabled="!savingPresetName.trim()">Save</n-button>
+              <n-button size="tiny" @click="cancelSavePreset">Cancel</n-button>
             </div>
           </div>
         </div>
@@ -169,6 +241,209 @@
         </n-popover>
       </div>
 
+      <!-- Compact mobile roster list (rendered outside .session-controls so overflow-menu toggle works) -->
+      <div v-if="isCompactMobile && showRosterList" class="session-controls compact-roster" :style="{ '--chat-width': chatSize.width + 'px' }">
+        <div class="story-character-inline">
+          <div class="story-character-inline-header">
+            <n-button size="small" type="primary" @click="showRosterList = !showRosterList">Characters</n-button>
+            <n-button size="small" type="success" @click="addRosterRow">+</n-button>
+            <n-button v-if="rosterRows.length > 0" size="small" type="info" @click="saveRosterAsPreset">Save as preset</n-button>
+            <n-button v-if="userInput.trim() && chatHistory.length === 0" size="small" type="info" @click="saveFirstTurnAsPreset">Save first turn</n-button>
+          </div>
+          <div class="story-character-list">
+            <div v-for="entry in rosterRows" :key="entry.key" class="story-character-row compact">
+              <n-select class="story-character-select" :value="entry.selection" :options="availableRosterOptions" filterable placeholder="Character" @update:value="(val) => updateRosterSelection(entry, val as string)" />
+              <n-select v-if="getSkinOptionsForEntry(entry).length > 0" class="story-character-select" :value="entry.skinId || getSkinOptionsForEntry(entry)[0]?.value" :options="getSkinOptionsForEntry(entry)" filterable placeholder="Skin" @update:value="(val) => updateRosterSkin(entry, val as string)" />
+              <n-tag v-if="entry.source === 'ai'" size="small" type="warning">AI</n-tag>
+              <n-button size="tiny" type="error" @click="removeRosterRow(entry)">Remove</n-button>
+            </div>
+            <div v-if="showSavingPresetInput" class="story-character-row compact save-preset-row">
+              <n-input v-model:value="savingPresetName" size="small" placeholder="Preset name..." @keydown.enter="confirmSavePreset" style="flex: 1" />
+              <n-button size="tiny" type="primary" @click="confirmSavePreset" :disabled="!savingPresetName.trim()">Save</n-button>
+              <n-button size="tiny" @click="cancelSavePreset">Cancel</n-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modals always rendered so overflow-menu buttons can trigger them -->
+      <n-modal v-model:show="showPresetsModal" preset="card" title="Presets" style="max-width: 500px">
+          <n-tabs v-model:value="activePresetTab" type="segment" animated>
+            <n-tab-pane name="roster" tab="Roster">
+              <div v-if="presets.length === 0" style="text-align: center; padding: 20px; color: #888">
+                No roster presets saved yet. Add characters to the roster and click <strong>Save as preset</strong> to create one.
+              </div>
+              <div v-else class="presets-list">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 4px;">
+                  <n-popconfirm @positive-click="deleteAllPresetsConfirm">
+                    <template #trigger>
+                      <n-button size="tiny" type="error" quaternary>Delete All</n-button>
+                    </template>
+                    Delete all roster presets? This action cannot be undone.
+                  </n-popconfirm>
+                </div>
+                <div v-for="preset in presets" :key="preset.id" class="preset-item">
+                  <div class="preset-info">
+                    <div class="preset-name-row">
+                      <span v-if="editingPresetId !== preset.id" class="preset-name">{{ preset.name }}</span>
+                      <n-input v-else v-model:value="editingPresetName" size="small" style="max-width: 200px" @keydown.enter="confirmRename(preset.id)" />
+                      <span class="preset-meta">{{ preset.roster.length }} character(s) &middot; {{ formatPresetDate(preset.createdAt) }}</span>
+                    </div>
+                    <div class="preset-chars">
+                      <span v-for="(entry, i) in preset.roster.slice(0, 5)" :key="entry.key" class="preset-char-tag">{{ getPresetCharName(entry) }}<span v-if="i < Math.min(preset.roster.length, 5) - 1">, </span></span>
+                      <span v-if="preset.roster.length > 5" class="preset-char-more">+{{ preset.roster.length - 5 }} more</span>
+                    </div>
+                  </div>
+                  <div class="preset-actions">
+                    <n-button size="tiny" type="primary" @click="loadPreset(preset)">Load</n-button>
+                    <n-button size="tiny" @click="startRename(preset)">{{ editingPresetId === preset.id ? 'Cancel' : 'Rename' }}</n-button>
+                    <n-popconfirm @positive-click="deletePresetConfirm(preset.id)">
+                      <template #trigger>
+                        <n-button size="tiny" type="error" @click="deletePresetTarget = preset.id">Delete</n-button>
+                      </template>
+                      Delete preset "{{ preset.name }}"?
+                    </n-popconfirm>
+                  </div>
+                </div>
+              </div>
+            </n-tab-pane>
+            <n-tab-pane name="firstTurn" tab="First Turn">
+              <div v-if="firstTurnPresets.length === 0" style="text-align: center; padding: 20px; color: #888">
+                No first turn presets saved yet. Type your opening message and click <strong>Save as first turn</strong> to create one.
+              </div>
+              <div v-else class="presets-list">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; padding: 0 4px;">
+                  <n-popconfirm @positive-click="deleteAllFirstTurnPresetsConfirm">
+                    <template #trigger>
+                      <n-button size="tiny" type="error" quaternary>Delete All</n-button>
+                    </template>
+                    Delete all first turn presets? This action cannot be undone.
+                  </n-popconfirm>
+                </div>
+                <div v-for="preset in firstTurnPresets" :key="preset.id" class="preset-item">
+                  <div class="preset-info">
+                    <div class="preset-name-row">
+                      <span class="preset-name">{{ preset.name }}</span>
+                      <span class="preset-meta"><template v-if="preset.sessionType">{{ formatSessionType(preset.sessionType) }} &middot; </template>{{ formatPresetDate(preset.createdAt) }}</span>
+                    </div>
+                    <div class="preset-message-preview">{{ preset.message.length > 120 ? preset.message.slice(0, 120) + '...' : preset.message }}</div>
+                    <div v-if="preset.playAsDifferentCharacter && preset.playerCharacterName" style="font-size: 11px; color: #888; margin-top: 2px;">
+                      Play as: {{ preset.playerCharacterName }}
+                    </div>
+                    <div v-if="preset.roster && preset.roster.length > 0" class="preset-chars">
+                      <span v-for="(entry, i) in preset.roster.slice(0, 5)" :key="entry.key" class="preset-char-tag">{{ getPresetCharName(entry) }}<span v-if="i < Math.min(preset.roster.length, 5) - 1">, </span></span>
+                      <span v-if="preset.roster.length > 5" class="preset-char-more">+{{ preset.roster.length - 5 }} more</span>
+                    </div>
+                  </div>
+                  <div class="preset-actions">
+                    <n-button size="tiny" type="primary" @click="loadFirstTurnPreset(preset)">Load</n-button>
+                    <n-button size="tiny" type="info" @click="openFirstTurnEditModal(preset)">Edit</n-button>
+                    <n-popconfirm @positive-click="deleteFirstTurnPresetConfirm(preset.id)">
+                      <template #trigger>
+                        <n-button size="tiny" type="error" @click="deleteFirstTurnPresetTarget = preset.id">Delete</n-button>
+                      </template>
+                      Delete preset "{{ preset.name }}"?
+                    </n-popconfirm>
+                  </div>
+                </div>
+              </div>
+            </n-tab-pane>
+          </n-tabs>
+          <template v-if="(activePresetTab === 'roster' && presets.length >= ROSTER_MAX_PRESETS) || (activePresetTab === 'firstTurn' && firstTurnPresets.length >= FIRST_TURN_MAX_PRESETS)" #header-extra>
+            <n-tag type="warning" size="small">Full ({{ activePresetTab === 'roster' ? presets.length : firstTurnPresets.length }}/{{ activePresetTab === 'roster' ? ROSTER_MAX_PRESETS : FIRST_TURN_MAX_PRESETS }})</n-tag>
+          </template>
+          <template #footer>
+            <template v-if="activePresetTab === 'roster'">
+              <div class="presets-footer">
+                <n-button size="small" @click="exportAllPresets" :disabled="presets.length === 0">Export All</n-button>
+                <n-button size="small" @click="triggerPresetImport">Import</n-button>
+              </div>
+              <n-alert v-if="presetImportWarning" type="warning" closable style="margin-top: 12px" @close="presetImportWarning = ''">
+                {{ presetImportWarning }}
+              </n-alert>
+              <n-alert v-if="presetImportSuccess" type="success" closable style="margin-top: 12px" @close="presetImportSuccess = ''">
+                {{ presetImportSuccess }}
+              </n-alert>
+            </template>
+            <template v-else>
+              <div class="presets-footer">
+                <n-button size="small" @click="exportAllFirstTurnPresets" :disabled="firstTurnPresets.length === 0">Export All</n-button>
+                <n-button size="small" @click="triggerFirstTurnPresetImport">Import</n-button>
+              </div>
+              <n-alert v-if="firstTurnPresetImportWarning" type="warning" closable style="margin-top: 12px" @close="firstTurnPresetImportWarning = ''">
+                {{ firstTurnPresetImportWarning }}
+              </n-alert>
+              <n-alert v-if="firstTurnPresetImportSuccess" type="success" closable style="margin-top: 12px" @close="firstTurnPresetImportSuccess = ''">
+                {{ firstTurnPresetImportSuccess }}
+              </n-alert>
+            </template>
+          </template>
+        </n-modal>
+        <n-modal v-model:show="showSummaryModal" preset="card" title="Story Summary" style="max-width: 600px">
+          <n-form-item label="Current Summary">
+            <n-input
+              v-model:value="editableSummary"
+              type="textarea"
+              :rows="12"
+              placeholder="No summary yet..."
+            />
+          </n-form-item>
+          <template #footer>
+            <n-space justify="end">
+              <n-button @click="cancelSummaryEdit">Cancel</n-button>
+              <n-button type="primary" @click="saveSummaryEdit">Save</n-button>
+            </n-space>
+          </template>
+        </n-modal>
+        <n-modal v-model:show="showFirstTurnEditModal" preset="card" title="Edit First Turn Preset" style="max-width: 600px">
+          <n-form class="first-turn-edit-modal-form" :show-feedback="false" label-placement="top" :model="firstTurnEditForm">
+            <n-form-item label="Preset Name" path="name">
+              <n-input
+                v-model:value="firstTurnEditForm.name"
+                placeholder="Preset name..."
+                @keydown.enter="confirmFirstTurnEdit"
+              />
+            </n-form-item>
+            <n-form-item label="Mode" path="sessionType">
+              <n-radio-group v-model:value="firstTurnEditForm.sessionType" name="first-turn-edit-mode">
+                <n-radio-button value="roleplay">Roleplay</n-radio-button>
+                <n-radio-button value="story">Story</n-radio-button>
+                <n-radio-button value="game">Game</n-radio-button>
+              </n-radio-group>
+            </n-form-item>
+            <n-form-item label="Play As Different Character" path="playAsDifferentCharacter">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <n-switch v-model:value="firstTurnEditForm.playAsDifferentCharacter" />
+                <span style="font-size: 11px; color: #888">
+                  {{ firstTurnEditForm.playAsDifferentCharacter ? 'Playing as a custom character' : 'Playing as the Commander' }}
+                </span>
+              </div>
+            </n-form-item>
+            <n-form-item v-if="firstTurnEditForm.playAsDifferentCharacter" label="Player Character" path="playerCharacterName">
+              <n-select
+                v-model:value="firstTurnEditForm.playerCharacterName"
+                :options="playerCharacterOptions"
+                filterable
+                placeholder="Select character"
+              />
+            </n-form-item>
+            <n-form-item label="First Prompt" path="message" :style="{ marginBottom: 0 }">
+              <n-input
+                v-model:value="firstTurnEditForm.message"
+                type="textarea"
+                :rows="6"
+                placeholder="Opening message..."
+              />
+            </n-form-item>
+          </n-form>
+          <template #footer>
+            <n-space justify="end">
+              <n-button @click="cancelFirstTurnEdit">Cancel</n-button>
+              <n-button type="primary" :disabled="!firstTurnEditForm.message.trim() || !firstTurnEditForm.name.trim()" @click="confirmFirstTurnEdit">Save</n-button>
+            </n-space>
+          </template>
+        </n-modal>
+
       <!-- Resize Handles -->
       <div class="resize-handle nw" @mousedown="startResize($event, 'nw')" @touchstart="startResize($event, 'nw')"></div>
       <div class="resize-handle ne" @mousedown="startResize($event, 'ne')" @touchstart="startResize($event, 'ne')"></div>
@@ -180,6 +455,7 @@
 
     <!-- NIKKE Mode Overlay -->
     <NikkeChatOverlay
+      :class="{ 'compact-mobile': isCompactMobile }"
       :chatMode="chatMode"
       :nikkeOverlayVisible="nikkeOverlayVisible"
       :nikkeOverlayPassthrough="nikkeOverlayPassthrough"
@@ -207,6 +483,22 @@
               </n-popover>
             </template>
             <n-switch v-model:value="showAdvancedSettings" />
+          </n-form-item>
+          <n-form-item>
+            <template #label>
+              Mobile Optimizations
+              <n-popover trigger="hover" placement="bottom">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Automatically enables Low Power Mode, disables text-to-speech and forces NIKKE visual mode to improve performance on mobile devices.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="mobileOptimizations" />
           </n-form-item>
           <h4 class="settings-section-header accent-blue">AI Provider & Model</h4>
           <n-divider />
@@ -444,7 +736,7 @@
 
           <h4 class="settings-section-header accent-red">Interface & Audio</h4>
           <n-divider />
-          <n-form-item v-if="showAdvancedSettings">
+          <n-form-item v-if="showAdvancedSettings" :style="{ opacity: mobileOptimizationsDim }">
             <template #label>
               Low Power Mode
               <n-popover trigger="hover" placement="bottom">
@@ -459,7 +751,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="lowPowerMode" />
+            <n-switch v-model:value="lowPowerMode" :disabled="mobileOptimizations" />
           </n-form-item>
           <n-form-item v-if="showAdvancedSettings">
             <template #label>
@@ -482,7 +774,7 @@
             </n-radio-group>
           </n-form-item>
 
-          <n-form-item>
+          <n-form-item :style="{ opacity: mobileOptimizationsDim }">
             <template #label>
               Chat Mode
               <n-popover trigger="hover" placement="bottom">
@@ -492,13 +784,13 @@
                   </n-icon>
                 </template>
                 <div>
-                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode.<br /><br />
+                  <strong>Classic:</strong> More similar to a standard LLM interface, with a traditional chat layout.<br />Not available in Game Mode or if Mobile Optimizations are enabled.<br /><br />
                   <strong>NIKKE:</strong> Interface looks much more similar to the videogame, with overlay text and typewriter effects.
                 </div>
               </n-popover>
             </template>
             <n-radio-group v-model:value="chatMode" name="chatmodegroup">
-              <n-radio-button :disabled="mode === 'game'" value="classic">Classic</n-radio-button>
+              <n-radio-button :disabled="mode === 'game' || mobileOptimizations" value="classic">Classic</n-radio-button>
               <n-radio-button value="nikke">NIKKE</n-radio-button>
             </n-radio-group>
           </n-form-item>
@@ -538,7 +830,7 @@
             <n-switch v-model:value="market.live2d.yapEnabled" />
           </n-form-item>
 
-          <n-form-item :style="{ opacity: lowPowerMode ? 0.5 : 1 }">
+          <n-form-item :style="{ opacity: lowPowerOrMobileDim }">
             <template #label>
               Enable Animation Replay
               <n-popover trigger="hover" placement="bottom">
@@ -553,7 +845,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode" />
+            <n-switch v-model:value="enableAnimationReplay" :disabled="lowPowerMode || mobileOptimizations" />
           </n-form-item>
             <n-form-item v-if="showAdvancedSettings">
             <template #label>
@@ -572,7 +864,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode" :style="{ opacity: lowPowerMode ? 0.5 : 1 }" />
+            <n-switch :value="market.live2d.backgroundImagesEnabled" @update:value="onBackgroundImagesToggle" :disabled="lowPowerMode || mobileOptimizations" :style="{ opacity: lowPowerOrMobileDim }" />
           </n-form-item>
           <template v-if="showAdvancedSettings && market.live2d.backgroundImagesEnabled && !lowPowerMode">
             <n-form-item label="Background Folder">
@@ -585,7 +877,7 @@
             <input ref="folderInput" type="file" webkitdirectory style="display: none" @change="handleFolderSelection" />
           </template>
 
-          <n-form-item>
+          <n-form-item :style="{ opacity: mobileOptimizationsDim }">
             <template #label>
               Text to Speech <span style="font-size: smaller">(Experimental)</span>
               <n-popover trigger="hover" placement="bottom">
@@ -601,7 +893,7 @@
                 </div>
               </n-popover>
             </template>
-            <n-switch v-model:value="ttsEnabled" />
+            <n-switch v-model:value="ttsEnabled" :disabled="mobileOptimizations" />
           </n-form-item>
 
           <n-form-item label="TTS Provider" v-if="ttsEnabled">
@@ -649,6 +941,8 @@
     </n-drawer>
 
     <input type="file" ref="fileInput" style="display: none" accept=".json" @change="handleFileUpload" />
+    <input type="file" ref="presetFileInput" style="display: none" accept=".json" @change="handlePresetFileUpload" />
+    <input type="file" ref="firstTurnPresetFileInput" style="display: none" accept=".json" @change="handleFirstTurnPresetFileUpload" />
 
     <StoryGuideModal
       :showGuide="showGuide"
@@ -661,11 +955,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, type Ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale } from '@vicons/carbon'
-import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag } from 'naive-ui'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document, OverflowMenuHorizontal, Send, Stop, Play } from '@vicons/carbon'
+import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag, NModal, NPopconfirm } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
 import variantCharacterProfiles from '@/utils/json/characterProfilesVariants.json'
@@ -673,7 +967,11 @@ import backgroundImagesList from '@/utils/json/backgroundImages.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, getAIErrorMessage, buildUserReminders, generateSystemPrompt as generateSystemPromptUtil, type ReminderToggleState } from '@/utils/chatUtils'
+import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, generateSystemPrompt as generateSystemPromptUtil } from '@/utils/chatUtils'
+import { executeAiTurn } from '@/utils/chatRetryUtils'
+import { dispatchToProvider, buildFirstTurnHonorificsReminder, injectFirstTurnReminder, type ProviderCallFunctions } from '@/utils/chatAiCaller'
+import { useStoryReminders } from '@/composables/useStoryReminders'
+import { usePresets } from '@/composables/usePresets'
 import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { formatBackgroundFolderLoadFeedback, resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
@@ -683,13 +981,21 @@ import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/util
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
 import { buildCharacterCatalog, getCharacterSelectOptions, getSkinOptionsForBase, getSkinOptionsForVariant, getSelectionForName, getSelectionValueForBase, parseSelectionValue, resolveCharacterIdFromInput, resolveRosterIdsFromPrompt, getCharacterDisplayName, getBaseCharacterDisplayName, getSelectedCharacterId, type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
+import { type PresetEntry, MAX_PRESETS as ROSTER_MAX_PRESETS } from '@/utils/rosterPresetUtils'
+import { type FirstTurnPresetEntry, MAX_PRESETS as FIRST_TURN_MAX_PRESETS } from '@/utils/firstTurnPresetUtils'
 import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverrides } from '@/utils/animationOverrideUtils'
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
 import NikkeChatOverlay from '@/components/common/StoryGenerator/NikkeChatOverlay.vue'
-import { loadSettingsFromStorage, validateSavedModel } from '@/utils/settingsUtils'
+import { loadSettingsFromStorage, validateSavedModel, MOBILE_OPTIMIZATIONS_STORAGE_KEY, MOBILE_OPTIMIZATIONS_PREV_KEY } from '@/utils/settingsUtils'
 
 const market = useMarket()
+
+const isCompactMobile = computed(() => market.globalParams.isMobileCompact)
+
+// Computed opacity values for settings controlled by mobile optimizations / low power mode
+const mobileOptimizationsDim = computed(() => mobileOptimizations.value ? 0.5 : 1)
+const lowPowerOrMobileDim = computed(() => (lowPowerMode.value || mobileOptimizations.value) ? 0.5 : 1)
 
 const STORY_GEN_LOW_POWER_STORAGE_KEY = 'nikke_story_gen_low_power_mode'
 const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
@@ -760,7 +1066,7 @@ const compactFrequencyOptions = [
 const isLoadedSession = ref(false) // Flag to track if session was restored from file
 let nextActionResolver: (() => void) | null = null
 let yapTimeoutId: any = null
-const chatHistory = ref<{ role: string; content: string; animation?: string; character?: string; speaking?: boolean; text?: string }[]>([])
+const chatHistory = ref<{ role: string; content: string; animation?: string; character?: string; speaking?: boolean; text?: string; background?: string | { key: string; variant?: string } }[]>([])
 const characterProfiles = ref<Record<string, any>>({})
 const characterProgression = ref<Record<string, any>>({})
 const gameChoices = ref<{ text: string; type?: 'dialogue' | 'action'; label?: string }[]>([])
@@ -777,6 +1083,49 @@ const characterCatalog = buildCharacterCatalog()
 validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
+const showSummaryModal = ref(false)
+const editableSummary = ref('')
+const {
+  showPresetsModal,
+  activePresetTab,
+  presets,
+  editingPresetId,
+  editingPresetName,
+  deletePresetTarget,
+  presetImportWarning,
+  presetImportSuccess,
+  presetFileInput,
+  showSavingPresetInput,
+  savingPresetName,
+  firstTurnPresets,
+  deleteFirstTurnPresetTarget,
+  firstTurnPresetImportWarning,
+  firstTurnPresetImportSuccess,
+  firstTurnPresetFileInput,
+  showSavingFirstTurnInput,
+  savingFirstTurnName,
+  formatPresetDate,
+  formatSessionType,
+  getPresetCharName,
+  saveRosterAsPreset,
+  confirmSavePreset: confirmSavePresetRaw,
+  cancelSavePreset,
+  startRename,
+  confirmRename,
+  deletePresetConfirm,
+  deleteAllPresetsConfirm,
+  triggerPresetImport,
+  exportAllPresets,
+  handlePresetFileUpload,
+  confirmSaveFirstTurnPreset: confirmSaveFirstTurnPresetRaw,
+  cancelSaveFirstTurnPreset,
+  updateFirstTurnPresetEntry,
+  deleteFirstTurnPresetConfirm,
+  deleteAllFirstTurnPresetsConfirm,
+  triggerFirstTurnPresetImport,
+  exportAllFirstTurnPresets,
+  handleFirstTurnPresetFileUpload
+} = usePresets(characterCatalog)
 const rosterOptions = computed(() => getCharacterSelectOptions(characterCatalog))
 const isCommanderProfileKey = (name: string) => {
   const normalized = name.trim().toLowerCase()
@@ -863,6 +1212,11 @@ watch(showAdvancedSettings, (val) => {
 const lowContextMode = ref(false)
 const lowContextModePrev = ref({ tokenUsage: '', autoCompactSummaries: false, autoCompactFrequency: 4 })
 const lowPowerMode = ref(localStorage.getItem(STORY_GEN_LOW_POWER_STORAGE_KEY) === 'true')
+const mobileOptimizations = ref(localStorage.getItem(MOBILE_OPTIMIZATIONS_STORAGE_KEY) === 'true')
+// Prevents applyLowPowerModeState from running twice when mobile optimizations
+// forces lowPowerMode (the watcher fires, but applyMobileOptimizationsState
+// already explicitly called applyLowPowerModeState).
+const isMobileDrivingLowPower = ref(false)
 const enableAnimationReplay = ref(false)
 const backgroundFolderName = ref('')
 const folderInput = ref<HTMLInputElement | null>(null)
@@ -1028,7 +1382,7 @@ const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY
 
 // Wrapper so the template doesn't need to pass Refs directly (auto-unwrap in templates
 // would pass plain objects instead of Ref<WindowSize> / Ref<WindowPosition>).
-const resetChatLayout = () => initChatLayout(chatSize, chatPosition)
+const resetChatLayout = () => initChatLayout(chatSize, chatPosition, isCompactMobile.value)
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
@@ -1043,51 +1397,26 @@ const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
 
-// AI Reminders state
-const showRemindersDropdown = ref(false)
-const invalidJsonToggle = ref(false)
-const invalidJsonPersist = ref(false)
-const invalidJsonAuto = ref(true)
-const emptyActionsRetry = ref(false)
-const honorificsToggle = ref(false)
-const aiControllingUserToggle = ref(false)
-const narrationAndDialogueNotSplitToggle = ref(false)
-const wrongSpeechStylesToggle = ref(false)
-const incorrectAnimationsToggle = ref(false)
-const incorrectAnimationsPersist = ref(false)
-const incorrectSpeakerLabelingToggle = ref(false)
-const narrationAsDialogueToggle = ref(false)
-const wrongCharacterOnScreenToggle = ref(false)
-const npcUsingCommanderHonorificsToggle = ref(false)
-const commanderPresentButSilentToggle = ref(false)
-
-watch(invalidJsonPersist, (val) => {
-  if (val) {
-    invalidJsonToggle.value = true
-    invalidJsonAuto.value = false
-  }
-})
-
-watch(invalidJsonToggle, (val) => {
-  if (val) {
-    invalidJsonAuto.value = false
-  }
-  if (!val) {
-    invalidJsonPersist.value = false
-  }
-})
-
-watch(incorrectAnimationsPersist, (val) => {
-  if (val) {
-    incorrectAnimationsToggle.value = true
-  }
-})
-
-watch(incorrectAnimationsToggle, (val) => {
-  if (!val) {
-    incorrectAnimationsPersist.value = false
-  }
-})
+const {
+  showRemindersDropdown,
+  invalidJsonToggle,
+  invalidJsonPersist,
+  invalidJsonAuto,
+  emptyActionsRetry,
+  honorificsToggle,
+  aiControllingUserToggle,
+  narrationAndDialogueNotSplitToggle,
+  wrongSpeechStylesToggle,
+  incorrectAnimationsToggle,
+  incorrectAnimationsPersist,
+  incorrectSpeakerLabelingToggle,
+  narrationAsDialogueToggle,
+  wrongCharacterOnScreenToggle,
+  npcUsingCommanderHonorificsToggle,
+  commanderPresentButSilentToggle,
+  getUserReminders: getUserRemindersFromComposable,
+  clearRemindersAfterSuccess
+} = useStoryReminders()
 
 // Helper to set random loading message
 const setRandomLoadingMessage = () => {
@@ -1105,6 +1434,7 @@ const modelOptions = computed(() => {
       { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
       { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
       { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite' },
+      { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
       { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
       { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro-preview' }
     ]
@@ -1219,6 +1549,44 @@ const applyLowPowerModeState = (enabled: boolean) => {
     backgroundFolderName.value = ''
   }
   localStorage.setItem('nikke_background_images_enabled', String(restoredBackgroundImages))
+}
+
+const loadMobileOptimizationsPrev = (): { lowPowerMode: boolean; ttsEnabled: boolean; chatMode: string } | null => {
+  try {
+    const raw = localStorage.getItem(MOBILE_OPTIMIZATIONS_PREV_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const applyMobileOptimizationsState = (enabled: boolean) => {
+  if (enabled) {
+    // Persist current values so they survive page reloads
+    localStorage.setItem(MOBILE_OPTIMIZATIONS_PREV_KEY, JSON.stringify({
+      lowPowerMode: lowPowerMode.value,
+      ttsEnabled: ttsEnabled.value,
+      chatMode: chatMode.value
+    }))
+    isMobileDrivingLowPower.value = true
+    lowPowerMode.value = true
+    ttsEnabled.value = false
+    chatMode.value = 'nikke'
+    // Explicitly apply low-power side effects — don't rely on the watcher
+    applyLowPowerModeState(true)
+    isMobileDrivingLowPower.value = false
+  } else {
+    const prev = loadMobileOptimizationsPrev()
+    localStorage.removeItem(MOBILE_OPTIMIZATIONS_PREV_KEY)
+    if (prev) {
+      chatMode.value = prev.chatMode
+      ttsEnabled.value = prev.ttsEnabled
+      lowPowerMode.value = prev.lowPowerMode
+    }
+    // Explicitly restore low-power state. Even if lowPowerMode didn't change
+    // (so the watcher won't fire), we still need to restore asset quality, etc.
+    applyLowPowerModeState(prev?.lowPowerMode ?? false)
+  }
 }
 
 const assetQuality = computed({
@@ -1354,11 +1722,125 @@ const syncRosterFromPrompt = (prompt: string) => {
   }
 }
 
+const confirmSavePreset = () => confirmSavePresetRaw(rosterRows.value)
+
+const saveFirstTurnAsPreset = () => {
+  showSavingFirstTurnInput.value = true
+  savingFirstTurnName.value = ''
+}
+
+const confirmSaveFirstTurnPreset = () => confirmSaveFirstTurnPresetRaw(
+  userInput.value,
+  isCustomPlayerCharacterActive.value,
+  resolvedPlayerCharacterKey.value,
+  rosterRows.value,
+  mode.value as 'roleplay' | 'story' | 'game'
+)
+
+const loadPreset = (preset: PresetEntry) => {
+  if (!preset || !preset.roster) return
+  rosterRows.value = [...preset.roster]
+  showPresetsModal.value = false
+}
+
+const loadFirstTurnPreset = (preset: FirstTurnPresetEntry) => {
+  if (!preset || !preset.message) return
+  userInput.value = preset.message
+  if (preset.playAsDifferentCharacter && preset.playerCharacterName) {
+    useCustomPlayerCharacter.value = true
+    selectedPlayerCharacterName.value = preset.playerCharacterName
+    ensureValidSelectedPlayerCharacter()
+    if (!findPlayerCharacterProfileKey(selectedPlayerCharacterName.value)) {
+      useCustomPlayerCharacter.value = false
+      selectedPlayerCharacterName.value = ''
+    }
+  } else {
+    useCustomPlayerCharacter.value = false
+    selectedPlayerCharacterName.value = ''
+  }
+  if (preset.roster && Array.isArray(preset.roster) && preset.roster.length > 0) {
+    rosterRows.value = [...preset.roster]
+  }
+  showPresetsModal.value = false
+}
+
+interface FirstTurnEditForm {
+  name: string
+  message: string
+  sessionType: 'roleplay' | 'story' | 'game'
+  playAsDifferentCharacter: boolean
+  playerCharacterName: string
+}
+
+const showFirstTurnEditModal = ref(false)
+const editingFirstTurnPresetId = ref<string | null>(null)
+const firstTurnEditForm = ref<FirstTurnEditForm>({
+  name: '',
+  message: '',
+  sessionType: 'roleplay',
+  playAsDifferentCharacter: false,
+  playerCharacterName: ''
+})
+
+const resetFirstTurnEditForm = () => {
+  firstTurnEditForm.value = {
+    name: '',
+    message: '',
+    sessionType: 'roleplay',
+    playAsDifferentCharacter: false,
+    playerCharacterName: ''
+  }
+  editingFirstTurnPresetId.value = null
+}
+
+const openFirstTurnEditModal = (preset: FirstTurnPresetEntry) => {
+  if (!preset) return
+  editingFirstTurnPresetId.value = preset.id
+  firstTurnEditForm.value = {
+    name: preset.name,
+    message: preset.message,
+    sessionType: preset.sessionType || 'roleplay',
+    playAsDifferentCharacter: !!preset.playAsDifferentCharacter,
+    playerCharacterName: preset.playerCharacterName || ''
+  }
+  showFirstTurnEditModal.value = true
+}
+
+const confirmFirstTurnEdit = () => {
+  const id = editingFirstTurnPresetId.value
+  if (!id) return
+  const form = firstTurnEditForm.value
+  const trimmedName = form.name.trim()
+  const trimmedMessage = form.message.trim()
+  if (!trimmedMessage || !trimmedName) return
+  const updates: Parameters<typeof updateFirstTurnPresetEntry>[1] = {
+    name: trimmedName,
+    message: trimmedMessage,
+    sessionType: form.sessionType
+  }
+  if (form.playAsDifferentCharacter) {
+    const resolvedKey = findPlayerCharacterProfileKey(form.playerCharacterName)
+    if (!resolvedKey) {
+      market.message.getMessage().warning('Selected player character is not in the profile database. Save as Commander instead.')
+    }
+    updates.playAsDifferentCharacter = true
+    updates.playerCharacterName = resolvedKey || form.playerCharacterName.trim()
+  } else {
+    updates.playAsDifferentCharacter = false
+  }
+  updateFirstTurnPresetEntry(id, updates)
+  showFirstTurnEditModal.value = false
+  resetFirstTurnEditForm()
+}
+
+const cancelFirstTurnEdit = () => {
+  showFirstTurnEditModal.value = false
+  resetFirstTurnEditForm()
+}
+
 // Watchers
 watch(chatMode, (newVal) => {
-  // Prevent selecting Classic while in Game mode
-  if (newVal === 'classic' && mode.value === 'game') {
-    // If we're in game mode, force NIKKE mode instead
+  if (newVal === 'classic' && (mode.value === 'game' || mobileOptimizations.value)) {
     chatMode.value = 'nikke'
     return
   }
@@ -1432,12 +1914,22 @@ watch(lowContextMode, (val) => {
 })
 
 watch(lowPowerMode, (enabled) => {
+  if (isMobileDrivingLowPower.value) return
+  if (!enabled && mobileOptimizations.value) {
+    lowPowerMode.value = true
+    return
+  }
   localStorage.setItem(STORY_GEN_LOW_POWER_STORAGE_KEY, String(enabled))
   applyLowPowerModeState(enabled)
 })
 
+watch(mobileOptimizations, (enabled) => {
+  localStorage.setItem(MOBILE_OPTIMIZATIONS_STORAGE_KEY, String(enabled))
+  applyMobileOptimizationsState(enabled)
+})
+
 watch(enableAnimationReplay, (newVal) => {
-  if (!lowPowerMode.value) {
+  if (!lowPowerMode.value && !mobileOptimizations.value) {
     storyGenAnimationReplayPreference.value = newVal
   }
   localStorage.setItem('nikke_enable_animation_replay', String(newVal))
@@ -1448,6 +1940,10 @@ watch(playbackMode, (newVal) => {
 })
 
 watch(ttsEnabled, (newVal) => {
+  if (newVal && mobileOptimizations.value) {
+    ttsEnabled.value = false
+    return
+  }
   localStorage.setItem('nikke_tts_enabled', String(newVal))
 })
 
@@ -1546,7 +2042,7 @@ watch(apiProvider, async (newVal) => {
 
   // Reset model when provider changes
   if (apiProvider.value === 'gemini') {
-    model.value = 'gemini-2.5-flash'
+    model.value = 'gemini-3.5-flash'
   } else if (apiProvider.value === 'opencode-go') {
     model.value = ''
     await refreshOpenCodeGoModels()
@@ -1589,8 +2085,8 @@ const initializeSettings = async () => {
   if (stored.mode !== undefined) mode.value = stored.mode
   if (stored.playbackMode !== undefined) playbackMode.value = stored.playbackMode
   if (stored.yapEnabled !== undefined) market.live2d.yapEnabled = stored.yapEnabled
-  applyStoryGenAssetQuality(lowPowerMode.value ? 'low' : storyGenAssetQualityPreference.value)
-  if (stored.ttsEnabled !== undefined) ttsEnabled.value = stored.ttsEnabled
+  applyStoryGenAssetQuality((lowPowerMode.value || mobileOptimizations.value) ? 'low' : storyGenAssetQualityPreference.value)
+  if (stored.ttsEnabled !== undefined && !mobileOptimizations.value) ttsEnabled.value = stored.ttsEnabled
   if (stored.ttsEndpoint !== undefined) ttsEndpoint.value = stored.ttsEndpoint
   if (stored.ttsProvider !== undefined) ttsProvider.value = stored.ttsProvider
   if (stored.gptSovitsEndpoint !== undefined) gptSovitsEndpoint.value = stored.gptSovitsEndpoint
@@ -1606,9 +2102,9 @@ const initializeSettings = async () => {
   if (stored.enableAnimationReplay !== undefined) {
     storyGenAnimationReplayPreference.value = stored.enableAnimationReplay
   }
-  enableAnimationReplay.value = lowPowerMode.value ? false : storyGenAnimationReplayPreference.value
+  enableAnimationReplay.value = (lowPowerMode.value || mobileOptimizations.value) ? false : storyGenAnimationReplayPreference.value
 
-  if (stored.backgroundImagesEnabled !== undefined) {
+  if (stored.backgroundImagesEnabled !== undefined && !mobileOptimizations.value) {
     market.live2d.backgroundImagesEnabled = stored.backgroundImagesEnabled
   }
 
@@ -1665,6 +2161,10 @@ const initializeSettings = async () => {
     await refreshPollinationsModels()
   }
 
+  if (mobileOptimizations.value) {
+    applyMobileOptimizationsState(true)
+  }
+
   isRestoring.value = false
 }
 
@@ -1679,11 +2179,22 @@ const { startDrag } = createDragHandlers({ chatPosition, chatSize, isDragging, d
 const { startResize } = createResizeHandlers({ chatPosition, chatSize, isResizing, resizeDirection, resizeStart })
 const { restoreViewportZoom, preventMobileZoomOnThisView, lockMobilePageScroll, unlockMobilePageScroll } = createViewportHandlers()
 
+const handleResize = () => {
+  // Ensure window stays in bounds on resize and re-layout if compact mode changes
+  const { innerWidth, innerHeight } = window
+  if (chatPosition.value.x + chatSize.value.width > innerWidth) {
+    chatPosition.value.x = Math.max(0, innerWidth - chatSize.value.width)
+  }
+  if (chatPosition.value.y + chatSize.value.height > innerHeight) {
+    chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
+  }
+}
+
 onMounted(() => {
   originalHQAssets.value = market.live2d.HQassets
   checkGuide()
   initializeSettings()
-  initChatLayout(chatSize, chatPosition)
+  initChatLayout(chatSize, chatPosition, isCompactMobile.value)
   window.addEventListener('beforeunload', handleBeforeUnload)
 
   preventMobileZoomOnThisView()
@@ -1697,15 +2208,13 @@ onMounted(() => {
   document.addEventListener('mousemove', onNikkeGlobalMove as any)
   document.addEventListener('mouseup', onNikkeGlobalEnd as any)
 
-  window.addEventListener('resize', () => {
-    // Ensure window stays in bounds on resize
-    const { innerWidth, innerHeight } = window
-    if (chatPosition.value.x + chatSize.value.width > innerWidth) {
-      chatPosition.value.x = Math.max(0, innerWidth - chatSize.value.width)
-    }
-    if (chatPosition.value.y + chatSize.value.height > innerHeight) {
-      chatPosition.value.y = Math.max(0, innerHeight - chatSize.value.height)
-    }
+  window.addEventListener('resize', handleResize)
+
+  // Re-layout when compact mode toggles (device rotation, resize across threshold)
+  watch(isCompactMobile, () => {
+    window.setTimeout(() => {
+      resetChatLayout()
+    }, 100)
   })
 
   syncStoryGenLowPowerDataset()
@@ -1715,6 +2224,7 @@ onUnmounted(() => {
   delete document.body.dataset[STORY_GEN_LOW_POWER_DATASET_KEY]
   market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener('resize', handleResize)
   unlockMobilePageScroll()
   restoreViewportZoom()
 
@@ -1743,6 +2253,7 @@ const resetCharacterPlacement = () => {
 const deleteLastMessage = () => {
   if (chatHistory.value.length > 0) {
     chatHistory.value.pop()
+    clearGameChoiceState()
   }
 }
 
@@ -1812,7 +2323,7 @@ const handleFolderSelection = (event: Event) => {
 }
 
 const onBackgroundImagesToggle = (enabled: boolean) => {
-  if (enabled && lowPowerMode.value) return
+  if (enabled && (lowPowerMode.value || mobileOptimizations.value)) return
   market.live2d.backgroundImagesEnabled = enabled
   localStorage.setItem('nikke_background_images_enabled', String(enabled))
   if (!enabled) {
@@ -1834,6 +2345,9 @@ const handleFileUpload = (event: Event) => {
         const data = JSON.parse(content)
 
         isRestoring.value = true
+        clearGameChoiceState()
+        nikkeOverlayVisible.value = false
+        selectedMessageIndex.value = null
 
         if (data.chatHistory && Array.isArray(data.chatHistory)) {
           chatHistory.value = reconstructChatHistory(data.chatHistory, getCharacterName)
@@ -1971,6 +2485,22 @@ const scrollToBottom = () => {
   })
 }
 
+const clearGameChoiceState = ({ resolvePendingWait = false }: { resolvePendingWait?: boolean } = {}) => {
+  const pendingResolver = nextActionResolver
+
+  nextActionResolver = null
+  waitingForNext.value = false
+  gameChoices.value = []
+  pendingGameChoices.value = []
+  choicesAwaitingReveal.value = false
+  pendingGameChoiceText.value = null
+  abortCurrentPlaybackForChoice.value = false
+
+  if (resolvePendingWait && pendingResolver) {
+    pendingResolver()
+  }
+}
+
 // If a Game Mode choice was selected during playback, queue and send it once the
 // current request finishes. This must be called from any function that drives
 // an AI turn (sendMessage/continueStory/retryLastMessage), otherwise the choice
@@ -1997,150 +2527,52 @@ const flushPendingGameChoice = () => {
   setTimeout(attemptFlush, 0)
 }
 
+const buildAiTurnContext = (logTag: string) => ({
+  isLoading,
+  isGenerating,
+  isStopped,
+  showRetry,
+  chatHistory,
+  getActiveAbortController: () => activeAbortController,
+  setActiveAbortController: (ctrl: AbortController | null) => { activeAbortController = ctrl },
+  setRandomLoadingMessage,
+  scrollToBottom,
+  callAI,
+  processAIResponse,
+  clearRemindersAfterSuccess,
+  flushPendingGameChoice,
+  logTag
+})
+
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
   if (!ensureApiKeyForCurrentProvider()) return
+  if (gameChoices.value.length > 0 || pendingGameChoices.value.length > 0 || choicesAwaitingReveal.value) return
 
-  let text = userInput.value
+  const text = sanitizeText(userInput.value)
 
   syncRosterFromPrompt(text)
 
   userInput.value = ''
   chatHistory.value.push({ role: 'user', content: text })
   scrollToBottom()
-  isLoading.value = true
-  isGenerating.value = true
-  setRandomLoadingMessage()
-  isStopped.value = false
-  activeAbortController = new AbortController()
-  showRetry.value = false
   lastPrompt.value = text
 
-  let attempts = 0
-  const maxAttempts = 3
-  let success = false
-
-  while (attempts < maxAttempts && !success && !isStopped.value) {
-    attempts++
-    try {
-      const response = await callAI(attempts > 1)
-
-      if (!isStopped.value) {
-        await processAIResponse(response)
-        success = true
-      }
-    } catch (error: any) {
-      // Silently swallow AbortError — the user pressed Stop
-      if (error.name === 'AbortError') {
-        logDebug('[sendMessage] Fetch aborted by user.')
-
-        break
-      }
-
-      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
-        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
-
-        continue
-      }
-
-      console.error('AI Error:', error)
-      showRetry.value = true
-      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
-
-      break
-    }
-  }
-
-  if (success) {
-    if (!invalidJsonPersist.value) {
-      invalidJsonToggle.value = false
-    }
-    if (!incorrectAnimationsPersist.value) {
-      incorrectAnimationsToggle.value = false
-    }
-    honorificsToggle.value = false
-    narrationAndDialogueNotSplitToggle.value = false
-    aiControllingUserToggle.value = false
-    wrongSpeechStylesToggle.value = false
-    npcUsingCommanderHonorificsToggle.value = false
-    commanderPresentButSilentToggle.value = false
-  }
-
-  isLoading.value = false
-  scrollToBottom()
-
-  flushPendingGameChoice()
+  await executeAiTurn(buildAiTurnContext('sendMessage'))
 }
 
 const retryLastMessage = async () => {
   if (!ensureApiKeyForCurrentProvider()) return
 
-  // Remove the last system error message
+  clearGameChoiceState()
+
   if (chatHistory.value.length > 0 && chatHistory.value[chatHistory.value.length - 1].role === 'system') {
     chatHistory.value.pop()
   }
 
   scrollToBottom()
-  isLoading.value = true
-  isGenerating.value = true
-  setRandomLoadingMessage()
-  isStopped.value = false
-  activeAbortController = new AbortController()
-  showRetry.value = false
 
-  let attempts = 0
-  const maxAttempts = 3
-  let success = false
-
-  while (attempts < maxAttempts && !success && !isStopped.value) {
-    attempts++
-    try {
-      const response = await callAI(attempts > 1)
-
-      if (!isStopped.value) {
-        await processAIResponse(response)
-        success = true
-      }
-    } catch (error: any) {
-      // Silently swallow AbortError — the user pressed Stop
-      if (error.name === 'AbortError') {
-        logDebug('[retryLastMessage] Fetch aborted by user.')
-        break
-      }
-
-      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
-        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
-
-        continue
-      }
-
-      console.error('AI Error:', error)
-      showRetry.value = true
-      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
-
-      break
-    }
-  }
-
-  if (success) {
-    if (!invalidJsonPersist.value) {
-      invalidJsonToggle.value = false
-    }
-    if (!incorrectAnimationsPersist.value) {
-      incorrectAnimationsToggle.value = false
-    }
-    honorificsToggle.value = false
-    narrationAndDialogueNotSplitToggle.value = false
-    aiControllingUserToggle.value = false
-    wrongSpeechStylesToggle.value = false
-    npcUsingCommanderHonorificsToggle.value = false
-    commanderPresentButSilentToggle.value = false
-  }
-
-  isLoading.value = false
-  scrollToBottom()
-
-  flushPendingGameChoice()
+  await executeAiTurn(buildAiTurnContext('retryLastMessage'))
 }
 
 const regenerateResponse = async () => {
@@ -2170,12 +2602,8 @@ const stopGeneration = () => {
     stopTypewriter()
   }
 
-  // If we are waiting for user input (Manual mode), cancel that wait so the loop can exit
-  if (nextActionResolver) {
-    nextActionResolver()
-    nextActionResolver = null
-    waitingForNext.value = false
-  }
+  // Cancel any pending choice/manual wait before the old turn can arm stale state.
+  clearGameChoiceState({ resolvePendingWait: true })
 }
 
 const nextAction = () => {
@@ -2197,120 +2625,42 @@ const continueStory = async () => {
   if (isLoading.value) return
   if (!ensureApiKeyForCurrentProvider()) return
 
+  clearGameChoiceState()
+
   const text = mode.value === 'story' ? prompts.continue.story : prompts.continue.roleplay
   chatHistory.value.push({ role: 'user', content: text })
-
   scrollToBottom()
-
-  isLoading.value = true
-  isGenerating.value = true
-  setRandomLoadingMessage()
-
-  isStopped.value = false
-  activeAbortController = new AbortController()
-  showRetry.value = false
   lastPrompt.value = text
 
-  let attempts = 0
-  const maxAttempts = 3
-  let success = false
-
-  while (attempts < maxAttempts && !success && !isStopped.value) {
-    attempts++
-
-    try {
-      const response = await callAI(attempts > 1)
-
-      if (!isStopped.value) {
-        await processAIResponse(response)
-        success = true
-      }
-    } catch (error: any) {
-      // Silently swallow AbortError — the user pressed Stop
-      if (error.name === 'AbortError') {
-        logDebug('[continueStory] Fetch aborted by user.')
-        break
-      }
-
-      if (error.message === 'JSON_PARSE_ERROR' && attempts < maxAttempts) {
-        console.warn(`JSON parse error, retrying (${attempts}/${maxAttempts})...`)
-
-        continue
-      }
-
-      console.error('AI Error:', error)
-      showRetry.value = true
-      chatHistory.value.push({ role: 'system', content: getAIErrorMessage(error) })
-
-      break
-    }
-  }
-
-  if (success) {
-    if (!invalidJsonPersist.value) {
-      invalidJsonToggle.value = false
-    }
-    if (!incorrectAnimationsPersist.value) {
-      incorrectAnimationsToggle.value = false
-    }
-    honorificsToggle.value = false
-    narrationAndDialogueNotSplitToggle.value = false
-    aiControllingUserToggle.value = false
-    wrongSpeechStylesToggle.value = false
-    npcUsingCommanderHonorificsToggle.value = false
-    commanderPresentButSilentToggle.value = false
-  }
-
-  isLoading.value = false
-  scrollToBottom()
-
-  flushPendingGameChoice()
+  await executeAiTurn(buildAiTurnContext('continueStory'))
 }
 
-// Helper to get user-toggled reminders string
 const getUserReminders = (): string => {
-  const toggleMap: Record<string, { ref: any; persist?: any }> = {
-    invalidJson: { ref: invalidJsonToggle, persist: invalidJsonPersist },
-    invalidJsonPersist: { ref: invalidJsonPersist },
-    emptyActionsRetry: { ref: emptyActionsRetry },
-    honorifics: { ref: honorificsToggle },
-    narrationAndDialogueNotSplit: { ref: narrationAndDialogueNotSplitToggle },
-    aiControllingUser: { ref: aiControllingUserToggle },
-    wrongSpeechStyles: { ref: wrongSpeechStylesToggle },
-    incorrectAnimations: { ref: incorrectAnimationsToggle, persist: incorrectAnimationsPersist },
-    incorrectAnimationsPersist: { ref: incorrectAnimationsPersist },
-    incorrectSpeakerLabeling: { ref: incorrectSpeakerLabelingToggle },
-    narrationAsDialogue: { ref: narrationAsDialogueToggle },
-    wrongCharacterOnScreen: { ref: wrongCharacterOnScreenToggle },
-    npcUsingCommanderHonorifics: { ref: npcUsingCommanderHonorificsToggle },
-    commanderPresentButSilent: { ref: commanderPresentButSilentToggle }
-  }
-
-  const snapshot: ReminderToggleState = {
-    invalidJson: invalidJsonToggle.value,
-    invalidJsonPersist: invalidJsonPersist.value,
-    emptyActionsRetry: emptyActionsRetry.value,
-    honorifics: honorificsToggle.value,
-    narrationAndDialogueNotSplit: narrationAndDialogueNotSplitToggle.value,
-    aiControllingUser: aiControllingUserToggle.value,
-    wrongSpeechStyles: wrongSpeechStylesToggle.value,
-    incorrectAnimations: incorrectAnimationsToggle.value,
-    incorrectAnimationsPersist: incorrectAnimationsPersist.value,
-    incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle.value,
-    narrationAsDialogue: narrationAsDialogueToggle.value,
-    wrongCharacterOnScreen: wrongCharacterOnScreenToggle.value,
-    npcUsingCommanderHonorifics: npcUsingCommanderHonorificsToggle.value,
-    commanderPresentButSilent: commanderPresentButSilentToggle.value
-  }
-
-  const { text, togglesToClear } = buildUserReminders(snapshot, mode.value, prompts.reminders as Record<string, string>, {
+  const { text, togglesToClear } = getUserRemindersFromComposable(mode.value, prompts.reminders as Record<string, string>, {
     playerCharacterName: activePlayerCharacterName.value,
     customPlayerCharacterActive: isCustomPlayerCharacterActive.value
   })
 
+  const toggleMap: Record<string, Ref<boolean>> = {
+    invalidJson: invalidJsonToggle,
+    invalidJsonPersist: invalidJsonPersist,
+    emptyActionsRetry: emptyActionsRetry,
+    honorifics: honorificsToggle,
+    narrationAndDialogueNotSplit: narrationAndDialogueNotSplitToggle,
+    aiControllingUser: aiControllingUserToggle,
+    wrongSpeechStyles: wrongSpeechStylesToggle,
+    incorrectAnimations: incorrectAnimationsToggle,
+    incorrectAnimationsPersist: incorrectAnimationsPersist,
+    incorrectSpeakerLabeling: incorrectSpeakerLabelingToggle,
+    narrationAsDialogue: narrationAsDialogueToggle,
+    wrongCharacterOnScreen: wrongCharacterOnScreenToggle,
+    npcUsingCommanderHonorifics: npcUsingCommanderHonorificsToggle,
+    commanderPresentButSilent: commanderPresentButSilentToggle
+  }
+
   for (const key of togglesToClear) {
     const entry = toggleMap[key]
-    if (entry?.ref) entry.ref.value = false
+    if (entry) entry.value = false
   }
 
   return text
@@ -2372,57 +2722,16 @@ const runTumblingWindowSummarization = async (contextMsg: string, logTag: string
   }
 }
 
-const callAI = async (isRetry: boolean = false): Promise<string> => {
-  // Determine if this is the first turn (web search needed for initial characters)
+const getProviderCalls = (): ProviderCallFunctions => ({
+  callGemini,
+  callOpenRouter,
+  callPollinations,
+  callOpenCodeGo,
+  callLocal
+})
+
+const buildPromptAndDispatch = async (isRetry: boolean, enableWebSearch: boolean, logTag: string): Promise<string> => {
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
-
-  // Disable initial web search to force the "needs_search" flow
-  // This allows us to check local JSON first before falling back to web search
-  const enableWebSearch = false
-
-  // Pre-load profiles for any characters mentioned in the first prompt
-  if (isFirstTurn && chatHistory.value.length > 0) {
-    const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
-    syncRosterFromPrompt(firstPrompt)
-    // Use whole word matching to avoid substring matches (e.g. "Crow" from "Crown")
-    const localNames = Object.keys(localCharacterProfiles)
-    const variantNames = Object.keys(variantCharacterProfiles)
-    const knownNames = [...localNames, ...variantNames]
-    const foundNames = knownNames.filter((name) => isWholeWordPresent(firstPrompt, name))
-
-    // Also load profiles for characters in the roster (both base and variants)
-    for (const entry of rosterRows.value) {
-      const selection = parseSelectionValue(entry.selection)
-      if (!selection) continue
-
-      if (selection.type === 'variant') {
-        // For variants, use the full variant name
-        const variantName = characterCatalog.idToName[selection.variantId]
-        if (variantName && !foundNames.includes(variantName)) {
-          foundNames.push(variantName)
-        }
-      } else if (selection.type === 'base') {
-        // For base characters, use the base name
-        const baseName = selection.baseName
-        if (baseName && !foundNames.includes(baseName)) {
-          foundNames.push(baseName)
-        }
-      }
-    }
-
-    // Both variant and base character profiles are now injected together. Variant
-    // profiles (e.g., "Anis: Star") carry variant-specific details, while base
-    // profiles (e.g., "Anis") provide complementary backstory and personality
-    // context. searchForCharacters will auto-inject base profiles for any
-    // variant names it encounters.
-    if (foundNames.length > 0 && !isStopped.value) {
-      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
-      await wrappedSearchForCharacters(foundNames)
-    }
-  }
-
-  logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
-
   const systemPrompt = generateSystemPrompt(enableWebSearch)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
 
@@ -2431,130 +2740,80 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
     needsJsonReminder.value = false
   }
 
-  // Add current context
   let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
 
-  // Tumbling window summarization + context/history preparation
-  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAI]')
+  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, `[${logTag}]`)
   contextMsg = updatedContextMsg
 
-  // Build hidden honorifics instruction for first turn only
-  // This is injected into the first user message but NOT saved to history
-  const buildFirstTurnReminder = (): string => {
-    if (!isFirstTurn) return ''
-
-    if (isCustomPlayerCharacterActive.value) {
-      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
-    }
-
-    // Get relevant honorifics from the characterHonorifics JSON
-    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
-
-    if (knownNames.length === 0) return ''
-
-    const honorificExamples: string[] = []
-    for (const name of knownNames) {
-      const honorific = getHonorific(name)
-
-      if (honorific && honorific !== 'Commander') {
-        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
-      }
-    }
-
-    if (honorificExamples.length === 0) return ''
-
-    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
-  }
-
-  // Helper to inject honorifics reminder into the last user message (first turn only)
-  const injectFirstTurnReminder = (messages: any[]): any[] => {
-    const reminder = buildFirstTurnReminder()
-
-    if (!reminder) return messages
-
-    // Find the last user message and append the reminder
-    const result = [...messages]
-    for (let i = result.length - 1; i >= 0; i--) {
-      if (result[i].role === 'user') {
-        result[i] = { ...result[i], content: result[i].content + reminder }
-
-        break
-      }
-    }
-
-    return result
-  }
-
-  let response: string
-
-  // Get user toggled reminders
   const reminders = getUserReminders()
+  const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
 
-  if (apiProvider.value === 'gemini') {
-    // Gemini: Merge context into system prompt to avoid confusion at the end of history
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
+  let messages: any[] = [
+    { role: 'system', content: fullSystemPrompt },
+    ...historyToSend.map((m) => ({ role: m.role, content: m.content }))
+  ]
 
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
+  const firstTurnReminder = buildFirstTurnHonorificsReminder(
+    isFirstTurn,
+    isCustomPlayerCharacterActive.value,
+    activePlayerCharacterName.value,
+    Object.keys(playerCharacterAwareProfiles.value),
+    getHonorific,
+    prompts.reminders as Record<string, string>
+  )
+  messages = injectFirstTurnReminder(messages, firstTurnReminder)
 
-    logDebug('Sending to Gemini:', messages)
-    response = await callGemini(messages, enableWebSearch)
-  } else if (apiProvider.value === 'opencode-go') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+  return await dispatchToProvider(apiProvider.value, messages, enableWebSearch, getProviderCalls())
+}
 
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
+const callAI = async (isRetry: boolean = false): Promise<string> => {
+  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
+  const enableWebSearch = false
 
-    logDebug('Sending to OpenCode Go:', messages)
-    response = await callOpenCodeGo(messages)
-  } else if (apiProvider.value === 'openrouter') {
-    // OpenRouter: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+  if (isFirstTurn && chatHistory.value.length > 0) {
+    const firstPrompt = chatHistory.value[chatHistory.value.length - 1].content
+    syncRosterFromPrompt(firstPrompt)
+    const localNames = Object.keys(localCharacterProfiles)
+    const variantNames = Object.keys(variantCharacterProfiles)
+    const knownNames = [...localNames, ...variantNames]
+    const foundNames = knownNames.filter((name) => isWholeWordPresent(firstPrompt, name))
 
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
+    for (const entry of rosterRows.value) {
+      const selection = parseSelectionValue(entry.selection)
+      if (!selection) continue
 
-    logDebug('Sending to OpenRouter:', messages)
-    response = await callOpenRouter(messages, undefined, enableWebSearch)
-  } else if (apiProvider.value === 'pollinations') {
-    // Pollinations: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
+      if (selection.type === 'variant') {
+        const variantName = characterCatalog.idToName[selection.variantId]
+        if (variantName && !foundNames.includes(variantName)) {
+          foundNames.push(variantName)
+        }
+      } else if (selection.type === 'base') {
+        const baseName = selection.baseName
+        if (baseName && !foundNames.includes(baseName)) {
+          foundNames.push(baseName)
+        }
+      }
+    }
 
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
-
-    logDebug('Sending to Pollinations:', messages)
-    response = await callPollinations(messages, enableWebSearch)
-  } else if (apiProvider.value === 'local') {
-    // Local: Use standard OpenAI format with context in system prompt
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    // Inject first-turn reminder for prompt steering (not saved to history)
-    messages = injectFirstTurnReminder(messages)
-
-    logDebug('Sending to Local:', messages)
-    response = await callLocal(messages)
-  } else {
-    throw new Error('Unknown API provider')
+    if (foundNames.length > 0 && !isStopped.value) {
+      logDebug('[callAI] Pre-loading local profiles for:', foundNames)
+      await wrappedSearchForCharacters(foundNames)
+    }
   }
 
-  // Check if the model needs to search for new characters
+  logDebug(`[callAI] isFirstTurn: ${isFirstTurn}, enableWebSearch: ${enableWebSearch}`)
+
+  const response = await buildPromptAndDispatch(isRetry, enableWebSearch, 'callAI')
+
   if (isStopped.value) return response
 
   const searchRequest = await checkForSearchRequest(response, lastPrompt.value)
 
   if (searchRequest && searchRequest.length > 0 && !isStopped.value) {
     logDebug('[callAI] Model requested search for characters:', searchRequest)
-    // Perform search for unknown characters
     const webSearchPerformed = await wrappedSearchForCharacters(searchRequest)
     setRandomLoadingMessage()
 
-    // Only regenerate if web search was actually performed
-    // If all characters were found locally, the original response is still valid
     if (webSearchPerformed && !isStopped.value) {
       logDebug('[callAI] Web search was performed, regenerating response...')
       return await callAIWithoutSearch(isRetry)
@@ -2566,91 +2825,8 @@ const callAI = async (isRetry: boolean = false): Promise<string> => {
   return response
 }
 
-// Separate function to call AI without search (after character lookup)
 const callAIWithoutSearch = async (isRetry: boolean = false): Promise<string> => {
-  const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
-  const systemPrompt = generateSystemPrompt(false)
-  let retryInstruction = isRetry ? prompts.reminders.retry : ''
-
-  if (needsJsonReminder.value) {
-    retryInstruction += prompts.reminders.json
-    needsJsonReminder.value = false
-  }
-
-  let contextMsg = `Current Character: ${market.live2d.current_id}.\n\nAvailable Animations:\n${getFormattedAnimationsForContext()}`
-
-  // Get user toggled reminders
-  const reminders = getUserReminders()
-
-  const buildFirstTurnReminder = (): string => {
-    if (!isFirstTurn) return ''
-
-    if (isCustomPlayerCharacterActive.value) {
-      return prompts.reminders.playerCharacterReminder.replaceAll('{playerCharacter}', activePlayerCharacterName.value)
-    }
-
-    const knownNames = Object.keys(playerCharacterAwareProfiles.value)
-    if (knownNames.length === 0) return ''
-
-    const honorificExamples: string[] = []
-    for (const name of knownNames) {
-      const honorific = getHonorific(name)
-      if (honorific && honorific !== 'Commander') {
-        honorificExamples.push(`${name} calls the Commander "${honorific}"`)
-      }
-    }
-
-    if (honorificExamples.length === 0) return ''
-    return prompts.reminders.honorifics.replace('{examples}', honorificExamples.join('. '))
-  }
-
-  const injectFirstTurnReminder = (messages: any[]): any[] => {
-    const reminder = buildFirstTurnReminder()
-    if (!reminder) return messages
-
-    const result = [...messages]
-    for (let i = result.length - 1; i >= 0; i--) {
-      if (result[i].role === 'user') {
-        result[i] = { ...result[i], content: result[i].content + reminder }
-        break
-      }
-    }
-
-    return result
-  }
-
-  // Tumbling window summarization + context/history preparation
-  const { contextMsg: updatedContextMsg, historyToSend } = await runTumblingWindowSummarization(contextMsg, '[callAIWithoutSearch]')
-  contextMsg = updatedContextMsg
-
-  if (apiProvider.value === 'gemini') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callGemini(messages, false)
-  } else if (apiProvider.value === 'opencode-go') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callOpenCodeGo(messages)
-  } else if (apiProvider.value === 'openrouter') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callOpenRouter(messages, undefined, false)
-  } else if (apiProvider.value === 'pollinations') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callPollinations(messages, false)
-  } else if (apiProvider.value === 'local') {
-    const fullSystemPrompt = `${systemPrompt}\n\n${contextMsg}${retryInstruction}${reminders}`
-    let messages = [{ role: 'system', content: fullSystemPrompt }, ...historyToSend.map((m) => ({ role: m.role, content: m.content }))]
-    messages = injectFirstTurnReminder(messages)
-    return await callLocal(messages)
-  }
-
-  throw new Error('Unknown API provider')
+  return await buildPromptAndDispatch(isRetry, false, 'callAIWithoutSearch')
 }
 
 // Check if the AI response contains a search request for unknown characters
@@ -2748,6 +2924,7 @@ const callOpenCodeGo = async (messages: any[]) => {
     apiKey: apiKey.value,
     modeIsGame: mode.value === 'game',
     reasoningEffort: reasoningEffort.value,
+    enableContextCaching: enableContextCaching.value,
     signal: activeAbortController?.signal
   })
 }
@@ -3050,169 +3227,115 @@ const getBaseCharacterName = (id: string): string | null => {
   return getBaseCharacterDisplayName(id, market.live2d.current_id, rosterRows.value, characterCatalog)
 }
 
-const executeAction = async (data: any) => {
-  logDebug('Executing Action:', data)
+const processMemoryBlock = (memory: Record<string, any>) => {
+  logDebug('[AI Memory Update - New Characters Only]:', memory)
+  const newProfiles: Record<string, any> = {}
 
-  // Always reset yapping state to ensure the watcher triggers for the new turn
-  market.live2d.isYapping = false
-  await new Promise((r) => setTimeout(r, 100))
+  for (const [charName, profile] of Object.entries(memory)) {
+    const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+    if (existingKey) {
+      logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
+      continue
+    }
 
-  // Log debug info
-  if (data.debug_info) {
-    logDebug('[AI Debug Info]:', data.debug_info)
-  }
+    const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const resolvedKey = variantKey || localKey
+    if (resolvedKey) {
+      logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
+      const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
+      newProfiles[charName] = {
+        ...localProfile,
+        id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
+      }
 
-  // Compatibility Fix: Map legacy/hallucinated 'characterProfile' or 'characterProfiles' to 'memory'
-  // This ensures they are treated as NEW character definitions and IGNORED if the character already exists.
-  if (data.characterProfile || data.characterProfiles) {
-    const legacyData = data.characterProfile || data.characterProfiles
-    logDebug('[AI Compatibility] Remapping characterProfile/s to memory (Read-Only for existing):', legacyData)
+      if (variantKey && charName.includes(':')) {
+        const baseName = charName.split(':')[0].trim()
+        const alreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
+        if (!alreadyKnown && !newProfiles[baseName]) {
+          const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (baseKey) {
+            newProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
+            logDebug(`[AI Memory] Also loading base profile for variant "${charName}": ${baseName}`)
+          }
+        }
+      }
+      continue
+    }
 
-    if (!data.memory) {
-      data.memory = legacyData
+    if (typeof profile === 'object' && profile !== null) {
+      const cleanedProfile = { ...(profile as any) }
+      delete (cleanedProfile as any).honorific_for_commander
+      delete (cleanedProfile as any).honorific_to_commander
+      delete (cleanedProfile as any).honorific
+
+      if (cleanedProfile.relationships && typeof cleanedProfile.relationships === 'object') {
+        const relationships = { ...cleanedProfile.relationships }
+        delete (relationships as any).Commander
+        delete (relationships as any).commander
+        cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
+      }
+
+      const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
+      if (char) cleanedProfile.id = char.id
+
+      const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+      const localProf = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
+      const variantProf = variantColorKey ? (variantCharacterProfiles as any)[variantColorKey] : null
+      const colorSource = variantProf || localProf
+      if (colorSource?.color) cleanedProfile.color = colorSource.color
+
+      newProfiles[charName] = cleanedProfile
     } else {
-      data.memory = { ...data.memory, ...legacyData }
+      newProfiles[charName] = profile
     }
   }
 
-  // Normalize legacy/misused profile updates (e.g., DeepSeek using characterProfile/memory) so they
-  // cannot overwrite existing profiles and instead become characterProgression updates.
-  data = normalizeAiActionCharacterData(data, playerCharacterAwareProfiles.value)
+  if (Object.keys(newProfiles).length > 0) {
+    characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
+    syncRosterFromProfiles(Object.keys(newProfiles), 'ai')
+  }
+}
 
-  if (data.memory) {
-    logDebug('[AI Memory Update - New Characters Only]:', data.memory)
-    const newProfiles: Record<string, any> = {}
+const processCharacterProgressionBlock = (progression: Record<string, any>) => {
+  logDebug('[AI Character Progression]:', progression)
+  const updatedProgression = { ...characterProgression.value }
+  let hasUpdates = false
 
-    for (const [charName, profile] of Object.entries(data.memory)) {
-      // 1. Check if already in active profiles (Case-Insensitive)
-      const existingKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+  for (const [charName, prog] of Object.entries(progression)) {
+    const targetKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const resolvedKey = targetKey || charName
 
-      if (existingKey) {
-        logDebug(`[AI Memory] Skipping existing character '${charName}' (matched '${existingKey}') in memory block. Use characterProgression to update.`)
-        continue
+    if (typeof prog === 'object' && prog !== null) {
+      const updates = prog as any
+      const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object' ? (updatedProgression as any)[resolvedKey] : {}
+
+      if (updates.personality) {
+        current.personality = updates.personality
+        hasUpdates = true
       }
 
-      // 2. Check local profiles - ENFORCE READ-ONLY FROM DB
-      const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-      const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-      const resolvedKey = variantKey || localKey
-      if (resolvedKey) {
-        logDebug(`[AI Memory] Found local profile for '${charName}' (matched '${resolvedKey}'). IGNORING AI memory and loading local profile instead.`)
-
-        const localProfile = variantKey ? (variantCharacterProfiles as any)[resolvedKey] : (localCharacterProfiles as any)[resolvedKey]
-        // Add the LOCAL profile to newProfiles, effectively overwriting the AI's suggestion with the correct data
-        newProfiles[charName] = {
-          ...localProfile,
-          id: localProfile.id || l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())?.id
-        }
-
-        // When a variant is loaded, also inject the base profile for context
-        if (variantKey && charName.includes(':')) {
-          const baseName = charName.split(':')[0].trim()
-          const alreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
-          if (!alreadyKnown && !newProfiles[baseName]) {
-            const baseKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
-            if (baseKey) {
-              newProfiles[baseName] = { ...(localCharacterProfiles as any)[baseKey] }
-              logDebug(`[AI Memory] Also loading base profile for variant "${charName}": ${baseName}`)
-            }
-          }
-        }
-        continue
+      if (updates.relationships && typeof updates.relationships === 'object') {
+        current.relationships = { ...(current.relationships || {}), ...(updates.relationships || {}) }
+        hasUpdates = true
       }
 
-      if (typeof profile === 'object' && profile !== null) {
-        const cleanedProfile = { ...(profile as any) }
-        delete (cleanedProfile as any).honorific_for_commander
-        delete (cleanedProfile as any).honorific_to_commander
-        delete (cleanedProfile as any).honorific
-
-        // Filter Commander out of relationships if present
-        if (cleanedProfile.relationships && typeof cleanedProfile.relationships === 'object') {
-          const relationships = { ...cleanedProfile.relationships }
-          delete (relationships as any).Commander
-          delete (relationships as any).commander
-          cleanedProfile.relationships = Object.keys(relationships).length > 0 ? relationships : undefined
-        }
-
-        // Add id from l2d.json if available
-        const char = l2d.find((c) => c.name.toLowerCase() === charName.toLowerCase())
-        if (char) {
-          cleanedProfile.id = char.id
-        }
-
-        // Lookup color from local profiles even if full profile isn't used.
-        // Variant color takes priority over base character color.
-        const localColorKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const variantColorKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
-        const localProfile = localColorKey ? (localCharacterProfiles as any)[localColorKey] : null
-        const variantProfile = variantColorKey ? (variantCharacterProfiles as any)[variantColorKey] : null
-        const colorSource = variantProfile || localProfile
-        if (colorSource?.color) {
-          cleanedProfile.color = colorSource.color
-        }
-
-        newProfiles[charName] = cleanedProfile
-      } else {
-        newProfiles[charName] = profile
+      if (updates.speech_style) {
+        logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${resolvedKey}'`)
       }
-    }
 
-    if (Object.keys(newProfiles).length > 0) {
-      characterProfiles.value = { ...characterProfiles.value, ...newProfiles }
-      syncRosterFromProfiles(Object.keys(newProfiles), 'ai')
+      ;(updatedProgression as any)[resolvedKey] = current
     }
   }
 
-  // Handle 'characterProgression' - For EXISTING characters (Personality/Relationships ONLY)
-  if (data.characterProgression) {
-    logDebug('[AI Character Progression]:', data.characterProgression)
-    const updatedProgression = { ...characterProgression.value }
-    let hasUpdates = false
+  if (hasUpdates) characterProgression.value = updatedProgression
+}
 
-    for (const [charName, progression] of Object.entries(data.characterProgression)) {
-      // Find target profile (Case-Insensitive) in BASE profiles.
-      const targetKey = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
-      const resolvedKey = targetKey || charName
-
-      if (typeof progression === 'object' && progression !== null) {
-        const updates = progression as any
-        const current = (updatedProgression as any)[resolvedKey] && typeof (updatedProgression as any)[resolvedKey] === 'object' ? (updatedProgression as any)[resolvedKey] : {}
-
-        if (updates.personality) {
-          current.personality = updates.personality
-          hasUpdates = true
-        }
-
-        if (updates.relationships && typeof updates.relationships === 'object') {
-          // NOTE: We allow "Commander" here as a dynamic relationship/attitude field.
-          current.relationships = {
-            ...(current.relationships || {}),
-            ...(updates.relationships || {})
-          }
-          hasUpdates = true
-        }
-
-        // CRITICAL: Explicitly IGNORE speech_style updates
-        if (updates.speech_style) {
-          logDebug(`[AI Character Progression] BLOCKED attempt to change speech_style for '${resolvedKey}'`)
-        }
-
-        ;(updatedProgression as any)[resolvedKey] = current
-      }
-    }
-
-    if (hasUpdates) {
-      characterProgression.value = updatedProgression
-    }
-  }
-
-  // Resolve Character ID EARLY to ensure TTS gets the right name
+const resolveEffectiveCharId = (data: any): string => {
   let effectiveCharId = data.character
 
-  // Handle 'current' character resolution and speaker detection
   if (effectiveCharId === 'current') {
-    // Check for speaker override in text
     const speakerMatch = data.text ? data.text.match(/^\s*(?:\*\*)?([^*]+?)(?:\*\*)?\s*:\s*/) : null
     if (speakerMatch) {
       const speakerName = speakerMatch[1].trim()
@@ -3220,7 +3343,6 @@ const executeAction = async (data: any) => {
       if (charObj && charObj.id !== market.live2d.current_id) {
         logDebug(`[Chat] Detected speaker '${speakerName}' in text. Switching from 'current' to: ${charObj.id}`)
         effectiveCharId = charObj.id
-        // Update data.character so subsequent logic uses the new ID
         data.character = effectiveCharId
       } else {
         effectiveCharId = market.live2d.current_id
@@ -3230,315 +3352,201 @@ const executeAction = async (data: any) => {
     }
   }
 
-  // Apply background image if specified
-  if (data.background && market.live2d.backgroundImagesEnabled && market.live2d.backgroundImageMap.size > 0) {
-    const backgroundSelection = resolveAiBackgroundSelection({
-      background: data.background,
-      availableFilenames: market.live2d.backgroundImageMap.keys()
-    })
+  return effectiveCharId
+}
 
-    if (backgroundSelection.action === 'clear') {
-      market.live2d.clearActiveBackground()
-    } else if (backgroundSelection.action === 'apply') {
-      const applied = backgroundSelection.filename ? market.live2d.applyBackground(backgroundSelection.filename) : false
-      if (!applied) {
-        console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
-      }
-    }
+const applyActionBackground = (background: any) => {
+  if (!background || !market.live2d.backgroundImagesEnabled || market.live2d.backgroundImageMap.size === 0) return
+
+  const backgroundSelection = resolveAiBackgroundSelection({
+    background,
+    availableFilenames: market.live2d.backgroundImageMap.keys()
+  })
+
+  if (backgroundSelection.action === 'clear') {
+    market.live2d.clearActiveBackground()
+  } else if (backgroundSelection.action === 'apply') {
+    const applied = backgroundSelection.filename ? market.live2d.applyBackground(backgroundSelection.filename) : false
+    if (!applied) console.warn(`Background "${backgroundSelection.label || 'unknown'}" not found in loaded images`)
+  }
+}
+
+const playActionAnimation = (data: any, effectiveCharId: string) => {
+  if (!data.animation) return
+
+  const requested = String(data.animation).trim()
+  const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
+  const normalized = isForbidden ? 'idle' : requested
+  logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
+
+  const animCharId = effectiveCharId || market.live2d.current_id
+  const resolvedAnim = resolveAnimationOverride(animCharId, normalized)
+  if (resolvedAnim !== normalized) {
+    logDebug(`[Chat] Animation override applied: ${normalized} -> ${resolvedAnim} for ${animCharId}`)
+  }
+  market.live2d.current_animation = resolvedAnim
+}
+
+const startYap = (data: any): number => {
+  if (!data.speaking || ttsEnabled.value) return 0
+
+  logDebug('Starting yap')
+  if (yapTimeoutId) {
+    clearTimeout(yapTimeoutId)
+    yapTimeoutId = null
   }
 
-  // Prepare character update promise
-  const characterUpdatePromise = (async () => {
-    if (data.character) {
-      // Handle 'none' character
-      if (data.character === 'none') {
-        logDebug('[Chat] Hiding character sprite')
-        market.live2d.isVisible = false
-      }
-      // Handle specific character switch (including resolved 'current')
-      else {
-        const resolvedRosterId = resolveCharacterIdFromInput(data.character, rosterRows.value, characterCatalog)
-        if (resolvedRosterId) {
-          data.character = resolvedRosterId
-          effectiveCharId = resolvedRosterId
-        }
-        // Force 'none' if character is Commander
-        if (data.character.toLowerCase().includes('commander') || data.character === 'c000') {
-          logDebug('[Chat] Hiding Commander sprite')
-          market.live2d.isVisible = false
-        } else {
-          // Find character object
-          // Case-insensitive search for name or ID
-          const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
+  market.live2d.isYapping = true
+  let yapDuration = 3000
+  if (data.text) yapDuration = calculateYapDuration(data.text)
+  else if (data.duration) yapDuration = data.duration
 
-          if (charObj) {
-            // Auto-load character profile from local JSON if not already known.
-            // This ensures profiles are injected into the system prompt for future
-            // turns even when the AI omits `needs_search` and `memory` blocks.
-            const charName = charObj.name
-            const profileAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
-              (k) => k.toLowerCase() === charName.toLowerCase()
-            )
-            if (!profileAlreadyKnown) {
-              const localKey = Object.keys(localCharacterProfiles).find(
-                (k) => k.toLowerCase() === charName.toLowerCase()
-              )
-              const variantKey = Object.keys(variantCharacterProfiles).find(
-                (k) => k.toLowerCase() === charName.toLowerCase()
-              )
-              const resolvedKey = variantKey || localKey
-              if (resolvedKey) {
-                const sourceProfile = variantKey
-                  ? (variantCharacterProfiles as Record<string, any>)[resolvedKey]
-                  : (localCharacterProfiles as Record<string, any>)[resolvedKey]
-                const newEntry = {
-                  ...sourceProfile,
-                  id: sourceProfile.id || charObj.id
-                }
-                characterProfiles.value = { ...characterProfiles.value, [charName]: newEntry }
-                logDebug(`[Chat] Auto-loaded local profile for new character: ${charName} (${charObj.id})`)
+  logDebug(`Yap duration calculated: ${yapDuration}ms`)
 
-                if (variantKey && charName.includes(':')) {
-                  const baseName = charName.split(':')[0].trim()
-                  const baseAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find(
-                    (k) => k.toLowerCase() === baseName.toLowerCase()
-                  )
-                  if (!baseAlreadyKnown) {
-                    const baseProfileKey = Object.keys(localCharacterProfiles).find(
-                      (k) => k.toLowerCase() === baseName.toLowerCase()
-                    )
-                    if (baseProfileKey) {
-                      characterProfiles.value = {
-                        ...characterProfiles.value,
-                        [baseName]: { ...(localCharacterProfiles as Record<string, any>)[baseProfileKey] }
-                      }
-                      logDebug(`[Chat] Also auto-loaded base profile for variant: ${baseName}`)
-                    }
-                  }
-                }
-                syncRosterFromProfiles([charName], 'ai')
-              }
-            }
+  yapTimeoutId = setTimeout(() => {
+    if (market.live2d.isYapping) {
+      logDebug('Auto-stopping yap based on text length')
+      market.live2d.isYapping = false
+    }
+    yapTimeoutId = null
+  }, yapDuration)
 
-            // Ensure visible
-            logDebug('[Chat] Setting visibility to true')
-            market.live2d.isVisible = true
+  return yapDuration
+}
 
-            // Check if character is already active to avoid unnecessary reload
-            if (charObj.id === market.live2d.current_id) {
-              logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
-              // Force visibility update again just in case
-              market.live2d.isVisible = true
-            } else {
-              logDebug(`[Chat] Switching character to: ${data.character}`)
-              const previousPlacement = captureSpineCanvasPlacement()
-              const previousLoadTime = market.live2d.finishedLoading
-              market.live2d.change_current_spine(charObj)
+const buildCharacterUpdatePromise = async (data: any, effectiveCharId: string): Promise<string> => {
+  if (!data.character) return effectiveCharId
 
-              // Wait for load to complete
-              logDebug('[Chat] Waiting for character load...')
-              await new Promise<void>((r) => {
-                const unwatch = watch(
-                  () => market.live2d.finishedLoading,
-                  (newVal) => {
-                    if (newVal > previousLoadTime) {
-                      logDebug('[Chat] Character loaded.')
-                      unwatch()
-                      // Add a small delay to ensure the spine player is fully ready to accept new tracks
-                      setTimeout(r, 100)
-                    }
-                  }
-                )
-                // Safety timeout
-                setTimeout(() => {
-                  unwatch()
-                  r()
-                }, 10000)
-              })
+  if (data.character === 'none') {
+    logDebug('[Chat] Hiding character sprite')
+    market.live2d.isVisible = false
+    return effectiveCharId
+  }
 
-              // Restore the user's zoom/position after switching characters.
-              await restoreSpineCanvasPlacement(previousPlacement)
-            }
-          } else {
-            console.warn(`[Chat] Character not found: ${data.character}`)
+  const resolvedRosterId = resolveCharacterIdFromInput(data.character, rosterRows.value, characterCatalog)
+  if (resolvedRosterId) {
+    data.character = resolvedRosterId
+    effectiveCharId = resolvedRosterId
+  }
+
+  if (data.character.toLowerCase().includes('commander') || data.character === 'c000') {
+    logDebug('[Chat] Hiding Commander sprite')
+    market.live2d.isVisible = false
+    return effectiveCharId
+  }
+
+  const charObj = l2d.find((c) => c.id.toLowerCase() === data.character.toLowerCase() || c.name.toLowerCase() === data.character.toLowerCase())
+  if (!charObj) {
+    console.warn(`[Chat] Character not found: ${data.character}`)
+    return effectiveCharId
+  }
+
+  const charName = charObj.name
+  const profileAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === charName.toLowerCase())
+  if (!profileAlreadyKnown) {
+    const localKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const variantKey = Object.keys(variantCharacterProfiles).find((k) => k.toLowerCase() === charName.toLowerCase())
+    const resolvedKey = variantKey || localKey
+    if (resolvedKey) {
+      const sourceProfile = variantKey
+        ? (variantCharacterProfiles as Record<string, any>)[resolvedKey]
+        : (localCharacterProfiles as Record<string, any>)[resolvedKey]
+      characterProfiles.value = { ...characterProfiles.value, [charName]: { ...sourceProfile, id: sourceProfile.id || charObj.id } }
+      logDebug(`[Chat] Auto-loaded local profile for new character: ${charName} (${charObj.id})`)
+
+      if (variantKey && charName.includes(':')) {
+        const baseName = charName.split(':')[0].trim()
+        const baseAlreadyKnown = Object.keys(playerCharacterAwareProfiles.value).find((k) => k.toLowerCase() === baseName.toLowerCase())
+        if (!baseAlreadyKnown) {
+          const baseProfileKey = Object.keys(localCharacterProfiles).find((k) => k.toLowerCase() === baseName.toLowerCase())
+          if (baseProfileKey) {
+            characterProfiles.value = { ...characterProfiles.value, [baseName]: { ...(localCharacterProfiles as Record<string, any>)[baseProfileKey] } }
+            logDebug(`[Chat] Also auto-loaded base profile for variant: ${baseName}`)
           }
         }
       }
+      syncRosterFromProfiles([charName], 'ai')
     }
-  })()
-
-  // Play Animation
-  if (data.animation) {
-    const requested = String(data.animation).trim()
-    // Never let AI drive internal talk tracks; they are handled by yapping/TTS logic.
-    // Also prevents Loader fuzzy-matching 'talk' -> 'talk_end'.
-    const isForbidden = requested === 'talk' || requested === 'talk_start' || requested === 'talk_end'
-    const normalized = isForbidden ? 'idle' : requested
-    logDebug(`[Chat] Requesting animation: ${normalized} (Requested: ${requested})`)
-
-    // Apply animation override reverse lookup (replaced name -> original Spine name)
-    const animCharId = effectiveCharId || market.live2d.current_id
-    const resolvedAnim = resolveAnimationOverride(animCharId, normalized)
-    if (resolvedAnim !== normalized) {
-      logDebug(`[Chat] Animation override applied: ${normalized} -> ${resolvedAnim} for ${animCharId}`)
-    }
-    market.live2d.current_animation = resolvedAnim
   }
 
-  // Speaking
-  let calculatedYapDuration = 0
+  logDebug('[Chat] Setting visibility to true')
+  market.live2d.isVisible = true
 
-  if (data.speaking && !ttsEnabled.value) {
-    logDebug('Starting yap')
+  if (charObj.id === market.live2d.current_id) {
+    logDebug(`[Chat] Character ${charObj.name} (${charObj.id}) is already active. Skipping reload.`)
+    market.live2d.isVisible = true
+  } else {
+    logDebug(`[Chat] Switching character to: ${data.character}`)
+    const previousPlacement = captureSpineCanvasPlacement()
+    const previousLoadTime = market.live2d.finishedLoading
+    market.live2d.change_current_spine(charObj)
 
-    // Clear previous timeout if exists
-    if (yapTimeoutId) {
-      clearTimeout(yapTimeoutId)
-      yapTimeoutId = null
-    }
-
-    market.live2d.isYapping = true
-
-    // Calculate yap duration based on text length
-    // Approx 60ms per character + 300ms base (Slightly faster than reading speed for natural feel)
-    let yapDuration = 3000
-
-    if (data.text) {
-      yapDuration = calculateYapDuration(data.text)
-    } else if (data.duration) {
-      yapDuration = data.duration
-    }
-    calculatedYapDuration = yapDuration
-
-    logDebug(`Yap duration calculated: ${yapDuration}ms`)
-
-    // Auto-stop yap after calculated duration
-    yapTimeoutId = setTimeout(() => {
-      if (market.live2d.isYapping) {
-        logDebug('Auto-stopping yap based on text length')
-        market.live2d.isYapping = false
-      }
-      yapTimeoutId = null
-    }, yapDuration)
-  }
-
-  // Add text to chat
-  if (data.text) {
-    let content = data.text
-
-    if (chatMode.value === 'nikke') {
-      nikkeCurrentText.value = data.text
-      // Use base character name (not skin variant) for NIKKE overlay
-      const baseName = data.speaking ? getBaseCharacterName(effectiveCharId) || '' : ''
-      nikkeCurrentSpeaker.value = baseName
-
-      // Get color from character profile (try full name first for variants, then fall back to base name)
-      const fullName = getCharacterName(effectiveCharId) || baseName
-      const profile = effectiveCharacterProfiles.value[fullName] || effectiveCharacterProfiles.value[baseName]
-      const localProfile = (localCharacterProfiles as Record<string, any>)[fullName] || (localCharacterProfiles as Record<string, any>)[baseName]
-      const variantProfile = (variantCharacterProfiles as Record<string, any>)[fullName] || (variantCharacterProfiles as Record<string, any>)[baseName]
-      nikkeSpeakerColor.value = variantProfile?.color || localProfile?.color || profile?.color || '#ffffff'
-
-      startTypewriter(data.text)
-
-      // Wait for BOTH typewriter AND character load
-      await Promise.all([
-        characterUpdatePromise,
-        new Promise<void>((resolve) => {
-          const check = setInterval(() => {
-            if (!isTyping.value) {
-              clearInterval(check)
-              resolve()
-            }
-          }, 100)
-        })
-      ])
-    } else {
-      // In classic mode, we still want to wait for character load before proceeding
-      await characterUpdatePromise
-    }
-
-    // Add speaker name if speaking
-    if (data.speaking) {
-      let name = null
-
-      if (effectiveCharId === 'commander') {
-        // Commander speaking - use properly capitalized name
-        name = 'Commander'
-      } else if (effectiveCharId === 'none') {
-        // In Story Mode, 'none' with speaking means a non-roster NPC is speaking.
-        // Try to extract the speaker name from the text itself (e.g. "Guard: Halt!" or "**Guard:** Halt!").
-        if (mode.value === 'story') {
-          const speakerLabelMatch = content.match(/^\s*(?:\*\*\s*)?([^*:]+?)(?:\s*\*\*)?\s*:\s*/)
-          if (speakerLabelMatch) {
-            // The text already has a speaker label — use it as the name and don't prepend another
-            name = speakerLabelMatch[1].trim()
+    logDebug('[Chat] Waiting for character load...')
+    await new Promise<void>((r) => {
+      const unwatch = watch(
+        () => market.live2d.finishedLoading,
+        (newVal) => {
+          if (newVal > previousLoadTime) {
+            logDebug('[Chat] Character loaded.')
+            unwatch()
+            setTimeout(r, 100)
           }
-          // If no speaker label found, name stays null — no label will be prepended
         }
-      } else {
-        // Use base character name (not skin variant) for display
-        name = getBaseCharacterName(effectiveCharId)
-      }
-
-      if (name) {
-        // Trigger TTS
-        if (ttsEnabled.value) {
-          playTTS(data.text, name, market)
-        }
-
-        // Check if the text already starts with the name to avoid duplication
-        // We check for "Name:", "**Name:**", "Name :", etc.
-        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
-
-        // Also check for ANY bolded name at the start (e.g. "**Chime:**") to prevent double naming
-        // if the AI messed up the character ID but got the text right.
-        const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
-
-        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
-          content = `**${name}:** ${content}`
-        }
-      }
-    }
-
-    chatHistory.value.push({
-      role: 'assistant',
-      content: content,
-      animation: market.live2d.current_animation,
-      character: effectiveCharId,
-      speaking: data.speaking,
-      text: data.text
+      )
+      setTimeout(() => { unwatch(); r() }, 10000)
     })
-    scrollToBottom()
-  } else if (chatMode.value === 'nikke') {
-    // Clear text but keep overlay visible for animations/switches
-    nikkeCurrentText.value = ''
-    nikkeDisplayedText.value = ''
-    nikkeCurrentSpeaker.value = ''
+
+    await restoreSpineCanvasPlacement(previousPlacement)
   }
 
-  // Handle Game Mode Choices
+  return effectiveCharId
+}
+
+const resolveSpeakerName = (effectiveCharId: string, content: string): string | null => {
+  if (effectiveCharId === 'commander') return 'Commander'
+
+  if (effectiveCharId === 'none') {
+    if (mode.value === 'story') {
+      const speakerLabelMatch = content.match(/^\s*(?:\*\*\s*)?([^*:]+?)(?:\s*\*\*)?\s*:\s*/)
+      return speakerLabelMatch ? speakerLabelMatch[1].trim() : null
+    }
+    return null
+  }
+
+  return getBaseCharacterName(effectiveCharId)
+}
+
+const resolveStoredBackground = (background: any): any => {
+  if (!background || !market.live2d.backgroundImagesEnabled || market.live2d.backgroundImageMap.size === 0) return background
+
+  const storedSelection = resolveAiBackgroundSelection({
+    background,
+    availableFilenames: market.live2d.backgroundImageMap.keys()
+  })
+  if (storedSelection.action === 'keep') return market.live2d.currentBackground || undefined
+  if (storedSelection.action === 'clear') return 'none'
+  if (storedSelection.action === 'apply' && storedSelection.filename) return storedSelection.filename
+  return background
+}
+
+const handlePlaybackWait = async (data: any, calculatedYapDuration: number) => {
+  if (isStopped.value) {
+    return false
+  }
+
   if (data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
     logDebug('[Chat] Game Mode Choices detected:', data.choices)
     pendingGameChoices.value = data.choices
     choicesAwaitingReveal.value = true
     loadingStatus.value = 'Click to show choices...'
-    waitingForNext.value = true // Pause auto-advance
+    waitingForNext.value = true
 
-    // Wait for user selection
-    await new Promise<void>((r) => {
-      nextActionResolver = r
-    })
+    await new Promise<void>((r) => { nextActionResolver = r })
 
-    // Clear choices after selection (handled in handleGameChoice)
     gameChoices.value = []
     pendingGameChoices.value = []
     choicesAwaitingReveal.value = false
-
-    // IMPORTANT: Do not continue into manual/auto playback waits after a choice.
-    // The selected choice will be queued and sent as the next user turn.
-    return
+    return true
   }
 
   const duration = data.duration || 3000
@@ -3547,33 +3555,16 @@ const executeAction = async (data: any) => {
     loadingStatus.value = 'Click Next to advance...'
     logDebug('Waiting for user input (Manual Mode)')
     waitingForNext.value = true
-    await new Promise<void>((r) => {
-      nextActionResolver = r
-    })
-    // Stop yapping when moving to next (just in case)
+    await new Promise<void>((r) => { nextActionResolver = r })
     if (data.speaking) {
       market.live2d.isYapping = false
-      if (yapTimeoutId) {
-        clearTimeout(yapTimeoutId)
-        yapTimeoutId = null
-      }
+      if (yapTimeoutId) { clearTimeout(yapTimeoutId); yapTimeoutId = null }
     }
   } else {
     loadingStatus.value = '...'
-    // Auto Mode
-    // If text is long, ensure we wait long enough to read it
     let autoDuration = Math.max(duration, 2000)
-
-    if (data.text) {
-      // Reading speed approx 50ms per char + base
-      const readDuration = data.text.length * 50 + 1500
-      autoDuration = Math.max(autoDuration, readDuration)
-    }
-
-    // Ensure we wait at least 2 seconds after yapping finishes
-    if (data.speaking && calculatedYapDuration > 0) {
-      autoDuration = Math.max(autoDuration, calculatedYapDuration + 2000)
-    }
+    if (data.text) autoDuration = Math.max(autoDuration, data.text.length * 50 + 1500)
+    if (data.speaking && calculatedYapDuration > 0) autoDuration = Math.max(autoDuration, calculatedYapDuration + 2000)
 
     logDebug(`Waiting for ${autoDuration}ms (Auto Mode)`)
     await new Promise<void>((resolve) => {
@@ -3586,6 +3577,103 @@ const executeAction = async (data: any) => {
       }, autoDuration)
     })
   }
+
+  return false
+}
+
+const executeAction = async (data: any) => {
+  logDebug('Executing Action:', data)
+
+  market.live2d.isYapping = false
+  await new Promise((r) => setTimeout(r, 100))
+
+  if (data.debug_info) logDebug('[AI Debug Info]:', data.debug_info)
+
+  if (data.characterProfile || data.characterProfiles) {
+    const legacyData = data.characterProfile || data.characterProfiles
+    logDebug('[AI Compatibility] Remapping characterProfile/s to memory (Read-Only for existing):', legacyData)
+    data.memory = data.memory ? { ...data.memory, ...legacyData } : legacyData
+  }
+
+  data = normalizeAiActionCharacterData(data, playerCharacterAwareProfiles.value)
+
+  if (data.memory) processMemoryBlock(data.memory)
+  if (data.characterProgression) processCharacterProgressionBlock(data.characterProgression)
+
+  let effectiveCharId = resolveEffectiveCharId(data)
+  applyActionBackground(data.background)
+
+  const characterUpdatePromise = buildCharacterUpdatePromise(data, effectiveCharId).then((resolvedId) => {
+    effectiveCharId = resolvedId
+  })
+
+  playActionAnimation(data, effectiveCharId)
+  const calculatedYapDuration = startYap(data)
+
+  if (data.text) {
+    let content = data.text
+
+    if (chatMode.value === 'nikke') {
+      nikkeCurrentText.value = data.text
+      const baseName = data.speaking ? getBaseCharacterName(effectiveCharId) || '' : ''
+      nikkeCurrentSpeaker.value = baseName
+
+      const fullName = getCharacterName(effectiveCharId) || baseName
+      const profile = effectiveCharacterProfiles.value[fullName] || effectiveCharacterProfiles.value[baseName]
+      const localProfile = (localCharacterProfiles as Record<string, any>)[fullName] || (localCharacterProfiles as Record<string, any>)[baseName]
+      const variantProfile = (variantCharacterProfiles as Record<string, any>)[fullName] || (variantCharacterProfiles as Record<string, any>)[baseName]
+      nikkeSpeakerColor.value = variantProfile?.color || localProfile?.color || profile?.color || '#ffffff'
+
+      startTypewriter(data.text)
+
+      await Promise.all([
+        characterUpdatePromise,
+        new Promise<void>((resolve) => {
+          const check = setInterval(() => {
+            if (!isTyping.value) { clearInterval(check); resolve() }
+          }, 100)
+        })
+      ])
+    } else {
+      await characterUpdatePromise
+    }
+
+    if (data.speaking) {
+      const name = resolveSpeakerName(effectiveCharId, content)
+      if (name) {
+        if (ttsEnabled.value) playTTS(data.text, name, market)
+
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const namePattern = new RegExp(`^\\**${escapedName}\\**\\s*:`, 'i')
+        const anyNamePattern = /^\*\*\s*[^*]+\s*\*\*:/
+
+        if (!namePattern.test(content) && !anyNamePattern.test(content)) {
+          content = `**${name}:** ${content}`
+        }
+      }
+    }
+
+    chatHistory.value.push({
+      role: 'assistant',
+      content,
+      animation: market.live2d.current_animation,
+      character: effectiveCharId,
+      speaking: data.speaking,
+      text: data.text,
+      background: resolveStoredBackground(data.background)
+    })
+    scrollToBottom()
+  } else if (chatMode.value === 'nikke') {
+    nikkeCurrentText.value = ''
+    nikkeDisplayedText.value = ''
+    nikkeCurrentSpeaker.value = ''
+    await characterUpdatePromise
+  } else {
+    await characterUpdatePromise
+  }
+
+  const wasChoice = await handlePlaybackWait(data, calculatedYapDuration)
+  if (wasChoice) return
 }
 
 const resetSession = () => {
@@ -3594,6 +3682,8 @@ const resetSession = () => {
   const confirmed = window.confirm('Are you sure you want to reset the story? All unsaved progress will be lost.')
 
   if (confirmed) {
+    clearGameChoiceState()
+
     // Resetting the story should not keep the previous visual scene pinned to the
     // page background, so clear any active blob URL even if the pack stays loaded.
     chatHistory.value = []
@@ -3720,6 +3810,34 @@ const handleCompactSummary = async () => {
       loadingStatus.value = ''
     }, 2000)
   }
+}
+
+const sanitizeText = (text: string): string => {
+  let sanitized = text.replace(/<[^>]*>/g, '')
+  const ALLOWED_CONTROLS = new Set(['\t', '\n', '\r'])
+  sanitized = sanitized.split('').filter((c) => {
+    const code = c.charCodeAt(0)
+    return code > 0x1F || ALLOWED_CONTROLS.has(c)
+  }).join('')
+  sanitized = sanitized.trim()
+  return sanitized
+}
+
+const openSummaryModal = () => {
+  editableSummary.value = storySummary.value
+  showSummaryModal.value = true
+}
+
+const cancelSummaryEdit = () => {
+  showSummaryModal.value = false
+  editableSummary.value = ''
+}
+
+const saveSummaryEdit = () => {
+  const sanitized = sanitizeText(editableSummary.value)
+  storySummary.value = sanitized
+  showSummaryModal.value = false
+  editableSummary.value = ''
 }
 </script>
 
@@ -4020,128 +4138,6 @@ const handleCompactSummary = async () => {
   font-style: italic;
   opacity: 0.8;
   font-size: 0.9em;
-}
-
-.nikke-chat-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9000;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  pointer-events: auto;
-  user-select: none;
-  box-sizing: border-box;
-  /* Support iOS safe area insets */
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.nikke-chat-overlay.passthrough {
-  pointer-events: none;
-}
-
-.nikke-overlay-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10003;
-  display: flex;
-  align-items: center;
-  pointer-events: auto;
-
-  @media (max-width: 1024px) {
-    top: 10px;
-    right: 10px;
-  }
-}
-
-.nikke-vignette {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
-  pointer-events: none;
-}
-
-.nikke-dialogue-container {
-  position: relative;
-  width: 100%;
-  pointer-events: auto;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-  padding: 60px 10% 80px 10%;
-  color: white;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  /* Allow interaction (scroll/touch) so mobile devices can scroll overflowing text */
-  pointer-events: auto;
-  box-sizing: border-box;
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
-
-  @media (max-width: 1024px) {
-    padding: 40px 5% 60px 5%;
-    min-height: 150px;
-    max-height: calc(100vh - 60px);
-  }
-
-  @media (max-width: 834px) {
-    padding: 30px 4% 50px 4%;
-    min-height: 120px;
-    max-height: calc(100vh - 50px);
-  }
-}
-
-.nikke-speaker-name {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 1.6em;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-
-  @media (max-width: 1024px) {
-    font-size: 1.2em;
-    margin-bottom: 8px;
-  }
-}
-
-.nikke-speaker-indicator {
-  width: 6px;
-  height: 1.2em;
-  background-color: #ffeb3b;
-  box-shadow: 0 0 10px rgba(255, 235, 59, 0.4);
-}
-
-.nikke-dialogue-text {
-  font-size: 1.4em;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  max-width: 1400px;
-  font-weight: 400;
-  word-break: break-word;
-  max-width: calc(100% - 40px);
-
-  @media (max-width: 1024px) {
-    font-size: 1.1em;
-    line-height: 1.4;
-  }
-
-  @media (max-width: 834px) {
-    font-size: 1em;
-    line-height: 1.35;
-  }
 }
 
 .fade-enter-active,
@@ -4470,5 +4466,174 @@ const handleCompactSummary = async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.preset-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  .preset-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+
+    .preset-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .preset-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #e0e0e0;
+      }
+
+      .preset-meta {
+        font-size: 11px;
+        color: #888;
+        white-space: nowrap;
+      }
+    }
+
+    .preset-chars {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.4;
+
+      .preset-char-more {
+        color: #777;
+        font-style: italic;
+      }
+    }
+  }
+
+  .preset-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+}
+
+.presets-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-preset-row {
+  border-top: 1px solid var(--n-border-color);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.save-first-turn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--n-border-color);
+  padding: 6px 8px;
+  margin: 0 8px;
+}
+
+.preset-message-preview {
+  font-size: 11px;
+  color: #999;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.first-turn-edit-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Compact Mobile Tweaks (chatbox stays draggable & transparent) ── */
+
+.chat-interface.compact-mobile {
+  .settings-btn,
+  .help-btn,
+  .reset-btn {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 1002;
+  }
+
+  .help-btn {
+    right: 52px;
+  }
+
+  .reset-btn {
+    right: 96px;
+  }
+
+  .chat-history {
+    padding: 6px 8px;
+
+    .message {
+      max-width: 92%;
+      padding: 6px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+  }
+
+  .chat-input-area {
+    padding: 6px 8px;
+    gap: 6px;
+    flex-direction: column;
+    align-items: stretch;
+
+    .n-input {
+      width: 100%;
+      flex: none;
+      order: 1;
+    }
+
+    :deep(.n-input__textarea) {
+      min-height: 36px;
+      max-height: 90px;
+    }
+
+    .mobile-btn-row {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      justify-content: flex-end;
+      align-items: center;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      order: 2;
+
+      .n-button {
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.mobile-overflow-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
 }
 </style>

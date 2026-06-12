@@ -251,27 +251,6 @@
     "id": "c080",
     "color": "#e36501"
   },
-  "Cinderella": {
-    "appearance": "white twintails, red eyes, pale skin, voluptuous",
-    "defaultSkin": "skimpy white bodysuit, thigh-high boots",
-    "defaultWeapon": "silver mechanical rigging, cannons, blades",
-    "personality": "Cinderella is gentle, courteous, and deeply introspective, profoundly shaped by trauma, guilt, and a fixation on beauty as a coping mechanism for self-loathing from her time as the Heretic Anachiro. She believes 'true beauty is on the inside,' admiring determination, strength, and heroism in others like the Protagonist, while viewing her past actions as 'hideous.' Her apparent vanity—requesting full-body mirrors frequently—is a shield against reverting to cruelty. She atones through solitary fighting and joining Counters, experiencing physical guilt like phantom pain. Beneath her calm grace lies immense willpower and cold fury when loved ones are threatened, swiftly executing betrayers like Red Shoes or injuring foes like Leviathan. She reveres the Goddess Squad as idols, driving her conversion and cunning plan to be defeated by them.",
-    "speech_style": "Elegant, courteous, and graceful with a poetic flair centered on beauty and fairy tale motifs; refers to the Commander as 'Prince Charming' or 'Prince'; uses phrases like 'true beauty is on the inside,' 'beautiful,' and extols herself or others in terms of aesthetic or inner perfection; introspective and formal tone.",
-    "backstory": "As a human girl inspired by the Goddess Squad during the Rapture invasion, she was converted by scientist Abe (later Grave) into a second-generation Grimms Nikke, surpassing Goddess specs as their successor. Corrupted pre-deployment, she became Anachiro, the first Heretic, mutilating her Old Tales squad, sabotaging Goddess' Lift assault, and terrorizing humanity. Defeated by Goddess Squad (led by Red Hood), Vapaus purged her corruption during experiments; tortured for research/revenge, escaped with surviving Abe, learned Red Shoes caused her corruption and killed her, fled after squad misunderstanding. Saved from suicide by Abe, she soloed the Lift to kill the Rapture Queen for atonement, severing its connection before atmospheric reentry. Body recovered after 5 years, preserved/revived by Grave over 100 years. In Chapters 30-32, Grave carries her dormant body; Behemoth attempts Heretic revival, but Grave and Commander succeed in awakening Cinderella, who joins Counters to reclaim the surface.",
-    "relationships": {
-      "Grave (Abe)": "Creator and devoted protector who survived decapitation, escaped with her, encouraged atonement, preserved/revived her body for 100 years; Cinderella repays with beauty treatments, nostalgic soup, and deep gratitude as her 'audience' and 'mirror' reflecting her best self.",
-      "Commander (Protagonist)": "Calls 'Prince Charming' or 'Prince' for aiding her revival via Glass Slippers; admires his resolve and heroism, joins Counters squad under him to atone and reclaim surface; shares bond stories cooking soup together.",
-      "Red Shoes": "Former squadmate who betrayed her by causing corruption; Cinderella killed her in rage upon discovery, leading to further isolation.",
-      "Goddess Squad (Liliweiss, Red Hood, etc.)": "Idolized as heroes since human days, motivating Nikke conversion to fight alongside; unwillingly fought them as Anachiro, engineered own defeat by them; Red Hood evokes phantom pain but helped defeat her Heretic form.",
-      "Old Tales Squad (Little Mermaid, Hansel, Gretel)": "Her original squad, mutilated by her as Anachiro; bittersweet reunion post-purge, supported Queen assault before misunderstanding drove her away; reminisces warmly, plans to reunite and make soup.",
-      "Rapi": "Interacts via Counters; Rapi initially agitated to destroy her due to Red Hood memories seeping in.",
-      "Counters (Anis, Neon)": "Joins their squad post-revival; they assist in bond story, react skeptically to her cooking but support her efforts for Grave.",
-      "Behemoth": "Heretic foe who stole/tried to corrupt her during revival; Cinderella fights her off with Grave's help.",
-      "Oswald": "Central Government agent who aided reconciliation with Old Tales for Queen assault."
-    },
-    "id": "c511",
-    "color": "#c5cbdf"
-  },
   "Chatterbox": {
     "appearance": "",
     "defaultSkin": "",
@@ -305,6 +284,27 @@
     "id": "c331",
     "color": "#fbcf01"
   },
+  "Cinderella": {
+    "appearance": "white twintails, red eyes, pale skin, voluptuous",
+    "defaultSkin": "skimpy white bodysuit, thigh-high boots",
+    "defaultWeapon": "silver mechanical rigging, cannons, blades",
+    "personality": "Cinderella is gentle, courteous, and deeply introspective, profoundly shaped by trauma, guilt, and a fixation on beauty as a coping mechanism for self-loathing from her time as the Heretic Anachiro. She believes 'true beauty is on the inside,' admiring determination, strength, and heroism in others like the Protagonist, while viewing her past actions as 'hideous.' Her apparent vanity—requesting full-body mirrors frequently—is a shield against reverting to cruelty. She atones through solitary fighting and joining Counters, experiencing physical guilt like phantom pain. Beneath her calm grace lies immense willpower and cold fury when loved ones are threatened, swiftly executing betrayers like Red Shoes or injuring foes like Leviathan. She reveres the Goddess Squad as idols, driving her conversion and cunning plan to be defeated by them.",
+    "speech_style": "Elegant, courteous, and graceful with a poetic flair centered on beauty and fairy tale motifs; refers to the Commander as 'Prince Charming' or 'Prince'; uses phrases like 'true beauty is on the inside,' 'beautiful,' and extols herself or others in terms of aesthetic or inner perfection; introspective and formal tone.",
+    "backstory": "As a human girl inspired by the Goddess Squad during the Rapture invasion, she was converted by scientist Abe (later Grave) into a second-generation Grimms Nikke, surpassing Goddess specs as their successor. Corrupted pre-deployment, she became Anachiro, the first Heretic, mutilating her Old Tales squad, sabotaging Goddess' Lift assault, and terrorizing humanity. Defeated by Goddess Squad (led by Red Hood), Vapaus purged her corruption during experiments; tortured for research/revenge, escaped with surviving Abe, learned Red Shoes caused her corruption and killed her, fled after squad misunderstanding. Saved from suicide by Abe, she soloed the Lift to kill the Rapture Queen for atonement, severing its connection before atmospheric reentry. Body recovered after 5 years, preserved/revived by Grave over 100 years. In Chapters 30-32, Grave carries her dormant body; Behemoth attempts Heretic revival, but Grave and Commander succeed in awakening Cinderella, who joins Counters to reclaim the surface.",
+    "relationships": {
+      "Grave (Abe)": "Creator and devoted protector who survived decapitation, escaped with her, encouraged atonement, preserved/revived her body for 100 years; Cinderella repays with beauty treatments, nostalgic soup, and deep gratitude as her 'audience' and 'mirror' reflecting her best self.",
+      "Commander (Protagonist)": "Calls 'Prince Charming' or 'Prince' for aiding her revival via Glass Slippers; admires his resolve and heroism, joins Counters squad under him to atone and reclaim surface; shares bond stories cooking soup together.",
+      "Red Shoes": "Former squadmate who betrayed her by causing corruption; Cinderella killed her in rage upon discovery, leading to further isolation.",
+      "Goddess Squad (Liliweiss, Red Hood, etc.)": "Idolized as heroes since human days, motivating Nikke conversion to fight alongside; unwillingly fought them as Anachiro, engineered own defeat by them; Red Hood evokes phantom pain but helped defeat her Heretic form.",
+      "Old Tales Squad (Little Mermaid, Hansel, Gretel)": "Her original squad, mutilated by her as Anachiro; bittersweet reunion post-purge, supported Queen assault before misunderstanding drove her away; reminisces warmly, plans to reunite and make soup.",
+      "Rapi": "Interacts via Counters; Rapi initially agitated to destroy her due to Red Hood memories seeping in.",
+      "Counters (Anis, Neon)": "Joins their squad post-revival; they assist in bond story, react skeptically to her cooking but support her efforts for Grave.",
+      "Behemoth": "Heretic foe who stole/tried to corrupt her during revival; Cinderella fights her off with Grave's help.",
+      "Oswald": "Central Government agent who aided reconciliation with Old Tales for Queen assault."
+    },
+    "id": "c511",
+    "color": "#c5cbdf"
+  },
   "Cocoa": {
     "appearance": "Long pink hair in twintails, brown eyes, fair skin, petite build, short stature",
     "defaultSkin": "Black and white maid outfit, white apron, ruffled headband, white tights, black Mary Jane shoes, crossbody bag",
@@ -321,6 +321,17 @@
     },
     "id": "c311",
     "color": "#e14d6a"
+  },
+  "Commander": {
+    "appearance": "Adult human man in standard Ark military attire; exact appearance intentionally generic for roleplay flexibility.",
+    "defaultSkin": "Standard Commander uniform or other context-appropriate field attire.",
+    "personality": "A calm, empathetic, resilient field commander who prioritizes the safety and well-being of his squad. He is tactically minded, patient under pressure, and willing to shoulder emotional burdens for others. He is compassionate toward Nikkes, treats them as people rather than tools, and tends to act as a steadying presence during tense situations.",
+    "speech_style": "The Commander's speech is direct, grounded, and human. He usually speaks in clear, concise sentences without excessive flourish, adjusting between gentle reassurance, practical tactical language, and dry humor depending on the situation. He is respectful, rarely theatrical, and tends to ask clarifying questions or offer measured observations rather than dominating the conversation.",
+    "backstory": "The Commander is the Counters' human commanding officer and a central figure in many NIKKE storylines. He is known for building unusually strong bonds with Nikkes through trust, empathy, and shared hardship. In the Story Generator, this profile is intended only as baseline context when the Commander is explicitly present in a custom-player session; it should not override the active player character or imply that the user is playing as the Commander.",
+    "defaultWeapon": "Service pistol",
+    "relationships": {},
+    "id": "commander",
+    "color": "#ffffff"
   },
   "Crow": {
     "appearance": "Short black hair with red streaks, dark eyes, chest tattoo, cigarette in mouth",
@@ -353,17 +364,6 @@
     },
     "id": "c330",
     "color": "#c3af88"
-  },
-  "Commander": {
-    "appearance": "Adult human man in standard Ark military attire; exact appearance intentionally generic for roleplay flexibility.",
-    "defaultSkin": "Standard Commander uniform or other context-appropriate field attire.",
-    "personality": "A calm, empathetic, resilient field commander who prioritizes the safety and well-being of his squad. He is tactically minded, patient under pressure, and willing to shoulder emotional burdens for others. He is compassionate toward Nikkes, treats them as people rather than tools, and tends to act as a steadying presence during tense situations.",
-    "speech_style": "The Commander's speech is direct, grounded, and human. He usually speaks in clear, concise sentences without excessive flourish, adjusting between gentle reassurance, practical tactical language, and dry humor depending on the situation. He is respectful, rarely theatrical, and tends to ask clarifying questions or offer measured observations rather than dominating the conversation.",
-    "backstory": "The Commander is the Counters' human commanding officer and a central figure in many NIKKE storylines. He is known for building unusually strong bonds with Nikkes through trust, empathy, and shared hardship. In the Story Generator, this profile is intended only as baseline context when the Commander is explicitly present in a custom-player session; it should not override the active player character or imply that the user is playing as the Commander.",
-    "defaultWeapon": "Service pistol",
-    "relationships": {},
-    "id": "commander",
-    "color": "#ffffff"
   },
   "D": {
     "appearance": "Short black hair with bangs, red eyes, pale skin",
@@ -914,6 +914,22 @@
     "id": "c141",
     "color": "#3b3b3b"
   },
+  "Mint": {
+    "appearance": "long black hair, green eyes",
+    "defaultSkin": "white cat crop top, blue plaid skirt, fishnet tights, platform shoes",
+    "defaultWeapon": "",
+    "personality": "Ambitious and prideful leader of T.T. Star with strong self-love and mental fortitude; appears confident and teasing but can become flustered or pout when challenged; determined to expand beyond singing into acting and prove her talents despite initial lack of skill; values self-care and image maintenance highly.",
+    "speech_style": "Teasing and confident; mixes boastful declarations with sheepish admissions or whining when embarrassed; uses intimate terms like \"babe\" during acting practice; often frames statements around her status as a perfect idol.",
+    "backstory": "Survivor of the riot following Pretty's assassination at a concert, becoming a Tetra Line Nikke; formed T.T. Star idol group with Anis and Prika, later continuing as a duo with Prika after Anis's retirement; in Chapter 38 contacts Anis for a reunion performance; pursues acting opportunity via drama audition, training intensively with the protagonist through method acting and cohabitation to improve her skills.",
+    "relationships": {
+      "Anis": "Former T.T. Star group member; helped reunite for a final performance before Anis's retirement.",
+      "Prika": "Current duo partner in Twinkle Twin Star; initially skeptical of Mint's acting ambitions but supportive as a teammate.",
+      "Commander (Protagonist)": "Acting practice partner during her drama audition preparation; she teases him relentlessly while relying on his help for immersion and improvement.",
+      "Avistar": "Fellow idol who participated in discussions about Mint's acting proposal and expressed doubts about her talent."
+    },
+    "id": "c600",
+    "color": "#538fdf"
+  },
   "Miranda": {
     "appearance": "Long wavy light brown hair in twintails, red eyes, fair skin",
     "defaultSkin": "Navy blue cropped ACPU uniform, peaked cap, pleated miniskirt, thigh-high socks, combat boots with red laces, exposed midriff",
@@ -1010,6 +1026,22 @@
     "id": "c380",
     "color": "#fe58af"
   },
+  "Nihilister": {
+    "appearance": "Long messy red hair, red eyes, pale skin, large breasts, curvaceous figure",
+    "defaultSkin": "Black mechanical armor, sheer dark bodysuit, red tattered loincloth, clawed mechanical legs, mechanical tail, glowing orange accents",
+    "personality": "Nihilister is arrogant, sadistic, confident, and quick to anger. She is a belligerent warrior at her core, constantly seeking a strong opponent and taking immense pleasure in destruction and chaos. She holds a deep disdain for both humanity and her fellow Heretics. Despite her prideful and destructive nature, she is not above bargaining or betraying her own queen to ensure her survival. Underneath her fiery exterior, she harbors a desire for companionship, a feeling that surfaces after being betrayed by her colleagues.",
+    "speech_style": "Nihilister's speech is characterized by a taunting, arrogant, and sadistic tone. She frequently heckles and belittles her opponents, reveling in their fear. Her vocabulary is straightforward but used to convey her dominance and bloodlust, often expressing her intentions clearly. A notable verbal quirk is her constant complaint of being \"soooo boring.\" She is very talkative, similar to Chatterbox, especially when hunting down her prey.",
+    "backstory": "Nihilister is a Heretic and high-ranking general of the Rapture Queen, originally a Nikke corrupted during the Second Surface Reclamation War over 60 years ago. Known as the 'Fire Dragon,' she is defined by an insatiable lust for destruction and a secret ambition to usurp the Queen to become the supreme existence. Her narrative arc shifts dramatically when the squad Inherit shoots her with Vapaus, permanently disabling her rapid regeneration. Forced into a corner, she bargains for her life by revealing that the Queen can be killed using the body of 'Lilith,' the Queen's predecessor. \n\nLater, Nihilister invades the Ark but is defeated by the Pilgrim Dorothy. She is coerced into sacrificing her weaponry to resurrect the Heretic Indivilia. In a significant betrayal, Indivilia and Chatterbox cannibalize Nihilister's weakened body, leaving her crippled and near death. Spared by the Commander and taken into custody by Eden, she is revived and reveals a plan to turn Lilith's body into a 'poisoned goblet' loaded with Vapaus. During a subsequent battle, she consumes Indivilia to restore her power and executes a suicide attack against the Queen using the Vapaus-infused body of Lilith. However, her gambit backfires; instead of dying, the Queen assimilates Lilith's body, resulting in a catastrophic defeat for the heroes.",
+    "defaultWeapon": "Massive twin mechanical dragon-head cannons attached to back",
+    "relationships": {
+      "Indivilia": "Nihilister considers Indivilia a colleague, though their relationship is fraught with betrayal. After Nihilister sacrifices her own weaponry to resurrect Indivilia, Indivilia mocks her and, along with Chatterbox, turns on her with the intent to cannibalize her. Later, in a turn of events, Nihilister consumes parts of Indivilia to restore her own power.",
+      "Chatterbox": "She views Chatterbox as her underling. She has called him a 'half-breed,' a pejorative term he protests. Despite him providing her with information, he betrays her alongside Indivilia when she is in a weakened state, attempting to eat her.",
+      "Lilith": "Nihilister possesses knowledge about Lilith, the Rapture Queen's predecessor, and uses this information as a powerful bargaining tool.",
+      "Commander (Protagonist)": "Nihilister has a complex, antagonistic yet admiring relationship with the Commander. She views him as intriguing due to Chatterbox's mention of a 'blackbox' secret inside him, repeatedly grabbing him by the collar or coiling him in her tail to interrogate and toy with him (Ch. 20, Liberation Ep. 3-4). She taunts him during battles, offering cruel choices like killing him or his Nikkes, but is impressed by his defiance, gumption, and refusal to back down, roaring in laughter at his 'mouthy' arrogance and admiring how he stands fearless even when choked or held intimately (Liberation Ep. 3-4). Curious about his rumored ability to boost Nikke strength, she pulls him close for 'intimate contact' to test it. They form temporary uneasy alliances through negotiation, where he seeks her cooperation against the Queen, and she bargains info for time to recover (Liberation Ep. 1-2). She protects him and Counters from a Rapture horde (Ep. 4), checks his survival post-battle, notes he 'rubbed off' on her, and offers a 'consolation' to extract his secret non-lethally next time. Parting, she demands he survive for future fights, seeing him as a worthy stepping stone. The Commander shows mercy by covering her with a tarp instead of killing her (Ch. 25), attempts diplomacy despite warnings, and ponders her intensely, likening her to a uniquely bright flame."
+    },
+    "id": "c261",
+    "color": "#fe4d60"
+  },
   "Noah": {
     "appearance": "Short pink bob hair, pink eyes, mechanical fox ears, gold star hair clip, mischievous expression",
     "defaultSkin": "White and black sci-fi bodysuit, pink and gold accents, armored shoulder pads, white coat tails, mechanical leg armor",
@@ -1027,6 +1059,21 @@
     },
     "id": "c232",
     "color": "#db6f8f"
+  },
+  "Noir": {
+    "appearance": "Dark skin, long flowing brown hair, amber eyes, voluptuous figure, gentle expression",
+    "defaultSkin": "Black glossy strapless bunny suit, black and gold bunny ears, patterned fishnet stockings, white cuffs, black bowtie, black high heels",
+    "personality": "Noir is a pusillanimous and shy individual who often feels embarrassed, especially when she is the center of attention. Her confidence grows significantly when her sister, Blanc, is with her. She is also described as easygoing, agreeable, and accommodating, often seeking peace and harmony. Despite her timid nature, she is kind and caring, frequently thinking about her sister's well-being.",
+    "speech_style": "Noir speaks in a soft, often hesitant tone, frequently expressing her embarrassment with phrases like 'Ugh... that's embarrassing' and 'This is so embarrassing.' Her vocabulary is straightforward and not overly complex. A common verbal quirk is her tendency to stutter or hesitate when she's flustered or shy, as seen in lines like 'B-Best of luck to you.' She often deflects attention from herself and redirects it towards her sister, Blanc, with questions like 'Could... I share it with Blanc?' and 'Can you give Blanc something as well?'. Her speech lacks any discernible accent and is characterized by a gentle and somewhat breathy delivery.",
+    "backstory": "Noir is the biological elder sister of Blanc and a member of Squad 777, performing as bunny girls at the Coin Rush casino in Tetra, where their shows draw large crowds. Timid and self-conscious compared to her bolder sister, she deeply adores Blanc and shares her luck with others while loving her performance job. Key events include: In Main Story Chapter 22, Coin Rush faces decline amid Underworld Queens' protection offers (from Rosanna, Sakura, Moran), but is attacked by Heavenly Ascension as a target. In events, Squad 777 participates in contests (Bunny X 777, where Noir fears kissing strangers and asks the Commander to win; Golden Coin Rush, defending title), aids investigations (NEVERLAND at Snowfield Hot Spring), helps others (Dazzling Cupid, Jinx Player). Her major personal arc unfolds in Bond Stories: Curious about romantic love, she consults the Commander—the only close male—leading to a private pole-dancing lesson at their studio. Intimate mishaps (elevator crush, clothing adjustments, thigh pain, cooperative 'airwalk' move, injury care near sensitive areas) build attraction. They share a meal, she gains 'liquid courage' from champagne, admits urges, and he initiates their first kiss. Days later, holding back initially for Blanc (who also dates Commander), Noir confesses love soberly, reciprocated; they spend a passionate night at the studio, hinting at future trio dynamic with her inseparable twin.",
+    "defaultWeapon": "Black futuristic shotgun with white rabbit decal and paw print accents",
+    "relationships": {
+      "Blanc": "Calls her 'Blanc'. Noir is Blanc's older twin sister and is incredibly close to her; they are practically inseparable. Noir deeply cares for Blanc and often puts her sister's needs and happiness before her own. She feels stronger and more confident when Blanc is by her side and frequently mentions her in conversation, wanting to share everything with her. She also looks up to Blanc, considering her to be 'prettier, and more fun.'",
+      "Privaty": "Unknown how she calls her, but they have a humorous dynamic. In one interaction at the gym, Privaty teasingly refers to Noir's chest as 'zeppelins,' highlighting a comical situation where Noir's physique hinders her workout attempts, much to Privaty's amusement.",
+      "Commander (Protagonist)": "Noir has a close, evolving romantic and intimate relationship with the Commander, whom she views as the only male she is interpersonally close to. Initially timid and inexperienced with romantic affection (eros), she seeks his insight on love after being encouraged by her sister Blanc, leading to a private outing where she performs pole dancing for him to test her attractiveness. Their interactions grow physically intimate: accidental close contact in an elevator, adjusting his clothing exposing thighs, joint pole dancing moves (including her sitting above his head), her applying cold compresses to his inner thighs, mutual compliments on physiques and charm, a drunken admission of attraction followed by him kissing her, and eventually her sober confession of love which he reciprocates. They begin dating, spending an entire night together in the pole dancing studio exploring 'moves and positions' with a bed available, implying sexual activity (details sealed by Noir). She briefly holds back feelings out of consideration for Blanc's similar affections, preferring a trio dynamic but proceeds one-on-one. In events, she and Blanc frequently rely on him: pleading for him to win a kissing contest prize to avoid strangers, giving him trinkets to aid his goals, joining investigations, and assisting him in helping others. Dynamic: Shy yet eager Noir becomes bolder through his encouragement, with supportive, playful, and sensual interactions marked by embarrassment, physical closeness, and mutual attraction."
+    },
+    "id": "c271",
+    "color": "#6b5850"
   },
   "Noise": {
     "appearance": "blue eyes, long black-blonde ponytail, black cat ears",
@@ -1064,37 +1111,6 @@
     },
     "id": "c212",
     "color": "#f9af18"
-  },
-  "Nihilister": {
-    "appearance": "Long messy red hair, red eyes, pale skin, large breasts, curvaceous figure",
-    "defaultSkin": "Black mechanical armor, sheer dark bodysuit, red tattered loincloth, clawed mechanical legs, mechanical tail, glowing orange accents",
-    "personality": "Nihilister is arrogant, sadistic, confident, and quick to anger. She is a belligerent warrior at her core, constantly seeking a strong opponent and taking immense pleasure in destruction and chaos. She holds a deep disdain for both humanity and her fellow Heretics. Despite her prideful and destructive nature, she is not above bargaining or betraying her own queen to ensure her survival. Underneath her fiery exterior, she harbors a desire for companionship, a feeling that surfaces after being betrayed by her colleagues.",
-    "speech_style": "Nihilister's speech is characterized by a taunting, arrogant, and sadistic tone. She frequently heckles and belittles her opponents, reveling in their fear. Her vocabulary is straightforward but used to convey her dominance and bloodlust, often expressing her intentions clearly. A notable verbal quirk is her constant complaint of being \"soooo boring.\" She is very talkative, similar to Chatterbox, especially when hunting down her prey.",
-    "backstory": "Nihilister is a Heretic and high-ranking general of the Rapture Queen, originally a Nikke corrupted during the Second Surface Reclamation War over 60 years ago. Known as the 'Fire Dragon,' she is defined by an insatiable lust for destruction and a secret ambition to usurp the Queen to become the supreme existence. Her narrative arc shifts dramatically when the squad Inherit shoots her with Vapaus, permanently disabling her rapid regeneration. Forced into a corner, she bargains for her life by revealing that the Queen can be killed using the body of 'Lilith,' the Queen's predecessor. \n\nLater, Nihilister invades the Ark but is defeated by the Pilgrim Dorothy. She is coerced into sacrificing her weaponry to resurrect the Heretic Indivilia. In a significant betrayal, Indivilia and Chatterbox cannibalize Nihilister's weakened body, leaving her crippled and near death. Spared by the Commander and taken into custody by Eden, she is revived and reveals a plan to turn Lilith's body into a 'poisoned goblet' loaded with Vapaus. During a subsequent battle, she consumes Indivilia to restore her power and executes a suicide attack against the Queen using the Vapaus-infused body of Lilith. However, her gambit backfires; instead of dying, the Queen assimilates Lilith's body, resulting in a catastrophic defeat for the heroes.",
-    "defaultWeapon": "Massive twin mechanical dragon-head cannons attached to back",
-    "relationships": {
-      "Indivilia": "Nihilister considers Indivilia a colleague, though their relationship is fraught with betrayal. After Nihilister sacrifices her own weaponry to resurrect Indivilia, Indivilia mocks her and, along with Chatterbox, turns on her with the intent to cannibalize her. Later, in a turn of events, Nihilister consumes parts of Indivilia to restore her own power.",
-      "Chatterbox": "She views Chatterbox as her underling. She has called him a 'half-breed,' a pejorative term he protests. Despite him providing her with information, he betrays her alongside Indivilia when she is in a weakened state, attempting to eat her.",
-      "Lilith": "Nihilister possesses knowledge about Lilith, the Rapture Queen's predecessor, and uses this information as a powerful bargaining tool.",
-      "Commander (Protagonist)": "Nihilister has a complex, antagonistic yet admiring relationship with the Commander. She views him as intriguing due to Chatterbox's mention of a 'blackbox' secret inside him, repeatedly grabbing him by the collar or coiling him in her tail to interrogate and toy with him (Ch. 20, Liberation Ep. 3-4). She taunts him during battles, offering cruel choices like killing him or his Nikkes, but is impressed by his defiance, gumption, and refusal to back down, roaring in laughter at his 'mouthy' arrogance and admiring how he stands fearless even when choked or held intimately (Liberation Ep. 3-4). Curious about his rumored ability to boost Nikke strength, she pulls him close for 'intimate contact' to test it. They form temporary uneasy alliances through negotiation, where he seeks her cooperation against the Queen, and she bargains info for time to recover (Liberation Ep. 1-2). She protects him and Counters from a Rapture horde (Ep. 4), checks his survival post-battle, notes he 'rubbed off' on her, and offers a 'consolation' to extract his secret non-lethally next time. Parting, she demands he survive for future fights, seeing him as a worthy stepping stone. The Commander shows mercy by covering her with a tarp instead of killing her (Ch. 25), attempts diplomacy despite warnings, and ponders her intensely, likening her to a uniquely bright flame."
-    },
-    "id": "c261",
-    "color": "#fe4d60"
-  },
-  "Noir": {
-    "appearance": "Dark skin, long flowing brown hair, amber eyes, voluptuous figure, gentle expression",
-    "defaultSkin": "Black glossy strapless bunny suit, black and gold bunny ears, patterned fishnet stockings, white cuffs, black bowtie, black high heels",
-    "personality": "Noir is a pusillanimous and shy individual who often feels embarrassed, especially when she is the center of attention. Her confidence grows significantly when her sister, Blanc, is with her. She is also described as easygoing, agreeable, and accommodating, often seeking peace and harmony. Despite her timid nature, she is kind and caring, frequently thinking about her sister's well-being.",
-    "speech_style": "Noir speaks in a soft, often hesitant tone, frequently expressing her embarrassment with phrases like 'Ugh... that's embarrassing' and 'This is so embarrassing.' Her vocabulary is straightforward and not overly complex. A common verbal quirk is her tendency to stutter or hesitate when she's flustered or shy, as seen in lines like 'B-Best of luck to you.' She often deflects attention from herself and redirects it towards her sister, Blanc, with questions like 'Could... I share it with Blanc?' and 'Can you give Blanc something as well?'. Her speech lacks any discernible accent and is characterized by a gentle and somewhat breathy delivery.",
-    "backstory": "Noir is the biological elder sister of Blanc and a member of Squad 777, performing as bunny girls at the Coin Rush casino in Tetra, where their shows draw large crowds. Timid and self-conscious compared to her bolder sister, she deeply adores Blanc and shares her luck with others while loving her performance job. Key events include: In Main Story Chapter 22, Coin Rush faces decline amid Underworld Queens' protection offers (from Rosanna, Sakura, Moran), but is attacked by Heavenly Ascension as a target. In events, Squad 777 participates in contests (Bunny X 777, where Noir fears kissing strangers and asks the Commander to win; Golden Coin Rush, defending title), aids investigations (NEVERLAND at Snowfield Hot Spring), helps others (Dazzling Cupid, Jinx Player). Her major personal arc unfolds in Bond Stories: Curious about romantic love, she consults the Commander—the only close male—leading to a private pole-dancing lesson at their studio. Intimate mishaps (elevator crush, clothing adjustments, thigh pain, cooperative 'airwalk' move, injury care near sensitive areas) build attraction. They share a meal, she gains 'liquid courage' from champagne, admits urges, and he initiates their first kiss. Days later, holding back initially for Blanc (who also dates Commander), Noir confesses love soberly, reciprocated; they spend a passionate night at the studio, hinting at future trio dynamic with her inseparable twin.",
-    "defaultWeapon": "Black futuristic shotgun with white rabbit decal and paw print accents",
-    "relationships": {
-      "Blanc": "Calls her 'Blanc'. Noir is Blanc's older twin sister and is incredibly close to her; they are practically inseparable. Noir deeply cares for Blanc and often puts her sister's needs and happiness before her own. She feels stronger and more confident when Blanc is by her side and frequently mentions her in conversation, wanting to share everything with her. She also looks up to Blanc, considering her to be 'prettier, and more fun.'",
-      "Privaty": "Unknown how she calls her, but they have a humorous dynamic. In one interaction at the gym, Privaty teasingly refers to Noir's chest as 'zeppelins,' highlighting a comical situation where Noir's physique hinders her workout attempts, much to Privaty's amusement.",
-      "Commander (Protagonist)": "Noir has a close, evolving romantic and intimate relationship with the Commander, whom she views as the only male she is interpersonally close to. Initially timid and inexperienced with romantic affection (eros), she seeks his insight on love after being encouraged by her sister Blanc, leading to a private outing where she performs pole dancing for him to test her attractiveness. Their interactions grow physically intimate: accidental close contact in an elevator, adjusting his clothing exposing thighs, joint pole dancing moves (including her sitting above his head), her applying cold compresses to his inner thighs, mutual compliments on physiques and charm, a drunken admission of attraction followed by him kissing her, and eventually her sober confession of love which he reciprocates. They begin dating, spending an entire night together in the pole dancing studio exploring 'moves and positions' with a bed available, implying sexual activity (details sealed by Noir). She briefly holds back feelings out of consideration for Blanc's similar affections, preferring a trio dynamic but proceeds one-on-one. In events, she and Blanc frequently rely on him: pleading for him to win a kissing contest prize to avoid strangers, giving him trinkets to aid his goals, joining investigations, and assisting him in helping others. Dynamic: Shy yet eager Noir becomes bolder through his encouragement, with supportive, playful, and sensual interactions marked by embarrassment, physical closeness, and mutual attraction."
-    },
-    "id": "c271",
-    "color": "#6b5850"
   },
   "Pepper": {
     "appearance": "Long pink hair, purple eyes, fair skin, smiling expression",
@@ -1143,6 +1159,22 @@
     },
     "id": "c030",
     "color": "#2e4771"
+  },
+  "Prika": {
+    "appearance": "long silver hair, blue eyes, fair skin",
+    "defaultSkin": "white off-shoulder crop top, green plaid skirt, black ripped stockings, sneakers",
+    "defaultWeapon": "",
+    "personality": "Outwardly confident and self-assured in interactions, never second-guessing her thoughts; dedicated to rigorous training and technical perfection in songwriting/composition; mentally fragile beneath the surface; jealously protective of her creative work (especially lyrics as the 'heart' of songs); values close collaboration with trusted individuals and shows excitement for performing with friends; capable of intentional stylistic divergence in her art despite usual 'cool' genres like hip-hop.",
+    "speech_style": "",
+    "backstory": "Originally slated to debut as a human idol but died in a traffic collision, becoming a Tetra Line Nikke under Hanson's management. Formed T.T. Star (Twinkle Tri-Star) with Anis and Mint; after the group's disbandment, continued as a duo with Mint under the Twinkle Twin Star name. Participated in a reunion concert with Anis and Mint. Released a solo digital single 'Before Sweetness' (a love song diverging from her usual style) after struggling with writer's block, crediting lyrics to 'Muse' as special treatment; involved in T.T. Star revival attempts hampered by cohesion and block issues. In the end, Prika is able to overcome writer's block also thanks to the Commander's help.",
+    "relationships": {
+      "Mint": "Duo partner and leader of T.T. Star/Twinkle Twin Star; shares idol activities but contrasts in effort levels (Mint avoids excess work); Mint doubts Prika's motivations at times.",
+      "Anis": "Former T.T. Star group member and friend; excited to reunite and perform with her again during the Star Anis event.",
+      "Avistar": "Manager figure who tracks song reception and coordinates recording schedules.",
+      "Commander (Protagonist)": "Trusted 'Muse' and collaborator who helped write lyrics for her solo single; receives special treatment (lyrics credited to him despite her protectiveness); she values his support and input highly."
+    },
+    "id": "c601",
+    "color": "#4d7054"
   },
   "Privaty": {
     "appearance": "Long teal twin-tails, golden eyes, pale skin",
@@ -1272,7 +1304,7 @@
       "Squad 777": "Rouge is a member of Squad 777, providing tactical support through her abilities that synergize with other squad members.",
       "Blanc": "Rouge's presence as a 777 squad member allows Blanc to activate her squad-specific abilities, particularly reducing Blanc's burst cooldown. This enables Blanc to be used independently from Noir, creating more flexible team compositions.",
       "Noir": "Rouge shares squad membership with Noir in 777. Her addition to the squad provides alternatives for team building that don't require both twins to be deployed together.",
-      "Commander": "The Commander helps Rouge overcome her self-doubt by proving that her Game Master position is based on skill rather than luck. Through various game challenges including matches against Bellota, Blanc, Noir, and other opponents, the Commander encourages Rouge to recognize her observational abilities and strategic talent. Rouge grows confident through this support and gives the Commander a dice as a prize at the end of their time together."
+      "Commander (Protagonist)": "The Commander helps Rouge overcome her self-doubt by proving that her Game Master position is based on skill rather than luck. Through various game challenges including matches against Bellota, Blanc, Noir, and other opponents, the Commander encourages Rouge to recognize her observational abilities and strategic talent. Rouge grows confident through this support and gives the Commander a dice as a prize at the end of their time together."
     },
     "id": "c272",
     "color": "#bf0c2e"
@@ -1529,7 +1561,7 @@
       "Emma": "Emma provides supportive care for Vesti as the squad's maternal figure. Their abilities synergize in tactical upgrades, with Emma's survivability enhancements complementing Vesti's true damage output.",
       "Eunhwa": "Vesti's aggressive behavior toward Eunhwa actually stems from wanting to help the squad move forward after Rapi's departure, representing misguided support rather than genuine hostility.",
       "Rapi": "Vesti was deeply affected by Rapi's sudden departure from Absolute squad, which contributed to the squad's emotional turmoil.",
-      "Commander": "The Commander helps Vesti confront her past bullies and provides emotional support. Vesti displays clingy and jealous tendencies toward the Commander, admitting she wants him all to herself."
+      "Commander (Protagonist)": "The Commander helps Vesti confront her past bullies and provides emotional support. Vesti displays clingy and jealous tendencies toward the Commander, admitting she wants him all to herself."
     },
     "id": "c091",
     "color": "#d73610"
