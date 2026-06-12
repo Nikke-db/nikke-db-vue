@@ -4,7 +4,7 @@
 import { AIError, logDebug } from '@/utils/chatUtils'
 import { callGeminiSummarization } from '@/utils/geminiUtils'
 import { callPollinationsSummarization } from '@/utils/pollinationsUtils'
-import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, buildStoryResponseSchema } from '@/utils/providerConfigUtils'
+import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MESSAGES_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, OPENCODE_GO_ANTHROPIC_MODELS, modelsWithoutCacheControlSupport, buildStoryResponseSchema } from '@/utils/providerConfigUtils'
 
 // Re-exports from extracted modules
 export { modelsWithoutJsonSupport, modelsRequiringStreamForHighTokens, modelsWithoutCacheControlSupport, modelsWithoutReasoningSupport, providerOptions, tokenUsageOptions, getReasoningEffortOptions, buildStoryResponseSchema } from '@/utils/providerConfigUtils'
@@ -75,6 +75,96 @@ const sendOpenAiCompatibleRequest = async (url: string, opts: { requestBody: any
   })
 }
 
+const isOpenCodeGoAnthropicModel = (model: string) => OPENCODE_GO_ANTHROPIC_MODELS.has(model)
+
+const convertOpenAiToAnthropicMessages = (messages: any[], enableContextCaching: boolean, model: string) => {
+  const shouldAddCacheControl = enableContextCaching && !modelsWithoutCacheControlSupport.value.has(model)
+
+  let systemContent: string | undefined
+  const anthropicMessages: any[] = []
+
+  for (const msg of messages) {
+    if (msg.role === 'system') {
+      systemContent = typeof msg.content === 'string' ? msg.content : msg.content
+      continue
+    }
+    anthropicMessages.push({
+      role: msg.role,
+      content: typeof msg.content === 'string' ? msg.content : msg.content
+    })
+  }
+
+  if (shouldAddCacheControl && systemContent) {
+    const systemBlock = [{ type: 'text', text: systemContent, cache_control: { type: 'ephemeral' } }]
+    if (anthropicMessages.length >= 1) {
+      const lastIdx = anthropicMessages.length - 1
+      const lastMsg = anthropicMessages[lastIdx]
+      if (typeof lastMsg.content === 'string') {
+        anthropicMessages[lastIdx] = {
+          ...lastMsg,
+          content: [{ type: 'text', text: lastMsg.content, cache_control: { type: 'ephemeral' } }]
+        }
+      }
+    }
+    return { system: systemBlock, messages: anthropicMessages, shouldAddCacheControl }
+  }
+
+  return { system: systemContent, messages: anthropicMessages, shouldAddCacheControl }
+}
+
+const buildAnthropicRequestBody = (opts: {
+  messages: any[]
+  maxTokens: number
+  model: string
+  enableContextCaching: boolean
+  reasoningEffort?: string
+}) => {
+  const { messages, maxTokens, model, enableContextCaching, reasoningEffort } = opts
+  const { system, messages: anthropicMessages, shouldAddCacheControl } = convertOpenAiToAnthropicMessages(messages, enableContextCaching, model)
+
+  const requestBody: any = {
+    model,
+    max_tokens: maxTokens,
+    messages: anthropicMessages
+  }
+
+  if (system) {
+    requestBody.system = system
+  }
+
+  if (reasoningEffort && reasoningEffort !== 'default') {
+    requestBody.reasoning = { effort: reasoningEffort }
+  }
+
+  return { requestBody, shouldAddCacheControl }
+}
+
+const parseAnthropicTextResponse = async (response: Response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
+  }
+
+  const data = await response.json()
+  if (data.content && Array.isArray(data.content) && data.content.length > 0) {
+    return data.content[0].text
+  }
+  throw new AIError('PARSE_ERROR', 'Unexpected Anthropic response format')
+}
+
+const sendAnthropicCompatibleRequest = async (url: string, opts: { requestBody: any; apiKey: string; signal?: AbortSignal }) => {
+  return await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': opts.apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify(opts.requestBody),
+    signal: opts.signal
+  })
+}
+
 const sendOpenCodeGoRequest = async (requestBody: any, apiKey: string, signal?: AbortSignal) => {
   const response = await sendOpenAiCompatibleRequest(OPENCODE_GO_CHAT_COMPLETIONS_URL, {
     requestBody,
@@ -96,17 +186,78 @@ const sendOpenCodeGoRequest = async (requestBody: any, apiKey: string, signal?: 
   return { response }
 }
 
+const sendOpenCodeGoAnthropicRequest = async (requestBody: any, apiKey: string, signal?: AbortSignal) => {
+  const response = await sendAnthropicCompatibleRequest(OPENCODE_GO_MESSAGES_URL, {
+    requestBody,
+    apiKey,
+    signal
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('OpenCode Go Anthropic API Error Details:', errorData)
+
+    if (response.status === 429) {
+      throw new Error('RATE_LIMITED')
+    }
+
+    return { response, errorData }
+  }
+
+  return { response }
+}
+
 const isReasoningParameterError = (errorData: any) => {
   const msg = (errorData?.error?.message || '') + ' ' + (errorData?.error?.code || '')
   return msg.toLowerCase().includes('reasoning') || (typeof errorData?.message === 'string' && errorData.message.toLowerCase().includes('reasoning'))
 }
 
-const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string; apiKey: string; maxTokens: number; reasoningEffort?: string; signal?: AbortSignal }) => {
-  const { messages, model, apiKey, maxTokens, signal } = opts
+const isCacheControlError = (errorData: any) => {
+  const msg = (errorData?.error?.message || '') + ' ' + (errorData?.error?.type || '')
+  return msg.toLowerCase().includes('cache_control') || msg.toLowerCase().includes('cache control')
+}
+
+const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string; apiKey: string; maxTokens: number; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
+  const { messages, model, apiKey, maxTokens, signal, enableContextCaching = false } = opts
   let { reasoningEffort } = opts
 
   if (reasoningEffort && reasoningEffort !== 'default' && modelsWithoutReasoningSupport.value.has(model)) {
     reasoningEffort = undefined
+  }
+
+  if (isOpenCodeGoAnthropicModel(model)) {
+    const { requestBody, shouldAddCacheControl } = buildAnthropicRequestBody({ messages, maxTokens, model, enableContextCaching, reasoningEffort })
+    const result = await sendOpenCodeGoAnthropicRequest(requestBody, apiKey, signal)
+
+    if (!result.response.ok) {
+      if (result.response.status === 400 && shouldAddCacheControl && isCacheControlError(result.errorData)) {
+        console.warn(`Model ${model} does not support cache_control, remembering and retrying without it...`)
+        modelsWithoutCacheControlSupport.value.add(model)
+        sessionStorage.setItem('modelsWithoutCacheControlSupport', JSON.stringify([...modelsWithoutCacheControlSupport.value]))
+        const { requestBody: retryBody } = buildAnthropicRequestBody({ messages, maxTokens, model, enableContextCaching: false, reasoningEffort })
+        const retryResult = await sendOpenCodeGoAnthropicRequest(retryBody, apiKey, signal)
+        if (!retryResult.response.ok) {
+          throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
+        }
+        return await parseAnthropicTextResponse(retryResult.response)
+      }
+
+      if (result.response.status === 400 && isReasoningParameterError(result.errorData)) {
+        console.warn(`Model ${model} rejected reasoning settings, remembering and retrying without reasoning...`)
+        modelsWithoutReasoningSupport.value.add(model)
+        sessionStorage.setItem('modelsWithoutReasoningSupport', JSON.stringify([...modelsWithoutReasoningSupport.value]))
+        const { requestBody: retryBody } = buildAnthropicRequestBody({ messages, maxTokens, model, enableContextCaching })
+        const retryResult = await sendOpenCodeGoAnthropicRequest(retryBody, apiKey, signal)
+        if (!retryResult.response.ok) {
+          throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
+        }
+        return await parseAnthropicTextResponse(retryResult.response)
+      }
+
+      throw new AIError(result.errorData?.error?.code ?? result.response.status, result.errorData?.error?.message ?? result.response.statusText ?? 'Unknown error')
+    }
+
+    return await parseAnthropicTextResponse(result.response)
   }
 
   const requestBody = buildOpenAiCompatibleRequestBody({
@@ -414,8 +565,8 @@ export const callLocal = async (
   return data.choices[0].message.content
 }
 
-export const callOpenCodeGoSummarization = async (messages: any[], opts: { model: string; apiKey: string; maxTokens?: number; reasoningEffort?: string; signal?: AbortSignal }) => {
-  const { model, apiKey, maxTokens = 16384, reasoningEffort, signal } = opts
+export const callOpenCodeGoSummarization = async (messages: any[], opts: { model: string; apiKey: string; maxTokens?: number; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
+  const { model, apiKey, maxTokens = 16384, reasoningEffort, enableContextCaching, signal } = opts
 
   return await callOpenCodeGoTextRequest({
     messages,
@@ -423,6 +574,7 @@ export const callOpenCodeGoSummarization = async (messages: any[], opts: { model
     apiKey,
     maxTokens,
     reasoningEffort,
+    enableContextCaching,
     signal
   })
 }
@@ -435,10 +587,11 @@ export const callOpenCodeGo = async (
     modeIsGame: boolean
     maxTokens?: number
     reasoningEffort?: string
+    enableContextCaching?: boolean
     signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, modeIsGame, maxTokens = 16384, signal } = opts
+  const { model, apiKey, modeIsGame, maxTokens = 16384, signal, enableContextCaching = false } = opts
   let { reasoningEffort } = opts
 
   if (reasoningEffort && reasoningEffort !== 'default' && modelsWithoutReasoningSupport.value.has(model)) {
@@ -451,8 +604,14 @@ export const callOpenCodeGo = async (
       model,
       apiKey,
       maxTokens,
-      reasoningEffort
+      reasoningEffort,
+      enableContextCaching,
+      signal
     })
+  }
+
+  if (isOpenCodeGoAnthropicModel(model)) {
+    return callWithoutJsonFormat()
   }
 
   if (modelsWithoutJsonSupport.value.has(model)) {
@@ -741,7 +900,7 @@ export const summarizeChunk = async (
   if (opts.apiProvider === 'gemini') {
     summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'opencode-go') {
-    summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, signal: opts.signal })
+    summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, enableContextCaching: opts.enableContextCaching, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
     summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'pollinations') {
@@ -782,7 +941,7 @@ export const compactSummary = async (
   if (opts.apiProvider === 'gemini') {
     summary = await callGeminiSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'opencode-go') {
-    summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, signal: opts.signal })
+    summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, enableContextCaching: opts.enableContextCaching, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
     summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
   } else if (opts.apiProvider === 'pollinations') {
