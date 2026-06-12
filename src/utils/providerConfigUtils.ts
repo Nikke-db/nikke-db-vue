@@ -15,10 +15,19 @@ export const providerOptions = [
 
 const OPENCODE_GO_BASE = import.meta.env.DEV ? '/opencode-go' : 'https://opencode.ai'
 export const OPENCODE_GO_CHAT_COMPLETIONS_URL = `${OPENCODE_GO_BASE}/zen/go/v1/chat/completions`
+export const OPENCODE_GO_MESSAGES_URL = `${OPENCODE_GO_BASE}/zen/go/v1/messages`
 export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE}/zen/go/v1/models`
 export const OPENCODE_GO_EXCLUDED_MODEL_IDS = new Set([
   'minimax-m2.5',
   'minimax-m2.7'
+])
+export const OPENCODE_GO_ANTHROPIC_MODELS = new Set([
+  'minimax-m3',
+  'minimax-m2.7',
+  'minimax-m2.5',
+  'qwen3.7-max',
+  'qwen3.7-plus',
+  'qwen3.6-plus'
 ])
 
 export const tokenUsageOptions = [

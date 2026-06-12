@@ -285,16 +285,44 @@ const clearSpineReferences = (player?: any) => {
   }
 }
 
+const forceRemovePlayerDom = () => {
+  const container = document.getElementById('player-container')
+  if (!container) return
+
+  const canvases = container.querySelectorAll('.spine-player-canvas')
+  canvases.forEach((c) => c.remove())
+
+  const controls = container.querySelectorAll('.spine-player-controls')
+  controls.forEach((c) => c.remove())
+
+  canvas = null
+}
+
 const disposeSpineInstance = (player: any, context: string) => {
   if (!player) return
 
   try {
-    player.dispose()
+    if (player.stopRequestAnimationFrame) {
+      player.stopRequestAnimationFrame = true
+    }
+  } catch (_) { /* ignore */ }
+
+  try {
+    if (player.assetManager && typeof player.assetManager.dispose === 'function') {
+      player.assetManager.dispose()
+    }
+  } catch (_) { /* ignore */ }
+
+  try {
+    if (!player.disposed) {
+      player.dispose()
+    }
   } catch (e) {
     console.warn(`[Loader] Error disposing ${context}:`, e)
   }
 
   clearSpineReferences(player)
+  forceRemovePlayerDom()
 }
 
 const handleSpineLoadFailure = ({
@@ -344,6 +372,7 @@ const handleSpineLoadFailure = ({
     disposeSpineInstance(player, `${stage} failure`)
   } else {
     clearSpineReferences()
+    forceRemovePlayerDom()
   }
 
   if (retryAttempt < MAX_SPINE_LOAD_RETRIES) {
@@ -563,6 +592,10 @@ const spineLoader = (retryAttempt = 0) => {
       const playerTimeoutId = window.setTimeout(() => {
         if (playerSettled || thisLoadId !== currentLoadId) return
         playerSettled = true
+        
+        // CRITICAL: Pass the spineCanvas instance so it gets properly disposed
+        // The SpinePlayer is still alive and trying to load - we must kill it
+        const hungPlayer = spineCanvas
         handleSpineLoadFailure({
           loadId: thisLoadId,
           retryAttempt,
@@ -571,7 +604,8 @@ const spineLoader = (retryAttempt = 0) => {
           requestedSkelUrl: skelUrl,
           requestedAtlasUrl: atlasUrl,
           stage: 'asset manager',
-          message: `SpinePlayer timed out after ${SPINE_PLAYER_TIMEOUT_MS}ms (atlas/texture fetch hung).`
+          message: `SpinePlayer timed out after ${SPINE_PLAYER_TIMEOUT_MS}ms (atlas/texture fetch hung).`,
+          player: hungPlayer
         })
       }, SPINE_PLAYER_TIMEOUT_MS)
 
@@ -895,6 +929,7 @@ watch(() => market.live2d.customLoad, () => {
     disposeSpineInstance(spineCanvas, 'spineCanvas for customLoad')
   } else {
     clearSpineReferences()
+    forceRemovePlayerDom()
   }
   market.load.beginLoad()
   customSpineLoader()
@@ -1037,6 +1072,7 @@ const loadSpineAfterWatcher = () => {
       disposeSpineInstance(spineCanvas, 'spineCanvas')
     } else {
       clearSpineReferences()
+      forceRemovePlayerDom()
     }
     market.load.beginLoad()
     spineLoader()

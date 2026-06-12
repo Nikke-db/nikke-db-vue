@@ -2924,6 +2924,7 @@ const callOpenCodeGo = async (messages: any[]) => {
     apiKey: apiKey.value,
     modeIsGame: mode.value === 'game',
     reasoningEffort: reasoningEffort.value,
+    enableContextCaching: enableContextCaching.value,
     signal: activeAbortController?.signal
   })
 }
