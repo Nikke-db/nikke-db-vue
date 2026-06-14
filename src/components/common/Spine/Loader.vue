@@ -325,6 +325,29 @@ const disposeSpineInstance = (player: any, context: string) => {
   forceRemovePlayerDom()
 }
 
+const isDefinitiveMissingAssetError = (
+  stage: string,
+  details?: Record<string, any>,
+  assetErrors?: Record<string, string>,
+  message?: string
+): boolean => {
+  if (stage === 'skeleton request') {
+    return details?.status === 404
+  }
+
+  if (message && message.includes('does not have the desired animation')) {
+    return true
+  }
+
+  if (assetErrors) {
+    return Object.values(assetErrors).some((msg) => {
+      return /status\s+404/.test(msg) || msg.startsWith('Couldn\'t load image:')
+    })
+  }
+
+  return false
+}
+
 const handleSpineLoadFailure = ({
   loadId,
   retryAttempt,
@@ -368,6 +391,22 @@ const handleSpineLoadFailure = ({
     ...details
   })
 
+  const isMissingAsset = isDefinitiveMissingAssetError(stage, details, assetErrors, message)
+
+  if (isMissingAsset) {
+    // Real missing asset (e.g. Logey aim/cover): keep the SpinePlayer error overlay visible
+    // Do not retry, and unblock any waiting story-gen playback.
+    if (!player) {
+      clearSpineReferences()
+      forceRemovePlayerDom()
+    }
+
+    wrongfullyLoaded()
+    market.live2d.triggerFinishedLoading()
+    return
+  }
+
+  // Transient failure / timeout path: tear down and retry.
   if (player) {
     disposeSpineInstance(player, `${stage} failure`)
   } else {
