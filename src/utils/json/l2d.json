@@ -336,6 +336,10 @@
     "id": "c113"
   },
   {
+    "name": "E.H. Junkyard Vanguard",
+    "id": "c113_01"
+  },
+  {
     "name": "N102",
     "id": "c120"
   },
@@ -792,6 +796,10 @@
     "id": "c281_01"
   },
   {
+    "name": "Moran King of Flowers",
+    "id": "c281_02"
+  },
+  {
     "name": "Sakura",
     "id": "c282"
   },
@@ -1104,6 +1112,10 @@
     "id": "c450_02"
   },
   {
+    "name": "Naga Ring Ensemble",
+    "id": "c450_03"
+  },
+  {
     "name": "Tia",
     "id": "c451"
   },
@@ -1264,8 +1276,21 @@
     "id": "c563"
   },
   {
-    "name": "Black Ark Ranger",
+    "name": "Ark Ranger Black",
     "id": "c570"
+  },
+  {
+    "name": "Ark Ranger Black",
+    "id": "c570_99",
+    "f": "c570_99"
+  },
+  {
+    "name": "Ark Ranger Red",
+    "id": "c571"
+  },
+  {
+    "name": "Ark Ranger Blue",
+    "id": "c572"
   },
   {
     "name": "Phantom",
@@ -2060,6 +2085,10 @@
     "id": "c9026"
   },
   {
+    "name": "NPC TBA",
+    "id": "c9028"
+  },
+  {
     "name": "Blue Water Island",
     "id": "bluewaterisland"
   },
@@ -2393,6 +2422,11 @@
     "name": "Bitter Spice",
     "id": "bitterspice",
     "f": "EventScene_bitterspice_01"
+  },
+  {
+    "name": "Ark Ranger",
+    "id": "arkranger",
+    "f": "EventScene_arkranger_03"
   },
   {
     "name": "Smol Ade",
