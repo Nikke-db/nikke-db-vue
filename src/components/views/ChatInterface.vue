@@ -24,16 +24,7 @@
     <div
       class="chat-container"
       v-show="chatMode === 'classic' || (chatMode === 'nikke' && !nikkeOverlayVisible)"
-      :style="{
-        top: chatPosition.y + 'px',
-        left: chatPosition.x + 'px',
-        width: chatSize.width + 'px',
-        height: chatSize.height + 'px',
-        bottom: 'auto',
-        maxHeight: 'none',
-        '--chat-width': chatSize.width + 'px',
-        '--chat-height': chatSize.height + 'px'
-      }"
+      :style="chatContainerStyle"
     >
       <!-- Drag Handle -->
       <div class="chat-drag-handle" @mousedown="startDrag" @touchstart="startDrag">
@@ -89,6 +80,27 @@
           <n-button type="warning" @click="retryLastMessage" v-if="showRetry && !isLoading" :disabled="isApiKeyMissing">Retry</n-button>
         </template>
         <template v-else>
+          <div class="mobile-overflow-inline">
+            <n-button size="tiny" quaternary circle title="More" aria-label="More actions" aria-haspopup="true" :aria-expanded="showMobileOverflowMenu" @click="toggleMobileOverflowMenu">
+              <template #icon><n-icon><OverflowMenuHorizontal /></n-icon></template>
+            </n-button>
+            <transition name="fade">
+              <div v-if="showMobileOverflowMenu" class="mobile-overflow-sheet" @click="closeMobileOverflowMenu">
+                <div class="mobile-overflow-sheet-content">
+                  <button type="button" class="mobile-overflow-sheet-close" @click="closeMobileOverflowMenu" aria-label="Close menu">
+                    <n-icon><Close /></n-icon>
+                  </button>
+                  <div class="mobile-overflow-sheet-title">Actions</div>
+                  <button type="button" class="mobile-overflow-sheet-item" :disabled="chatHistory.length === 0 || isLoading" @click="saveSession">Save session</button>
+                  <button type="button" class="mobile-overflow-sheet-item" :disabled="isLoading" @click="triggerRestore">Load session</button>
+                  <button type="button" class="mobile-overflow-sheet-item" :disabled="isCompactSummaryDisabled" @click="handleCompactSummary">Compaction</button>
+                  <button type="button" class="mobile-overflow-sheet-item" @click="showRosterList = !showRosterList">Characters</button>
+                  <button type="button" class="mobile-overflow-sheet-item" :disabled="isLoading" @click="showPresetsModal = true">Presets</button>
+                  <button type="button" class="mobile-overflow-sheet-item" :disabled="!storySummary || isLoading" @click="openSummaryModal">Story Summary</button>
+                </div>
+              </div>
+            </transition>
+          </div>
           <div class="mobile-btn-row">
             <n-button type="primary" size="tiny" circle @click="sendMessage" :disabled="isLoading || !userInput.trim() || isApiKeyMissing" title="Send" aria-label="Send message">
               <template #icon><n-icon><Send /></n-icon></template>
@@ -105,21 +117,6 @@
             <n-button type="error" size="tiny" circle @click="resetSession" :disabled="isLoading || chatHistory.length === 0" title="Reset Session" aria-label="Reset session">
               <template #icon><n-icon><Reset /></n-icon></template>
             </n-button>
-            <n-popover trigger="click" placement="top" style="max-width: 240px">
-              <template #trigger>
-                <n-button size="tiny" quaternary circle title="More" aria-label="More actions" aria-haspopup="true">
-                  <template #icon><n-icon><OverflowMenuHorizontal /></n-icon></template>
-                </n-button>
-              </template>
-              <div class="mobile-overflow-menu" style="display: flex; flex-direction: column; gap: 6px">
-                <n-button size="small" type="error" @click="saveSession" :disabled="chatHistory.length === 0 || isLoading" block>Save</n-button>
-                <n-button size="small" type="warning" @click="triggerRestore" :disabled="isLoading" block>Load</n-button>
-                <n-button size="small" type="info" @click="handleCompactSummary" :disabled="isCompactSummaryDisabled" block>Compaction</n-button>
-                <n-button size="small" type="primary" @click="showRosterList = !showRosterList" block>Characters</n-button>
-                <n-button size="small" type="primary" @click="showPresetsModal = true" :disabled="isLoading" block>Presets</n-button>
-                <n-button size="small" type="info" @click="openSummaryModal" :disabled="!storySummary || isLoading" block>Story Summary</n-button>
-              </div>
-            </n-popover>
           </div>
         </template>
       </div>
@@ -208,7 +205,7 @@
             </div>
           </div>
         </div>
-        <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top">
+        <n-popover trigger="click" v-model:show="showRemindersDropdown" placement="top" to="body">
           <template #trigger>
             <n-button type="info" size="small" :style="{ opacity: isLoading ? 0.4 : 0.8, transition: 'opacity 0.15s' }">
               <template #icon>
@@ -958,7 +955,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted, type Ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useMarket } from '@/stores/market'
-import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document, OverflowMenuHorizontal, Send, Stop, Play } from '@vicons/carbon'
+import { Settings, Help, Save, Upload, TrashCan, Reset, Renew, Draggable, Maximize, TextScale, Bookmark, Document, OverflowMenuHorizontal, Send, Stop, Play, Close } from '@vicons/carbon'
 import { NIcon, NButton, NInput, NDrawer, NDrawerContent, NForm, NFormItem, NSelect, NSwitch, NPopover, NAlert, NSpin, NCheckbox, NTag, NModal, NPopconfirm } from 'naive-ui'
 import l2d from '@/utils/json/l2d.json'
 import localCharacterProfiles from '@/utils/json/characterProfiles.json'
@@ -1083,7 +1080,16 @@ const characterCatalog = buildCharacterCatalog()
 validateAnimationOverrides()
 const rosterRows = ref<StoryCharacterEntry[]>([])
 const showRosterList = ref(false)
+const showMobileOverflowMenu = ref(false)
 const showSummaryModal = ref(false)
+
+const toggleMobileOverflowMenu = () => {
+  showMobileOverflowMenu.value = !showMobileOverflowMenu.value
+}
+
+const closeMobileOverflowMenu = () => {
+  showMobileOverflowMenu.value = false
+}
 const editableSummary = ref('')
 const {
   showPresetsModal,
@@ -1383,6 +1389,30 @@ const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0, initialX: 0, initialY
 // Wrapper so the template doesn't need to pass Refs directly (auto-unwrap in templates
 // would pass plain objects instead of Ref<WindowSize> / Ref<WindowPosition>).
 const resetChatLayout = () => initChatLayout(chatSize, chatPosition, isCompactMobile.value)
+
+// In compact/mobile mode the chat box is a fixed bottom overlay instead of a
+// draggable desktop window, so we skip the pixel top/left/width/height bindings
+// and only keep the CSS variables used by child components.
+const chatContainerStyle = computed(() => {
+  const cssVars = {
+    '--chat-width': chatSize.value.width + 'px',
+    '--chat-height': chatSize.value.height + 'px'
+  }
+
+  if (isCompactMobile.value) {
+    return cssVars
+  }
+
+  return {
+    top: chatPosition.value.y + 'px',
+    left: chatPosition.value.x + 'px',
+    width: chatSize.value.width + 'px',
+    height: chatSize.value.height + 'px',
+    bottom: 'auto',
+    maxHeight: 'none',
+    ...cssVars
+  }
+})
 
 // Effective profiles = base profiles + progression overlays (personality + relationships only)
 const effectiveCharacterProfiles = computed<Record<string, any>>(() => {
@@ -2190,6 +2220,13 @@ const handleResize = () => {
   }
 }
 
+const onDocumentClickForOverflowMenu = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('.mobile-overflow-inline')) {
+    showMobileOverflowMenu.value = false
+  }
+}
+
 onMounted(() => {
   originalHQAssets.value = market.live2d.HQassets
   checkGuide()
@@ -2209,6 +2246,7 @@ onMounted(() => {
   document.addEventListener('mouseup', onNikkeGlobalEnd as any)
 
   window.addEventListener('resize', handleResize)
+  document.addEventListener('click', onDocumentClickForOverflowMenu)
 
   // Re-layout when compact mode toggles (device rotation, resize across threshold)
   watch(isCompactMobile, () => {
@@ -2225,6 +2263,7 @@ onUnmounted(() => {
   market.live2d.HQassets = originalHQAssets.value
   window.removeEventListener('beforeunload', handleBeforeUnload)
   window.removeEventListener('resize', handleResize)
+  document.removeEventListener('click', onDocumentClickForOverflowMenu)
   unlockMobilePageScroll()
   restoreViewportZoom()
 
@@ -4565,7 +4604,7 @@ const saveSummaryEdit = () => {
   gap: 18px;
 }
 
-/* ── Compact Mobile Tweaks (chatbox stays draggable & transparent) ── */
+/* ── Compact Mobile Tweaks (fixed bottom overlay, non-draggable) ── */
 
 .chat-interface.compact-mobile {
   .settings-btn,
@@ -4585,6 +4624,27 @@ const saveSummaryEdit = () => {
     right: 96px;
   }
 
+  .chat-container {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom, 0px);
+    width: 100%;
+    height: 55vh;
+    height: 55dvh;
+    max-height: 420px;
+    /* Must stay above the Spine WebGL canvas but below Naive UI popovers/modals */
+    z-index: 1001;
+    will-change: transform;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .chat-drag-handle,
+  .resize-handle {
+    display: none;
+  }
+
   .chat-history {
     padding: 6px 8px;
 
@@ -4597,6 +4657,7 @@ const saveSummaryEdit = () => {
   }
 
   .chat-input-area {
+    position: relative;
     padding: 6px 8px;
     gap: 6px;
     flex-direction: column;
@@ -4613,6 +4674,123 @@ const saveSummaryEdit = () => {
       max-height: 90px;
     }
 
+    .mobile-overflow-inline {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      z-index: 2;
+
+      .mobile-overflow-sheet {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10002;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        pointer-events: auto;
+
+        .mobile-overflow-sheet-content {
+          position: relative;
+          background: rgba(25, 25, 25, 0.98);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px 16px 0 0;
+          padding: 8px 12px;
+          padding-bottom: calc(8px + env(safe-area-inset-bottom));
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          max-height: calc(100dvh - 32px);
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+
+          .mobile-overflow-sheet-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            border: none;
+            background: transparent;
+            color: #ff6b6b;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+
+            &:focus,
+            &:focus-visible {
+              outline: none;
+            }
+
+            &:hover {
+              background: rgba(255, 107, 107, 0.12);
+            }
+
+            &:active {
+              background: rgba(255, 107, 107, 0.2);
+            }
+          }
+
+          .mobile-overflow-sheet-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px 4px;
+            padding-right: 44px;
+          }
+
+          .mobile-overflow-sheet-item {
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 16px;
+            text-align: left;
+            padding: 14px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background 0.15s ease;
+
+            &:focus,
+            &:focus-visible {
+              outline: none;
+            }
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.08);
+            }
+
+            &:active {
+              background: rgba(255, 255, 255, 0.12);
+            }
+
+            &:disabled {
+              color: rgba(255, 255, 255, 0.3);
+              cursor: not-allowed;
+
+              &:hover,
+              &:active {
+                background: transparent;
+              }
+            }
+          }
+        }
+      }
+    }
+
     .mobile-btn-row {
       display: flex;
       flex-direction: row;
@@ -4622,6 +4800,7 @@ const saveSummaryEdit = () => {
       flex-shrink: 0;
       flex-wrap: wrap;
       order: 2;
+      padding-right: 44px;
 
       .n-button {
         flex-shrink: 0;
@@ -4629,11 +4808,16 @@ const saveSummaryEdit = () => {
     }
   }
 }
-
-.mobile-overflow-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 4px;
+:global(.story-gen #player-container) {
+  position: relative;
+  z-index: 999;
+  /* Belt-and-suspenders: give the container a definite viewport
+     height for story-gen so the player is never 0x0 at init on
+     physical iOS (where -webkit-fill-available can resolve to 0
+     when ancestor chain has no definite height). The Loader also
+     forces this via inline style right before SpinePlayer() for
+     the critical timing window. */
+  height: 100dvh;
+  width: 100%;
 }
 </style>

@@ -81,6 +81,22 @@ const applyStoryGenLowPowerThrottle = (player: any) => {
 
 onMounted(() => {
   market.load.beginLoad()
+  /*Pre-size the player container for story-gen *before* any load attempt.
+   On physical iOS, -webkit-fill-available (used by .mobile) can resolve
+   to 0 or be clamped until a definite ancestor height exists. StoryGenerator
+   now sets 100dvh on .l2dGlobal.story-gen, and we force it here synchronously
+   so that the first (or subsequent) SpinePlayer('player-container', ...) sees
+   a measurable rect at construction time. The visualiser (L2D) route does not
+   need this because its Wrapper* components + layout provide real height early. */
+  if (market.route.name === 'story-gen') {
+    const containerEl = document.getElementById('player-container')
+    if (containerEl) {
+      containerEl.style.height = '100dvh'
+      containerEl.style.minHeight = '100dvh'
+      containerEl.style.width = '100%'
+      containerEl.style.position = containerEl.style.position || 'relative'
+    }
+  }
   spineLoader()
   window.addEventListener('resize', handleResize)
   document.addEventListener('mousedown', onMouseDown)
@@ -648,6 +664,22 @@ const spineLoader = (retryAttempt = 0) => {
         })
       }, SPINE_PLAYER_TIMEOUT_MS)
 
+      /*Ensure the container has a definite non-zero size *right before* the
+      SpinePlayer constructor on story-gen. This is the moment the library
+      samples clientWidth/clientHeight/dpr to allocate its internal canvas
+      and WebGL viewport. Without this, on physical iPhones the container
+      can be 0x0 (or offscreen) due to fill-available timing in the
+      n-scrollbar + fixed NikkeChatOverlay + conditional header ancestry,
+      even though the same Loader works for the L2D visualiser route. */
+      if (market.route.name === 'story-gen') {
+        const containerEl = document.getElementById('player-container')
+        if (containerEl) {
+          containerEl.style.height = '100dvh'
+          containerEl.style.minHeight = '100dvh'
+          containerEl.style.width = '100%'
+          containerEl.style.position = containerEl.style.position || 'relative'
+        }
+      }
       spineCanvas = new usedSpine.SpinePlayer('player-container', {
         skelUrl: requestedCharacterId,
         rawDataURIs: {

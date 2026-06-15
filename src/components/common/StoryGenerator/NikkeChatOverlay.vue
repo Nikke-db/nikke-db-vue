@@ -63,6 +63,7 @@ const emit = defineEmits<{
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 9000;
   display: flex;
   flex-direction: column;
@@ -117,6 +118,7 @@ const emit = defineEmits<{
   pointer-events: auto;
   box-sizing: border-box;
   max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
@@ -124,13 +126,13 @@ const emit = defineEmits<{
   @media (max-width: 1024px) {
     padding: 40px 5% 60px 5%;
     min-height: 150px;
-    max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
   }
 
   @media (max-width: 834px) {
     padding: 30px 4% 50px 4%;
     min-height: 120px;
-    max-height: calc(100vh - 50px);
+    max-height: calc(100dvh - 50px);
   }
 }
 
@@ -190,7 +192,7 @@ const emit = defineEmits<{
 
 .nikke-narration-container {
   position: absolute;
-  bottom: 120px;
+  bottom: calc(120px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   width: 800px;
@@ -210,7 +212,7 @@ const emit = defineEmits<{
     width: 700px;
     max-width: 90%;
     padding: 20px 24px;
-    bottom: 100px;
+    bottom: calc(100px + env(safe-area-inset-bottom));
     min-height: 100px;
   }
 
@@ -218,7 +220,7 @@ const emit = defineEmits<{
     width: 100%;
     max-width: 95%;
     padding: 16px 20px;
-    bottom: 80px;
+    bottom: calc(80px + env(safe-area-inset-bottom));
     min-height: 80px;
   }
 }
