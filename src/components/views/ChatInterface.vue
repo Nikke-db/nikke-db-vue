@@ -4810,7 +4810,7 @@ const saveSummaryEdit = () => {
 }
 :global(.story-gen #player-container) {
   position: relative;
-  z-index: 999;
+  z-index: 9;
   /* Belt-and-suspenders: give the container a definite viewport
      height for story-gen so the player is never 0x0 at init on
      physical iOS (where -webkit-fill-available can resolve to 0
