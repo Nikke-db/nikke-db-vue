@@ -1,5 +1,5 @@
 <template>
-  <div class="l2dGlobal">
+  <div class="l2dGlobal story-gen">
     <Loader />
     <ChatInterface />
   </div>
@@ -36,4 +36,17 @@ onBeforeRouteLeave(() => {
 })
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+/* Ensure the story-gen route root has a definite height so that
+   the shared Spine Loader's #player-container (and its .mobile
+   height:-webkit-fill-available rule) can resolve to a non-zero
+   size on real mobile devices. This is required for SpinePlayer
+   to measure a proper container at construction time. The visualiser
+   (L2D) route does not need this because its Wrapper* components
+   participate in a layout that provides height. */
+.l2dGlobal.story-gen {
+  height: 100dvh;
+  min-height: 100dvh;
+  position: relative;
+}
+</style>
