@@ -13,6 +13,12 @@
 
       <n-divider />
 
+      <n-alert type="warning">
+        A new decently useful toggle have been added to the layer editor. Please take a look at the new chapter in the quick tutorial to learn about it.
+      </n-alert>
+
+      <n-divider />
+
       <n-alert type="info">
         I have quit the game and pretty much only "play" to do website updates. <br />
         As such I can't really know NPC names anymore. So every NPCs I can't datamine from now on will have their names be "NPC: TBA" in the L2D viewer. <br/>
