@@ -21,12 +21,24 @@ export type WindowRefs = {
 
 // ── Chat window layout ────────────────────────────────────────────────
 
-export const initChatLayout = (chatSize: Ref<WindowSize>, chatPosition: Ref<WindowPosition>) => {
+export const initChatLayout = (chatSize: Ref<WindowSize>, chatPosition: Ref<WindowPosition>, isCompact = false) => {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
 
+  if (isCompact) {
+    // Compact mobile: large floating chat window so everything is visible without scrolling
+    const width = Math.min(viewportWidth - 16, 520)
+    const height = Math.min(Math.floor(viewportHeight * 0.55), 420)
+    chatSize.value = { width, height }
+    chatPosition.value = {
+      x: Math.max(4, (viewportWidth - width) / 2),
+      y: Math.max(4, viewportHeight - height - 60)
+    }
+    return
+  }
+
   if (viewportWidth <= 768) {
-    // Mobile default: Bottom sheet style
+    // Mobile default: Bottom sheet style (legacy non-compact tablets)
     const width = Math.min(viewportWidth - 20, 400)
     const height = viewportHeight * 0.5
     chatSize.value = { width, height }
@@ -61,11 +73,12 @@ export const createDragHandlers = (refs: Pick<WindowRefs, 'chatPosition' | 'chat
     let newX = clientX - refs.dragOffset.value.x
     let newY = clientY - refs.dragOffset.value.y
 
-    // Boundaries
-    const maxX = window.innerWidth - 50 // Keep at least 50px visible
-    const maxY = window.innerHeight - 50
+    // Boundaries: keep at least 50px (or 20% of the smaller viewport dim) visible, with floor of 50px
+    const minVisiblePx = Math.max(50, Math.min(100, Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.2)))
+    const maxX = window.innerWidth - minVisiblePx
+    const maxY = window.innerHeight - minVisiblePx
 
-    newX = Math.max(-refs.chatSize.value.width + 50, Math.min(newX, maxX))
+    newX = Math.max(-refs.chatSize.value.width + minVisiblePx, Math.min(newX, maxX))
     newY = Math.max(0, Math.min(newY, maxY))
 
     refs.chatPosition.value = { x: newX, y: newY }

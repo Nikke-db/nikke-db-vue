@@ -23,20 +23,34 @@ import { useMarket } from '@/stores/market'
 const theme = ref(darkTheme)
 const market = useMarket()
 
+const COMPACT_MODE_THRESHOLD = 768
+const MOBILE_MODE_THRESHOLD = 900
+
+let resizeTimer: ReturnType<typeof setTimeout> | null = null
+
 onBeforeMount(() => {
   checkIfMobileUI()
 })
 
 window.addEventListener('resize', () => {
-  checkIfMobileUI()
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(checkIfMobileUI, 100)
 })
 
 const checkIfMobileUI = () => {
-  if (document.body.clientWidth < 900) {
+  const vw = document.body.clientWidth
+  const vh = window.innerHeight
+  if (vw < MOBILE_MODE_THRESHOLD) {
     // DOM's width, if too low switch to mobile display globally
     market.globalParams.setMobile()
   } else {
     market.globalParams.setComputer()
   }
+
+  // Compact mode: phone-sized screens that need a dedicated layout overhaul
+  const minDim = Math.min(vw, vh)
+  const isCompact = minDim < COMPACT_MODE_THRESHOLD
+  market.globalParams.setMobileCompact(isCompact)
 }
+
 </script>

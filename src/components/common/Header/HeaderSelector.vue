@@ -3,7 +3,7 @@
     <HeaderMobile
       v-show="
         market.globalParams.isMobile &&
-        market.globalParams.isMobileHeaderVisibile
+        market.globalParams.isMobileHeaderVisible
       "
       :routes="ROUTES"
     />

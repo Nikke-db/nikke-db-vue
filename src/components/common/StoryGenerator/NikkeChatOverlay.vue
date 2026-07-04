@@ -9,12 +9,17 @@
         </n-button>
       </div>
 
-      <div class="nikke-dialogue-container">
-        <div v-if="nikkeCurrentSpeaker" class="nikke-speaker-name">
+      <div v-if="nikkeCurrentSpeaker" class="nikke-dialogue-container">
+        <div class="nikke-speaker-name">
           <div class="nikke-speaker-indicator" :style="{ backgroundColor: nikkeSpeakerColor }"></div>
           <span>{{ nikkeCurrentSpeaker }}</span>
         </div>
         <div class="nikke-dialogue-text">{{ nikkeDisplayedText }}</div>
+      </div>
+
+      <div v-else class="nikke-narration-container">
+        <div class="nikke-narration-text">{{ nikkeDisplayedText }}</div>
+        <div class="nikke-narration-indicator">▼</div>
       </div>
 
       <transition name="fade">
@@ -58,6 +63,7 @@ const emit = defineEmits<{
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 9000;
   display: flex;
   flex-direction: column;
@@ -108,9 +114,11 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  align-items: center;
   pointer-events: auto;
   box-sizing: border-box;
   max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
@@ -118,13 +126,13 @@ const emit = defineEmits<{
   @media (max-width: 1024px) {
     padding: 40px 5% 60px 5%;
     min-height: 150px;
-    max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
   }
 
   @media (max-width: 834px) {
     padding: 30px 4% 50px 4%;
     min-height: 120px;
-    max-height: calc(100vh - 50px);
+    max-height: calc(100dvh - 50px);
   }
 }
 
@@ -132,21 +140,28 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 1.6em;
+  font-size: 1.3em;
   font-weight: 700;
   margin-bottom: 16px;
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  width: 100%;
+  max-width: 800px;
 
   @media (max-width: 1024px) {
-    font-size: 1.2em;
+    font-size: 1.1em;
     margin-bottom: 8px;
+    max-width: 700px;
+  }
+
+  @media (max-width: 834px) {
+    max-width: none;
   }
 }
 
 .nikke-speaker-indicator {
-  width: 6px;
-  height: 1.2em;
+  width: 5px;
+  height: 1.1em;
   background-color: #ffeb3b;
   box-shadow: 0 0 10px rgba(255, 235, 59, 0.4);
 }
@@ -156,10 +171,70 @@ const emit = defineEmits<{
   line-height: 1.6;
   white-space: pre-wrap;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  max-width: 1400px;
   font-weight: 400;
   word-break: break-word;
-  max-width: calc(100% - 40px);
+  width: 100%;
+  max-width: 800px;
+  text-align: left;
+
+  @media (max-width: 1024px) {
+    font-size: 1.1em;
+    line-height: 1.4;
+    max-width: 700px;
+  }
+
+  @media (max-width: 834px) {
+    font-size: 1em;
+    line-height: 1.35;
+    max-width: none;
+  }
+}
+
+.nikke-narration-container {
+  position: absolute;
+  bottom: calc(120px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  max-width: 80%;
+  min-height: 120px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 24px 32px;
+  border-radius: 4px;
+  z-index: 9002;
+  pointer-events: auto;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (max-width: 1024px) {
+    width: 700px;
+    max-width: 90%;
+    padding: 20px 24px;
+    bottom: calc(100px + env(safe-area-inset-bottom));
+    min-height: 100px;
+  }
+
+  @media (max-width: 834px) {
+    width: 100%;
+    max-width: 95%;
+    padding: 16px 20px;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    min-height: 80px;
+  }
+}
+
+.nikke-narration-text {
+  color: white;
+  font-size: 1.4em;
+  line-height: 1.6;
+  text-align: left;
+  white-space: pre-wrap;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 400;
+  word-break: break-word;
+  width: 100%;
 
   @media (max-width: 1024px) {
     font-size: 1.1em;
@@ -170,6 +245,16 @@ const emit = defineEmits<{
     font-size: 1em;
     line-height: 1.35;
   }
+}
+
+.nikke-narration-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8em;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .fade-enter-active,

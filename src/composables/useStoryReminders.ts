@@ -70,6 +70,7 @@ export function useStoryReminders() {
   const clearRemindersAfterSuccess = () => {
     if (!invalidJsonPersist.value) invalidJsonToggle.value = false
     if (!incorrectAnimationsPersist.value) incorrectAnimationsToggle.value = false
+    emptyActionsRetry.value = false
     honorificsToggle.value = false
     narrationAndDialogueNotSplitToggle.value = false
     aiControllingUserToggle.value = false
