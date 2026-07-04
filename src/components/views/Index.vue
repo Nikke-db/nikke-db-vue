@@ -13,8 +13,8 @@
 
       <n-divider />
 
-      <n-alert type="warning">
-        A new decently useful toggle have been added to the layer editor. Please take a look at the new chapter in the quick tutorial to learn about it.
+      <n-alert type="info">
+        Summer & minigame event galleries will come at the event's end to avoid spoilers
       </n-alert>
 
       <n-divider />

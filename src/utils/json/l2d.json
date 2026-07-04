@@ -904,6 +904,10 @@
     "id": "c321_01"
   },
   {
+    "name": "Marciana: Marine Study",
+    "id": "c322"
+  },
+  {
     "name": "Crown",
     "id": "c330"
   },
@@ -1096,7 +1100,7 @@
     "id": "c440"
   },
   {
-    "name": "Avista",
+    "name": "Avistar",
     "id": "c441"
   },
   {
@@ -1126,6 +1130,10 @@
   {
     "name": "Tia Sweet Chef",
     "id": "c451_02"
+  },
+  {
+    "name": "Tia Sea Lizzie",
+    "id": "c451_03"
   },
   {
     "name": "Red Hood",
@@ -1192,7 +1200,7 @@
     "id": "c511_01"
   },
   {
-    "name": "Anachiro | Cinderella Beatiful Me",
+    "name": "Anachiro | Cinderella Beautiful Me",
     "id": "c511_02"
   },
   {
@@ -1208,11 +1216,19 @@
     "id": "c513_02"
   },
   {
+    "name": "Little Mermaid | Siren Shell Princess",
+    "id": "c513_03"
+  },
+  {
     "name": "Grave",
     "id": "c514"
   },
   {
-    "name": "Grave Beatiful You",
+    "name": "Anachiro | Cinderella: Crystal Wave",
+    "id": "c515"
+  },
+  {
+    "name": "Grave Beautiful You",
     "id": "c514_01"
   },
   {
@@ -1525,7 +1541,7 @@
     "id": "c840"
   },
   {
-    "name": "Ada Seperate Ways",
+    "name": "Ada Separate Ways",
     "id": "c840_01"
   },
   {
@@ -1917,7 +1933,7 @@
     "id": "c990"
   },
   {
-    "name": "D.E.E.P",
+    "name": "D.E.E.P.",
     "id": "c991"
   },
   {
@@ -2033,7 +2049,7 @@
     "id": "c9015"
   },
   {
-    "name": "V.T.C Priestess",
+    "name": "V.T.C. Priestess",
     "id": "c9016"
   },
   {
@@ -2087,6 +2103,22 @@
   {
     "name": "Hope",
     "id": "c9028"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9034"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9035"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9036"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9037"
   },
   {
     "name": "Blue Water Island",
