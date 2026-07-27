@@ -292,16 +292,24 @@
     "id": "c102_01"
   },
   {
-    "name": "Laplace",
+    "name": "Laplace: Ultimate Hero",
     "id": "c103"
+  },
+  {
+    "name": "Laplace: Ultimate Hero Prototype Hero",
+    "id": "c103_01"
   },
   {
     "name": "Drake",
     "id": "c104"
   },
   {
-    "name": "Maxwell",
+    "name": "Maxwell: Ordinary Mechanic",
     "id": "c105"
+  },
+  {
+    "name": "Maxwell: Ordinary Mechanic Chief Researcher",
+    "id": "c105_01"
   },
   {
     "name": "Crow",
@@ -2105,6 +2113,22 @@
     "id": "c9028"
   },
   {
+    "name": "Laplace",
+    "id": "c9029"
+  },
+  {
+    "name": "NPC TBA",
+    "id": "c9030"
+  },
+  {
+    "name": "Syuen",
+    "id": "c9031"
+  },
+  {
+    "name": "Jien",
+    "id": "c9032"
+  },
+  {
     "name": "Penguin",
     "id": "c9034"
   },
@@ -2550,6 +2574,21 @@
     "name": "Smol Prika TTS",
     "id": "smol_prika",
     "f": "tts_c601_00"
+  },
+  {
+    "name": "Smol Marciana TTS",
+    "id": "smol_marciana",
+    "f": "tts_c322_00"
+  },
+  {
+    "name": "Smol Naga TTS",
+    "id": "smol_naga",
+    "f": "tts_c450_03"
+  },
+  {
+    "name": "Smol Tia TTS",
+    "id": "smol_tia",
+    "f": "tts_c451_03"
   },
   {
     "name": "AZX Service Time 1",

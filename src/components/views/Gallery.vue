@@ -228,6 +228,7 @@ import chocolateplease from '@/utils/json/Gallery/chocolateplease.json'
 import staranis from '@/utils/json/Gallery/staranis.json'
 import bsideidol from '@/utils/json/Gallery/bsideidol.json'
 import arkranger from '@/utils/json/Gallery/arkranger.json'
+import wavetoyou from '@/utils/json/Gallery/wavetoyou.json'
 
 
 const market = useMarket()
@@ -317,7 +318,8 @@ const buttonListEvents = [
   { data: chocolateplease },
   { data: staranis },
   { data: bsideidol },
-  { data: arkranger }
+  { data: arkranger },
+  { data: wavetoyou }
 ] as buttonInterface[]
 
 const buttonListOther = [

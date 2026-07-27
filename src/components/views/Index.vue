@@ -14,7 +14,8 @@
       <n-divider />
 
       <n-alert type="info">
-        Summer & minigame event galleries will come at the event's end to avoid spoilers
+        Project Matis stuff when the event is over. <br />
+        PSA : Since I don't really want to put more money into the website, I won't pay the person that used to fix favorite assets for me. As such there won't be any more favorite sprites added. Unless someone is up to the task for free ( requires spine pro 4.1+ )
       </n-alert>
 
       <n-divider />

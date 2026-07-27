@@ -933,7 +933,7 @@ const getDefaultAnimation = () => {
     return 'idle_front'
   }
 
-  if (['smol_anis', 'smol_prika', 'smol_mint'].includes(market.live2d.current_id)) {
+  if (['smol_anis', 'smol_prika', 'smol_mint', 'smol_marciana', 'smol_naga', 'smol_tia'].includes(market.live2d.current_id)) {
     return 'pose_idle'
   }
 
