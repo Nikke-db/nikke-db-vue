@@ -1072,6 +1072,10 @@
     "id": "c411"
   },
   {
+    "name": "Flora Fairy Rabbit",
+    "id": "c411_01"
+  },
+  {
     "name": "Trina",
     "id": "c412"
   },
@@ -1158,6 +1162,14 @@
   {
     "name": "Snow White: Heavy Arms",
     "id": "c471"
+  },
+  {
+    "name": "Scarlet",
+    "id": "c472"
+  },
+  {
+    "name": "Rapunzel",
+    "id": "c473"
   },
   {
     "name": "Liveryn",
@@ -1319,6 +1331,10 @@
   {
     "name": "Phantom",
     "id": "c580"
+  },
+  {
+    "name": "Phantom Saint Thief",
+    "id": "c580_01"
   },
   {
     "name": "Arcana",
@@ -1635,6 +1651,34 @@
   {
     "name": "Kurumi",
     "id": "c862"
+  },
+  {
+    "name": "Queen (Makoto)",
+    "id": "c870"
+  },
+  {
+    "name": "Queen (Makoto) Shujin Academy Student Council President",
+    "id": "c870_01"
+  },
+  {
+    "name": "Queen (Makoto) Queen's Pajamas (Ver. NIKKE Collabo)",
+    "id": "c870_02"
+  },
+  {
+    "name": "Yukiko",
+    "id": "c871"
+  },
+  {
+    "name": "Yukiko Amagi Inn Kimono",
+    "id": "c871_01"
+  },
+  {
+    "name": "Yukiko Winter Roomwear (Ver. NIKKE Collabo)",
+    "id": "c871_02"
+  },
+  {
+    "name": "Aigis",
+    "id": "c872"
   },
   {
     "name": "Ingrid",
@@ -2117,7 +2161,7 @@
     "id": "c9029"
   },
   {
-    "name": "NPC TBA",
+    "name": "Enme",
     "id": "c9030"
   },
   {
@@ -2143,6 +2187,18 @@
   {
     "name": "Penguin",
     "id": "c9037"
+  },
+  {
+    "name": "Teddie",
+    "id": "c9038"
+  },
+  {
+    "name": "Morgana",
+    "id": "c9039"
+  },
+  {
+    "name": "Morgana",
+    "id": "c9040"
   },
   {
     "name": "Blue Water Island",
@@ -2483,6 +2539,11 @@
     "name": "Ark Ranger",
     "id": "arkranger",
     "f": "EventScene_arkranger_03"
+  },
+  {
+    "name": "Project Matis",
+    "id": "projectmatis",
+    "f": "EventScene_projectmatis_02"
   },
   {
     "name": "Smol Ade",
