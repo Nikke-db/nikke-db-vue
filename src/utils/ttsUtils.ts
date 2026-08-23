@@ -200,12 +200,13 @@ export const playTTSChatterbox = async (text: string, characterName: string, mar
       const chunks: Uint8Array[] = []
 
       try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          if (value) {
-            chunks.push(value)
-            logDebug(`[TTS-Chatterbox] Received chunk: ${value.length} bytes`)
+        let done = false
+        while (!done) {
+          const result = await reader.read()
+          done = result.done
+          if (result.value) {
+            chunks.push(result.value)
+            logDebug(`[TTS-Chatterbox] Received chunk: ${result.value.length} bytes`)
           }
         }
       } catch (e) {

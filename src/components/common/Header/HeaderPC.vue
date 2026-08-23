@@ -36,7 +36,6 @@ import { GithubFilled } from '@vicons/antd'
 import { globalParams } from '@/utils/enum/globalParams'
 
 import { type route2DisplayInterface } from '@/components/common/Header/routes2Display'
-import VisitorCounter from '@/components/common/Header/VisitorCounter.vue'
 
 const props = defineProps<{
   routes: route2DisplayInterface[]
