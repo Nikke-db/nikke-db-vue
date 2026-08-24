@@ -1001,9 +1001,14 @@ watch(() => market.live2d.resetPlacement, () => {
 
 watch(() => market.live2d.screenshot, () => {
   if (!checkMobile()) {
-    const sc_sz = localStorage.getItem('sc_sz')
+    const sc_sz = parseInt(localStorage.getItem('sc_sz') || '3000', 10) || 3000
+    // Cap the capture size to the real WebGL buffer limit so the character
+    // isn't cropped at the top on high-DPI displays.
+    const dpr = window.devicePixelRatio || 1
+    const limit = measureBufferLimit(Math.round(sc_sz * dpr))
+    const cappedPx = Math.min(sc_sz, Math.floor(limit / dpr))
     const old_sc_sz = canvas ? canvas.style.height : '0'
-    canvas && (canvas.style.height = sc_sz + 'px')
+    canvas && (canvas.style.height = cappedPx + 'px')
 
     setTimeout(() => {
       takeScreenshot()
@@ -1177,11 +1182,65 @@ const loadSpineAfterWatcher = () => {
   }
 }
 
+// The GPU clamps the WebGL drawing buffer to a max dimension (often 4096-16384
+// device px, and on some drivers ~5768). If the canvas is sized beyond that,
+// spine still renders into the requested coordinate space but only the bottom
+// portion is composited, so the head gets cropped while the feet stay anchored.
+// We detect the real limit by probing an offscreen canvas' drawing buffer
+// (gl.drawingBufferWidth), cap the canvas to it, and compensate with a larger
+// transform scale so the on-screen size and sharpness stay the same.
+let maxCanvasDimension = 0
+
+// Measures the maximum drawing-buffer dimension (device px) the GPU will
+// actually allocate. We probe with `desiredDevice` (the exact size we'd use),
+// because requesting more than the limit is what triggers the clamp. The
+// buffer is then allocated at the GPU max and drawingBufferWidth reports that
+// max. We use a throwaway offscreen context (the clamp is a GPU/driver
+// property, identical across contexts) so the live spine canvas is never
+// touched. The probe context is released afterwards to avoid exhausting the
+// browser's WebGL context pool on repeated resizes.
+const measureBufferLimit = (desiredDevice: number): number => {
+  const probe = Math.max(256, Math.round(desiredDevice))
+  if (maxCanvasDimension > 0 && probe <= maxCanvasDimension) return maxCanvasDimension
+  let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null
+  try {
+    const tmp = document.createElement('canvas')
+    gl = (tmp.getContext('webgl2') ||
+      tmp.getContext('webgl') ||
+      tmp.getContext('experimental-webgl')) as WebGLRenderingContext | WebGL2RenderingContext | null
+    if (!gl) {
+      maxCanvasDimension = Math.max(maxCanvasDimension, 4096)
+      return maxCanvasDimension
+    }
+    tmp.width = probe
+    tmp.height = probe
+    const w = gl.drawingBufferWidth || 0
+    const h = gl.drawingBufferHeight || 0
+    if (w > 0 && w < probe) {
+      // Clamped: the GPU capped us, so min(w,h) is the real maximum.
+      maxCanvasDimension = Math.min(w, h)
+    } else {
+      // Not clamped at this size; we never need more than `probe`, so treat it
+      // as effectively unlimited.
+      maxCanvasDimension = probe
+    }
+  } catch (_) {
+    maxCanvasDimension = Math.max(maxCanvasDimension, 4096)
+  } finally {
+    try {
+      gl?.getExtension('WEBGL_lose_context')?.loseContext()
+    } catch (_) { /* ignore */ }
+  }
+  return maxCanvasDimension
+}
+
 const applyDefaultStyle2Canvas = () => {
   setTimeout(() => {
     canvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
 
-    if (!canvas) return
+    if (!canvas) {
+      return
+    }
 
     canvas.width = canvas.height
 
@@ -1191,12 +1250,24 @@ const applyDefaultStyle2Canvas = () => {
     if (checkMobile()) {
       setCanvasStyleMobile()
     } else {
-      canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
-      canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
+      const isHQ = market.live2d.HQassets
+      const desiredVh = isHQ ? 450 : 168
+      const baseScale = isHQ ? 0.18 : 0.5
+      const dpr = window.devicePixelRatio || 1
+      const desiredDevice = Math.round((desiredVh * window.innerHeight) / 100 * dpr)
+      const limit = measureBufferLimit(desiredDevice)
+      let cappedVh = desiredVh
+      if (desiredDevice > limit) {
+        cappedVh = (limit / dpr / window.innerHeight) * 100
+      }
+      const scale = baseScale * (desiredVh / cappedVh)
+
+      canvas.style.height = cappedVh + 'vh'
+      canvas.style.marginTop = 'calc(' + (54 - cappedVh / 2) + 'vh)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
-      setTransformScale(market.live2d.HQassets ? 0.18 : 0.5)
+      setTransformScale(scale)
       market.globalParams.showMobileHeader()
       centerCanvas()
     }
