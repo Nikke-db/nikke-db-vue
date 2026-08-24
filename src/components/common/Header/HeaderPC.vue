@@ -34,6 +34,7 @@ import logo from '@/assets/nikke-db.png'
 
 import { GithubFilled } from '@vicons/antd'
 import { globalParams } from '@/utils/enum/globalParams'
+import VisitorCounter from '@/components/common/Header/VisitorCounter.vue'
 
 import { type route2DisplayInterface } from '@/components/common/Header/routes2Display'
 

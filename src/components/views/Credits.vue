@@ -133,6 +133,11 @@ const forks: help[] = [
     name: 'pin02',
     contribution: 'Anis uncensored Live2D assets.',
     tier: null
+  },
+  {
+    name: 'FilipNone',
+    contribution: '',
+    tier: null
   }
 ]
 

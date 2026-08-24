@@ -57,6 +57,7 @@ import type { route2DisplayInterface } from '@/components/common/Header/routes2D
 
 import { MenuOpenRound } from '@vicons/material'
 import { globalParams } from '@/utils/enum/globalParams'
+import VisitorCounter from '@/components/common/Header/VisitorCounter.vue'
 
 const showDrawer = ref(false)
 

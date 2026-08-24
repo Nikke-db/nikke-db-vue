@@ -6,6 +6,7 @@ import Tools from '@/components/views/Tools.vue'
 import Chibi from '@/components/views/Chibi.vue'
 import Gallery from '@/components/views/Gallery.vue'
 import StoryGenerator from '@/components/views/StoryGenerator.vue'
+import TierListMaker from '@/components/views/Tierlistmaker.vue'
 import HighAndLowQualityAssets from '@/components/views/notices/HighAndLowQualityAssets.vue'
 import AttachmentEditor from '@/components/views/notices/AttachmentEditor.vue'
 
