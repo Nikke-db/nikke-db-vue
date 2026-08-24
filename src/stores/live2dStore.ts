@@ -5,7 +5,6 @@ import l2d from '@/utils/json/l2d.json'
 import { theme } from '@/utils/enum/globalParams'
 import { resolveCanonicalBackgroundFilename, type BackgroundLoadResult } from '@/utils/backgroundUtils'
 import type { LANG } from '@/components/common/Spine/CharacterList.vue'
-import { CN, DE, FR, GB, JP, KR, TH, TW } from 'country-flag-icons/string/3x2'
 
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {

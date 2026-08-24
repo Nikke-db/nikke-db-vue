@@ -93,7 +93,7 @@ const setLanguage = (lang: LANG) => {
 const changeLanguage = (newLang: LANG) => {
   setLanguage(newLang)
   market.live2d.filtered_l2d_Array = []
-  market.live2d.filter(language.value)
+  market.live2d.filter(newLang)
 }
 
 // get the name in translation selected, or EN if undefined
