@@ -518,7 +518,7 @@
     "cn": "迪塞尔：冬日甜心",
     "de": "Diesel: Winterliche Süßigkeiten",
     "th": "ดีเซล: ฤดูหนาวแสนหวาน",
-    "fr": "Diesel : Douceurs d’hiver"
+    "fr": "Diesel : Douceurs d’hiver"
   },
   {
     "name": "Centi",
@@ -1098,7 +1098,7 @@
     "cn": "米尔克：花漾兔女郎",
     "de": "Milk: Blühendes Häschen",
     "th": "มิลค์: กระต่ายเบ่งบาน",
-    "fr": "Lactée : Lapin florissant"
+    "fr": "Lactée : Lapin florissant"
   },
   {
     "name": "Julia",
@@ -3671,7 +3671,7 @@
     "cn": "白鹤",
     "de": "Schneekranich",
     "th": "สโนว์เครน",
-    "fr": "Snow Crane"
+    "fr": "Snow Crane"
   },
   {
     "name": "Makima",
@@ -4387,7 +4387,7 @@
     "fr": "Queen (Makoto)"
   },
   {
-    "name": "Queen (Makoto) Shujin Academy Student Council President",
+    "name": "Queen (Makoto) Shujin Academy Student Council President",
     "id": "c870_01",
     "ko": "퀸(마코토) 슈진고교 학생회장",
     "jp": "クイーン（真） 秀尽学園生徒会長",
@@ -4610,7 +4610,14 @@
   },
   {
     "name": "E.H.",
-    "id": "c940"
+    "id": "c940",
+    "ko": "E.H.",
+    "jp": "E.H.",
+    "tw": "E.H.",
+    "cn": "E.H.",
+    "de": "E.H.",
+    "th": "E.H.",
+    "fr": "H.E."
   },
   {
     "name": "Pinne",
@@ -4718,7 +4725,14 @@
   },
   {
     "name": "Kilo",
-    "id": "c977"
+    "id": "c977",
+    "ko": "킬로",
+    "jp": "キロ",
+    "tw": "吉洛",
+    "cn": "吉洛",
+    "de": "Kilo",
+    "th": "กิโล",
+    "fr": "Kilo"
   },
   {
     "name": "Abe",
@@ -4742,7 +4756,14 @@
   },
   {
     "name": "Yuni",
-    "id": "c985"
+    "id": "c985",
+    "ko": "유니",
+    "jp": "ユニ",
+    "tw": "尤妮",
+    "cn": "尤妮",
+    "de": "Yuni",
+    "th": "ยูนิ",
+    "fr": "Yuni"
   },
   {
     "name": "Chloe - Village Guardian",
@@ -4750,11 +4771,25 @@
   },
   {
     "name": "Rapi",
-    "id": "c989"
+    "id": "c989",
+    "ko": "라피",
+    "jp": "ラピ",
+    "tw": "拉毗",
+    "cn": "拉毗",
+    "de": "Rapi",
+    "th": "ราพี",
+    "fr": "Rapi"
   },
   {
     "name": "Rapi",
-    "id": "c990"
+    "id": "c990",
+    "ko": "라피",
+    "jp": "ラピ",
+    "tw": "拉毗",
+    "cn": "拉毗",
+    "de": "Rapi",
+    "th": "ราพี",
+    "fr": "Rapi"
   },
   {
     "name": "D.E.E.P.",
@@ -4762,7 +4797,14 @@
   },
   {
     "name": "Rapi",
-    "id": "c992"
+    "id": "c992",
+    "ko": "라피",
+    "jp": "ラピ",
+    "tw": "拉毗",
+    "cn": "拉毗",
+    "de": "Rapi",
+    "th": "ราพี",
+    "fr": "Rapi"
   },
   {
     "name": "Mecha Shifty",
@@ -4770,11 +4812,25 @@
   },
   {
     "name": "Rapi",
-    "id": "c994"
+    "id": "c994",
+    "ko": "라피",
+    "jp": "ラピ",
+    "tw": "拉毗",
+    "cn": "拉毗",
+    "de": "Rapi",
+    "th": "ราพี",
+    "fr": "Rapi"
   },
   {
     "name": "Leviathan",
-    "id": "c996"
+    "id": "c996",
+    "ko": "레비아탄",
+    "jp": "レヴィアタン",
+    "tw": "利維坦",
+    "cn": "利维坦",
+    "de": "Leviathan",
+    "th": "เลวีอาธาน",
+    "fr": "Léviathan"
   },
   {
     "name": "Ying Ning (婴宁) (CN)",
@@ -4854,7 +4910,14 @@
   },
   {
     "name": "Nihilister",
-    "id": "c9009"
+    "id": "c9009",
+    "ko": "니힐리스타",
+    "jp": "ニヒリスター",
+    "tw": "尼希利斯塔",
+    "cn": "尼希利斯塔",
+    "de": "Nihilister",
+    "th": "นิฮิลิสเตอร์",
+    "fr": "Nihiliste"
   },
   {
     "name": "Jane",
@@ -4898,11 +4961,25 @@
   },
   {
     "name": "Anis",
-    "id": "c9021"
+    "id": "c9021",
+    "ko": "아니스",
+    "jp": "アニス",
+    "tw": "阿妮斯",
+    "cn": "阿妮斯",
+    "de": "Anis",
+    "th": "แอนิส",
+    "fr": "Anis"
   },
   {
     "name": "Anis",
-    "id": "c9021_01"
+    "id": "c9021_01",
+    "ko": "아니스",
+    "jp": "アニス",
+    "tw": "阿妮斯",
+    "cn": "阿妮斯",
+    "de": "Anis",
+    "th": "แอนิส",
+    "fr": "Anis"
   },
   {
     "name": "Mustang",
@@ -4930,7 +5007,14 @@
   },
   {
     "name": "Laplace",
-    "id": "c9029"
+    "id": "c9029",
+    "ko": "라플라스",
+    "jp": "ラプラス",
+    "tw": "拉普拉斯",
+    "cn": "拉普拉斯",
+    "de": "Laplace",
+    "th": "ลาปลาซ",
+    "fr": "Laplace"
   },
   {
     "name": "Enme",
