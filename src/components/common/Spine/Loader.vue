@@ -16,7 +16,7 @@ import spine40 from '@/utils/spine/spine-player4.0'
 import spine41 from '@/utils/spine/spine-player4.1'
 
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
-import type { AttachmentInterface, AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
+import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
 import { animationMappings } from '@/utils/animationMappings'
 
 // Helper for debug logging
@@ -119,6 +119,10 @@ onUnmounted(() => {
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('touchmove', onTouchMove)
   document.removeEventListener('wheel', onWheel)
+  if (zoomFrameId !== null) {
+    cancelAnimationFrame(zoomFrameId)
+    zoomFrameId = null
+  }
 })
 
 const handleResize = () => {
@@ -155,45 +159,56 @@ const handlePinch = (e: TouchEvent) => {
   )
 
   const scaleFactor = currentDistance / initialDistance
-  transformScale = initialScale * scaleFactor
+  const newScale = clampScale(initialScale * scaleFactor)
+  if (newScale === transformScale) return
 
-  // Clamp scale between reasonable bounds
-  transformScale = Math.max(0.1, Math.min(3, transformScale))
-
-  if (canvas) {
-    canvas.style.transform = 'scale(' + transformScale + ')'
-  }
+  // Anchor the zoom at the midpoint of the two fingers so the character stays
+  // under the fingers instead of flying off-screen (the original pinch bug).
+  const midX = (touch1.clientX + touch2.clientX) / 2
+  const midY = (touch1.clientY + touch2.clientY) / 2
+  captureAnchor(midX, midY)
+  transformScale = newScale
+  targetScale = newScale
+  applyScaleWithAnchor(transformScale)
 
   // Prevent page zoom during pinch
   if (e.cancelable) e.preventDefault()
 }
 
 const onTouchStart = (e: TouchEvent) => {
-  if (market.route.name === 'story-gen' && filterDomEvents(e)) {
-    // Handle pinch gesture start
-    if (e.touches.length === 2) {
-      const touch1 = e.touches[0]
-      const touch2 = e.touches[1]
-      initialDistance = Math.sqrt(
-        Math.pow(touch2.clientX - touch1.clientX, 2) + 
-        Math.pow(touch2.clientY - touch1.clientY, 2)
-      )
-      initialScale = transformScale
-      move = false
-      return
+  if (!filterDomEvents(e)) return
+
+  // Tell the browser we own this gesture before it can start panning/zooming the page.
+  if (e.cancelable) e.preventDefault()
+
+  // Handle pinch gesture start
+  if (e.touches.length === 2) {
+    const touch1 = e.touches[0]
+    const touch2 = e.touches[1]
+    initialDistance = Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) + 
+      Math.pow(touch2.clientY - touch1.clientY, 2)
+    )
+    initialScale = transformScale
+    move = false
+    // Stop any in-flight wheel zoom smoothing so pinch takes over cleanly
+    if (zoomFrameId !== null) {
+      cancelAnimationFrame(zoomFrameId)
+      zoomFrameId = null
     }
-    
-    // Only start dragging if it's a single touch (not pinch)
-    if (e.touches.length === 1) {
-      oldX = e.touches[0].clientX
-      oldY = e.touches[0].clientY
-      move = true
-      initialDistance = 0 // Reset pinch tracking
-    }
+    return
+  }
+  
+  // Only start dragging if it's a single touch (not pinch)
+  if (e.touches.length === 1) {
+    oldX = e.touches[0].clientX
+    oldY = e.touches[0].clientY
+    move = true
+    initialDistance = 0 // Reset pinch tracking
   }
 }
 
-const onMouseUp = (e: MouseEvent) => {
+const onMouseUp = () => {
   if (isCanvasMouseDown && market.live2d.clickToSelectMode && !didDrag) {
     handleCanvasClick(mouseDownX, mouseDownY)
   }
@@ -228,8 +243,9 @@ const onMouseMove = (e: MouseEvent) => {
       if (dx * dx + dy * dy > 25) didDrag = true
     }
 
-    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
-    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
+    const cs = getComputedStyle(canvas)
+    const stylel = parseFloat(canvas.style.left) || parseFloat(cs.left) || 0
+    const stylet = parseFloat(canvas.style.top) || parseFloat(cs.top) || 0
 
     if (newX !== oldX) {
       canvas.style.left = stylel + (newX - oldX) + 'px'
@@ -253,7 +269,7 @@ const onTouchMove = (e: TouchEvent) => {
     return
   }
 
-  if (move && canvas && market.route.name === 'story-gen') {
+  if (move && canvas) {
     // Only prevent default for single touch drag, allow multi-touch for pinch zoom
     if (e.touches.length === 1 && e.cancelable) {
       e.preventDefault()
@@ -262,8 +278,9 @@ const onTouchMove = (e: TouchEvent) => {
     const newX = e.touches[0].clientX
     const newY = e.touches[0].clientY
 
-    const stylel = parseInt(canvas.style.left.replace(/px/g, ''))
-    const stylet = parseInt(canvas.style.top.replace(/px/g, ''))
+    const cs = getComputedStyle(canvas)
+    const stylel = parseFloat(canvas.style.left) || parseFloat(cs.left) || 0
+    const stylet = parseFloat(canvas.style.top) || parseFloat(cs.top) || 0
 
     if (newX !== oldX) {
       canvas.style.left = stylel + (newX - oldX) + 'px'
@@ -280,24 +297,9 @@ const onTouchMove = (e: TouchEvent) => {
 
 const onWheel = (e: WheelEvent) => {
   if (filterDomEvents(e)) {
-    switch (e.deltaY > 0) {
-      case true:
-        transformScale -= 0.02
-        transformScale < 0.01 && transformScale > -0.01
-          ? (transformScale = -0.02)
-          : ''
-        break
-      case false:
-        transformScale += 0.02
-        transformScale < 0.01 && transformScale > -0.01
-          ? (transformScale = 0.02)
-          : ''
-        break
-      default:
-        break
-    }
-
-    canvas && (canvas.style.transform = 'scale(' + transformScale + ')')
+    const direction = e.deltaY > 0 ? -1 : 1
+    targetScale = clampScale(targetScale * Math.pow(ZOOM_FACTOR, direction))
+    startZoomSmoothing()
   }
 }
 
@@ -1183,16 +1185,18 @@ const applyDefaultStyle2Canvas = () => {
 
     canvas.width = canvas.height
 
+    // The canvas is the actual touch gesture target; touch-action is NOT inherited.
+    canvas.style.touchAction = 'none'
+
     if (checkMobile()) {
       setCanvasStyleMobile()
     } else {
       canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
       canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
-      canvas.style.transform = market.live2d.HQassets ? 'scale(0.18)' : 'scale(0.5)'
       canvas.style.position = 'absolute'
       canvas.style.left = '0px'
       canvas.style.top = '0px'
-      transformScale = market.live2d.HQassets ? 0.18 : 0.5
+      setTransformScale(market.live2d.HQassets ? 0.18 : 0.5)
       market.globalParams.showMobileHeader()
       centerCanvas()
     }
@@ -1201,6 +1205,9 @@ const applyDefaultStyle2Canvas = () => {
 
 const setCanvasStyleMobile = () => {
   if (!canvas) return
+  canvas.style.marginTop = ''
+  canvas.style.marginLeft = ''
+  canvas.style.transformOrigin = ''
 
   if (market.route.name === 'story-gen') {
     const isCompact = market.globalParams.isMobileCompact
@@ -1210,22 +1217,25 @@ const setCanvasStyleMobile = () => {
       canvas.style.width = 'auto'
       canvas.style.position = 'absolute'
       canvas.style.top = '0px'
-      canvas.style.transform = 'scale(0.85)'
-      transformScale = 0.85
+      setTransformScale(0.85)
     } else {
       canvas.style.height = '70vh'
       canvas.style.width = 'auto'
       canvas.style.position = 'absolute'
       canvas.style.top = '0px'
-      canvas.style.transform = 'scale(0.7)'
-      transformScale = 0.7
+      setTransformScale(0.7)
     }
     centerCanvas()
   } else {
     // L2D (visualiser) - use production behavior
+    // Must be positioned (absolute) or left/top are ignored and drag does nothing.
     canvas.style.height = '90vh'
     canvas.style.width = '100%'
-    transformScale = 1
+    canvas.style.position = 'absolute'
+    canvas.style.top = '0px'
+    canvas.style.left = '0px'
+    setTransformScale(1)
+    centerCanvas()
   }
   market.globalParams.hideMobileHeader()
 }
@@ -1295,7 +1305,87 @@ let didDrag = false
  * though I don't see the point as it is already pixelated enough
  */
 
+const MIN_SCALE = 0.05
+const MAX_SCALE = 5
+const ZOOM_FACTOR = 1.15
+const ZOOM_SMOOTHING = 0.15
+
 let transformScale = 0.5
+let targetScale = 0.5
+let zoomFrameId: number | null = null
+let anchorX = 0
+let anchorY = 0
+let anchorMarginTop = 0
+let anchorScreenX = 0
+let anchorScreenY = 0
+
+const clampScale = (value: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, value))
+
+const setTransformScale = (value: number) => {
+  transformScale = clampScale(value)
+  targetScale = transformScale
+  if (canvas) canvas.style.transform = 'scale(' + transformScale + ')'
+}
+
+// Capture the canvas-local point currently under the anchor screen position
+// (the mouse cursor while dragging, otherwise the screen center) so that
+// zooming keeps that point fixed on screen even after the canvas is dragged.
+const captureAnchor = (screenX?: number, screenY?: number) => {
+  if (!canvas) return
+  const style = getComputedStyle(canvas)
+  const left = parseFloat(style.left) || 0
+  const top = parseFloat(style.top) || 0
+  const marginTop = parseFloat(style.marginTop) || 0
+  const width = canvas.offsetWidth
+  const height = canvas.offsetHeight
+  if (!width || !height) return
+  const sw = window.innerWidth
+  const sh = window.innerHeight
+  // While dragging, anchor to the mouse/finger cursor; otherwise to the screen
+  // center. Pinch passes an explicit midpoint so the zoom stays under the fingers.
+  anchorScreenX = screenX !== undefined ? screenX : (move && oldX !== undefined ? oldX : sw / 2)
+  anchorScreenY = screenY !== undefined ? screenY : (move && oldY !== undefined ? oldY : sh / 2)
+  const visualLeft = left
+  const visualTop = top + marginTop
+  anchorX = width / 2 + (anchorScreenX - visualLeft - width / 2) / transformScale
+  anchorY = height / 2 + (anchorScreenY - visualTop - height / 2) / transformScale
+  anchorMarginTop = marginTop
+}
+
+const applyScaleWithAnchor = (scale: number) => {
+  if (!canvas) return
+  const width = canvas.offsetWidth
+  const height = canvas.offsetHeight
+  if (!width || !height) {
+    canvas.style.transform = 'scale(' + scale + ')'
+    return
+  }
+  const newVisualLeft = anchorScreenX - width / 2 - (anchorX - width / 2) * scale
+  const newVisualTop = anchorScreenY - height / 2 - (anchorY - height / 2) * scale
+  canvas.style.left = newVisualLeft + 'px'
+  canvas.style.top = (newVisualTop - anchorMarginTop) + 'px'
+  canvas.style.transform = 'scale(' + scale + ')'
+}
+
+const startZoomSmoothing = () => {
+  if (zoomFrameId !== null) return
+  zoomFrameId = requestAnimationFrame(zoomSmoothingStep)
+}
+
+const zoomSmoothingStep = () => {
+  // Re-capture the anchor each frame so that any drag performed while the
+  // zoom animation is running is preserved instead of being overwritten.
+  captureAnchor()
+  const diff = targetScale - transformScale
+  if (Math.abs(diff) < 0.0005) {
+    transformScale = targetScale
+    zoomFrameId = null
+  } else {
+    transformScale += diff * ZOOM_SMOOTHING
+    zoomFrameId = requestAnimationFrame(zoomSmoothingStep)
+  }
+  applyScaleWithAnchor(transformScale)
+}
 
 /**
  * Yap or talking mode for the normal people;
@@ -1697,7 +1787,9 @@ const hitTest = (screenX: number, screenY: number): { slotIndex: number, key: st
           return { slotIndex: slot.data.index, key: attachment.name }
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      // ignore hit-test errors for this attachment
+    }
   }
   return null
 }
@@ -1741,6 +1833,7 @@ const handleCanvasClick = (screenX: number, screenY: number) => {
 #player-container {
    //height: calc(100vh - 100px);
   overflow:hidden;
+  touch-action: none;
 }
 .mobile {
   height: -webkit-fill-available;
