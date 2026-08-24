@@ -1,19 +1,22 @@
 <template>
   <div id="l2dsearchbox" :class="checkMobile()" v-show="!market.live2d.hideUI">
-    <n-card size="small" :bordered="false">
-      <n-input
-        type="text"
-        placeholder="Name"
-        v-model:value="name_filter"
-        :clearable="true"
-      ></n-input>
+    <n-card size="small" :bordered="false" >
+      <div class="flexbox">
+        <n-input
+          type="text"
+          placeholder="Name"
+          v-model:value="name_filter"
+          :clearable="true"
+        ></n-input>
+        <CharacterListFlags :lang="getLanguage()" @change-language="changeLanguage"/>
+      </div>
     </n-card>
     <n-scrollbar>
-      <n-list hoverable :show-divider="false">
+      <n-list hoverable :show-divider="false" :key="language">
         <n-list-item
           v-for="character in market.live2d.filtered_l2d_Array"
           v-show="
-            character.name.toLowerCase().includes(name_filter.toLowerCase()) &&
+            getCharacterName(character).toLowerCase().includes(name_filter.toLowerCase()) &&
             !character.name.toUpperCase().startsWith('HIDDEN')
           "
           :key="character.id"
@@ -23,7 +26,7 @@
             <img :src="getSiIcon(character.id)" class="si_img" loading="lazy" :onerror="`this.onerror=null; this.src='${fallbackSiIcon()}'`"/>
           </template>
 
-          <n-h5>{{ character.name }}</n-h5>
+          <n-h5>{{ getCharacterName(character) }}</n-h5>
         </n-list-item>
       </n-list>
     </n-scrollbar>
@@ -35,13 +38,18 @@ import { useMarket } from '@/stores/market'
 import { onMounted, ref } from 'vue'
 import { globalParams } from '@/utils/enum/globalParams'
 import type { live2d_interface } from '@/utils/interfaces/live2d'
+import CharacterListFlags from '@/components/common/Spine/CharacterListFlags.vue'
 
 const market = useMarket()
 const name_filter = ref('')
+const language = ref<LANG>()
+
+export type LANG = 'EN' | 'KR' | 'JP' | 'TW' | 'CN' | 'DE' | 'TH' | 'FR'
 
 onMounted(() => {
+  language.value = getLanguage()
   if (market.live2d.filtered_l2d_Array.length === 0) {
-    market.live2d.filter()
+    market.live2d.filter(language.value)
   }
 })
 
@@ -64,6 +72,42 @@ const checkMobile = () => {
 
 const changeSpine = (character: live2d_interface) => {
   market.live2d.change_current_spine(character)
+}
+
+const getLanguage = (): LANG => {
+  let lang = localStorage.getItem('l2d_language')
+
+  if (lang === undefined || lang === null) {
+    lang = 'EN'
+    setLanguage(lang as LANG)
+  }
+
+  return lang as LANG
+}
+
+const setLanguage = (lang: LANG) => {
+  localStorage.setItem('l2d_language', lang)
+  language.value = lang
+}
+
+const changeLanguage = (newLang: LANG) => {
+  setLanguage(newLang)
+  market.live2d.filtered_l2d_Array = []
+  market.live2d.filter(language.value)
+}
+
+// get the name in translation selected, or EN if undefined
+const getCharacterName = (character: live2d_interface) => {
+  switch (getLanguage()) {
+    case 'KR': return (character.ko ?? character.name).trim()
+    case 'JP': return (character.jp ?? character.name).trim()
+    case 'TW': return (character.tw ?? character.name).trim()
+    case 'CN': return (character.cn ?? character.name).trim()
+    case 'DE': return (character.de ?? character.name).trim()
+    case 'TH': return (character.th ?? character.name).trim()
+    case 'FR': return (character.fr ?? character.name).trim()
+    default: return character.name
+  }
 }
 
 </script>
@@ -124,5 +168,10 @@ const changeSpine = (character: live2d_interface) => {
       height: 50px;
     }
   }
+}
+
+.flexbox {
+  display: flex;
+  gap: 8px;
 }
 </style>

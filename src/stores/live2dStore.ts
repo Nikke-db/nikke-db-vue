@@ -4,6 +4,8 @@ import { type AttachmentInterface, type live2d_interface } from '@/utils/interfa
 import l2d from '@/utils/json/l2d.json'
 import { theme } from '@/utils/enum/globalParams'
 import { resolveCanonicalBackgroundFilename, type BackgroundLoadResult } from '@/utils/backgroundUtils'
+import type { LANG } from '@/components/common/Spine/CharacterList.vue'
+import { CN, DE, FR, GB, JP, KR, TH, TW } from 'country-flag-icons/string/3x2'
 
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
@@ -89,11 +91,20 @@ export const useLive2dStore = defineStore('live2d', () => {
   const currentBackgroundUrl = ref('') as Ref<string>
   const backgroundImageMap = ref(new Map<string, File>()) as Ref<Map<string, File>>
 
-  const filter = () => {
+  const filter = (language: LANG) => {
     const base_array: live2d_interface[] = l2d
     filtered_l2d_Array.value = base_array.sort(
       (a: live2d_interface, b: live2d_interface) => {
-        return a.name.trim().localeCompare(b.name.trim())
+        switch (language) {
+          case 'KR': return (a.ko ?? a.name).trim().localeCompare((b.ko ?? b.name).trim())
+          case 'JP': return (a.jp ?? a.name).trim().localeCompare((b.jp ?? b.name).trim())
+          case 'TW': return (a.tw ?? a.name).trim().localeCompare((b.tw ?? b.name).trim())
+          case 'CN': return (a.cn ?? a.name).trim().localeCompare((b.cn ?? b.name).trim())
+          case 'DE': return (a.de ?? a.name).trim().localeCompare((b.de ?? b.name).trim())
+          case 'TH': return (a.th ?? a.name).trim().localeCompare((b.th ?? b.name).trim())
+          case 'FR': return (a.fr ?? a.name).trim().localeCompare((b.fr ?? b.name).trim())
+          default: return a.name.trim().localeCompare(b.name.trim())
+        }
       }
     )
   }

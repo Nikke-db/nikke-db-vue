@@ -1,7 +1,14 @@
 [
   {
     "name": "Rapi",
-    "id": "c010"
+    "id": "c010",
+    "ko": "라피",
+    "jp": "ラピ",
+    "tw": "拉毗",
+    "cn": "拉毗",
+    "de": "Rapi",
+    "th": "ราพี",
+    "fr": "Rapi"
   },
   {
     "name": "Rapi_old",
@@ -9,211 +16,575 @@
   },
   {
     "name": "Rapi White Promise",
-    "id": "c010_02"
+    "id": "c010_02",
+    "ko": "라피 화이트 프로미스",
+    "jp": "ラピ ホワイトプロミス",
+    "tw": "拉毗 白色諾言",
+    "cn": "拉毗 白色诺言",
+    "de": "Rapi Weißes Versprechen",
+    "th": "ราพี คำสัตย์บริสุทธิ์",
+    "fr": "Rapi Promesse blanche"
   },
   {
     "name": "Rapi Classic Vacation",
-    "id": "c010_03"
+    "id": "c010_03",
+    "ko": "라피 클래식 바캉스",
+    "jp": "ラピ クラシックバカンス",
+    "tw": "拉毗 經典假期",
+    "cn": "拉毗 经典假期",
+    "de": "Rapi Sonniger Urlaub",
+    "th": "ราพี วันหยุดสุดคลาสสิก",
+    "fr": "Rapi Vacances classiques"
   },
   {
     "name": "Neon",
-    "id": "c011"
+    "id": "c011",
+    "ko": "네온",
+    "jp": "ネオン",
+    "tw": "尼恩",
+    "cn": "尼恩",
+    "de": "Neon",
+    "th": "นีออน",
+    "fr": "Neon"
   },
   {
     "name": "Neon Bling Bullet",
-    "id": "c011_01"
+    "id": "c011_01",
+    "ko": "네온 블링 불렛",
+    "jp": "ネオン ブリングバレット",
+    "tw": "尼恩 閃亮子彈",
+    "cn": "尼恩 闪亮子弹",
+    "de": "Neon Bling-Patrone",
+    "th": "นีออน กระสุนระยิบระยับ",
+    "fr": "Neon Balle tape-à-l'œil"
   },
   {
     "name": "Anis",
-    "id": "c012"
+    "id": "c012",
+    "ko": "아니스",
+    "jp": "アニス",
+    "tw": "阿妮斯",
+    "cn": "阿妮斯",
+    "de": "Anis",
+    "th": "แอนิส",
+    "fr": "Anis"
   },
   {
     "name": "Marian",
-    "id": "c013"
+    "id": "c013",
+    "ko": "마리안",
+    "jp": "マリアン",
+    "tw": "瑪麗安",
+    "cn": "玛丽安",
+    "de": "Marian",
+    "th": "แมเรียน",
+    "fr": "Marian"
   },
   {
     "name": "Neon: Blue Ocean",
-    "id": "c014"
+    "id": "c014",
+    "ko": "네온 : 블루 오션",
+    "jp": "ネオン：ブルーオーシャン",
+    "tw": "尼恩：藍色海洋",
+    "cn": "尼恩：蓝色海洋",
+    "de": "Neon: Blauer Ozean",
+    "th": "นีออน: บลูโอเชี่ยน",
+    "fr": "Neon : Océan bleu"
   },
   {
     "name": "Anis: Sparkling Summer",
-    "id": "c015"
+    "id": "c015",
+    "ko": "아니스 : 스파클링 서머",
+    "jp": "アニス：スパークリングサマー",
+    "tw": "阿妮斯：閃耀夏日",
+    "cn": "阿妮斯：闪耀夏日",
+    "de": "Anis: Funkelsommer",
+    "th": "แอนิส: ซัมเมอร์ซาบซ่า",
+    "fr": "Anis : Chaleur chatoyante"
   },
   {
     "name": "Rapi: Red Hood",
-    "id": "c016"
+    "id": "c016",
+    "ko": "라피 : 레드 후드",
+    "jp": "ラピ：レッドフード",
+    "tw": "拉毗：小紅帽",
+    "cn": "拉毗：小红帽",
+    "de": "Rapi: Rotkäppchen",
+    "th": "ราพี: หมวกแดง",
+    "fr": "Rapi : Carmine"
   },
   {
     "name": "Rapi: Red Hood Red Flavor",
-    "id": "c016_01"
+    "id": "c016_01",
+    "ko": "라피 : 레드 후드 레드 플레이버",
+    "jp": "ラピ：レッドフード レッドフレーバー",
+    "tw": "拉毗：小紅帽 紅色風情",
+    "cn": "拉毗：小红帽 红色风情",
+    "de": "Rapi: Rotkäppchen Roter Geschmack",
+    "th": "ราพี: หมวกแดง รสชาติแดงเดือด",
+    "fr": "Rapi : Carmine Saveur écarlate"
   },
   {
     "name": "Rapi: Red Hood Cherished Red",
-    "id": "c016_02"
+    "id": "c016_02",
+    "ko": "라피 : 레드 후드 체리시드 레드",
+    "jp": "ラピ：レッドフード チェリッシュドレッド",
+    "tw": "拉毗：小紅帽 摯愛之紅",
+    "cn": "拉毗：小红帽 挚爱之红",
+    "de": "Rapi: Rotkäppchen Geschätztes Rot",
+    "th": "ราพี: หมวกแดง รักแรงแดงฉ่ำ",
+    "fr": "Rapi : Carmine Rouge chéri"
   },
   {
     "name": "Rapi: Red Hood Shining Light",
-    "id": "c016_03"
+    "id": "c016_03",
+    "ko": "라피 : 레드 후드 샤인 라이트",
+    "jp": "ラピ：レッドフード シャインライト",
+    "tw": "拉毗：小紅帽 耀光",
+    "cn": "拉毗：小红帽 耀光",
+    "de": "Rapi: Rotkäppchen Strahlendes Licht",
+    "th": "ราพี: หมวกแดง แสงสว่างเรืองรอง",
+    "fr": "Rapi : Carmine Luminance"
   },
   {
     "name": "Anis: Star",
-    "id": "c017"
+    "id": "c017",
+    "ko": "아니스 : 스타",
+    "jp": "アニス：スター",
+    "tw": "阿妮斯：超級巨星",
+    "cn": "阿妮斯：超级巨星",
+    "de": "Anis: Star",
+    "th": "แอนิส: ดาวเปล่งประกาย",
+    "fr": "Anis : Star"
   },
   {
     "name": "Anis: Star Starlight",
-    "id": "c017_01"
+    "id": "c017_01",
+    "ko": "아니스 : 스타 스타라이트",
+    "jp": "アニス：スター スターライト",
+    "tw": "阿妮斯：超級巨星 星光",
+    "cn": "阿妮斯：超级巨星 星光",
+    "de": "Anis: Star Sternenlicht",
+    "th": "แอนิส: ดาวเปล่งประกาย แสงดาวพราวพร่าง",
+    "fr": "Anis : Star Star - Éclat céleste"
   },
   {
     "name": "Anis: Star T.T. STAR",
-    "id": "c017_02"
+    "id": "c017_02",
+    "ko": "아니스 : 스타 T.T. STAR",
+    "jp": "アニス：スター T.T. STAR",
+    "tw": "阿妮斯：超級巨星 T.T. STAR",
+    "cn": "阿妮斯：超级巨星 T.T. STAR",
+    "de": "Anis: Star T.T. STAR",
+    "th": "แอนิส: ดาวเปล่งประกาย T.T. STAR",
+    "fr": "Anis : Star T.T. STAR"
   },
   {
     "name": "Neon: Vision Eye",
-    "id": "c018"
+    "id": "c018",
+    "ko": "네온 : 비전 아이",
+    "jp": "ネオン：ビジョン・アイ",
+    "tw": "尼恩：透視之眼",
+    "cn": "尼恩：透视之眼",
+    "de": "Neon: Vision Eye",
+    "th": "นีออน: เนตรวิชั่น",
+    "fr": "Neon : Œil bionique"
   },
   {
     "name": "Delta",
-    "id": "c020"
+    "id": "c020",
+    "ko": "델타",
+    "jp": "デルタ",
+    "tw": "德爾塔",
+    "cn": "德尔塔",
+    "de": "Delta",
+    "th": "เดลต้า",
+    "fr": "Delta"
   },
   {
     "name": "Signal",
-    "id": "c022"
+    "id": "c022",
+    "ko": "시그널",
+    "jp": "シグナル",
+    "tw": "西格娜",
+    "cn": "西格娜",
+    "de": "Signal",
+    "th": "ซิกนัล",
+    "fr": "Signal"
   },
   {
     "name": "Signal Dramatic Chocolate",
-    "id": "c022_01"
+    "id": "c022_01",
+    "ko": "시그널 드라마틱 초코",
+    "jp": "シグナル ドラマチックチョコ",
+    "tw": "西格娜 甜蜜宅配員",
+    "cn": "西格娜 甜蜜宅配员",
+    "de": "Signal Dramatische Schokolade",
+    "th": "ซิกนัล ช็อกโกแลตในละคร",
+    "fr": "Signal Chocolat dramatique"
   },
   {
     "name": "Delta: Ninja Thief",
-    "id": "c023"
+    "id": "c023",
+    "ko": "델타 : 닌자 시프",
+    "jp": "デルタ：ニンジャシーフ",
+    "tw": "德爾塔：怪盜忍者",
+    "cn": "德尔塔：怪盗忍者",
+    "de": "Delta: Ninja-Dieb",
+    "th": "เดลต้า: จอมโจรนินจา",
+    "fr": "Delta : Voleur ninja"
   },
   {
     "name": "Poli",
-    "id": "c030"
+    "id": "c030",
+    "ko": "폴리",
+    "jp": "ポリ",
+    "tw": "波莉",
+    "cn": "波莉",
+    "de": "Poli",
+    "th": "โพลี่",
+    "fr": "Poli"
   },
   {
     "name": "Poli Sweet Holic",
-    "id": "c030_01"
+    "id": "c030_01",
+    "ko": "폴리 스위트 홀릭",
+    "jp": "ポリ スイートホリック",
+    "tw": "波莉 甜美控",
+    "cn": "波莉 甜美控",
+    "de": "Poli Süße Holic",
+    "th": "โพลี่ คลั่งของหวาน",
+    "fr": "Poli Accrosucré"
   },
   {
     "name": "Poli Cheer Up Police",
-    "id": "c030_02"
+    "id": "c030_02",
+    "ko": "폴리 치얼 업 폴리스",
+    "jp": "ポリ チアーアップ・ポリス",
+    "tw": "波莉 警察加油",
+    "cn": "波莉 警察加油",
+    "de": "Poli Gute-Laune-Polizei",
+    "th": "โพลี่ ตำรวจเชียร์สุดใจ",
+    "fr": "Poli Police de la bonne humeur"
   },
   {
     "name": "Miranda",
-    "id": "c032"
+    "id": "c032",
+    "ko": "미란다",
+    "jp": "ミランダ",
+    "tw": "米蘭達",
+    "cn": "米兰达",
+    "de": "Miranda",
+    "th": "มิแรนด้า",
+    "fr": "Miranda"
   },
   {
     "name": "Miranda Thief of Justice",
-    "id": "c032_01"
+    "id": "c032_01",
+    "ko": "미란다 씨프 오브 저스티스",
+    "jp": "ミランダ シーフ・オブ・ジャスティス",
+    "tw": "米蘭達 正義怪盜",
+    "cn": "米兰达 正义怪盗",
+    "de": "Miranda Diebin der Gerechtigkeit",
+    "th": "มิแรนด้า โจรคุณธรรม",
+    "fr": "Miranda Robin des bois"
   },
   {
     "name": "Quiry",
-    "id": "c033"
+    "id": "c033",
+    "ko": "키리",
+    "jp": "キリ",
+    "tw": "基里",
+    "cn": "基里",
+    "de": "Quiry",
+    "th": "คิริ",
+    "fr": "Quiry"
   },
   {
     "name": "D",
-    "id": "c040"
+    "id": "c040",
+    "ko": "D",
+    "jp": "D",
+    "tw": "D",
+    "cn": "D",
+    "de": "D",
+    "th": "D",
+    "fr": "D"
   },
   {
     "name": "K",
-    "id": "c041"
+    "id": "c041",
+    "ko": "K",
+    "jp": "K",
+    "tw": "K",
+    "cn": "K",
+    "de": "K",
+    "th": "K",
+    "fr": "K"
   },
   {
     "name": "K Undercover",
-    "id": "c041_01"
+    "id": "c041_01",
+    "ko": "K 언더 커버",
+    "jp": "K アンダーカバー",
+    "tw": "K 祕密行動",
+    "cn": "K 秘密行动",
+    "de": "K Verdeckt",
+    "th": "K ปฏิบัติการลับ",
+    "fr": "K Sous couverture"
   },
   {
     "name": "D: Killer Wife",
-    "id": "c043"
+    "id": "c043",
+    "ko": "D : 킬러 와이프",
+    "jp": "D：キラーワイフ",
+    "tw": "D：殺手妻子",
+    "cn": "D：杀手妻子",
+    "de": "D: Killer-Braut",
+    "th": "D: ยอดรักนักฆ่า",
+    "fr": "D : Potiche assassine"
   },
   {
     "name": "D: Killer Wife Secret Party Cleaner",
-    "id": "c043_01"
+    "id": "c043_01",
+    "ko": "D : 킬러 와이프 시크릿 파티 클리너",
+    "jp": "D：キラーワイフ シークレットパーティークリーナー",
+    "tw": "D：殺手妻子 祕密派對清潔工",
+    "cn": "D：杀手妻子 秘密派对清洁工",
+    "de": "D: Killer-Braut Partygirl",
+    "th": "D: ยอดรักนักฆ่า กวาดล้างกลางงานเลี้ยง",
+    "fr": "D : Potiche assassine Épongeuse de fête secrète"
   },
   {
     "name": "D: Killer Wife Secret Police",
-    "id": "c043_02"
+    "id": "c043_02",
+    "ko": "D : 킬러 와이프 시크릿 폴리스",
+    "jp": "D：キラーワイフ シークレットポリス",
+    "tw": "D：殺手妻子 祕密警探",
+    "cn": "D：杀手妻子 秘密警探",
+    "de": "D: Killer-Braut Secret Police",
+    "th": "D: ยอดรักนักฆ่า คุณตำรวจสายลับ",
+    "fr": "D : Potiche assassine Police secrète"
   },
   {
     "name": "Belorta",
-    "id": "c060"
+    "id": "c060",
+    "ko": "벨로타",
+    "jp": "ベロータ",
+    "tw": "貝洛塔",
+    "cn": "贝洛塔",
+    "de": "Belorta",
+    "th": "เบลอร์ต้า",
+    "fr": "Bella"
   },
   {
     "name": "Mica",
-    "id": "c061"
+    "id": "c061",
+    "ko": "미카",
+    "jp": "ミカ",
+    "tw": "米卡",
+    "cn": "米卡",
+    "de": "Mica",
+    "th": "ไมก้า",
+    "fr": "Mica"
   },
   {
     "name": "Mica: Snow Buddy",
-    "id": "c062"
+    "id": "c062",
+    "ko": "미카 : 스노우 버디",
+    "jp": "ミカ：スノーバディ",
+    "tw": "米卡：雪地夥伴",
+    "cn": "米卡：雪地伙伴",
+    "de": "Mica: Schneezofe",
+    "th": "ไมก้า: สโนว์บัดดี้",
+    "fr": "Mica : Camarade des neiges"
   },
   {
     "name": "Brid",
-    "id": "c070"
+    "id": "c070",
+    "ko": "브리드",
+    "jp": "ブリッド",
+    "tw": "布麗德",
+    "cn": "布丽德",
+    "de": "Brid",
+    "th": "บริด",
+    "fr": "Breda"
   },
   {
     "name": "Brid Model Worker",
-    "id": "c070_01"
+    "id": "c070_01",
+    "ko": "브리드 클래식 워커",
+    "jp": "ブリッド クラシックワーカー",
+    "tw": "布麗德 古典工作服",
+    "cn": "布丽德 古典工作服",
+    "de": "Brid Modellarbeiterin",
+    "th": "บริด พนักงานต้นแบบ",
+    "fr": "Breda Travailleuse modèle"
   },
   {
     "name": "Brid Black Moon",
-    "id": "c070_02"
+    "id": "c070_02",
+    "ko": "브리드 블랙 문",
+    "jp": "ブリッド ブラックムーン",
+    "tw": "布麗德 黑月",
+    "cn": "布丽德 黑月",
+    "de": "Brid Schwarzer Mond",
+    "th": "บริด จันทร์สีนิล",
+    "fr": "Breda Lune noire"
   },
   {
     "name": "Soline",
-    "id": "c071"
+    "id": "c071",
+    "ko": "솔린",
+    "jp": "ソリン",
+    "tw": "索林",
+    "cn": "索林",
+    "de": "Soline",
+    "th": "โซลีน",
+    "fr": "Soline"
   },
   {
     "name": "Diesel",
-    "id": "c072"
+    "id": "c072",
+    "ko": "디젤",
+    "jp": "ディーゼル",
+    "tw": "迪塞爾",
+    "cn": "迪塞尔",
+    "de": "Diesel",
+    "th": "ดีเซล",
+    "fr": "Diesel"
   },
   {
     "name": "Diesel Black Sunday",
-    "id": "c072_01"
+    "id": "c072_01",
+    "ko": "디젤 블랙 홀리데이",
+    "jp": "ディーゼル ブラックホリデー",
+    "tw": "迪塞爾 黑色假日",
+    "cn": "迪塞尔 黑色假日",
+    "de": "Diesel Schwarzer Sonntag",
+    "th": "ดีเซล วันอาทิตย์สีดำ",
+    "fr": "Diesel Dimanche noir"
   },
   {
     "name": "Diesel Strawberry Flower",
-    "id": "c072_02"
+    "id": "c072_02",
+    "ko": "디젤 스트로베리 플라워",
+    "jp": "ディーゼル ストロベリーフラワー",
+    "tw": "迪塞爾 草莓花朵",
+    "cn": "迪塞尔 草莓花朵",
+    "de": "Diesel Erdbeerblüte",
+    "th": "ดีเซล สตรอว์เบอร์รีผลิดอก",
+    "fr": "Diesel Fleur de fraisier"
   },
   {
     "name": "Diesel Midnight Strawberry",
-    "id": "c072_04"
+    "id": "c072_04",
+    "ko": "디젤 미드나잇 스트로베리",
+    "jp": "ディーゼル ミッドナイト・ストロベリー",
+    "tw": "迪塞爾 午夜草莓",
+    "cn": "迪塞尔 午夜草莓",
+    "de": "Diesel Mitternachtserdbeere",
+    "th": "ดีเซล มิดไนท์สตรอว์เบอร์รี",
+    "fr": "Diesel Fraise de minuit"
   },
   {
     "name": "Brid: Silent Track",
-    "id": "c073"
+    "id": "c073",
+    "ko": "브리드 : 사일런트 트랙",
+    "jp": "ブリッド：サイレントトラック",
+    "tw": "布麗德：靜默軌道",
+    "cn": "布丽德：静默轨道",
+    "de": "Brid: Stille Spur",
+    "th": "บริด: รางรถไฟไร้เสียง",
+    "fr": "Breda : Piste Silencieuse"
   },
   {
     "name": "Soline: Frost Ticket",
-    "id": "c074"
+    "id": "c074",
+    "ko": "솔린 : 프로스트 티켓",
+    "jp": "ソリン：フロストチケット",
+    "tw": "索林：霜雪車票",
+    "cn": "索林：霜之旅票",
+    "de": "Soline: Frost-Ticket",
+    "th": "โซลีน: รถด่วนขบวนเหมันต์",
+    "fr": "Soline : Ticket de givre"
   },
   {
     "name": "Diesel: Winter Sweets",
-    "id": "c075"
+    "id": "c075",
+    "ko": "디젤 : 윈터 스위츠",
+    "jp": "ディーゼル：ウィンタースイーツ",
+    "tw": "迪塞爾：冬日甜心",
+    "cn": "迪塞尔：冬日甜心",
+    "de": "Diesel: Winterliche Süßigkeiten",
+    "th": "ดีเซล: ฤดูหนาวแสนหวาน",
+    "fr": "Diesel : Douceurs d’hiver"
   },
   {
     "name": "Centi",
-    "id": "c080"
+    "id": "c080",
+    "ko": "센티",
+    "jp": "センチ",
+    "tw": "桑迪",
+    "cn": "桑迪",
+    "de": "Centi",
+    "th": "เซนตี้",
+    "fr": "Centi"
   },
   {
     "name": "Centi Supreme Holiday",
-    "id": "c080_01"
+    "id": "c080_01",
+    "ko": "센티 마이티 홀리데이",
+    "jp": "センチ マイティホリデー",
+    "tw": "桑迪 非凡假日",
+    "cn": "桑迪 非凡假日",
+    "de": "Centi Fabelhafte Ferien",
+    "th": "เซนตี้ สุพรีมฮอลิเดย์",
+    "fr": "Centi Vacances suprêmes"
   },
   {
     "name": "Centi Ocean Repair",
-    "id": "c080_02"
+    "id": "c080_02",
+    "ko": "센티 오션 리페어",
+    "jp": "センチ オーシャンリペア",
+    "tw": "桑迪 海洋維修",
+    "cn": "桑迪 海洋维修",
+    "de": "Centi Ozean-Mechanikerin",
+    "th": "เซนตี้ งานซ่อมริมสมุทร",
+    "fr": "Centi Rafistolage marin"
   },
   {
     "name": "Liter",
-    "id": "c082"
+    "id": "c082",
+    "ko": "리타",
+    "jp": "リター",
+    "tw": "麗塔",
+    "cn": "丽塔",
+    "de": "Litera",
+    "th": "ลิเตอร์",
+    "fr": "Litra"
   },
   {
     "name": "Liter Guardfish",
-    "id": "c082_01"
+    "id": "c082_01",
+    "ko": "리타 피쉬 가드",
+    "jp": "リター フィッシュガード",
+    "tw": "麗塔 菲什加德",
+    "cn": "丽塔 菲什加德",
+    "de": "Litera Seeteufel",
+    "th": "ลิเตอร์ การ์ดปลาน้อย",
+    "fr": "Litra Orphie"
   },
   {
     "name": "Liter Cute Sunflower",
-    "id": "c082_02"
+    "id": "c082_02",
+    "ko": "리타 큐트 선플라워",
+    "jp": "リター キュートサンフラワー",
+    "tw": "麗塔 可愛向日葵",
+    "cn": "丽塔 可爱向日葵",
+    "de": "Litera Sonnenblumenpracht",
+    "th": "ลิเตอร์ ทานตะวันบานฉ่ำ",
+    "fr": "Litra Joli tournesol"
   },
   {
     "name": "Liter (CN)",
@@ -221,83 +592,223 @@
   },
   {
     "name": "Emma",
-    "id": "c090"
+    "id": "c090",
+    "ko": "엠마",
+    "jp": "エマ",
+    "tw": "艾瑪",
+    "cn": "艾玛",
+    "de": "Emma",
+    "th": "เอ็มม่า",
+    "fr": "Emma"
   },
   {
-    "name": "Emma Color Me Red",
-    "id": "c090_01"
+    "name": "Emma Color me Red",
+    "id": "c090_01",
+    "ko": "엠마 달링 레드",
+    "jp": "エマ ダーリンレッド",
+    "tw": "艾瑪 寶貝紅",
+    "cn": "艾玛 宝贝红",
+    "de": "Emma Rosenrot",
+    "th": "เอ็มม่า ชุดแดงแรงอารมณ์",
+    "fr": "Emma La vie en rouge"
   },
   {
     "name": "Emma Office Therapy",
-    "id": "c090_02"
+    "id": "c090_02",
+    "ko": "엠마 오피스 테라피",
+    "jp": "エマ オフィスセラピー",
+    "tw": "艾瑪 辦公室療法",
+    "cn": "艾玛 办公室疗法",
+    "de": "Emma Bürotherapie",
+    "th": "เอ็มม่า ออฟฟิศบำบัด",
+    "fr": "Emma Thérapie de bureau"
   },
   {
     "name": "Vesti",
-    "id": "c091"
+    "id": "c091",
+    "ko": "베스티",
+    "jp": "ベスティー",
+    "tw": "貝斯蒂",
+    "cn": "贝斯蒂",
+    "de": "Vesti",
+    "th": "เวสตี้",
+    "fr": "Vesti"
   },
   {
     "name": "Vesti Ark Mage",
-    "id": "c091_01"
+    "id": "c091_01",
+    "ko": "베스티 아크 메이지",
+    "jp": "ベスティー アークメイジ",
+    "tw": "貝斯蒂 方舟魔法師",
+    "cn": "贝斯蒂 方舟魔法师",
+    "de": "Vesti Magierin der Arche",
+    "th": "เวสตี้ อาร์คเมจ",
+    "fr": "Vesti Mage de l'Arche"
   },
   {
     "name": "Eunhwa",
-    "id": "c092"
+    "id": "c092",
+    "ko": "은화",
+    "jp": "ウンファ",
+    "tw": "銀華",
+    "cn": "银华",
+    "de": "Eunhwa",
+    "th": "อึนฮวา",
+    "fr": "Eunhwa"
   },
   {
     "name": "Emma: Tactical Upgrade",
-    "id": "c093"
+    "id": "c093",
+    "ko": "엠마 : 택티컬 업",
+    "jp": "エマ：タクティカル・アップ",
+    "tw": "艾瑪：戰術升級",
+    "cn": "艾玛：战术升级",
+    "de": "Emma: Taktisches Upgrade",
+    "th": "เอ็มม่า: แทคทิคอลอัปเกรด",
+    "fr": "Emma : Amélioration tactique"
   },
   {
     "name": "Emma: Tactical Upgrade Secret Therapy",
-    "id": "c093_01"
+    "id": "c093_01",
+    "ko": "엠마 : 택티컬 업 시크릿 테라피",
+    "jp": "エマ：タクティカル・アップ シークレットセラピー",
+    "tw": "艾瑪：戰術升級 祕密療法",
+    "cn": "艾玛：战术升级 秘密疗法",
+    "de": "Emma: Taktisches Upgrade Heimliche Therapie",
+    "th": "เอ็มม่า: แทคทิคอลอัปเกรด บำบัดสูตรลับ",
+    "fr": "Emma : Amélioration tactique Thérapie secrète"
   },
   {
     "name": "Vesti: Tactical Upgrade",
-    "id": "c094"
+    "id": "c094",
+    "ko": "베스티 : 택티컬 업",
+    "jp": "ベスティー：タクティカル・アップ",
+    "tw": "貝斯蒂：戰術升級",
+    "cn": "贝斯蒂：战术升级",
+    "de": "Vesti: Taktisches Upgrade",
+    "th": "เวสตี้: แทคทิคอลอัปเกรด",
+    "fr": "Vesti : Amélioration tactique"
   },
   {
     "name": "Vesti: Tactical Upgrade Pure Beginner",
-    "id": "c094_01"
+    "id": "c094_01",
+    "ko": "베스티 : 택티컬 업 퓨어 비기너",
+    "jp": "ベスティー：タクティカル・アップ ピュアビギナー",
+    "tw": "貝斯蒂：戰術升級 青澀新生",
+    "cn": "贝斯蒂：战术升级 青涩新生",
+    "de": "Vesti: Taktisches Upgrade Purer Anfänger",
+    "th": "เวสตี้: แทคทิคอลอัปเกรด น้องใหม่ใสบริสุทธิ์",
+    "fr": "Vesti : Amélioration tactique Pur débutant"
   },
   {
     "name": "Eunhwa: Tactical Upgrade",
-    "id": "c095"
+    "id": "c095",
+    "ko": "은화 : 택티컬 업",
+    "jp": "ウンファ：タクティカル・アップ",
+    "tw": "銀華：戰術升級",
+    "cn": "银华：战术升级",
+    "de": "Eunhwa: Taktisches Upgrade",
+    "th": "อึนฮวา: แทคทิคอลอัปเกรด",
+    "fr": "Eunhwa : Amélioration tactique"
   },
   {
     "name": "Eunhwa: Tactical Upgrade Day Off",
-    "id": "c095_01"
+    "id": "c095_01",
+    "ko": "은화 : 택티컬 업 데이 오프",
+    "jp": "ウンファ：タクティカル・アップ デイオフ",
+    "tw": "銀華：戰術升級 休假日",
+    "cn": "银华：战术升级 休假日",
+    "de": "Eunhwa: Taktisches Upgrade Freizeit",
+    "th": "อึนฮวา: แทคทิคอลอัปเกรด ชุดวันหยุด",
+    "fr": "Eunhwa : Amélioration tactique Jour de repos"
   },
   {
     "name": "Laplace",
-    "id": "c100"
+    "id": "c100",
+    "ko": "라플라스",
+    "jp": "ラプラス",
+    "tw": "拉普拉斯",
+    "cn": "拉普拉斯",
+    "de": "Laplace",
+    "th": "ลาปลาซ",
+    "fr": "Laplace"
   },
   {
     "name": "Drake",
-    "id": "c101"
+    "id": "c101",
+    "ko": "드레이크",
+    "jp": "ドレイク",
+    "tw": "德雷克",
+    "cn": "德雷克",
+    "de": "Draka",
+    "th": "เดรค",
+    "fr": "Drake"
   },
   {
     "name": "Drake Villain Racer",
-    "id": "c101_01"
+    "id": "c101_01",
+    "ko": "드레이크 빌런 레이서",
+    "jp": "ドレイク ヴィランレーサー",
+    "tw": "德雷克 反派賽車手",
+    "cn": "德雷克 反派赛车手",
+    "de": "Draka Schnelle Schurkin",
+    "th": "เดรค วายร้ายนักแข่งรถ",
+    "fr": "Drake Méchanceté adverse"
   },
   {
     "name": "Drake Maid For Villain",
-    "id": "c101_02"
+    "id": "c101_02",
+    "ko": "드레이크 메이드 포 빌런",
+    "jp": "ドレイク メイド・フォー・ヴィラン",
+    "tw": "德雷克 反派專屬女僕",
+    "cn": "德雷克 反派专属女仆",
+    "de": "Draka Schurken-Maid",
+    "th": "เดรค เมดจอมวายร้าย",
+    "fr": "Drake Soubrette diabolique"
   },
   {
     "name": "Maxwell",
-    "id": "c102"
+    "id": "c102",
+    "ko": "맥스웰",
+    "jp": "マクスウェル",
+    "tw": "麥斯威爾",
+    "cn": "麦斯威尔",
+    "de": "Maxwell",
+    "th": "แม็กซ์เวลล์",
+    "fr": "Maxie"
   },
   {
     "name": "Maxwell Mechanic White",
-    "id": "c102_01"
+    "id": "c102_01",
+    "ko": "맥스웰 메카닉 화이트",
+    "jp": "マクスウェル メカニックホワイト",
+    "tw": "麥斯威爾 機械白",
+    "cn": "麦斯威尔 机械白",
+    "de": "Maxwell Mechanikerweiß",
+    "th": "แม็กซ์เวลล์ ช่างกลชุดขาว",
+    "fr": "Maxie Blanc de mécano"
   },
   {
     "name": "Laplace: Ultimate Hero",
-    "id": "c103"
+    "id": "c103",
+    "ko": "라플라스 : 얼티밋 히어로",
+    "jp": "ラプラス：アルティメットヒーロー",
+    "tw": "拉普拉斯：究極英雄",
+    "cn": "拉普拉斯：究极英雄",
+    "de": "Laplace: Ultimative Heldin",
+    "th": "ลาปลาซ: สุดยอดฮีโร่",
+    "fr": "Laplace : Héroïne ultime"
   },
   {
     "name": "Laplace: Ultimate Hero Prototype Hero",
-    "id": "c103_01"
+    "id": "c103_01",
+    "ko": "라플라스 : 얼티밋 히어로 프로토타입 히어로",
+    "jp": "ラプラス：アルティメットヒーロー プロトタイプヒーロー",
+    "tw": "拉普拉斯：究極英雄 原型英雄",
+    "cn": "拉普拉斯：究极英雄 原型英雄",
+    "de": "Laplace: Ultimative Heldin Prototyp-Heldin",
+    "th": "ลาปลาซ: สุดยอดฮีโร่ ฮีโร่ต้นแบบ",
+    "fr": "Laplace : Héroïne ultime Héroïne prototype"
   },
   {
     "name": "Drake",
@@ -305,375 +816,1026 @@
   },
   {
     "name": "Maxwell: Ordinary Mechanic",
-    "id": "c105"
+    "id": "c105",
+    "ko": "맥스웰 : 오디너리 미케닉",
+    "jp": "マクスウェル：オーディナリーメカニック",
+    "tw": "麥斯威爾：平凡技師",
+    "cn": "麦斯威尔：平凡技师",
+    "de": "Maxwell: Gewöhnlicher Mechaniker",
+    "th": "แม็กซ์เวลล์: ออดิแนรีเมคานิค",
+    "fr": "Maxie : Mécano ordinaire"
   },
   {
     "name": "Maxwell: Ordinary Mechanic Chief Researcher",
-    "id": "c105_01"
+    "id": "c105_01",
+    "ko": "맥스웰 : 오디너리 미케닉 치프 리서처",
+    "jp": "マクスウェル：オーディナリーメカニック チーフリサーチャー",
+    "tw": "麥斯威爾：平凡技師 首席研究員",
+    "cn": "麦斯威尔：平凡技师 首席研究员",
+    "de": "Maxwell: Gewöhnlicher Mechaniker Chefforscher",
+    "th": "แม็กซ์เวลล์: ออดิแนรีเมคานิค หัวหน้านักวิจัย",
+    "fr": "Maxie : Mécano ordinaire Chercheuse en chef"
   },
   {
     "name": "Crow",
-    "id": "c110"
+    "id": "c110",
+    "ko": "크로우",
+    "jp": "クロウ",
+    "tw": "克拉烏",
+    "cn": "克拉乌",
+    "de": "Crow",
+    "th": "โครว์",
+    "fr": "Crow"
   },
   {
     "name": "Jackal",
-    "id": "c111"
+    "id": "c111",
+    "ko": "자칼",
+    "jp": "ジャッカル",
+    "tw": "豺狼",
+    "cn": "豺狼",
+    "de": "Schakal",
+    "th": "แจ็กคัล",
+    "fr": "Chacal"
   },
   {
     "name": "Jackal Class Troublemaker",
-    "id": "c111_01"
+    "id": "c111_01",
+    "ko": "자칼 클래스 팽",
+    "jp": "ジャッカル クラスの問題児",
+    "tw": "豺狼 萌牙學園",
+    "cn": "豺狼 獠牙同窗",
+    "de": "Schakal Klasse Unruhestifter",
+    "th": "แจ็กคัล ตัวป่วนประจำชั้น",
+    "fr": "Chacal Trublionne de la classe"
   },
   {
     "name": "Viper",
-    "id": "c112"
+    "id": "c112",
+    "ko": "바이퍼",
+    "jp": "バイパー",
+    "tw": "毒蛇",
+    "cn": "毒蛇",
+    "de": "Viper",
+    "th": "ไวเปอร์",
+    "fr": "Viper"
   },
   {
     "name": "Viper Toxic Rabbit",
-    "id": "c112_01"
+    "id": "c112_01",
+    "ko": "바이퍼 톡신 래빗",
+    "jp": "バイパー トキシックラビット",
+    "tw": "毒蛇 毒兔",
+    "cn": "毒蛇 毒兔",
+    "de": "Viper Gifthäschen",
+    "th": "ไวเปอร์ กระต่ายท็อกซิก",
+    "fr": "Viper Lapin toxique"
   },
   {
     "name": "Viper Shine of Love",
-    "id": "c112_02"
+    "id": "c112_02",
+    "ko": "바이퍼 샤인 오브 러브",
+    "jp": "バイパー シャイン・オブ・ラブ",
+    "tw": "毒蛇 愛情光芒",
+    "cn": "毒蛇 爱情光芒",
+    "de": "Viper Morgenkuss",
+    "th": "ไวเปอร์ ประกายแห่งรัก",
+    "fr": "Viper Éclat d'amour"
   },
   {
     "name": "Viper Punky Street",
-    "id": "c112_03"
+    "id": "c112_03",
+    "ko": "바이퍼 펑키 스트리트",
+    "jp": "バイパー パンキーストリート",
+    "tw": "毒蛇 街頭龐克",
+    "cn": "毒蛇 街头朋克",
+    "de": "Viper Punk-Vibes",
+    "th": "ไวเปอร์ พังกี้สตรีท",
+    "fr": "Viper Punk urbain"
   },
   {
     "name": "E.H.",
-    "id": "c113"
+    "id": "c113",
+    "ko": "E.H.",
+    "jp": "E.H.",
+    "tw": "E.H.",
+    "cn": "E.H.",
+    "de": "E.H.",
+    "th": "E.H.",
+    "fr": "H.E."
   },
   {
     "name": "E.H. Junkyard Vanguard",
-    "id": "c113_01"
+    "id": "c113_01",
+    "ko": "E.H. 정크야드 뱅가드",
+    "jp": "E.H. ジャンクヤード・ヴァンガード",
+    "tw": "E.H. 極道先鋒",
+    "cn": "E.H. 极道先锋",
+    "de": "E.H. Schrottplatz-Vorhut",
+    "th": "E.H. ทัพหน้าลานขยะ",
+    "fr": "H.E. Avant-garde de la décharge"
   },
   {
     "name": "N102",
-    "id": "c120"
+    "id": "c120",
+    "ko": "N102",
+    "jp": "N102",
+    "tw": "N102",
+    "cn": "N102",
+    "de": "N102",
+    "th": "N102",
+    "fr": "N102"
   },
   {
     "name": "Anne: Miracle Fairy",
-    "id": "c121"
+    "id": "c121",
+    "ko": "앤 : 미라클 페어리",
+    "jp": "エヌ : ミラクルフェアリー",
+    "tw": "安妮：奇蹟仙女",
+    "cn": "安妮：奇迹仙女",
+    "de": "Anne: Gute Fee",
+    "th": "แอนน์: นางฟ้าปาฏิหาริย์",
+    "fr": "Anne : La fée miracle"
   },
   {
     "name": "Mary",
-    "id": "c130"
+    "id": "c130",
+    "ko": "메어리",
+    "jp": "メアリー",
+    "tw": "梅里",
+    "cn": "梅里",
+    "de": "Mary",
+    "th": "แมรี่",
+    "fr": "Mary"
   },
   {
     "name": "Mary Medical Rabbit",
-    "id": "c130_01"
+    "id": "c130_01",
+    "ko": "메어리 메디컬 래빗",
+    "jp": "メアリー メディカルラビット",
+    "tw": "梅里 醫療兔",
+    "cn": "梅里 医疗兔",
+    "de": "Mary Arzt-Häschen",
+    "th": "แมรี่ กระต่ายคุณหมอ",
+    "fr": "Mary Lapine médicale"
   },
   {
     "name": "Pepper",
-    "id": "c131"
+    "id": "c131",
+    "ko": "페퍼",
+    "jp": "ペッパー",
+    "tw": "佩珀",
+    "cn": "佩珀",
+    "de": "Pepper",
+    "th": "เปปเปอร์",
+    "fr": "Pepper"
   },
   {
     "name": "Pepper Ocean Vitamin",
-    "id": "c131_01"
+    "id": "c131_01",
+    "ko": "페퍼 오션 비타민",
+    "jp": "ペッパー オーシャンビタミン",
+    "tw": "佩珀 海洋維他命",
+    "cn": "佩珀 海洋维他命",
+    "de": "Pepper Ozeanvitamin",
+    "th": "เปปเปอร์ โอเชี่ยนวิตามิน",
+    "fr": "Pepper Vitamine océanique"
   },
   {
     "name": "Mary: Bay Goddess",
-    "id": "c132"
+    "id": "c132",
+    "ko": "메어리 : 베이 갓데스",
+    "jp": "メアリー：ベイゴッデス",
+    "tw": "梅里：海灣女神",
+    "cn": "梅里：海湾女神",
+    "de": "Mary: Göttin der Bucht",
+    "th": "แมรี่: เทพธิดาชายหาด",
+    "fr": "Mary : Déesse de la baie"
   },
   {
     "name": "Sugar",
-    "id": "c140"
+    "id": "c140",
+    "ko": "슈가",
+    "jp": "シュガー",
+    "tw": "舒格",
+    "cn": "舒格",
+    "de": "Sugar",
+    "th": "ชูการ์",
+    "fr": "Sugar"
   },
   {
     "name": "Sugar Hard-Boiled",
-    "id": "c140_01"
+    "id": "c140_01",
+    "ko": "슈가 콜 미 하드보일드",
+    "jp": "シュガー コールミー・ハードボイルド",
+    "tw": "舒格 叫我冷硬派",
+    "cn": "舒格 叫我冷硬派",
+    "de": "Sugar Hartgekocht",
+    "th": "ชูการ์ หัวใจเย็นชา",
+    "fr": "Sugar Dur, dur"
   },
   {
     "name": "Sugar Wild Backyard",
-    "id": "c140_02"
+    "id": "c140_02",
+    "ko": "슈가 와일드 백야드",
+    "jp": "シュガー ワイルド・バックヤード",
+    "tw": "舒格 狂野後花園",
+    "cn": "舒格 狂野后花园",
+    "de": "Sugar Drachenbändigerin",
+    "th": "ชูการ์ นักเลงลายมังกร",
+    "fr": "Sugar Jardin sauvage"
   },
   {
     "name": "Milk",
-    "id": "c141"
+    "id": "c141",
+    "ko": "밀크",
+    "jp": "ミルク",
+    "tw": "米爾克",
+    "cn": "米尔克",
+    "de": "Milk",
+    "th": "มิลค์",
+    "fr": "Lactée"
   },
   {
     "name": "Milk Extreme Fighter",
-    "id": "c141_01"
+    "id": "c141_01",
+    "ko": "밀크 익스트림 파이터",
+    "jp": "ミルク エクストリームファイター",
+    "tw": "米爾克 極限戰士",
+    "cn": "米尔克 极限战士",
+    "de": "Milk Kampfkünstlerin",
+    "th": "มิลค์ เอ็กซ์ตรีมไฟท์เตอร์",
+    "fr": "Lactée Combattante de l'extrême"
   },
   {
     "name": "Frima",
-    "id": "c142"
+    "id": "c142",
+    "ko": "프림",
+    "jp": "プリム",
+    "tw": "普琳瑪",
+    "cn": "普琳玛",
+    "de": "Frima",
+    "th": "ฟริมา",
+    "fr": "Frima"
   },
   {
     "name": "Frima Sea of Sloth",
-    "id": "c142_01"
+    "id": "c142_01",
+    "ko": "프림 씨 오브 슬로스",
+    "jp": "プリム レイジーサマー",
+    "tw": "普琳瑪 慵懶海灘",
+    "cn": "普琳玛 慵懒海滩",
+    "de": "Frima Meer der Faulheit",
+    "th": "ฟริมา ขี้เซาริมทะเล",
+    "fr": "Frima Mer de paresse"
   },
   {
     "name": "Milk: Blooming Bunny",
-    "id": "c143"
+    "id": "c143",
+    "ko": "밀크 : 블루밍 바니",
+    "jp": "ミルク：ブルーミングバニー",
+    "tw": "米爾克：花漾兔女郎",
+    "cn": "米尔克：花漾兔女郎",
+    "de": "Milk: Blühendes Häschen",
+    "th": "มิลค์: กระต่ายเบ่งบาน",
+    "fr": "Lactée : Lapin florissant"
   },
   {
     "name": "Julia",
-    "id": "c150"
+    "id": "c150",
+    "ko": "율리아",
+    "jp": "ジュリア",
+    "tw": "尤莉亞",
+    "cn": "尤莉亚",
+    "de": "Julia",
+    "th": "จูเลีย",
+    "fr": "Julia"
   },
   {
     "name": "Julia Mild Nocturne",
-    "id": "c150_01"
+    "id": "c150_01",
+    "ko": "율리아 마일드 녹턴",
+    "jp": "ジュリア マイルドノクターン",
+    "tw": "尤莉亞 溫柔夜曲",
+    "cn": "尤莉亚 温柔夜曲",
+    "de": "Julia Nachtigall",
+    "th": "จูเลีย บทเพลงชวนฝัน",
+    "fr": "Julia Nocturne doux"
   },
   {
     "name": "Julia Summer Romance",
-    "id": "c150_02"
+    "id": "c150_02",
+    "ko": "율리아 서머 로망스",
+    "jp": "ジュリア サマーロマンス",
+    "tw": "尤莉亞 夏日浪漫",
+    "cn": "尤莉亚 夏日浪漫",
+    "de": "Julia Sommer-Romantik",
+    "th": "จูเลีย ฤดูร้อนรวยรัก",
+    "fr": "Julia Romance estivale"
   },
   {
     "name": "Yuni",
-    "id": "c160"
+    "id": "c160",
+    "ko": "유니",
+    "jp": "ユニ",
+    "tw": "尤妮",
+    "cn": "尤妮",
+    "de": "Yuni",
+    "th": "ยูนิ",
+    "fr": "Yuni"
   },
   {
-    "name": "Yuni Pretty In Pink",
-    "id": "c160_01"
+    "name": "Yuni Pretty in Pink",
+    "id": "c160_01",
+    "ko": "유니 러블리 핑크",
+    "jp": "ユニ ラブリーピンク",
+    "tw": "尤妮 可愛粉色",
+    "cn": "尤妮 可爱粉色",
+    "de": "Yuni Hübsch in Rosa",
+    "th": "ยูนิ สาวน้อยชุดชมพู",
+    "fr": "Yuni Jolie en rose"
   },
   {
     "name": "Mihara",
-    "id": "c161"
+    "id": "c161",
+    "ko": "미하라",
+    "jp": "ミハラ",
+    "tw": "米哈拉",
+    "cn": "米哈拉",
+    "de": "Mihara",
+    "th": "มิฮาร่า",
+    "fr": "Mihara"
   },
   {
     "name": "Mihara: Bonding Chain",
-    "id": "c162"
+    "id": "c162",
+    "ko": "미하라 : 본딩 체인",
+    "jp": "ミハラ：ボンディングチェーン",
+    "tw": "米哈拉：羈絆鎖鏈",
+    "cn": "米哈拉：羁绊锁链",
+    "de": "Mihara: „Ketten der Bindung“",
+    "th": "มิฮาร่า: บ่วงโซ่สายใย",
+    "fr": "Mihara : Très attachée"
   },
   {
-    "name": "Mihara Paint Eater",
-    "id": "c162_01"
+    "name": "Mihara: Bonding Chain Pain Eater",
+    "id": "c162_01",
+    "ko": "미하라 : 본딩 체인 페인 이터",
+    "jp": "ミハラ：ボンディングチェーン ペインイーター",
+    "tw": "米哈拉：羈絆鎖鏈 痛苦吞食者",
+    "cn": "米哈拉：羁绊锁链 痛苦吞食者",
+    "de": "Mihara: „Ketten der Bindung“ Schmerzvertilgerin",
+    "th": "มิฮาร่า: บ่วงโซ่สายใย เสพสมซ่านทรวง",
+    "fr": "Mihara : Très attachée Douleur dînatoire"
   },
   {
     "name": "Privaty",
-    "id": "c170"
+    "id": "c170",
+    "ko": "프리바티",
+    "jp": "プリバティ",
+    "tw": "普麗瓦蒂",
+    "cn": "普丽瓦蒂",
+    "de": "Privatia",
+    "th": "ไพรเวตี้",
+    "fr": "Privatia"
   },
   {
     "name": "Privaty Government Grunt",
-    "id": "c170_01"
+    "id": "c170_01",
+    "ko": "프리바티 거버먼트 노멀",
+    "jp": "プリバティ ガバメントノーマル",
+    "tw": "普麗瓦蒂 行政正裝",
+    "cn": "普丽瓦蒂 行政正装",
+    "de": "Privatia Staatliche Beamtin",
+    "th": "ไพรเวตี้ ลิ่วล้อรัฐบาล",
+    "fr": "Privatia Sbire du gouvernement"
   },
   {
     "name": "Privaty Banquet Princess",
-    "id": "c170_02"
+    "id": "c170_02",
+    "ko": "프리바티 연회의 공주",
+    "jp": "プリバティ バンケット・プリンセス",
+    "tw": "普麗瓦蒂 宴會公主",
+    "cn": "普丽瓦蒂 宴会公主",
+    "de": "Privatia Bankettprinzessin",
+    "th": "ไพรเวตี้ องค์หญิงแห่งงานเลี้ยง",
+    "fr": "Privatia Princesse du banquet"
   },
   {
     "name": "Privaty Destined in Blue",
-    "id": "c170_03"
+    "id": "c170_03",
+    "ko": "프리바티 푸른 인연",
+    "jp": "プリバティ 青い絆",
+    "tw": "普麗瓦蒂 青之羈絆",
+    "cn": "普丽瓦蒂 青之羁绊",
+    "de": "Privatia Blaue Pracht",
+    "th": "ไพรเวตี้ ลิขิตชะตาสีคราม",
+    "fr": "Privatia Destin d'azur"
   },
   {
     "name": "Privaty Sharp Lesson",
-    "id": "c170_04"
+    "id": "c170_04",
+    "ko": "프리바티 샤프 레슨",
+    "jp": "プリバティ シャープレッスン",
+    "tw": "普麗瓦蒂 嚴厲教誨",
+    "cn": "普丽瓦蒂 严厉教诲",
+    "de": "Privatia Scharfe Lehrstunde",
+    "th": "ไพรเวตี้ ติวเข้มคมเฉียบ",
+    "fr": "Privatia Cours acéré"
   },
   {
     "name": "Yulha",
-    "id": "c171"
+    "id": "c171",
+    "ko": "율하",
+    "jp": "ユルハ",
+    "tw": "尤爾夏",
+    "cn": "尤尔夏",
+    "de": "Yulhea",
+    "th": "ยูลฮา",
+    "fr": "Yulha"
   },
   {
     "name": "Admi",
-    "id": "c172"
+    "id": "c172",
+    "ko": "애드미",
+    "jp": "アドミ",
+    "tw": "艾德米",
+    "cn": "艾德米",
+    "de": "Admi",
+    "th": "แอดมี่",
+    "fr": "Admi"
   },
   {
     "name": "Guillotine",
-    "id": "c180"
+    "id": "c180",
+    "ko": "길로틴",
+    "jp": "ギロチン",
+    "tw": "吉蘿婷",
+    "cn": "吉萝婷",
+    "de": "Guillotine",
+    "th": "กิโยติน",
+    "fr": "Guillotine"
   },
   {
     "name": "Guillotine Dark Tracer",
-    "id": "c180_01"
+    "id": "c180_01",
+    "ko": "길로틴 다크 트레이서",
+    "jp": "ギロチン ダークトレーサー",
+    "tw": "吉蘿婷 黑暗追蹤者",
+    "cn": "吉萝婷 黑暗追踪者",
+    "de": "Guillotine Dunkler Ronin",
+    "th": "กิโยติน รังสรรค์อันธการ",
+    "fr": "Guillotine Pisteur sombre"
   },
   {
     "name": "Maiden",
-    "id": "c181"
+    "id": "c181",
+    "ko": "메이든",
+    "jp": "メイデン",
+    "tw": "梅登",
+    "cn": "梅登",
+    "de": "Maiden",
+    "th": "เมเดน",
+    "fr": "Maiden"
   },
   {
-    "name": "Guillotine Winter Slayer",
-    "id": "c182"
+    "name": "Guillotine: Winter Slayer",
+    "id": "c182",
+    "ko": "길로틴 : 윈터 슬레이어",
+    "jp": "ギロチン：ウィンタースレイヤー",
+    "tw": "吉蘿婷：寒冬殺手",
+    "cn": "吉萝婷：寒冬杀手",
+    "de": "Guillotine: Eiskalt",
+    "th": "กิโยติน: ผู้พิชิตเหมันต์",
+    "fr": "Guillotine : Chasseuse d'hiver"
   },
   {
-    "name": "Maiden Ice Rose",
-    "id": "c183"
+    "name": "Maiden: Ice Rose",
+    "id": "c183",
+    "ko": "메이든 : 아이스 로즈",
+    "jp": "メイデン：アイスローズ",
+    "tw": "梅登：冰玫瑰",
+    "cn": "梅登：冰玫瑰",
+    "de": "Maiden: Eisrose",
+    "th": "เมเดน: ไอซ์โรส",
+    "fr": "Maiden : Rose des glaces"
   },
   {
     "name": "Maiden Covert Nurse",
-    "id": "c181_01"
+    "id": "c181_01",
+    "ko": "메이든 시크릿 너스",
+    "jp": "メイデン シークレットナース",
+    "tw": "梅登 祕密護士",
+    "cn": "梅登 秘密护士",
+    "de": "Maiden Heimliche Krankenschwester",
+    "th": "เมเดน พยาบาลแฝงตัว",
+    "fr": "Maiden Infirmière clandestine"
   },
   {
-    "name": "Maiden Under the Sun",
-    "id": "c181_02"
+    "name": "Maiden Under The Sun",
+    "id": "c181_02",
+    "ko": "메이든 언더 더 썬",
+    "jp": "メイデン アンダー・ザ・サン",
+    "tw": "梅登 豔陽之下",
+    "cn": "梅登 艳阳之下",
+    "de": "Maiden Hitzegefühle",
+    "th": "เมเดน ใต้ดวงตะวัน",
+    "fr": "Maiden Sous le soleil"
   },
   {
     "name": "Ludmilla",
-    "id": "c190"
+    "id": "c190",
+    "ko": "루드밀라",
+    "jp": "ルドミラ",
+    "tw": "魯德米拉",
+    "cn": "鲁德米拉",
+    "de": "Ludmilla",
+    "th": "ลุดมิลล่า",
+    "fr": "Ludmilla"
   },
   {
     "name": "Alice",
-    "id": "c191"
+    "id": "c191",
+    "ko": "앨리스",
+    "jp": "アリス",
+    "tw": "愛麗絲",
+    "cn": "爱丽丝",
+    "de": "Alice",
+    "th": "อลิซ",
+    "fr": "Alice"
   },
   {
     "name": "Alice Sweet Home",
-    "id": "c191_01"
+    "id": "c191_01",
+    "ko": "앨리스 스위트 홈",
+    "jp": "アリス スイートホーム",
+    "tw": "愛麗絲 甜蜜之家",
+    "cn": "爱丽丝 甜蜜之家",
+    "de": "Alice Trautes Heim",
+    "th": "อลิซ สวีทโฮม",
+    "fr": "Alice Chez-soi chaleureux"
   },
   {
     "name": "Alice Märchen Dream",
-    "id": "c191_02"
+    "id": "c191_02",
+    "ko": "앨리스 메르헨 드림",
+    "jp": "アリス メルヘンドリーム",
+    "tw": "愛麗絲 童話幻夢",
+    "cn": "爱丽丝 童话幻梦",
+    "de": "Alice Märchentraum",
+    "th": "อลิซ ขับขานนิทานฝัน",
+    "fr": "Alice Rêve chimérique"
   },
   {
     "name": "Tove",
-    "id": "c192"
+    "id": "c192",
+    "ko": "토브",
+    "jp": "トーブ",
+    "tw": "托比",
+    "cn": "托比",
+    "de": "Tove",
+    "th": "โทฟ",
+    "fr": "Tove"
   },
   {
     "name": "Tove Baseball Fan",
-    "id": "c192_01"
+    "id": "c192_01",
+    "ko": "토브 아이 러브 베이스볼",
+    "jp": "トーブ アイラブベースボール",
+    "tw": "托比 我愛棒球",
+    "cn": "托比 我爱棒球",
+    "de": "Tove Baseball-Fan",
+    "th": "โทฟ แฟนเบสบอล",
+    "fr": "Tove Fan de baseball"
   },
   {
     "name": "Tove Sunblaze",
-    "id": "c192_02"
+    "id": "c192_02",
+    "ko": "토브 썬블레이즈",
+    "jp": "トーブ サンブレイズ",
+    "tw": "托比 烈陽",
+    "cn": "托比 烈阳",
+    "de": "Tove Sunblaze",
+    "th": "โทฟ เปลวตะวัน",
+    "fr": "Tove Bain de soleil"
   },
   {
     "name": "Neve",
-    "id": "c193"
+    "id": "c193",
+    "ko": "네베",
+    "jp": "ネヴェ",
+    "tw": "尼夫",
+    "cn": "尼夫",
+    "de": "Neve",
+    "th": "เนเว่",
+    "fr": "Neve"
   },
   {
     "name": "Ludmilla: Winter Owner",
-    "id": "c194"
+    "id": "c194",
+    "ko": "루드밀라 : 윈터 오너",
+    "jp": "ルドミラ：ウィンターオーナー",
+    "tw": "魯德米拉：冬日之主",
+    "cn": "鲁德米拉：冬日之主",
+    "de": "Ludmilla: Winterwirtin",
+    "th": "ลุดมิลล่า: ราชินีน้ำพุร้อน",
+    "fr": "Ludmilla : Propriétaire hivernale"
   },
   {
     "name": "Alice: Wonderland Bunny",
-    "id": "c195"
+    "id": "c195",
+    "ko": "앨리스 : 원더랜드 바니",
+    "jp": "アリス：ワンダーランドバニー",
+    "tw": "愛麗絲：仙境兔女郎",
+    "cn": "爱丽丝：仙境兔女郎",
+    "de": "Alice: Wunderland-Häschen",
+    "th": "อลิซ: กระต่ายแดนมหัศจรรย์",
+    "fr": "Alice : Lapine des merveilles"
   },
   {
     "name": "Rupee",
-    "id": "c200"
+    "id": "c200",
+    "ko": "루피",
+    "jp": "ルピー",
+    "tw": "露菲",
+    "cn": "露菲",
+    "de": "Rupee",
+    "th": "รูปี",
+    "fr": "Rupee"
   },
   {
     "name": "Rupee Rabbit Deluxe",
-    "id": "c200_01"
+    "id": "c200_01",
+    "ko": "루피 럭셔리 래빗",
+    "jp": "ルピー ラグジュアリーラビット",
+    "tw": "露菲 奢侈兔",
+    "cn": "露菲 奢侈兔",
+    "de": "Rupee Deluxe Häschen",
+    "th": "รูปี กระต่ายเดอลุกซ์",
+    "fr": "Rupee Lapine Deluxe"
   },
   {
     "name": "Yan",
-    "id": "c201"
+    "id": "c201",
+    "ko": "얀",
+    "jp": "ヤン",
+    "tw": "楊",
+    "cn": "杨",
+    "de": "Yan",
+    "th": "เหยียน",
+    "fr": "Yan"
   },
   {
     "name": "Yan Sunrise Market",
-    "id": "c201_01"
+    "id": "c201_01",
+    "ko": "얀 선라이즈 마켓",
+    "jp": "ヤン サンライズマーケット",
+    "tw": "楊 黎明超市",
+    "cn": "杨 黎明超市",
+    "de": "Yan Sonnenaufgangsmarkt",
+    "th": "เหยียน ตลาดรุ่งอรุณ",
+    "fr": "Yan Marché de l'aube"
   },
   {
     "name": "Dolla",
-    "id": "c202"
+    "id": "c202",
+    "ko": "도라",
+    "jp": "ドラー",
+    "tw": "朵拉",
+    "cn": "朵拉",
+    "de": "Dolla",
+    "th": "ดอลล่า",
+    "fr": "Dolla"
   },
   {
     "name": "Dolla Dark Rose",
-    "id": "c202_01"
+    "id": "c202_01",
+    "ko": "도라 다크 로즈",
+    "jp": "ドラー ダークローズ",
+    "tw": "朵拉 黑玫瑰",
+    "cn": "朵拉 黑玫瑰",
+    "de": "Dolla Dunkle Rose",
+    "th": "ดอลล่า ดาร์กโรส",
+    "fr": "Dolla Rose sombre"
   },
   {
     "name": "Rupee: Winter Shopper",
-    "id": "c203"
+    "id": "c203",
+    "ko": "루피 : 윈터 쇼퍼",
+    "jp": "ルピー：ウィンターショッパー",
+    "tw": "露菲：冬日購物狂",
+    "cn": "露菲：冬日购物狂",
+    "de": "Rupee: Wintershopperin",
+    "th": "รูปี: นักช้อปฤดูหนาว",
+    "fr": "Rupee : Courses hivernales"
   },
   {
     "name": "Exia",
-    "id": "c210"
+    "id": "c210",
+    "ko": "엑시아",
+    "jp": "エクシア",
+    "tw": "艾可希雅",
+    "cn": "艾可希雅",
+    "de": "Exia",
+    "th": "เอ็กเซีย",
+    "fr": "Exia"
   },
   {
     "name": "Exia Joy to the Nerds",
-    "id": "c210_01"
+    "id": "c210_01",
+    "ko": "엑시아 메리 너드 데이",
+    "jp": "エクシア メリー・ナードデー",
+    "tw": "艾可希雅 書呆子日快樂",
+    "cn": "艾可希雅 书呆子日快乐",
+    "de": "Exia Streber-Weihnachten",
+    "th": "เอ็กเซีย จอยทูเดอะเนิร์ด",
+    "fr": "Exia Joie des intellos"
   },
   {
     "name": "Exia Gamer",
-    "id": "c210_02"
+    "id": "c210_02",
+    "ko": "엑시아 게이머즈",
+    "jp": "エクシア ゲーマーズ",
+    "tw": "艾可希雅 遊戲玩家",
+    "cn": "艾可希雅 游戏玩家",
+    "de": "Exia Gamerin",
+    "th": "เอ็กเซีย เกมเมอร์ชั้นเซียน",
+    "fr": "Exia Joueur"
   },
   {
     "name": "Exia Hacker Rabbit",
-    "id": "c210_03"
+    "id": "c210_03",
+    "ko": "엑시아 해커 래빗",
+    "jp": "エクシア ハッカーラビット",
+    "tw": "艾可希雅 駭客兔",
+    "cn": "艾可希雅 黑客兔",
+    "de": "Exia Hacker-Häschen",
+    "th": "เอ็กเซีย กระต่ายแฮ็กเกอร์",
+    "fr": "Exia Hackeuse de garenne"
   },
   {
     "name": "Novel",
-    "id": "c212"
+    "id": "c212",
+    "ko": "노벨",
+    "jp": "ノベル",
+    "tw": "諾薇兒",
+    "cn": "诺薇儿",
+    "de": "Novel",
+    "th": "โนเวล",
+    "fr": "Novel"
   },
   {
     "name": "Novel Penguin Holmes",
-    "id": "c212_01"
+    "id": "c212_01",
+    "ko": "노벨 펭귄 홈즈",
+    "jp": "ノベル ペンギンホームズ",
+    "tw": "諾薇兒 企鵝福爾摩斯",
+    "cn": "诺薇儿 企鹅福尔摩斯",
+    "de": "Novel Pinguin Holmes",
+    "th": "โนเวล โฮล์มเพนกวิน",
+    "fr": "Novel Maison du pingouin"
   },
   {
     "name": "Novel Detective Nurse",
-    "id": "c212_02"
+    "id": "c212_02",
+    "ko": "노벨 디텍티브 너스",
+    "jp": "ノベル ディテクティブナース",
+    "tw": "諾薇兒 偵探護士",
+    "cn": "诺薇儿 侦探护士",
+    "de": "Novel Detektivkrankenschwester",
+    "th": "โนเวล พยาบาลนักสืบ",
+    "fr": "Novel Infirmière détective"
   },
   {
     "name": "Snow White",
-    "id": "c220"
+    "id": "c220",
+    "ko": "스노우 화이트",
+    "jp": "スノーホワイト",
+    "tw": "白雪公主",
+    "cn": "白雪公主",
+    "de": "Schneewittchen",
+    "th": "สโนว์ไวท์",
+    "fr": "Blanche-Neige"
   },
   {
     "name": "Snow White White Knight",
-    "id": "c220_01"
+    "id": "c220_01",
+    "ko": "스노우 화이트 화이트 나이트",
+    "jp": "スノーホワイト ホワイトナイト",
+    "tw": "白雪公主 白色騎士",
+    "cn": "白雪公主 白色骑士",
+    "de": "Schneewittchen Weißer Ritter",
+    "th": "สโนว์ไวท์ อัศวินขาว",
+    "fr": "Blanche-Neige Cavalière blanche"
   },
   {
     "name": "Rapunzel",
-    "id": "c221"
+    "id": "c221",
+    "ko": "라푼젤",
+    "jp": "ラプンツェル",
+    "tw": "長髮公主",
+    "cn": "长发公主",
+    "de": "Rapunzel",
+    "th": "ราพันเซล",
+    "fr": "Doucette"
   },
   {
     "name": "Scarlet",
-    "id": "c222"
+    "id": "c222",
+    "ko": "홍련",
+    "jp": "紅蓮",
+    "tw": "紅蓮",
+    "cn": "红莲",
+    "de": "Scarlet",
+    "th": "สการ์เล็ต",
+    "fr": "Scarlette"
   },
   {
     "name": "Scarlet Racer's High",
-    "id": "c222_01"
+    "id": "c222_01",
+    "ko": "홍련 레이서즈 하이",
+    "jp": "紅蓮 レーサーズハイ",
+    "tw": "紅蓮 賽車服",
+    "cn": "红莲 狂飙车手",
+    "de": "Scarlet Auf der Überholspur",
+    "th": "สการ์เล็ต ถนนนักแข่ง",
+    "fr": "Scarlette Euphorie du pilote"
   },
   {
     "name": "Nayuta",
-    "id": "c223"
+    "id": "c223",
+    "ko": "나유타",
+    "jp": "ナユタ",
+    "tw": "娜由塔",
+    "cn": "娜由塔",
+    "de": "Nayuta",
+    "th": "นายูตะ",
+    "fr": "Nayuta"
   },
   {
     "name": "Nayuta Wu Wei",
-    "id": "c223_01"
+    "id": "c223_01",
+    "ko": "나유타 무위",
+    "jp": "ナユタ 無為",
+    "tw": "娜由塔 無為",
+    "cn": "娜由塔 无为",
+    "de": "Nayuta Wu Wei",
+    "th": "นายูตะ ล่องกระแสจักรวาล",
+    "fr": "Nayuta Wu Wei"
   },
   {
     "name": "Snow White: Innocent Days",
-    "id": "c224"
+    "id": "c224",
+    "ko": "스노우 화이트 : 이노센트 데이즈",
+    "jp": "スノーホワイト：イノセントデイズ",
+    "tw": "白雪公主：純真年代",
+    "cn": "白雪公主：纯真年代",
+    "de": "Schneewittchen: Tage der Unschuld",
+    "th": "สโนว์ไวท์: วัยไร้เดียงสา",
+    "fr": "Blanche-Neige : Innocence"
   },
   {
     "name": "Scarlet: Black Shadow",
-    "id": "c225"
+    "id": "c225",
+    "ko": "홍련 : 흑영",
+    "jp": "紅蓮：ブラックシャドウ",
+    "tw": "紅蓮：暗影",
+    "cn": "红莲：暗影",
+    "de": "Scarlet: Schwarzer Schatten",
+    "th": "สการ์เล็ต: เงาดำพิฆาต",
+    "fr": "Scarlette : Ombre noire"
   },
   {
     "name": "Scarlet: Black Shadow Longing Flower",
-    "id": "c225_01"
+    "id": "c225_01",
+    "ko": "홍련 : 흑영 연화",
+    "jp": "紅蓮：ブラックシャドウ ロンギングフラワー",
+    "tw": "紅蓮：暗影 蓮花",
+    "cn": "红莲：暗影 莲花",
+    "de": "Scarlet: Schwarzer Schatten Sehnsüchtige Blume",
+    "th": "สการ์เล็ต: เงาดำพิฆาต มาลาอาลัย",
+    "fr": "Scarlette : Ombre noire Fleur de désir"
   },
   {
     "name": "Rapunzel: Pure Grace",
-    "id": "c226"
+    "id": "c226",
+    "ko": "라푼젤 : 퓨어 그레이스",
+    "jp": "ラプンツェル：ピュアグレイス",
+    "tw": "長髮公主：純潔恩典",
+    "cn": "长发公主：纯洁恩典",
+    "de": "Rapunzel: Wahre Eleganz",
+    "th": "ราพันเซล: สิริวิสุทธิ์",
+    "fr": "Doucette : Beauté gracile"
   },
   {
-    "name": "Pinoccio",
-    "id": "c227"
+    "name": "Pinocchio",
+    "id": "c227",
+    "ko": "피노키오",
+    "jp": "ピノキオ",
+    "tw": "皮諾丘",
+    "cn": "匹诺曹",
+    "de": "Pinocchio",
+    "th": "พิน็อกคิโอ",
+    "fr": "Pinocchio"
   },
   {
     "name": "Harran",
-    "id": "c230"
+    "id": "c230",
+    "ko": "하란",
+    "jp": "ハラン",
+    "tw": "哈蘭",
+    "cn": "哈兰",
+    "de": "Harran",
+    "th": "ฮาร์ราน",
+    "fr": "Harran"
   },
   {
     "name": "Harran Banquet Witch",
-    "id": "c230_01"
+    "id": "c230_01",
+    "ko": "하란 연회의 마녀",
+    "jp": "ハラン バンケット・ウィッチ",
+    "tw": "哈蘭 宴會的魔女",
+    "cn": "哈兰 宴会的魔女",
+    "de": "Harran Banketthexe",
+    "th": "ฮาร์ราน แม่มดงานราตรี",
+    "fr": "Harran Sorcière du banquet"
   },
   {
     "name": "Isabel",
-    "id": "c231"
+    "id": "c231",
+    "ko": "이사벨",
+    "jp": "イサベル",
+    "tw": "伊莎貝爾",
+    "cn": "伊莎贝尔",
+    "de": "Isabel",
+    "th": "อิซาเบล",
+    "fr": "Isabel"
   },
   {
     "name": "Isabel Honeymoon Party",
-    "id": "c231_01"
+    "id": "c231_01",
+    "ko": "이사벨 허니문 파티",
+    "jp": "イサベル ハネムーンパーティー",
+    "tw": "伊莎貝爾 蜜月派對",
+    "cn": "伊莎贝尔 蜜月派对",
+    "de": "Isabel Flitterwochen-Party",
+    "th": "อิซาเบล ปาร์ตี้ฮันนีมูน",
+    "fr": "Isabel Lune de miel en folie"
   },
   {
     "name": "Noah",
-    "id": "c232"
+    "id": "c232",
+    "ko": "노아",
+    "jp": "ノア",
+    "tw": "諾雅",
+    "cn": "诺雅",
+    "de": "Noa",
+    "th": "โนอาห์",
+    "fr": "Noah"
   },
   {
     "name": "Dorothy",
-    "id": "c233"
+    "id": "c233",
+    "ko": "도로시",
+    "jp": "ドロシー",
+    "tw": "桃樂絲",
+    "cn": "桃乐丝",
+    "de": "Dorothy",
+    "th": "โดโรธี",
+    "fr": "Dorothy"
   },
   {
     "name": "Dorothy: Serendipity",
-    "id": "c234"
+    "id": "c234",
+    "ko": "도로시 : 세렌디피티",
+    "jp": "ドロシー：セレンディピティ",
+    "tw": "桃樂絲：機緣巧遇",
+    "cn": "桃乐丝：机缘巧遇",
+    "de": "Dorothy: Serendipity",
+    "th": "โดโรธี: พรหมลิขิตดลบันดาล",
+    "fr": "Dorothy : Sérendipité"
   },
   {
     "name": "Dorothy Nostalgia",
-    "id": "c233_01"
+    "id": "c233_01",
+    "ko": "도로시 노스텔지어",
+    "jp": "ドロシー ノスタルジア",
+    "tw": "桃樂絲 懷舊",
+    "cn": "桃乐丝 怀旧",
+    "de": "Dorothy Nostalgie",
+    "th": "โดโรธี ถวิลหาวันวาน",
+    "fr": "Dorothy Nostalgie"
   },
   {
     "name": "Dorothy Luna Light",
-    "id": "c233_02"
+    "id": "c233_02",
+    "ko": "도로시 루나 라이트",
+    "jp": "ドロシー ルナーライト",
+    "tw": "桃樂絲 月光",
+    "cn": "桃乐丝 月光",
+    "de": "Dorothy Mondlicht",
+    "th": "โดโรธี รัศมีจันทรา",
+    "fr": "Dorothy Lumière lunaire"
   },
   {
     "name": "Dorothy (CN)",
@@ -681,19 +1843,47 @@
   },
   {
     "name": "Rumani",
-    "id": "c240"
+    "id": "c240",
+    "ko": "루마니",
+    "jp": "ルマニ",
+    "tw": "魯瑪妮",
+    "cn": "鲁玛妮",
+    "de": "Ramani",
+    "th": "รุมานิ",
+    "fr": "Rumani"
   },
   {
     "name": "Epinel",
-    "id": "c241"
+    "id": "c241",
+    "ko": "에피넬",
+    "jp": "エピネル",
+    "tw": "艾菲涅爾",
+    "cn": "艾菲涅尔",
+    "de": "Epinel",
+    "th": "เอพิเนล",
+    "fr": "Epinel"
   },
   {
     "name": "Folkwang",
-    "id": "c242"
+    "id": "c242",
+    "ko": "폴크방",
+    "jp": "フォルクヴァン",
+    "tw": "富克旺",
+    "cn": "富克旺",
+    "de": "Diagora",
+    "th": "โฟล์กวัง",
+    "fr": "Folkie"
   },
   {
-    "name": "Folkwang Moist Bunny",
-    "id": "c242_01"
+    "name": "Folkwang Moist Rabbit",
+    "id": "c242_01",
+    "ko": "폴크방 모이스트 래빗",
+    "jp": "フォルクヴァン モイストラビット",
+    "tw": "富克旺 濕潤兔",
+    "cn": "富克旺 湿润兔",
+    "de": "Diagora Leichtes Häschen",
+    "th": "โฟล์กวัง กระต่ายชื้นแฉะ",
+    "fr": "Folkie Lapine transpirante"
   },
   {
     "name": "Mass Produced Red",
@@ -721,15 +1911,36 @@
   },
   {
     "name": "Modernia",
-    "id": "c260"
+    "id": "c260",
+    "ko": "모더니아",
+    "jp": "モダニア",
+    "tw": "神罰",
+    "cn": "神罚",
+    "de": "Modernia",
+    "th": "โมเดอร์เนีย",
+    "fr": "Modernia"
   },
   {
     "name": "Modernia First Affection",
-    "id": "c260_01"
+    "id": "c260_01",
+    "ko": "모더니아 퍼스트 어펙션",
+    "jp": "モダニア ファースト・アフェクション",
+    "tw": "神罰 初次的愛戀",
+    "cn": "神罚 初次的爱恋",
+    "de": "Modernia Erste Zuneigung",
+    "th": "โมเดอร์เนีย รักแรก",
+    "fr": "Modernia Coup de cœur"
   },
   {
     "name": "Modernia Second Affection",
-    "id": "c260_02"
+    "id": "c260_02",
+    "ko": "모더니아 세컨드 어펙션",
+    "jp": "モダニア セカンド・アフェクション",
+    "tw": "神罰 第二種情感",
+    "cn": "神罚 第二种情感",
+    "de": "Modernia Zweite Zuneigung",
+    "th": "โมเดอร์เนีย รักครั้งที่สอง",
+    "fr": "Modernia Deuxième affection"
   },
   {
     "name": "Modernia (CN)",
@@ -737,15 +1948,36 @@
   },
   {
     "name": "Nihilister",
-    "id": "c261"
+    "id": "c261",
+    "ko": "니힐리스타",
+    "jp": "ニヒリスター",
+    "tw": "尼希利斯塔",
+    "cn": "尼希利斯塔",
+    "de": "Nihilister",
+    "th": "นิฮิลิสเตอร์",
+    "fr": "Nihiliste"
   },
   {
     "name": "Liberalio",
-    "id": "c262"
+    "id": "c262",
+    "ko": "리버렐리오",
+    "jp": "リバーレリオ",
+    "tw": "莉貝雷利奧",
+    "cn": "莉贝雷利奥",
+    "de": "Liberalio",
+    "th": "ลิเบอราลิโอ",
+    "fr": "Liberalio"
   },
   {
     "name": "Liberalio Dreaming Lake",
-    "id": "c262_01"
+    "id": "c262_01",
+    "ko": "리버렐리오 드리밍 레이크",
+    "jp": "リバーレリオ ドリーミングレイク",
+    "tw": "莉貝雷利奧 夢境湖",
+    "cn": "莉贝雷利奥 梦境湖",
+    "de": "Liberalio Traumsee",
+    "th": "ลิเบอราลิโอ นิทราชลาศัย",
+    "fr": "Liberalio Lac des songes"
   },
   {
     "name": "Indivilia",
@@ -753,195 +1985,531 @@
   },
   {
     "name": "Blanc",
-    "id": "c270"
+    "id": "c270",
+    "ko": "블랑",
+    "jp": "ブラン",
+    "tw": "布蘭兒",
+    "cn": "布兰儿",
+    "de": "Blanche",
+    "th": "บล็อง",
+    "fr": "Bianca"
   },
   {
     "name": "Blanc White Rabbit",
-    "id": "c270_01"
+    "id": "c270_01",
+    "ko": "블랑 백묘",
+    "jp": "ブラン ホワイトラビット",
+    "tw": "布蘭兒 白兔",
+    "cn": "布兰儿 白兔",
+    "de": "Blanche Weißes Häschen",
+    "th": "บล็อง กระต่ายขาว",
+    "fr": "Bianca Lapin blanc"
   },
   {
     "name": "Blanc No. 77 Batter",
-    "id": "c270_02"
+    "id": "c270_02",
+    "ko": "블랑 77번 타자",
+    "jp": "ブラン 77番バッター",
+    "tw": "布蘭兒 77號打者",
+    "cn": "布兰儿 77号击球员",
+    "de": "Blanche Schläger (Nr. 77)",
+    "th": "บล็อง นักตีหมายเลข 77",
+    "fr": "Bianca Batteuse n° 77"
   },
   {
     "name": "Blanc Fortune Express",
-    "id": "c270_03"
+    "id": "c270_03",
+    "ko": "블랑 포츈 익스프레스",
+    "jp": "ブラン フォーチュンエクスプレス",
+    "tw": "布蘭兒 幸運特快車",
+    "cn": "布兰儿 幸运特快车",
+    "de": "Blanche Glücks-Express",
+    "th": "บล็อง รถไฟสายนำโชค",
+    "fr": "Bianca Bonheur et Chance"
   },
   {
     "name": "Noir",
-    "id": "c271"
+    "id": "c271",
+    "ko": "누아르",
+    "jp": "ノワール",
+    "tw": "諾亞爾",
+    "cn": "诺亚尔",
+    "de": "Noire",
+    "th": "นัวร์",
+    "fr": "Nera"
   },
   {
     "name": "Noir Black Rabbit",
-    "id": "c271_01"
+    "id": "c271_01",
+    "ko": "누아르 흑묘",
+    "jp": "ノワール ブラックラビット",
+    "tw": "諾亞爾 黑兔",
+    "cn": "诺亚尔 黑兔",
+    "de": "Noire Schwarzes Häschen",
+    "th": "นัวร์ กระต่ายดำ",
+    "fr": "Nera Lapin noir"
   },
   {
     "name": "Noir Baseball Cheerleader",
-    "id": "c271_02"
+    "id": "c271_02",
+    "ko": "누아르 베이스볼 치어리더",
+    "jp": "ノワール ベースボールチアリーダー",
+    "tw": "諾亞爾 棒球啦啦隊",
+    "cn": "诺亚尔 棒球啦啦队",
+    "de": "Noire Baseball-Cheerleader",
+    "th": "นัวร์ เชียร์ลีดเดอร์เบสบอล",
+    "fr": "Nera Groupie de première base"
   },
   {
     "name": "Rouge",
-    "id": "c272"
+    "id": "c272",
+    "ko": "루주",
+    "jp": "ルージュ",
+    "tw": "露姬",
+    "cn": "露姬",
+    "de": "Rouge",
+    "th": "รูจ",
+    "fr": "Rouge"
   },
   {
-    "name": "Rouge Unlucky Rabbit or something idk 60$ for the worst reverse bunny girl in multi media is quite the scam. Should've released Jaune and gave her a skin instead of 'this'",
-    "id": "c272_01"
+    "name": "Rouge Unlucky Rabbit",
+    "id": "c272_01",
+    "ko": "루주 언럭키 래빗",
+    "jp": "ルージュ アンラッキーラビット",
+    "tw": "露姬 倒楣兔",
+    "cn": "露姬 倒霉兔",
+    "de": "Rouge Ungeschicktes Häschen",
+    "th": "รูจ กระต่ายอับโชค",
+    "fr": "Rouge Lapin malchanceux"
   },
   {
     "name": "Rosanna",
-    "id": "c280"
+    "id": "c280",
+    "ko": "로산나",
+    "jp": "ロザンナ",
+    "tw": "羅珊娜",
+    "cn": "罗珊娜",
+    "de": "Rosanna",
+    "th": "โรซานน่า",
+    "fr": "Rosanna"
   },
   {
     "name": "Rosanna Ms. Dangerous",
-    "id": "c280_01"
+    "id": "c280_01",
+    "ko": "로산나 미스 데인저러스",
+    "jp": "ロザンナ ミス・デンジャラス",
+    "tw": "羅珊娜 危險小姐",
+    "cn": "罗珊娜 危险小姐",
+    "de": "Rosanna Gefährliche Dame",
+    "th": "โรซานน่า คุณนายขาโหด",
+    "fr": "Rosanna Mme Dangereuse"
   },
   {
     "name": "Moran",
-    "id": "c281"
+    "id": "c281",
+    "ko": "목단",
+    "jp": "モラン",
+    "tw": "牡丹",
+    "cn": "牡丹",
+    "de": "Moran",
+    "th": "โมรัน",
+    "fr": "Moran"
   },
   {
     "name": "Moran Off-Duty Queen",
-    "id": "c281_01"
+    "id": "c281_01",
+    "ko": "목단 오프 듀티 퀸",
+    "jp": "モラン オフ・デューティー・クイーン",
+    "tw": "牡丹 休假女王",
+    "cn": "牡丹 休假女王",
+    "de": "Moran Königin im Feierabend",
+    "th": "โมรัน ราชินีวันหยุด",
+    "fr": "Moran Reine en détente"
   },
   {
     "name": "Moran King of Flowers",
-    "id": "c281_02"
+    "id": "c281_02",
+    "ko": "목단 화중지왕",
+    "jp": "モラン キング・オブ・フラワーズ",
+    "tw": "牡丹 百花之王",
+    "cn": "牡丹 百花之王",
+    "de": "Moran Königin der Blumen",
+    "th": "โมรัน ดอกโบตั๋น",
+    "fr": "Moran Roi des fleurs"
   },
   {
     "name": "Sakura",
-    "id": "c282"
+    "id": "c282",
+    "ko": "사쿠라",
+    "jp": "サクラ",
+    "tw": "櫻花",
+    "cn": "樱花",
+    "de": "Sakura",
+    "th": "ซากุระ",
+    "fr": "Sakura"
   },
   {
     "name": "Sakura Midnight Stealth",
-    "id": "c282_01"
+    "id": "c282_01",
+    "ko": "사쿠라 흑야암행",
+    "jp": "サクラ 黒夜密行",
+    "tw": "櫻花 黑夜潛行",
+    "cn": "樱花 黑夜潜行",
+    "de": "Sakura Mitternachtsstille",
+    "th": "ซากุระ ราตรีลอบเร้น",
+    "fr": "Sakura Camouflage de minuit"
   },
   {
     "name": "Rosanna: Chic Ocean",
-    "id": "c283"
+    "id": "c283",
+    "ko": "로산나 : 시크 오션",
+    "jp": "ロザンナ：シックオーシャン",
+    "tw": "羅珊娜：高雅海洋",
+    "cn": "罗珊娜：高雅海洋",
+    "de": "Rosanna: Ozean der Mode",
+    "th": "โรซานน่า: ชิคโอเชี่ยน",
+    "fr": "Rosanna : Chic océanique"
   },
   {
     "name": "Sakura: Bloom in Summer",
-    "id": "c284"
+    "id": "c284",
+    "ko": "사쿠라 : 블룸 인 서머",
+    "jp": "サクラ：ブルーム・イン・サマー",
+    "tw": "櫻花：夏日綻放",
+    "cn": "樱花：夏日绽放",
+    "de": "Sakura: Sommerblüten",
+    "th": "ซากุระ: คิมหันต์แย้มกลีบ",
+    "fr": "Sakura : Floraison estivale"
   },
   {
     "name": "Mana",
-    "id": "c290"
+    "id": "c290",
+    "ko": "마나",
+    "jp": "マナ",
+    "tw": "瑪娜",
+    "cn": "玛娜",
+    "de": "Mana",
+    "th": "มานา",
+    "fr": "Mana"
   },
   {
     "name": "Ether",
-    "id": "c291"
+    "id": "c291",
+    "ko": "에테르",
+    "jp": "エーテル",
+    "tw": "艾瑟兒",
+    "cn": "艾瑟儿",
+    "de": "Ethera",
+    "th": "เอเธอร์",
+    "fr": "Ether"
   },
   {
     "name": "Soldier EG",
-    "id": "c300"
+    "id": "c300",
+    "ko": "솔져 E.G.",
+    "jp": "ソルジャーE.G.",
+    "tw": "士兵E.G.",
+    "cn": "士兵E.G.",
+    "de": "Soldatin EG",
+    "th": "ทหาร EG",
+    "fr": "Soldat EG"
   },
   {
     "name": "Soldier FA",
-    "id": "c301"
+    "id": "c301",
+    "ko": "솔져 F.A.",
+    "jp": "ソルジャーF.A.",
+    "tw": "士兵F.A.",
+    "cn": "士兵F.A.",
+    "de": "Soldatin FA",
+    "th": "ทหาร FA",
+    "fr": "Soldat FA"
   },
   {
     "name": "Product 08",
-    "id": "c302"
+    "id": "c302",
+    "ko": "프로덕트 08",
+    "jp": "プロダクト08",
+    "tw": "產品08",
+    "cn": "产品08",
+    "de": "Produkt 08",
+    "th": "ผลิตภัณฑ์ 08",
+    "fr": "Produit 08"
   },
   {
     "name": "Product 12",
-    "id": "c303"
+    "id": "c303",
+    "ko": "프로덕트 12",
+    "jp": "プロダクト12",
+    "tw": "產品12",
+    "cn": "产品12",
+    "de": "Produkt 12",
+    "th": "ผลิตภัณฑ์ 12",
+    "fr": "Produit 12"
   },
   {
     "name": "iDoll Flower",
-    "id": "c304"
+    "id": "c304",
+    "ko": "iDoll 플라워",
+    "jp": "I-DOLL・フラワー",
+    "tw": "iDoll花",
+    "cn": "iDoll花",
+    "de": "iDoll Blume",
+    "th": "ไอดอลล์ ฟลาวเวอร์",
+    "fr": "iDoll Fleur"
   },
   {
     "name": "iDoll Ocean",
-    "id": "c305"
+    "id": "c305",
+    "ko": "iDoll 오션",
+    "jp": "I-DOLL・オーシャン",
+    "tw": "iDoll海",
+    "cn": "iDoll海",
+    "de": "iDoll Meer",
+    "th": "ไอดอลล์ โอเชี่ยน",
+    "fr": "iDoll Océan"
   },
   {
     "name": "Soldier OW",
-    "id": "c306"
+    "id": "c306",
+    "ko": "솔져 O.W.",
+    "jp": "ソルジャーO.W.",
+    "tw": "士兵O.W.",
+    "cn": "士兵O.W.",
+    "de": "Soldatin OW",
+    "th": "ทหาร OW",
+    "fr": "Soldat OW"
   },
   {
     "name": "Product 23",
-    "id": "c307"
+    "id": "c307",
+    "ko": "프로덕트 23",
+    "jp": "プロダクト23",
+    "tw": "產品23",
+    "cn": "产品23",
+    "de": "Produkt 23",
+    "th": "ผลิตภัณฑ์ 23",
+    "fr": "Produit 23"
   },
   {
     "name": "iDoll Sun",
-    "id": "c308"
+    "id": "c308",
+    "ko": "iDoll 썬",
+    "jp": "I-DOLL・サン",
+    "tw": "iDoll太陽",
+    "cn": "iDoll太阳",
+    "de": "iDoll Sonne",
+    "th": "ไอดอลล์ ซัน",
+    "fr": "iDoll Soleil"
   },
   {
     "name": "Ade",
-    "id": "c310"
+    "id": "c310",
+    "ko": "에이드",
+    "jp": "エード",
+    "tw": "愛德",
+    "cn": "爱德",
+    "de": "Ade",
+    "th": "เอด",
+    "fr": "Ade"
   },
   {
     "name": "Ade Maid In Spring",
-    "id": "c310_01"
+    "id": "c310_01",
+    "ko": "에이드 메이드 인 스프링",
+    "jp": "エード メイド・イン・スプリング",
+    "tw": "愛德 春日之作",
+    "cn": "爱德 春日之作",
+    "de": "Ade Frühlingsmaid",
+    "th": "เอด เมดใบไม้ผลิ",
+    "fr": "Ade Tablier de printemps"
   },
   {
     "name": "Cocoa",
-    "id": "c311"
+    "id": "c311",
+    "ko": "코코아",
+    "jp": "ココア",
+    "tw": "可可",
+    "cn": "可可",
+    "de": "Coco",
+    "th": "โกโก้",
+    "fr": "Coco"
   },
   {
     "name": "Soda",
-    "id": "c312"
+    "id": "c312",
+    "ko": "소다",
+    "jp": "ソーダ",
+    "tw": "索達",
+    "cn": "索达",
+    "de": "Soda",
+    "th": "โซดา",
+    "fr": "Soda"
   },
   {
     "name": "Privaty: Unkind Maid",
-    "id": "c313"
+    "id": "c313",
+    "ko": "프리바티 : 언카인드 메이드",
+    "jp": "プリバティ：アンカインド・メイド",
+    "tw": "普麗瓦蒂：不友善的女僕",
+    "cn": "普丽瓦蒂：不友善的女仆",
+    "de": "Privatia: Unfreundliche Maid",
+    "th": "ไพรเวตี้: เมดใจร้าย",
+    "fr": "Privatia : Soubrette peu aimable"
   },
   {
     "name": "Soda: Twinkling Bunny",
-    "id": "c314"
+    "id": "c314",
+    "ko": "소다 : 트윙클링 바니",
+    "jp": "ソーダ：トゥインクルバニー",
+    "tw": "索達：閃亮兔女郎",
+    "cn": "索达：闪亮兔女郎",
+    "de": "Soda: Glitzerhäschen",
+    "th": "โซดา: กระต่ายวิบวับ",
+    "fr": "Soda : Lapine scintillante"
   },
   {
     "name": "Ade: Agent Bunny",
-    "id": "c315"
+    "id": "c315",
+    "ko": "에이드 : 에이전트 바니",
+    "jp": "エード：エージェントバニー",
+    "tw": "愛德：特務兔女郎",
+    "cn": "爱德：特工兔女郎",
+    "de": "Ade: Agent Bunny",
+    "th": "เอด: กระต่ายสายลับ",
+    "fr": "Ade : Agent Lapin"
   },
   {
     "name": "Velvet",
-    "id": "c316"
+    "id": "c316",
+    "ko": "벨벳",
+    "jp": "ベルベット",
+    "tw": "薇爾維特",
+    "cn": "薇尔维特",
+    "de": "Velvet",
+    "th": "เวลเว็ต",
+    "fr": "Velvet"
   },
   {
     "name": "Velvet Sensual Rabbit",
-    "id": "c316_01"
+    "id": "c316_01",
+    "ko": "벨벳 센슈얼 래빗",
+    "jp": "ベルベット センシュアルラビット",
+    "tw": "薇爾維特 魅惑兔",
+    "cn": "薇尔维特 魅惑兔",
+    "de": "Velvet Sinnliches Häschen",
+    "th": "เวลเว็ต กระต่ายกระชากใจ",
+    "fr": "Velvet Lapine sensuelle"
   },
   {
     "name": "Marciana",
-    "id": "c321"
+    "id": "c321",
+    "ko": "마르차나",
+    "jp": "マルチャーナ",
+    "tw": "瑪律恰那",
+    "cn": "玛律恰那",
+    "de": "Marciana",
+    "th": "มาร์เซียน่า",
+    "fr": "Marciana"
   },
   {
     "name": "Marciana School Days",
-    "id": "c321_01"
+    "id": "c321_01",
+    "ko": "마르차나 스쿨 데이즈",
+    "jp": "マルチャーナ スクールデイズ",
+    "tw": "瑪律恰那 學生時代",
+    "cn": "玛律恰那 学生时代",
+    "de": "Marciana Schulzeiten",
+    "th": "มาร์เซียน่า ย้อนวัยสมัยเรียน",
+    "fr": "Marciana Retour à l'école"
   },
   {
     "name": "Marciana: Marine Study",
-    "id": "c322"
+    "id": "c322",
+    "ko": "마르차나 : 마린 스터디",
+    "jp": "マルチャーナ：マリンスタディ",
+    "tw": "瑪律恰那：海洋進修",
+    "cn": "玛律恰那：海洋进修",
+    "de": "Marciana: Meeresstudie",
+    "th": "มาร์เซียน่า: หวานใจไลฟ์การ์ด",
+    "fr": "Marciana : Étude marine"
   },
   {
     "name": "Crown",
-    "id": "c330"
+    "id": "c330",
+    "ko": "크라운",
+    "jp": "クラウン",
+    "tw": "皇冠",
+    "cn": "皇冠",
+    "de": "Crown",
+    "th": "คราวน์",
+    "fr": "Couronne"
   },
   {
     "name": "Crown Naked King",
-    "id": "c330_01"
+    "id": "c330_01",
+    "ko": "크라운 네이키드 킹",
+    "jp": "クラウン ネイキッドキング",
+    "tw": "皇冠 國王的新衣",
+    "cn": "皇冠 国王的新衣",
+    "de": "Crown Majestätisch",
+    "th": "คราวน์ ราชาไร้อาภรณ์",
+    "fr": "Couronne Roi nu"
   },
   {
     "name": "Crown Glorious Flower",
-    "id": "c330_02"
+    "id": "c330_02",
+    "ko": "크라운 영화",
+    "jp": "クラウン グロリアスフラワー",
+    "tw": "皇冠 榮耀之花",
+    "cn": "皇冠 荣耀之花",
+    "de": "Crown Glorreiche Blume",
+    "th": "คราวน์ บุปผาประกาศิต",
+    "fr": "Couronne Fleur glorieuse"
   },
   {
     "name": "Chime",
-    "id": "c331"
+    "id": "c331",
+    "ko": "차임",
+    "jp": "チャイム",
+    "tw": "鐘鳴",
+    "cn": "钟鸣",
+    "de": "Chime",
+    "th": "ไชม์",
+    "fr": "Carillon"
   },
   {
     "name": "Mast",
-    "id": "c350"
+    "id": "c350",
+    "ko": "마스트",
+    "jp": "マスト",
+    "tw": "馬斯特",
+    "cn": "马斯特",
+    "de": "Mast",
+    "th": "แมสต์",
+    "fr": "Artimon"
   },
   {
     "name": "Mast A Pirate's Heart",
-    "id": "c350_01"
+    "id": "c350_01",
+    "ko": "마스트 파이레츠 하트",
+    "jp": "マスト パイレーツハート",
+    "tw": "馬斯特 海盜之心",
+    "cn": "马斯特 海盗之心",
+    "de": "Mast Piratenherz",
+    "th": "แมสต์ ฤทัยโจรสลัด",
+    "fr": "Artimon Cœur de pirate"
   },
   {
-    "name": "Mast the Diver",
-    "id": "c350_02"
+    "name": "Mast Mast the Diver",
+    "id": "c350_02",
+    "ko": "마스트 마스트 더 다이버",
+    "jp": "マスト マスト・ザ・ダイバー",
+    "tw": "馬斯特 潛水員馬斯特",
+    "cn": "马斯特 潜水员马斯特",
+    "de": "Mast Mast, Taucherin",
+    "th": "แมสต์ แมสต์เดอะไดเวอร์",
+    "fr": "Artimon Artimon : La plongeuse"
   },
   {
     "name": "Mast_old",
@@ -949,219 +2517,597 @@
   },
   {
     "name": "Anchor",
-    "id": "c351"
+    "id": "c351",
+    "ko": "앵커",
+    "jp": "アンカー",
+    "tw": "安克",
+    "cn": "安克",
+    "de": "Anchor",
+    "th": "แองเคอร์",
+    "fr": "Ancre"
   },
   {
-    "name": "Anchor the Diver",
-    "id": "c351_01"
+    "name": "Anchor Anchor the Diver",
+    "id": "c351_01",
+    "ko": "앵커 앵커 더 다이버",
+    "jp": "アンカー アンカー・ザ・ダイバー",
+    "tw": "安克 潛水員安克",
+    "cn": "安克 潜水员安克",
+    "de": "Anchor Anchor, Taucherin",
+    "th": "แองเคอร์ แองเคอร์เดอะไดเวอร์",
+    "fr": "Ancre Ancre : La plongeuse"
   },
   {
     "name": "Helm",
-    "id": "c352"
+    "id": "c352",
+    "ko": "헬름",
+    "jp": "ヘルム",
+    "tw": "海倫",
+    "cn": "海伦",
+    "de": "Helm",
+    "th": "เฮล์ม",
+    "fr": "Gouverne"
   },
   {
     "name": "Helm Chandelier",
-    "id": "c352_01"
+    "id": "c352_01",
+    "ko": "헬름 샹들리에 라이트",
+    "jp": "ヘルム シャンデリアライト",
+    "tw": "海倫 水晶派對",
+    "cn": "海伦 水晶派对",
+    "de": "Helm Kronleuchter",
+    "th": "เฮล์ม แชนเดอเลียร์",
+    "fr": "Gouverne Chandelier"
   },
   {
     "name": "Helm Post-Shower Moment",
-    "id": "c352_02"
+    "id": "c352_02",
+    "ko": "헬름 애프터 샤워",
+    "jp": "ヘルム アフターシャワー",
+    "tw": "海倫 浴後",
+    "cn": "海伦 浴后",
+    "de": "Helm „Frisch geduscht“-Gefühl",
+    "th": "เฮล์ม ไอรักหลังอาบน้ำ",
+    "fr": "Gouverne Après la douche"
   },
   {
     "name": "Helm: Aquamarine",
-    "id": "c353"
+    "id": "c353",
+    "ko": "헬름 : 아쿠아마린",
+    "jp": "ヘルム：アクアマリン",
+    "tw": "海倫：海藍寶石",
+    "cn": "海伦：海蓝宝石",
+    "de": "Helm: Gebieterin der Meere",
+    "th": "เฮล์ม: อะความารีน",
+    "fr": "Gouverne : Aigue-marine"
   },
   {
     "name": "Mast: Romantic Maid",
-    "id": "c354"
+    "id": "c354",
+    "ko": "마스트 : 로망틱 메이드",
+    "jp": "マスト：ロマンチックメイド",
+    "tw": "馬斯特：浪漫的女僕",
+    "cn": "马斯特：浪漫的女仆",
+    "de": "Mast: Romantische Maid",
+    "th": "แมสต์: เมดเปี่ยมรัก",
+    "fr": "Artimon : Soubrette sentimentale"
   },
   {
     "name": "Mast: Romantic Maid Tea Service",
-    "id": "c354_01"
+    "id": "c354_01",
+    "ko": "마스트 : 로망틱 메이드 티 서비스",
+    "jp": "マスト：ロマンチックメイド ティーサービス",
+    "tw": "馬斯特：浪漫的女僕 茶飲服務",
+    "cn": "马斯特：浪漫的女仆 茶饮服务",
+    "de": "Mast: Romantische Maid Teeservice",
+    "th": "แมสต์: เมดเปี่ยมรัก สาวใช้ร้านน้ำชา",
+    "fr": "Artimon : Soubrette sentimentale Thé douceur"
   },
   {
     "name": "Anchor: Innocent Maid",
-    "id": "c355"
+    "id": "c355",
+    "ko": "앵커 : 이노센트 메이드",
+    "jp": "アンカー：イノセントメイド",
+    "tw": "安克：天真的女僕",
+    "cn": "安克：天真的女仆",
+    "de": "Anchor: Unschuldige Maid",
+    "th": "แองเคอร์: เมดใสซื่อ",
+    "fr": "Ancre : Soubrette candide"
   },
   {
-    "name": "T.A.L.O.S (Kilo)",
-    "id": "c361"
+    "name": "Kilo",
+    "id": "c361",
+    "ko": "킬로",
+    "jp": "キロ",
+    "tw": "吉洛",
+    "cn": "吉洛",
+    "de": "Kilo",
+    "th": "กิโล",
+    "fr": "Kilo"
   },
   {
     "name": "Eternity",
-    "id": "c370"
+    "id": "c370",
+    "ko": "이터니티",
+    "jp": "エタニティ",
+    "tw": "伊特妮緹",
+    "cn": "伊特妮缇",
+    "de": "Ewigkeit",
+    "th": "อีเทอร์นิตี้",
+    "fr": "Éternité"
   },
   {
     "name": "Endless",
-    "id": "c371"
+    "id": "c371",
+    "ko": "엔드리스",
+    "jp": "エンドレス",
+    "tw": "恩德莉絲",
+    "cn": "恩德莉丝",
+    "de": "Endless",
+    "th": "เอนด์เลส",
+    "fr": "Infini"
   },
   {
     "name": "Nero",
-    "id": "c380"
+    "id": "c380",
+    "ko": "네로",
+    "jp": "ネロ",
+    "tw": "尼羅",
+    "cn": "尼罗",
+    "de": "Nero",
+    "th": "เนโร",
+    "fr": "Néron"
   },
   {
     "name": "Biscuit",
-    "id": "c381"
+    "id": "c381",
+    "ko": "비스킷",
+    "jp": "ビスケット",
+    "tw": "餅乾",
+    "cn": "饼干",
+    "de": "Biscuit",
+    "th": "บิสกิต",
+    "fr": "Biscuit"
   },
   {
     "name": "Biscuit Spring Puppy",
-    "id": "c381_01"
+    "id": "c381_01",
+    "ko": "비스킷 스프링 퍼피",
+    "jp": "ビスケット スプリングパピー",
+    "tw": "餅乾 春日幼犬",
+    "cn": "饼干 春日幼犬",
+    "de": "Biscuit Frühlingswelpe",
+    "th": "บิสกิต หมาน้อยกลางวสันต์",
+    "fr": "Biscuit Chiot printanier"
   },
   {
     "name": "Leona",
-    "id": "c382"
+    "id": "c382",
+    "ko": "레오나",
+    "jp": "レオナ",
+    "tw": "萊昂納",
+    "cn": "莱昂纳",
+    "de": "Leona",
+    "th": "ลีโอน่า",
+    "fr": "Leona"
   },
   {
     "name": "Leona Zoo Keeper",
-    "id": "c382_01"
+    "id": "c382_01",
+    "ko": "레오나 주 키퍼",
+    "jp": "レオナ ズーキーパー",
+    "tw": "萊昂納 動物飼養員",
+    "cn": "莱昂纳 动物饲养员",
+    "de": "Leona Zoowärterin",
+    "th": "ลีโอน่า ผู้ดูแลสวนสัตว์",
+    "fr": "Leona Gardienne de zoo"
   },
   {
     "name": "Zwei",
-    "id": "c390"
+    "id": "c390",
+    "ko": "츠바이",
+    "jp": "ツバイ",
+    "tw": "茨瓦伊",
+    "cn": "茨瓦伊",
+    "de": "Zwei",
+    "th": "ซไว",
+    "fr": "Zwei"
   },
   {
     "name": "Zwei First Festa",
-    "id": "c390_01"
+    "id": "c390_01",
+    "ko": "츠바이 퍼스트 페스타",
+    "jp": "ツバイ ファーストフェスタ",
+    "tw": "茨瓦伊 第一次慶典",
+    "cn": "茨瓦伊 第一次庆典",
+    "de": "Zwei Erstes Festa",
+    "th": "ซไว งานเทศกาลแรก",
+    "fr": "Zwei Premier festival"
   },
   {
     "name": "Zwei Spring Stroll",
-    "id": "c390_02"
+    "id": "c390_02",
+    "ko": "츠바이 스프링 스트롤",
+    "jp": "ツバイ スプリング・ストロール",
+    "tw": "茨瓦伊 春日漫步",
+    "cn": "茨瓦伊 春日漫步",
+    "de": "Zwei Frühlingsspaziergang",
+    "th": "ซไว เดินรับใบไม้ผลิ",
+    "fr": "Zwei Promenade printanière"
   },
   {
     "name": "Ein",
-    "id": "c391"
+    "id": "c391",
+    "ko": "아인",
+    "jp": "アイン",
+    "tw": "愛因",
+    "cn": "爱因",
+    "de": "Ein",
+    "th": "ไอน์",
+    "fr": "Ein"
   },
   {
     "name": "Ein Handmade Festa",
-    "id": "c391_01"
+    "id": "c391_01",
+    "ko": "아인 핸드메이드 페스타",
+    "jp": "アイン ハンドメイドフェスタ",
+    "tw": "愛因 手作慶典",
+    "cn": "爱因 手作庆典",
+    "de": "Ein Handgemachtes Festa",
+    "th": "ไอน์ เทศกาลงานฝีมือ",
+    "fr": "Ein Festival sur mesure"
   },
   {
     "name": "Rei",
-    "id": "c392"
+    "id": "c392",
+    "ko": "라이",
+    "jp": "ライ",
+    "tw": "萊伊",
+    "cn": "莱伊",
+    "de": "Rei",
+    "th": "ไร",
+    "fr": "Rei"
   },
   {
     "name": "Guilty",
-    "id": "c400"
+    "id": "c400",
+    "ko": "길티",
+    "jp": "ギルティ",
+    "tw": "吉爾提",
+    "cn": "吉尔提",
+    "de": "Guilty",
+    "th": "กิลตี้",
+    "fr": "Guilty"
   },
   {
     "name": "Guilty Wave of Disbelief",
-    "id": "c400_01"
+    "id": "c400_01",
+    "ko": "길티 디스빌리프 웨이브",
+    "jp": "ギルティ ディスビリーフウェーブ",
+    "tw": "吉爾提 多疑浪潮",
+    "cn": "吉尔提 多疑浪潮",
+    "de": "Guilty Zweifelwelle",
+    "th": "กิลตี้ คลื่นแคลงใจ",
+    "fr": "Guilty Vague de défiance"
   },
   {
     "name": "Sin",
-    "id": "c401"
+    "id": "c401",
+    "ko": "신",
+    "jp": "シン",
+    "tw": "森",
+    "cn": "森",
+    "de": "Sin",
+    "th": "ซิน",
+    "fr": "Sin"
   },
   {
     "name": "Sin Backstreet Dream",
-    "id": "c401_01"
+    "id": "c401_01",
+    "ko": "신 백스트리트 드림",
+    "jp": "シン バックストリートドリーム",
+    "tw": "森 後街的夢想",
+    "cn": "森 后街的梦想",
+    "de": "Sin Hinterhoftraum",
+    "th": "ซิน ฝันร้ายสาวเกเร",
+    "fr": "Sin Rêve d'une banlieusarde"
   },
   {
     "name": "Quency",
-    "id": "c402"
+    "id": "c402",
+    "ko": "퀀시",
+    "jp": "クエンシー",
+    "tw": "坎西",
+    "cn": "坎西",
+    "de": "Quency",
+    "th": "เควนซี่",
+    "fr": "Quency"
   },
   {
-    "name": "Quency Escape Queen",
-    "id": "c403"
+    "name": "Quency: Escape Queen",
+    "id": "c403",
+    "ko": "퀀시 : 이스케이프 퀸",
+    "jp": "クエンシー：エスケープクイーン",
+    "tw": "坎西：逃生女王",
+    "cn": "坎西：逃生女王",
+    "de": "Quency: Fluchtkönigin",
+    "th": "เควนซี่: ราชินีหนีคุก",
+    "fr": "Quency : Reine de l'évasion"
   },
   {
-    "name": "Quency Escape Queen Masquerade Swan",
-    "id": "c403_01"
+    "name": "Quency: Escape Queen Masquerade Swan",
+    "id": "c403_01",
+    "ko": "퀀시 : 이스케이프 퀸 마스커레이드 스완",
+    "jp": "クエンシー：エスケープクイーン マスカレードスワン",
+    "tw": "坎西：逃生女王 變裝天鵝",
+    "cn": "坎西：逃生女王 变装天鹅",
+    "de": "Quency: Fluchtkönigin Schwan der Maskerade",
+    "th": "เควนซี่: ราชินีหนีคุก หน้ากากหงส์เริงระบำ",
+    "fr": "Quency : Reine de l'évasion Danseuse cycnéenne"
   },
   {
     "name": "Flora",
-    "id": "c411"
+    "id": "c411",
+    "ko": "플로라",
+    "jp": "フローラ",
+    "tw": "芙羅拉",
+    "cn": "芙罗拉",
+    "de": "Flora",
+    "th": "ฟลอร่า",
+    "fr": "Flora"
   },
   {
     "name": "Flora Fairy Rabbit",
-    "id": "c411_01"
+    "id": "c411_01",
+    "ko": "플로라 페어리 래빗",
+    "jp": "フローラ フェアリーラビット",
+    "tw": "芙羅拉 妖精兔",
+    "cn": "芙罗拉 妖精兔",
+    "de": "Flora Feenhäschen",
+    "th": "ฟลอร่า กระต่ายนางฟ้า",
+    "fr": "Flora Lapine féérique"
   },
   {
     "name": "Trina",
-    "id": "c412"
+    "id": "c412",
+    "ko": "트리나",
+    "jp": "トリナ",
+    "tw": "特蕾娜",
+    "cn": "特蕾娜",
+    "de": "Trina",
+    "th": "ทรีน่า",
+    "fr": "Trina"
   },
   {
     "name": "Trina Natural White",
-    "id": "c412_01"
+    "id": "c412_01",
+    "ko": "트리나 내추럴 화이트",
+    "jp": "トリナ ナチュラルホワイト",
+    "tw": "特蕾娜 純粹潔白",
+    "cn": "特蕾娜 纯粹洁白",
+    "de": "Trina Natürliches Weiß",
+    "th": "ทรีน่า ขาวธรรมชาติ",
+    "fr": "Trina Blanc naturel"
   },
   {
     "name": "Noise",
-    "id": "c430"
+    "id": "c430",
+    "ko": "노이즈",
+    "jp": "ノイズ",
+    "tw": "諾伊斯",
+    "cn": "诺伊斯",
+    "de": "Noise",
+    "th": "นอยส์",
+    "fr": "Noise"
   },
   {
     "name": "Noise Cherry Blossom Stage",
-    "id": "c430_01"
+    "id": "c430_01",
+    "ko": "노이즈 체리블로섬 스테이지",
+    "jp": "ノイズ チェリーブロッサムステージ",
+    "tw": "諾伊斯 櫻花舞台",
+    "cn": "诺伊斯 樱花舞台",
+    "de": "Noise Kirschblütenbühne",
+    "th": "นอยส์ เวทีซากุระ",
+    "fr": "Noise Cerisiers en fleur"
   },
   {
     "name": "Noise Classic Diva",
-    "id": "c430_02"
+    "id": "c430_02",
+    "ko": "노이즈 클래식 디바",
+    "jp": "ノイズ クラシックディーバ",
+    "tw": "諾伊斯 經典天后",
+    "cn": "诺伊斯 经典天后",
+    "de": "Noise Klassische Diva",
+    "th": "นอยส์ คลาสสิกดีว่า",
+    "fr": "Noise Diva classique"
   },
   {
     "name": "Volume",
-    "id": "c431"
+    "id": "c431",
+    "ko": "볼륨",
+    "jp": "ボリューム",
+    "tw": "沃綸姆",
+    "cn": "沃纶姆",
+    "de": "Volume",
+    "th": "โวลุ่ม",
+    "fr": "Volume"
   },
   {
     "name": "Volume Beat the Gun",
-    "id": "c431_01"
+    "id": "c431_01",
+    "ko": "볼륨 비트 더 건",
+    "jp": "ボリューム ビート・ザ・ガン",
+    "tw": "沃綸姆 搶跑",
+    "cn": "沃纶姆 抢跑",
+    "de": "Volume Seeräuberin",
+    "th": "โวลุ่ม รัวจังหวะปืน",
+    "fr": "Volume Plus vite que la musique"
   },
   {
     "name": "Aria",
-    "id": "c432"
+    "id": "c432",
+    "ko": "아리아",
+    "jp": "アリア",
+    "tw": "阿莉亞",
+    "cn": "阿莉亚",
+    "de": "Aria",
+    "th": "อาเรีย",
+    "fr": "Aria"
   },
   {
     "name": "Eyeri",
-    "id": "c440"
+    "id": "c440",
+    "ko": "아이리",
+    "jp": "アイリ",
+    "tw": "愛莉",
+    "cn": "爱莉",
+    "de": "Eyeri",
+    "th": "อายริ",
+    "fr": "Eyeri"
   },
   {
     "name": "Avistar",
-    "id": "c441"
+    "id": "c441",
+    "ko": "아비스타",
+    "jp": "アビスタ",
+    "tw": "阿維斯塔",
+    "cn": "阿维斯塔",
+    "de": "Avistar",
+    "th": "อวิสต้า",
+    "fr": "Avistar"
   },
   {
     "name": "Naga",
-    "id": "c450"
+    "id": "c450",
+    "ko": "나가",
+    "jp": "ナガ",
+    "tw": "娜嘉",
+    "cn": "娜嘉",
+    "de": "Naga",
+    "th": "นากะ",
+    "fr": "Naga"
   },
   {
     "name": "Naga Elegant Date",
-    "id": "c450_01"
+    "id": "c450_01",
+    "ko": "나가 엘레강스 데이트",
+    "jp": "ナガ エレガンスデート",
+    "tw": "娜嘉 優雅約會",
+    "cn": "娜嘉 优雅约会",
+    "de": "Naga Elegantes Date",
+    "th": "นากะ เดตแสนสง่างาม",
+    "fr": "Naga Rendez-vous élégant"
   },
   {
     "name": "Naga Last Girlhood",
-    "id": "c450_02"
+    "id": "c450_02",
+    "ko": "나가 라스트 걸후드",
+    "jp": "ナガ ラストガールフッド",
+    "tw": "娜嘉 最後的少女時代",
+    "cn": "娜嘉 最后的少女时代",
+    "de": "Naga Letzte Mädchenjahre",
+    "th": "นากะ ส่งท้ายวัยเรียน",
+    "fr": "Naga Années jeunesse"
   },
   {
     "name": "Naga Ring Ensemble",
-    "id": "c450_03"
+    "id": "c450_03",
+    "ko": "나가 링 앙상블",
+    "jp": "ナガ リング・アンサンブル",
+    "tw": "娜嘉 金環戀曲",
+    "cn": "娜嘉 金环恋曲",
+    "de": "Naga Ring-Ensemble",
+    "th": "นากะ ประสานเสียงกังวาน",
+    "fr": "Naga Parure de bracelets"
   },
   {
     "name": "Tia",
-    "id": "c451"
+    "id": "c451",
+    "ko": "티아",
+    "jp": "ティア",
+    "tw": "蒂亞",
+    "cn": "蒂亚",
+    "de": "Tia",
+    "th": "เทีย",
+    "fr": "Tia"
   },
   {
     "name": "Tia Lovely Date",
-    "id": "c451_01"
+    "id": "c451_01",
+    "ko": "티아 러블리 데이트",
+    "jp": "ティア ラブリーデート",
+    "tw": "蒂亞 美妙約會",
+    "cn": "蒂亚 美妙约会",
+    "de": "Tia Liebreizendes Date",
+    "th": "เทีย เดตสุดน่ารัก",
+    "fr": "Tia Rendez-vous charmant"
   },
   {
     "name": "Tia Sweet Chef",
-    "id": "c451_02"
+    "id": "c451_02",
+    "ko": "티아 스윗 셰프",
+    "jp": "ティア スウィートシェフ",
+    "tw": "蒂亞 甜美主廚",
+    "cn": "蒂亚 甜美主厨",
+    "de": "Tia Süße Chefköchin",
+    "th": "เทีย เชฟขนมหวาน",
+    "fr": "Tia Cheffe en sucre"
   },
   {
     "name": "Tia Sea Lizzie",
-    "id": "c451_03"
+    "id": "c451_03",
+    "ko": "티아 씨 리지",
+    "jp": "ティア シー・リジー",
+    "tw": "蒂亞 海岸甜心",
+    "cn": "蒂亚 海岸甜心",
+    "de": "Tia Strand-Lizzle",
+    "th": "เทีย ซีลิซซี่",
+    "fr": "Tia Lézard marin"
   },
   {
     "name": "Red Hood",
-    "id": "c470"
+    "id": "c470",
+    "ko": "레드 후드",
+    "jp": "レッドフード",
+    "tw": "小紅帽",
+    "cn": "小红帽",
+    "de": "Rotkäppchen",
+    "th": "หมวกแดง",
+    "fr": "Carmine"
   },
   {
     "name": "Red Hood Nonsense Red",
-    "id": "c470_01"
+    "id": "c470_01",
+    "ko": "레드 후드 넌센스 레드",
+    "jp": "レッドフード ナンセンスレッド",
+    "tw": "小紅帽 荒誕紅",
+    "cn": "小红帽 荒诞红",
+    "de": "Rotkäppchen Nonsense Red",
+    "th": "หมวกแดง สีแดงแรงฤทธิ์",
+    "fr": "Carmine Rouge burlesque"
   },
   {
     "name": "Red Hood Retro Days",
-    "id": "c470_02"
+    "id": "c470_02",
+    "ko": "레드 후드 레트로 데이즈",
+    "jp": "レッドフード レトロデイズ",
+    "tw": "小紅帽 懷舊時光",
+    "cn": "小红帽 怀旧时光",
+    "de": "Rotkäppchen Retro-Tage",
+    "th": "หมวกแดง ย้อนวันวาน",
+    "fr": "Carmine Jours rétro"
   },
   {
     "name": "Snow White: Heavy Arms",
-    "id": "c471"
+    "id": "c471",
+    "ko": "스노우 화이트 : 헤비암즈",
+    "jp": "スノーホワイト：ヘビーアームズ",
+    "tw": "白雪公主：重型武裝",
+    "cn": "白雪公主：重型武装",
+    "de": "Schneewittchen: Schwere Arme",
+    "th": "สโนว์ไวท์: เฮฟวี่อาร์มส์",
+    "fr": "Blanche-Neige : Armes lourdes"
   },
   {
     "name": "Scarlet",
@@ -1173,11 +3119,25 @@
   },
   {
     "name": "Liveryn",
-    "id": "c480"
+    "id": "c480",
+    "ko": "리버린",
+    "jp": "リヴァリン",
+    "tw": "利弗林",
+    "cn": "利弗林",
+    "de": "Liveryn",
+    "th": "ลิเวอริน",
+    "fr": "Livrette"
   },
   {
     "name": "Fragile",
-    "id": "c481"
+    "id": "c481",
+    "ko": "프레자일",
+    "jp": "フラジャイル",
+    "tw": "芙拉吉爾",
+    "cn": "芙拉吉尔",
+    "de": "Zärti",
+    "th": "แฟรไจล์",
+    "fr": "Fragile"
   },
   {
     "name": "#000000 - Logey",
@@ -1185,135 +3145,366 @@
   },
   {
     "name": "Hammering",
-    "id": "c490"
+    "id": "c490",
+    "ko": "해머링",
+    "jp": "ハンマリング",
+    "tw": "哈梅林",
+    "cn": "哈梅林",
+    "de": "Hammering",
+    "th": "แฮมเมอริ่ง",
+    "fr": "Martelle"
   },
   {
     "name": "Drilley",
-    "id": "c491"
+    "id": "c491",
+    "ko": "드릴리",
+    "jp": "ドリリー",
+    "tw": "德里爾林",
+    "cn": "德里尔林",
+    "de": "Bohri",
+    "th": "ดริลลี่",
+    "fr": "Perceuse"
   },
   {
     "name": "Elegg",
-    "id": "c500"
+    "id": "c500",
+    "ko": "일레그",
+    "jp": "エレグ",
+    "tw": "伊萊格",
+    "cn": "伊莱格",
+    "de": "Elegg",
+    "th": "อิเล็กก์",
+    "fr": "Électre"
   },
   {
     "name": "Trony",
-    "id": "c501"
+    "id": "c501",
+    "ko": "트로니",
+    "jp": "トロニー",
+    "tw": "特羅尼",
+    "cn": "特罗尼",
+    "de": "Trony",
+    "th": "โทรนี่",
+    "fr": "Trony"
   },
   {
     "name": "Trony Sweet Step",
-    "id": "c501_01"
+    "id": "c501_01",
+    "ko": "트로니 스위트 스텝",
+    "jp": "トロニー スイートステップ",
+    "tw": "特羅尼 甜蜜舞步",
+    "cn": "特罗尼 甜蜜舞步",
+    "de": "Trony Süßer Schritt",
+    "th": "โทรนี่ ย่างก้าวเข้าสายหวาน",
+    "fr": "Trony Pas de velours"
   },
   {
     "name": "Elegg: Boom and Shock",
-    "id": "c502"
+    "id": "c502",
+    "ko": "일레그 : 붐 앤 쇼크",
+    "jp": "エレグ：ブーム・アンド・ショック",
+    "tw": "伊萊格：BOOM與驚嚇",
+    "cn": "伊莱格：BOOM与惊吓",
+    "de": "Elegg: Boom und Schock",
+    "th": "อิเล็กก์: บูมแอนด์ช็อก",
+    "fr": "Électre : Bzzzzt boom"
   },
   {
     "name": "Grave",
-    "id": "c510"
+    "id": "c510",
+    "ko": "그레이브",
+    "jp": "グレイブ",
+    "tw": "格拉維",
+    "cn": "格拉维",
+    "de": "Grave",
+    "th": "เกรฟ",
+    "fr": "Sépulcre"
   },
   {
-    "name": "Anachiro | Cinderella",
-    "id": "c511"
+    "name": "Cinderella",
+    "id": "c511",
+    "ko": "신데렐라",
+    "jp": "シンデレラ",
+    "tw": "灰姑娘",
+    "cn": "灰姑娘",
+    "de": "Aschenputtel",
+    "th": "ซินเดอเรลล่า",
+    "fr": "Cendrillon"
   },
   {
-    "name": "Anachiro | Cinderella Glass Princess",
-    "id": "c511_01"
+    "name": "Cinderella Glass Princess",
+    "id": "c511_01",
+    "ko": "신데렐라 유리 공주",
+    "jp": "シンデレラ ガラスのプリンセス",
+    "tw": "灰姑娘 水晶公主",
+    "cn": "灰姑娘 水晶公主",
+    "de": "Aschenputtel Kristallprinzessin",
+    "th": "ซินเดอเรลล่า เจ้าหญิงรองเท้าแก้ว",
+    "fr": "Cendrillon Princesse de verre"
   },
   {
-    "name": "Anachiro | Cinderella Beautiful Me",
-    "id": "c511_02"
+    "name": "Cinderella Beautiful Me",
+    "id": "c511_02",
+    "ko": "신데렐라 뷰티풀 미",
+    "jp": "シンデレラ ビューティフル・ミー",
+    "tw": "灰姑娘 美麗的我",
+    "cn": "灰姑娘 美丽的我",
+    "de": "Aschenputtel Wunderschönes Ich",
+    "th": "ซินเดอเรลล่า ฉันผู้งดงาม",
+    "fr": "Cendrillon Ma beauté"
   },
   {
-    "name": "Little Mermaid | Siren",
-    "id": "c513"
+    "name": "Little Mermaid",
+    "id": "c513",
+    "ko": "리틀 머메이드",
+    "jp": "リトルマーメイド",
+    "tw": "小美人魚",
+    "cn": "小美人鱼",
+    "de": "Kleine Meerjungfrau",
+    "th": "ลิตเติลเมอร์เมด",
+    "fr": "Petite sirène"
   },
   {
-    "name": "Little Mermaid | Siren Abyss Flower",
-    "id": "c513_01"
+    "name": "Little Mermaid Abyss Flower",
+    "id": "c513_01",
+    "ko": "리틀 머메이드 어비스 플라워",
+    "jp": "リトルマーメイド アビスフラワー",
+    "tw": "小美人魚 深淵之花",
+    "cn": "小美人鱼 深渊之花",
+    "de": "Kleine Meerjungfrau Blume aus der Tiefe",
+    "th": "ลิตเติลเมอร์เมด บุหงันผันสมุทร",
+    "fr": "Petite sirène Fleur abyssale"
   },
   {
-    "name": "Little Mermaid | Siren Beautiful Bubble",
-    "id": "c513_02"
+    "name": "Little Mermaid Beautiful Bubble",
+    "id": "c513_02",
+    "ko": "리틀 머메이드 뷰티풀 버블",
+    "jp": "リトルマーメイド ビューティフル・バブル",
+    "tw": "小美人魚 絢麗泡泡",
+    "cn": "小美人鱼 绚丽泡泡",
+    "de": "Kleine Meerjungfrau Schöne Blase",
+    "th": "ลิตเติลเมอร์เมด ฟองแสนงดงาม",
+    "fr": "Petite sirène Bulle de magnificence"
   },
   {
-    "name": "Little Mermaid | Siren Shell Princess",
-    "id": "c513_03"
+    "name": "Little Mermaid Shell Princess",
+    "id": "c513_03",
+    "ko": "리틀 머메이드 쉘 프린세스",
+    "jp": "リトルマーメイド シェルプリンセス",
+    "tw": "小美人魚 珍珠貝公主",
+    "cn": "小美人鱼 珍珠贝公主",
+    "de": "Kleine Meerjungfrau Muschelprinzessin",
+    "th": "ลิตเติลเมอร์เมด องค์หญิงหอยมุก",
+    "fr": "Petite sirène Princesse coquillage"
   },
   {
     "name": "Grave",
-    "id": "c514"
+    "id": "c514",
+    "ko": "그레이브",
+    "jp": "グレイブ",
+    "tw": "格拉維",
+    "cn": "格拉维",
+    "de": "Grave",
+    "th": "เกรฟ",
+    "fr": "Sépulcre"
   },
   {
-    "name": "Anachiro | Cinderella: Crystal Wave",
-    "id": "c515"
+    "name": "Cinderella: Crystal Wave",
+    "id": "c515",
+    "ko": "신데렐라 : 크리스탈 웨이브",
+    "jp": "シンデレラ：クリスタルウェーブ",
+    "tw": "灰姑娘：琉璃波光",
+    "cn": "灰姑娘：琉璃波光",
+    "de": "Aschenputtel: Kristallwelle",
+    "th": "ซินเดอเรลล่า: คริสตัลเวฟ",
+    "fr": "Cendrillon : Vague de cristal"
   },
   {
     "name": "Grave Beautiful You",
-    "id": "c514_01"
+    "id": "c514_01",
+    "ko": "그레이브 뷰티풀 유",
+    "jp": "グレイブ ビューティフル・ユー",
+    "tw": "格拉維 美麗的你",
+    "cn": "格拉维 美丽的你",
+    "de": "Grave Wunderschönes Du",
+    "th": "เกรฟ เธอผู้งดงาม",
+    "fr": "Sépulcre Ta beauté"
   },
   {
     "name": "Bready",
-    "id": "c520"
+    "id": "c520",
+    "ko": "브래디",
+    "jp": "ブレッディ",
+    "tw": "布蕾德",
+    "cn": "布蕾德",
+    "de": "Knusprig",
+    "th": "เบรดี้",
+    "fr": "Bready"
   },
   {
     "name": "Bready Frosty Bite",
-    "id": "c520_01"
+    "id": "c520_01",
+    "ko": "브래디 프로스티 바이트",
+    "jp": "ブレッディ フロスティバイト",
+    "tw": "布蕾德 糖霜咬咬",
+    "cn": "布蕾德 糖霜咬咬",
+    "de": "Knusprig Frostiger Biss",
+    "th": "เบรดี้ หนึ่งคำฉ่ำลิ้น",
+    "fr": "Bready Morsure glacée"
   },
   {
     "name": "Crust",
-    "id": "c521"
+    "id": "c521",
+    "ko": "크러스트",
+    "jp": "クラスト",
+    "tw": "克勞斯特",
+    "cn": "克劳斯特",
+    "de": "Kross",
+    "th": "ครัสต์",
+    "fr": "Crust"
   },
   {
     "name": "Sky",
-    "id": "c530"
+    "id": "c530",
+    "ko": "스카이",
+    "jp": "スカイ",
+    "tw": "思凱",
+    "cn": "思凯",
+    "de": "Sky",
+    "th": "สกาย",
+    "fr": "Sky"
   },
   {
     "name": "Cielo",
-    "id": "c531"
+    "id": "c531",
+    "ko": "시엘로",
+    "jp": "シエロ",
+    "tw": "西埃洛",
+    "cn": "西埃洛",
+    "de": "Cielo",
+    "th": "เชโล่",
+    "fr": "Cielo"
   },
   {
     "name": "Sora",
-    "id": "c532"
+    "id": "c532",
+    "ko": "소라",
+    "jp": "ソラ",
+    "tw": "索拉",
+    "cn": "索拉",
+    "de": "Sora",
+    "th": "โซระ",
+    "fr": "Sora"
   },
   {
     "name": "Sora Spring Flight",
-    "id": "c532_01"
+    "id": "c532_01",
+    "ko": "소라 스프링 플라이트",
+    "jp": "ソラ スプリングフライト",
+    "tw": "索拉 春日飛行",
+    "cn": "索拉 春日飞行",
+    "de": "Sora Frühlingsflug",
+    "th": "โซระ เที่ยวบินยามวสันต์",
+    "fr": "Sora Envol printanier"
   },
   {
     "name": "Bay",
-    "id": "c550"
+    "id": "c550",
+    "ko": "베이",
+    "jp": "ベイ",
+    "tw": "貝伊",
+    "cn": "贝伊",
+    "de": "Bay",
+    "th": "เบย์",
+    "fr": "Baie"
   },
   {
     "name": "Bay Radiant Rabbit",
-    "id": "c550_01"
+    "id": "c550_01",
+    "ko": "베이 래디언트 래빗",
+    "jp": "ベイ ラディアントラビット",
+    "tw": "貝伊 閃耀兔",
+    "cn": "贝伊 闪耀兔",
+    "de": "Bay Strahlendes Häschen",
+    "th": "เบย์ กระต่ายเจิดจรัส",
+    "fr": "Baie Lapin radieux"
   },
   {
     "name": "Clay",
-    "id": "c551"
+    "id": "c551",
+    "ko": "클레이",
+    "jp": "クレイ",
+    "tw": "克雷伊",
+    "cn": "克雷伊",
+    "de": "Clay",
+    "th": "เคลย์",
+    "fr": "Clay"
   },
   {
     "name": "Clay Cheer Up Training",
-    "id": "c551_01"
+    "id": "c551_01",
+    "ko": "클레이 치얼 업 트레이닝",
+    "jp": "クレイ チアーアップトレーニング",
+    "tw": "克雷伊 啦啦隊訓練服",
+    "cn": "克雷伊 啦啦队训练服",
+    "de": "Clay Aufmunterungstraining",
+    "th": "เคลย์ เทรนนิ่งปลุกใจ",
+    "fr": "Clay Entraînement de remontée de moral"
   },
   {
     "name": "Behemoth",
-    "id": "c560"
+    "id": "c560",
+    "ko": "베히모스",
+    "jp": "ベヒモス",
+    "tw": "貝西摩斯",
+    "cn": "贝西摩斯",
+    "de": "Behemoth",
+    "th": "บีฮีมอธ",
+    "fr": "Béhémoth"
   },
   {
     "name": "Ziz",
-    "id": "c561"
+    "id": "c561",
+    "ko": "지즈",
+    "jp": "ジズ",
+    "tw": "席茲",
+    "cn": "席兹",
+    "de": "Ziz",
+    "th": "ซิซ",
+    "fr": "Ziz"
   },
   {
     "name": "Leviathan",
-    "id": "c562"
+    "id": "c562",
+    "ko": "레비아탄",
+    "jp": "レヴィアタン",
+    "tw": "利維坦",
+    "cn": "利维坦",
+    "de": "Leviathan",
+    "th": "เลวีอาธาน",
+    "fr": "Léviathan"
   },
   {
     "name": "Bahamut",
-    "id": "c563"
+    "id": "c563",
+    "ko": "바하무트",
+    "jp": "バハムート",
+    "tw": "巴哈姆特",
+    "cn": "巴哈姆特",
+    "de": "Bahamut",
+    "th": "บาฮามุต",
+    "fr": "Bahamut"
   },
   {
     "name": "Ark Ranger Black",
-    "id": "c570"
+    "id": "c570",
+    "ko": "아크레인저 블랙",
+    "jp": "アークレンジャー・ブラック",
+    "tw": "方舟黑色遊俠",
+    "cn": "方舟黑色游侠",
+    "de": "Schwarzer Ark Ranger",
+    "th": "แบล็กอาร์คเรนเจอร์",
+    "fr": "Ranger noir de l'Arche"
   },
   {
     "name": "Ark Ranger Black",
@@ -1322,43 +3513,113 @@
   },
   {
     "name": "Ark Ranger Red",
-    "id": "c571"
+    "id": "c571",
+    "ko": "아크레인저 레드",
+    "jp": "アークレンジャー・レッド",
+    "tw": "方舟紅色遊俠",
+    "cn": "方舟红色游侠",
+    "de": "Roter Ark Ranger",
+    "th": "เร้ดอาร์คเรนเจอร์",
+    "fr": "Ranger rouge de l'Arche"
   },
   {
     "name": "Ark Ranger Blue",
-    "id": "c572"
+    "id": "c572",
+    "ko": "아크레인저 블루",
+    "jp": "アークレンジャー・ブルー",
+    "tw": "方舟藍色遊俠",
+    "cn": "方舟蓝色游侠",
+    "de": "Blauer Ark Ranger",
+    "th": "บลูอาร์คเรนเจอร์",
+    "fr": "Ranger bleu de l'Arche"
   },
   {
     "name": "Phantom",
-    "id": "c580"
+    "id": "c580",
+    "ko": "팬텀",
+    "jp": "ファントム",
+    "tw": "潘托姆",
+    "cn": "潘托姆",
+    "de": "Phantom",
+    "th": "แฟนธ่อม",
+    "fr": "Phantom"
   },
   {
     "name": "Phantom Saint Thief",
-    "id": "c580_01"
+    "id": "c580_01",
+    "ko": "팬텀 세인트 시프",
+    "jp": "ファントム セイントシーフ",
+    "tw": "潘托姆 聖潔怪盜",
+    "cn": "潘托姆 圣洁怪盗",
+    "de": "Phantom Heilige Diebin",
+    "th": "แฟนธ่อม จอมโจรนักบุญ",
+    "fr": "Phantom Sainte voleuse"
   },
   {
     "name": "Arcana",
-    "id": "c581"
+    "id": "c581",
+    "ko": "아르카나",
+    "jp": "アルカナ",
+    "tw": "阿爾卡娜",
+    "cn": "阿尔卡娜",
+    "de": "Arcana",
+    "th": "อาร์คานา",
+    "fr": "Arcana"
   },
   {
     "name": "Label",
-    "id": "c582"
+    "id": "c582",
+    "ko": "레이블",
+    "jp": "レーベル",
+    "tw": "蕾貝兒",
+    "cn": "蕾贝儿",
+    "de": "Label",
+    "th": "เลเบิล",
+    "fr": "Label"
   },
   {
     "name": "Arcana: Fortune Mate",
-    "id": "c583"
+    "id": "c583",
+    "ko": "아르카나 : 포츈 메이트",
+    "jp": "アルカナ：フォーチュンメイト",
+    "tw": "阿爾卡娜：命運伴侶",
+    "cn": "阿尔卡娜：命运伴侣",
+    "de": "Arcana: Glücksbringer",
+    "th": "อาร์คานา: เพื่อนสาวพยากรณ์",
+    "fr": "Arcana : Compagnon de Fortune"
   },
   {
     "name": "Mori",
-    "id": "c590"
+    "id": "c590",
+    "ko": "모리",
+    "jp": "モリー",
+    "tw": "莫莉",
+    "cn": "莫莉",
+    "de": "Mori",
+    "th": "โมริ",
+    "fr": "Mori"
   },
   {
     "name": "Mint",
-    "id": "c600"
+    "id": "c600",
+    "ko": "민트",
+    "jp": "ミント",
+    "tw": "敏特",
+    "cn": "敏特",
+    "de": "Mint",
+    "th": "มินต์",
+    "fr": "Mint"
   },
   {
     "name": "Mint Fresh Mint",
-    "id": "c600_01"
+    "id": "c600_01",
+    "ko": "민트 프레쉬 민트",
+    "jp": "ミント フレッシュミント",
+    "tw": "敏特 清新薄荷",
+    "cn": "敏特 清新薄荷",
+    "de": "Mint Frische Minz",
+    "th": "มินต์ เฟรชมินต์",
+    "fr": "Mint Fraîcheur d'été"
   },
   {
     "name": "Mint",
@@ -1366,11 +3627,25 @@
   },
   {
     "name": "Prika",
-    "id": "c601"
+    "id": "c601",
+    "ko": "프리카",
+    "jp": "プリカ",
+    "tw": "普莉卡",
+    "cn": "普莉卡",
+    "de": "Prika",
+    "th": "พริก้า",
+    "fr": "Prika"
   },
   {
-    "name": "Prika",
-    "id": "c601_01"
+    "name": "Prika Cool Paprika",
+    "id": "c601_01",
+    "ko": "프리카 쿨 파프리카",
+    "jp": "プリカ クールパプリカ",
+    "tw": "普莉卡 酷冷辣椒",
+    "cn": "普莉卡 酷冷辣椒",
+    "de": "Prika Coole Paprika",
+    "th": "พริก้า คูลปาปริก้า",
+    "fr": "Prika Paprika cool"
   },
   {
     "name": "Prika",
@@ -1378,27 +3653,69 @@
   },
   {
     "name": "Mekami Shifty",
-    "id": "c610"
+    "id": "c610",
+    "ko": "메카미 시프티",
+    "jp": "メカミシフティー",
+    "tw": "機甲神謝芙蒂",
+    "cn": "机甲神谢芙蒂",
+    "de": "Mekami-Shifty",
+    "th": "เมกามิ ชิฟตี้",
+    "fr": "Mekami Futée"
   },
   {
     "name": "Snow Crane",
-    "id": "c620"
+    "id": "c620",
+    "ko": "백학",
+    "jp": "シラツル",
+    "tw": "白鶴",
+    "cn": "白鹤",
+    "de": "Schneekranich",
+    "th": "สโนว์เครน",
+    "fr": "Snow Crane"
   },
   {
     "name": "Makima",
-    "id": "c800"
+    "id": "c800",
+    "ko": "마키마",
+    "jp": "マキマ",
+    "tw": "真紀真",
+    "cn": "玛奇玛",
+    "de": "Makima",
+    "th": "มาคิมะ",
+    "fr": "Makima"
   },
   {
     "name": "Makima Coat Off",
-    "id": "c800_01"
+    "id": "c800_01",
+    "ko": "마키마 코트 오프",
+    "jp": "マキマ コートオフ",
+    "tw": "真紀真 脫下外套",
+    "cn": "玛奇玛 脱下外套",
+    "de": "Makima Ohne Mantel",
+    "th": "มาคิมะ ถอดเสื้อโคต",
+    "fr": "Makima Sans le manteau"
   },
   {
     "name": "Power",
-    "id": "c801"
+    "id": "c801",
+    "ko": "파워",
+    "jp": "パワー",
+    "tw": "帕瓦",
+    "cn": "帕瓦",
+    "de": "Power",
+    "th": "พาวเวอร์",
+    "fr": "Power"
   },
   {
     "name": "Himeno",
-    "id": "c802"
+    "id": "c802",
+    "ko": "히메노",
+    "jp": "姫野",
+    "tw": "姬野",
+    "cn": "姬野",
+    "de": "Himeno",
+    "th": "ฮิเมโนะ",
+    "fr": "Himeno"
   },
   {
     "name": "Denji",
@@ -1414,39 +3731,102 @@
   },
   {
     "name": "2B",
-    "id": "c810"
+    "id": "c810",
+    "ko": "2B",
+    "jp": "2B",
+    "tw": "2B",
+    "cn": "2B",
+    "de": "2B",
+    "th": "2B",
+    "fr": "2B"
   },
   {
     "name": "2B Metamorphic Damage",
-    "id": "c810_01"
+    "id": "c810_01",
+    "ko": "2B 중파상태",
+    "jp": "2B 中破状態",
+    "tw": "2B 戰損狀態",
+    "cn": "2B 战损状态",
+    "de": "2B Metamorphischer Schaden",
+    "th": "2B เสียหายแปรสภาพ",
+    "fr": "2B Dégâts métamorphiques"
   },
   {
     "name": "2B YoRHa Uniform 1",
-    "id": "c810_02"
+    "id": "c810_02",
+    "ko": "2B 요르하 제복1",
+    "jp": "2B ヨルハ制式装束・壱",
+    "tw": "2B 寄葉制服1",
+    "cn": "2B 寄叶制服1",
+    "de": "2B YoRHa-Uniform 1",
+    "th": "2B เครื่องแบบ YoRHa 1",
+    "fr": "2B Uniforme YoRHa 1"
   },
   {
-    "name": "2B Unofficial Waterfront Gear 1",
-    "id": "c810_03"
+    "name": "2B YoRHa Unofficial Waterfront Gear I",
+    "id": "c810_03",
+    "ko": "2B 요르하 비공식 수변 활동 장비 1",
+    "jp": "2B ヨルハ非公式水域活動服・壱",
+    "tw": "2B 寄葉非官方水域活動服1",
+    "cn": "2B 寄叶非官方水上活动服1",
+    "de": "2B YoRHa – Inoffizielle Promenade-Ausrüstung I",
+    "th": "2B เกียร์วอเตอร์ฟรอนต์ (ไม่ทางการ) YoRHa I",
+    "fr": "2B Équipement aquatique non officiel de YoRHa I"
   },
   {
     "name": "A2",
-    "id": "c811"
+    "id": "c811",
+    "ko": "A2",
+    "jp": "A2",
+    "tw": "A2",
+    "cn": "A2",
+    "de": "A2",
+    "th": "A2",
+    "fr": "A2"
   },
   {
     "name": "A2 Metamorphic Damage",
-    "id": "c811_01"
+    "id": "c811_01",
+    "ko": "A2 중파상태",
+    "jp": "A2 中破状態",
+    "tw": "A2 戰損狀態",
+    "cn": "A2 战损状态",
+    "de": "A2 Metamorphischer Schaden",
+    "th": "A2 เสียหายแปรสภาพ",
+    "fr": "A2 Dégâts métamorphiques"
   },
   {
     "name": "A2 YoRHa Uniform Prototype",
-    "id": "c811_02"
+    "id": "c811_02",
+    "ko": "A2 요르하 제복 프로토 타입",
+    "jp": "A2 ヨルハ制式装束・試作",
+    "tw": "A2 寄葉制服原型",
+    "cn": "A2 寄叶制服原型",
+    "de": "A2 YoRHa-Uniform (Prototyp)",
+    "th": "A2 เครื่องแบบ YoRHa ต้นแบบ",
+    "fr": "A2 Prototype Uniforme YoRHa"
   },
   {
-    "name": "A2 Unofficial Waterfront Gear Prototype",
-    "id": "c811_03"
+    "name": "A2 YoRHa Unofficial Waterfront Gear Prototype",
+    "id": "c811_03",
+    "ko": "A2 요르하 비공식 수변 활동 장비 프로토타입",
+    "jp": "A2 ヨルハ非公式水域活動服・試作",
+    "tw": "A2 寄葉非官方水域活動服原型",
+    "cn": "A2 寄叶非官方水上活动服原型",
+    "de": "A2 YoRHa – Inoffizielle Promenade-Ausrüstung (Prototyp)",
+    "th": "A2 ต้นแบบเกียร์วอเตอร์ฟรอนต์ (ไม่ทางการ) YoRHa",
+    "fr": "A2 Prototype d'équipement aquatique non officiel de YoRHa"
   },
   {
     "name": "Pascal",
-    "id": "c812"
+    "id": "c812",
+    "ko": "파스칼",
+    "jp": "パスカル",
+    "tw": "帕斯卡",
+    "cn": "帕斯卡",
+    "de": "Pascal",
+    "th": "ปาสคาล",
+    "fr": "Pascal"
   },
   {
     "name": "9S",
@@ -1454,171 +3834,465 @@
   },
   {
     "name": "Rem",
-    "id": "c820"
+    "id": "c820",
+    "ko": "렘",
+    "jp": "レム",
+    "tw": "雷姆",
+    "cn": "雷姆",
+    "de": "Rem",
+    "th": "เรม",
+    "fr": "Rem"
   },
   {
     "name": "Rem Handy Maid",
-    "id": "c820_01"
+    "id": "c820_01",
+    "ko": "렘 핸디 메이드",
+    "jp": "レム ハンディメイド",
+    "tw": "雷姆 俐落女僕",
+    "cn": "雷姆 俐落女仆",
+    "de": "Rem Maid für alles",
+    "th": "เรม เมดผู้คล่องแคล่ว",
+    "fr": "Rem Soubrette serviable"
   },
   {
     "name": "Rem Pure Blossom",
-    "id": "c820_02"
+    "id": "c820_02",
+    "ko": "렘 퓨어 블라썸",
+    "jp": "レム ピュアブロッサム",
+    "tw": "雷姆 純淨之花",
+    "cn": "雷姆 纯净之花",
+    "de": "Rem Reine Blüte",
+    "th": "เรม บุปผาบริสุทธิ์",
+    "fr": "Rem Fleur pure"
   },
   {
     "name": "Emilia",
-    "id": "c821"
+    "id": "c821",
+    "ko": "에밀리아",
+    "jp": "エミリア",
+    "tw": "愛蜜莉雅",
+    "cn": "爱蜜莉雅",
+    "de": "Emilia",
+    "th": "เอมิเลีย",
+    "fr": "Emilia"
   },
   {
     "name": "Emilia Clumsy Maid",
-    "id": "c821_01"
+    "id": "c821_01",
+    "ko": "에밀리아 클럼지 메이드",
+    "jp": "エミリア クラムジーメイド",
+    "tw": "愛蜜莉雅 生澀女僕",
+    "cn": "爱蜜莉雅 生涩女仆",
+    "de": "Emilia Ungeschickte Maid",
+    "th": "เอมิเลีย เมดจอมซุ่มซ่าม",
+    "fr": "Emilia Soubrette maladroite"
   },
   {
     "name": "Emilia Spring Breeze",
-    "id": "c821_02"
+    "id": "c821_02",
+    "ko": "에밀리아 스프링 브리즈",
+    "jp": "エミリア スプリングブリーズ",
+    "tw": "愛蜜莉雅 春日微風",
+    "cn": "爱蜜莉雅 春日微风",
+    "de": "Emilia Frühlingsbrise",
+    "th": "เอมิเลีย สายลมใบไม้ผลิ",
+    "fr": "Emilia Brise de printemps"
   },
   {
     "name": "Ram",
-    "id": "c822"
+    "id": "c822",
+    "ko": "람",
+    "jp": "ラム",
+    "tw": "拉姆",
+    "cn": "拉姆",
+    "de": "Ram",
+    "th": "แรม",
+    "fr": "Ram"
   },
   {
-    "name": "Asuka Shikinami",
-    "id": "c830"
+    "name": "Asuka",
+    "id": "c830",
+    "ko": "아스카",
+    "jp": "アスカ",
+    "tw": "明日香",
+    "cn": "明日香",
+    "de": "Asuka",
+    "th": "อาสึกะ",
+    "fr": "Asuka"
   },
   {
-    "name": "Asuka Shikinami Asuka's School Uniform",
-    "id": "c830_01"
+    "name": "Asuka Asuka's School Uniform",
+    "id": "c830_01",
+    "ko": "아스카 아스카의 교복",
+    "jp": "アスカ アスカの制服",
+    "tw": "明日香 明日香的校服",
+    "cn": "明日香 明日香的校服",
+    "de": "Asuka Asukas Schuluniform",
+    "th": "อาสึกะ อาสึกะชุดนักเรียน",
+    "fr": "Asuka Uniforme scolaire d'Asuka"
   },
   {
-    "name": "Asuka Shikinami Cynical Street",
-    "id": "c830_02"
+    "name": "Asuka Cynical Street",
+    "id": "c830_02",
+    "ko": "아스카 시니컬 스트리트",
+    "jp": "アスカ シニカルストリート",
+    "tw": "明日香 自私街",
+    "cn": "明日香 自私街",
+    "de": "Asuka Zynische Straße",
+    "th": "อาสึกะ สาวปากร้ายสายสตรีท",
+    "fr": "Asuka Cynisme urbain"
   },
   {
-    "name": "Asuka Shikinami Test Plugsuit",
-    "id": "c830_03"
+    "name": "Asuka Test Plugsuit",
+    "id": "c830_03",
+    "ko": "아스카 테스트용 플러그 슈트",
+    "jp": "アスカ テスト用プラグスーツ",
+    "tw": "明日香 測試用作戰服",
+    "cn": "明日香 测试用作战服",
+    "de": "Asuka Test-Plugsuit",
+    "th": "อาสึกะ ปลั๊กสูทรุ่นทดสอบ",
+    "fr": "Asuka Plugsuit expérimentale"
   },
   {
-    "name": "Rei Ayanami",
-    "id": "c831"
+    "name": "Rei",
+    "id": "c831",
+    "ko": "레이",
+    "jp": "レイ",
+    "tw": "零",
+    "cn": "零",
+    "de": "Rei",
+    "th": "เรย์",
+    "fr": "Rei"
   },
   {
-    "name": "Rei Ayanami Rei's School Uniform",
-    "id": "c831_01"
+    "name": "Rei Rei's School Uniform",
+    "id": "c831_01",
+    "ko": "레이 레이의 교복",
+    "jp": "レイ レイの制服",
+    "tw": "零 零的校服",
+    "cn": "零 零的校服",
+    "de": "Rei Reis Schuluniform",
+    "th": "เรย์ เรย์ชุดนักเรียน",
+    "fr": "Rei Uniforme scolaire de Rei"
   },
   {
-    "name": "Rei Ayanami Peaceful Vacation",
-    "id": "c831_02"
+    "name": "Rei Peaceful Vacation",
+    "id": "c831_02",
+    "ko": "레이 피스풀 바캉스",
+    "jp": "レイ ピースフルバカンス",
+    "tw": "零 寧靜渡假",
+    "cn": "零 宁静渡假",
+    "de": "Rei Friedlicher Urlaub",
+    "th": "เรย์ วันหยุดแสนสงบ",
+    "fr": "Rei Vacances paisibles"
   },
   {
-    "name": "Mari Makinami",
-    "id": "c832"
+    "name": "Mari",
+    "id": "c832",
+    "ko": "마리",
+    "jp": "マリ",
+    "tw": "真理",
+    "cn": "真理",
+    "de": "Mari",
+    "th": "มาริ",
+    "fr": "Mari"
   },
   {
-    "name": "Mari Makinami Mari's School Uniform",
-    "id": "c832_01"
+    "name": "Mari Mari's School Uniform",
+    "id": "c832_01",
+    "ko": "마리 마리의 교복",
+    "jp": "マリ マリの制服",
+    "tw": "真理 真理的校服",
+    "cn": "真理 真理的校服",
+    "de": "Mari Maris Schuluniform",
+    "th": "มาริ มาริชุดนักเรียน",
+    "fr": "Mari Uniforme scolaire de Mari"
   },
   {
-    "name": "Mari Makinami Leisure Travel",
-    "id": "c832_02"
+    "name": "Mari Leisure Travel",
+    "id": "c832_02",
+    "ko": "마리 레저리 트래블",
+    "jp": "マリ レジャートラベル",
+    "tw": "真理 休閒之旅",
+    "cn": "真理 休闲之旅",
+    "de": "Mari Freizeitreisen",
+    "th": "มาริ ท่องเที่ยวผ่อนคลาย",
+    "fr": "Mari Voyage de plaisance"
   },
   {
-    "name": "Mari Makinami Final Battle",
-    "id": "c832_03"
+    "name": "Mari Final Battle: Mari",
+    "id": "c832_03",
+    "ko": "마리 최종 결전: 마리",
+    "jp": "マリ 最終決戦：マリ",
+    "tw": "真理 最終決戰：真理",
+    "cn": "真理 最终决战：真理",
+    "de": "Mari Mari: Letzte Schlacht",
+    "th": "มาริ ศึกสุดท้าย: มาริ",
+    "fr": "Mari Mari : Combat final"
   },
   {
-    "name": "Mari Makinami Mystery Muse",
-    "id": "c832_04"
+    "name": "Mari Mystery Muse",
+    "id": "c832_04",
+    "ko": "마리 미스테리 뮤즈",
+    "jp": "マリ 神秘の女神",
+    "tw": "真理 神祕謬思",
+    "cn": "真理 神秘缪斯",
+    "de": "Mari Mysteriöse Muse",
+    "th": "มาริ มิวส์ผู้ลึกลับ",
+    "fr": "Mari Muse mystérieuse"
   },
   {
-    "name": "Misato Katsuragi",
-    "id": "c833"
+    "name": "Misato",
+    "id": "c833",
+    "ko": "미사토",
+    "jp": "ミサト",
+    "tw": "美里",
+    "cn": "美里",
+    "de": "Misato",
+    "th": "มิซาโตะ",
+    "fr": "Misato"
   },
   {
-    "name": "Rei Ayanami (Tentative Name)",
-    "id": "c834"
+    "name": "Rei (Tentative Name)",
+    "id": "c834",
+    "ko": "레이 (가칭)",
+    "jp": "レイ（仮称）",
+    "tw": "零（暫稱）",
+    "cn": "零（暂称）",
+    "de": "Rei (vorläufiger Name)",
+    "th": "เรย์ (ชื่อชั่วคราว)",
+    "fr": "Rei (nom provisoire)"
   },
   {
-    "name": "Rei Ayanami Miss Lookalike from Village-3",
-    "id": "c834_01"
+    "name": "Rei (Tentative Name) Miss Lookalike from Village-3",
+    "id": "c834_01",
+    "ko": "레이 (가칭) 제 3마을의 닮은꼴 씨",
+    "jp": "レイ（仮称） 第3村のそっくりさん",
+    "tw": "零（暫稱） 第三村的神似小姐",
+    "cn": "零（暂称） 第三村的长得像小姐",
+    "de": "Rei (vorläufiger Name) Frau Doppelgängerin aus Dorf-3",
+    "th": "เรย์ (ชื่อชั่วคราว) คนหน้าเหมือนจากหมู่บ้าน 3",
+    "fr": "Rei (nom provisoire) Rei Q du Village-3"
   },
   {
-    "name": "Rei Ayanami Soul Connect",
-    "id": "c834_02"
+    "name": "Rei (Tentative Name) Soul Connect",
+    "id": "c834_02",
+    "ko": "레이 (가칭) 소울 커넥트",
+    "jp": "レイ（仮称） 霊魂の連結",
+    "tw": "零（暫稱） 靈魂連結",
+    "cn": "零（暂称） 灵魂连接",
+    "de": "Rei (vorläufiger Name) Seelenverbindung",
+    "th": "เรย์ (ชื่อชั่วคราว) เชื่อมโยงกระแสจิต",
+    "fr": "Rei (nom provisoire) Union d'âme"
   },
   {
-    "name": "Asuka Shikinami WILLE",
-    "id": "c835"
+    "name": "Asuka: WILLE",
+    "id": "c835",
+    "ko": "아스카 : WILLE",
+    "jp": "アスカ：WILLE",
+    "tw": "明日香：WILLE",
+    "cn": "明日香：WILLE",
+    "de": "Asuka: WILLE",
+    "th": "อาสึกะ: WILLE",
+    "fr": "Asuka : WILLE"
   },
   {
-    "name": "Asuka Shikinami Final Battle",
-    "id": "c835_01"
+    "name": "Asuka: WILLE Final Battle: Asuka",
+    "id": "c835_01",
+    "ko": "아스카 : WILLE 최종 결전: 아스카",
+    "jp": "アスカ：WILLE 最終決戦：アスカ",
+    "tw": "明日香：WILLE 最終決戰：明日香",
+    "cn": "明日香：WILLE 最终决战：明日香",
+    "de": "Asuka: WILLE Asuka: Letzte Schlacht",
+    "th": "อาสึกะ: WILLE ศึกสุดท้าย: อาสึกะ",
+    "fr": "Asuka : WILLE Asuka : Combat final"
   },
   {
-    "name": "Asuka Shikinami Ocean's Lament",
-    "id": "c835_02"
+    "name": "Asuka: WILLE Ocean's Lament",
+    "id": "c835_02",
+    "ko": "아스카 : WILLE 오션 라멘트",
+    "jp": "アスカ：WILLE 孤海の楽章",
+    "tw": "明日香：WILLE 孤海樂章",
+    "cn": "明日香：WILLE 孤海乐章",
+    "de": "Asuka: WILLE Klagelied des Meeres",
+    "th": "อาสึกะ: WILLE ห้วงสมุทรคร่ำครวญ",
+    "fr": "Asuka : WILLE Lamentation de l'océan"
   },
   {
-    "name": "Sakura Suzuhara",
-    "id": "c836"
+    "name": "Sakura",
+    "id": "c836",
+    "ko": "사쿠라",
+    "jp": "サクラ",
+    "tw": "櫻",
+    "cn": "樱",
+    "de": "Sakura",
+    "th": "ซากุระ",
+    "fr": "Sakura"
   },
   {
     "name": "Ada",
-    "id": "c840"
+    "id": "c840",
+    "ko": "에이다",
+    "jp": "エイダ",
+    "tw": "艾達",
+    "cn": "艾达",
+    "de": "Ada",
+    "th": "เอด้า",
+    "fr": "Ada"
   },
   {
     "name": "Ada Separate Ways",
-    "id": "c840_01"
+    "id": "c840_01",
+    "ko": "에이다 SEPARATE WAYS",
+    "jp": "エイダ SEPARATE WAYS",
+    "tw": "艾達 SEPARATE WAYS",
+    "cn": "艾达 SEPARATE WAYS",
+    "de": "Ada SEPARATE WAYS",
+    "th": "เอด้า SEPARATE WAYS",
+    "fr": "Ada SEPARATE WAYS"
   },
   {
     "name": "Ada Dress",
-    "id": "c840_02"
+    "id": "c840_02",
+    "ko": "에이다 DRESS",
+    "jp": "エイダ DRESS",
+    "tw": "艾達 DRESS",
+    "cn": "艾达 DRESS",
+    "de": "Ada DRESS",
+    "th": "เอด้า DRESS",
+    "fr": "Ada DRESS"
   },
   {
     "name": "Jill",
-    "id": "c841"
+    "id": "c841",
+    "ko": "질",
+    "jp": "ジル",
+    "tw": "吉兒",
+    "cn": "吉儿",
+    "de": "Jill",
+    "th": "จิล",
+    "fr": "Jill"
   },
   {
     "name": "Jill Classic",
-    "id": "c841_01"
+    "id": "c841_01",
+    "ko": "질 CLASSIC",
+    "jp": "ジル CLASSIC",
+    "tw": "吉兒 CLASSIC",
+    "cn": "吉儿 CLASSIC",
+    "de": "Jill CLASSIC",
+    "th": "จิล CLASSIC",
+    "fr": "Jill CLASSIC"
   },
   {
     "name": "Jill Battle Suit",
-    "id": "c841_02"
+    "id": "c841_02",
+    "ko": "질 BATTLE SUIT",
+    "jp": "ジル BATTLE SUIT",
+    "tw": "吉兒 BATTLE SUIT",
+    "cn": "吉儿 BATTLE SUIT",
+    "de": "Jill BATTLE SUIT",
+    "th": "จิล BATTLE SUIT",
+    "fr": "Jill BATTLE SUIT"
   },
   {
     "name": "Claire",
-    "id": "c842"
+    "id": "c842",
+    "ko": "클레어",
+    "jp": "クレア",
+    "tw": "克蕾兒",
+    "cn": "克莱尔",
+    "de": "Claire",
+    "th": "แคลร์",
+    "fr": "Claire"
   },
   {
     "name": "EVE",
-    "id": "c850"
+    "id": "c850",
+    "ko": "이브",
+    "jp": "イヴ",
+    "tw": "伊芙",
+    "cn": "伊芙",
+    "de": "EVE",
+    "th": "อีฟ",
+    "fr": "EVE"
   },
   {
     "name": "EVE Keyhole Dress",
-    "id": "c850_01"
+    "id": "c850_01",
+    "ko": "이브 키홀 드레스",
+    "jp": "イヴ キーホールドレス",
+    "tw": "伊芙 挖空裝",
+    "cn": "伊芙 镂空裙装",
+    "de": "EVE Kleid mit Tropfenausschnitt",
+    "th": "อีฟ คีย์โฮลเดรส",
+    "fr": "EVE Tenue ouverte"
   },
   {
     "name": "EVE Neurolink Suit",
-    "id": "c850_02"
+    "id": "c850_02",
+    "ko": "이브 뉴로링크 슈트",
+    "jp": "イヴ ニューロリンクスーツ",
+    "tw": "伊芙 神經連結裝",
+    "cn": "伊芙 神经元链接套装",
+    "de": "EVE Neurolink-Suit",
+    "th": "อีฟ นิวโรลิงก์สูท",
+    "fr": "EVE Combinaison neurolien"
   },
   {
     "name": "EVE Skin Suit",
-    "id": "c850_03"
+    "id": "c850_03",
+    "ko": "이브 스킨 슈트",
+    "jp": "イヴ スキンスーツ",
+    "tw": "伊芙 緊身衣",
+    "cn": "伊芙 活肤紧身服",
+    "de": "EVE Skin-Suit",
+    "th": "อีฟ สกินสูท",
+    "fr": "EVE Seconde peau"
   },
   {
     "name": "Raven",
-    "id": "c851"
+    "id": "c851",
+    "ko": "레이븐",
+    "jp": "レイヴン",
+    "tw": "蕾雯",
+    "cn": "渡鸦",
+    "de": "Raven",
+    "th": "เรเวน",
+    "fr": "Raven"
   },
   {
     "name": "Raven Planet Diving Suit (6th) V2",
-    "id": "c851_01"
+    "id": "c851_01",
+    "ko": "레이븐 플래닛 다이브 슈트(6th) V2",
+    "jp": "レイヴン プラネットダイブスーツ（第６）V2",
+    "tw": "蕾雯 二代星球空降衣（第6小隊）",
+    "cn": "渡鸦 星球空降服（第6小队）第2版",
+    "de": "Raven Planetarischer Diving-Suit (6.) Ver. 2",
+    "th": "เรเวน แพลเน็ตไดฟ์วิงสูท (หน่วยที่ 6) V2",
+    "fr": "Raven Combinaison de plongée planétaire (6) V2"
   },
   {
     "name": "Raven Midsummer Alice",
-    "id": "c851_02"
+    "id": "c851_02",
+    "ko": "레이븐 미드서머 앨리스",
+    "jp": "レイヴン ミッドサマーアリス",
+    "tw": "蕾雯 仲夏愛麗絲",
+    "cn": "渡鸦 盛夏爱丽丝",
+    "de": "Raven Hochsommer-Alice",
+    "th": "เรเวน อลิซกลางฤดูร้อน",
+    "fr": "Raven Alice ensoleillée"
   },
   {
     "name": "Lily",
-    "id": "c852"
+    "id": "c852",
+    "ko": "릴리",
+    "jp": "リリー",
+    "tw": "百合",
+    "cn": "百合",
+    "de": "Lily",
+    "th": "ลิลี",
+    "fr": "Lily"
   },
   {
     "name": "Adam",
@@ -1626,59 +4300,157 @@
   },
   {
     "name": "Chisato",
-    "id": "c860"
+    "id": "c860",
+    "ko": "치사토",
+    "jp": "千束",
+    "tw": "千束",
+    "cn": "千束",
+    "de": "Chisato",
+    "th": "จิซาโตะ",
+    "fr": "Chisato"
   },
   {
     "name": "Chisato DA Training Wear (First)",
-    "id": "c860_01"
+    "id": "c860_01",
+    "ko": "치사토 DA 트레이닝 웨어(퍼스트)",
+    "jp": "千束 DAトレーニングウエア（ファースト）",
+    "tw": "千束 DA訓練服（第一套）",
+    "cn": "千束 DA训练服（第一套）",
+    "de": "Chisato DA-Trainingskleidung (erste)",
+    "th": "จิซาโตะ ชุดฝึก DA (รุ่นแรก)",
+    "fr": "Chisato Tenue d'entraînement DA (Première)"
   },
   {
     "name": "Chisato Red Spark Guitar",
-    "id": "c860_02"
+    "id": "c860_02",
+    "ko": "치사토 레드 스파크 기타",
+    "jp": "千束 レッドスパークギター",
+    "tw": "千束 赤紅火花吉他",
+    "cn": "千束 赤红火花吉他",
+    "de": "Chisato Rote Funken-Gitarre",
+    "th": "จิซาโตะ กีตาร์ประกายเดือด",
+    "fr": "Chisato Guitare rouge étincelante"
   },
   {
     "name": "Takina",
-    "id": "c861"
+    "id": "c861",
+    "ko": "타키나",
+    "jp": "たきな",
+    "tw": "瀧奈",
+    "cn": "泷奈",
+    "de": "Takina",
+    "th": "ทากินะ",
+    "fr": "Takina"
   },
   {
     "name": "Takina DA Training Wear (Second)",
-    "id": "c861_01"
+    "id": "c861_01",
+    "ko": "타키나 DA 트레이닝 웨어(세컨드)",
+    "jp": "たきな DAトレーニングウエア（セカンド）",
+    "tw": "瀧奈 DA訓練服（第二套）",
+    "cn": "泷奈 DA训练服（第二套）",
+    "de": "Takina DA Trainingskleidung (Zweit)",
+    "th": "ทากินะ ชุดฝึก DA (รุ่นสอง)",
+    "fr": "Takina Tenue d'entraînement DA (Seconde)"
   },
   {
     "name": "Takina Blue Pulse Bass",
-    "id": "c861_02"
+    "id": "c861_02",
+    "ko": "타키나 블루 펄스 베이스",
+    "jp": "たきな ブルーパルスベース",
+    "tw": "瀧奈 湛藍律動貝斯",
+    "cn": "泷奈 湛蓝律动贝斯",
+    "de": "Takina Blauer Impulsbass",
+    "th": "ทากินะ เบสครามกระหึ่ม",
+    "fr": "Takina Basse à impulsion bleue"
   },
   {
     "name": "Kurumi",
-    "id": "c862"
+    "id": "c862",
+    "ko": "쿠루미",
+    "jp": "クルミ",
+    "tw": "胡桃",
+    "cn": "胡桃",
+    "de": "Kurumi",
+    "th": "คุรุมิ",
+    "fr": "Kurumi"
   },
   {
     "name": "Queen (Makoto)",
-    "id": "c870"
+    "id": "c870",
+    "ko": "퀸(마코토)",
+    "jp": "クイーン（真）",
+    "tw": "QUEEN（真）",
+    "cn": "QUEEN（真）",
+    "de": "Queen (Makoto)",
+    "th": "ควีน (มาโกโตะ)",
+    "fr": "Queen (Makoto)"
   },
   {
-    "name": "Queen (Makoto) Shujin Academy Student Council President",
-    "id": "c870_01"
+    "name": "Queen (Makoto) Shujin Academy Student Council President",
+    "id": "c870_01",
+    "ko": "퀸(마코토) 슈진고교 학생회장",
+    "jp": "クイーン（真） 秀尽学園生徒会長",
+    "tw": "QUEEN（真） 秀盡學園學生會長",
+    "cn": "QUEEN（真） 秀尽学园学生会长",
+    "de": "Queen (Makoto) Schülersprecherin der Shujin-Akademie",
+    "th": "ควีน (มาโกโตะ) ประธานนักเรียนโรงเรียนชูจิน",
+    "fr": "Queen (Makoto) Présidente du conseil étudiant de Shujin Academy"
   },
   {
     "name": "Queen (Makoto) Queen's Pajamas (Ver. NIKKE Collabo)",
-    "id": "c870_02"
+    "id": "c870_02",
+    "ko": "퀸(마코토) 퀸즈 파자마 (Ver. NIKKE Collabo)",
+    "jp": "クイーン（真） クイーンズパジャマ（Ver. NIKKE Collabo）",
+    "tw": "QUEEN（真） 女王睡衣（Ver. NIKKE Collabo）",
+    "cn": "QUEEN（真） 女王睡衣（Ver. NIKKE Collabo）",
+    "de": "Queen (Makoto) Queens Pyjama (Ver. NIKKE Collabo)",
+    "th": "ควีน (มาโกโตะ) ชุดนอนของควีน (Ver. NIKKE Collabo)",
+    "fr": "Queen (Makoto) Pyjama royal (Ver. NIKKE Collabo)"
   },
   {
     "name": "Yukiko",
-    "id": "c871"
+    "id": "c871",
+    "ko": "유키코",
+    "jp": "雪子",
+    "tw": "雪子",
+    "cn": "雪子",
+    "de": "Yukiko",
+    "th": "ยูกิโกะ",
+    "fr": "Yukiko"
   },
   {
     "name": "Yukiko Amagi Inn Kimono",
-    "id": "c871_01"
+    "id": "c871_01",
+    "ko": "유키코 아마기 여관의 기모노",
+    "jp": "雪子 天城屋旅館の着物",
+    "tw": "雪子 天城屋旅館和服",
+    "cn": "雪子 天城屋旅馆和服",
+    "de": "Yukiko Amagi-Inn-Kimono",
+    "th": "ยูกิโกะ ชุดกิโมโนเรียวกังอามากิ",
+    "fr": "Yukiko Kimono de l'auberge Amagi"
   },
   {
     "name": "Yukiko Winter Roomwear (Ver. NIKKE Collabo)",
-    "id": "c871_02"
+    "id": "c871_02",
+    "ko": "유키코 윈터 레이디 룸웨어 (Ver. NIKKE Collabo)",
+    "jp": "雪子 ウィンターレディルームウェア（Ver. NIKKE Collabo）",
+    "tw": "雪子 冬季淑女家居服（Ver. NIKKE Collabo）",
+    "cn": "雪子 冬日雅居（Ver. NIKKE Collabo）",
+    "de": "Yukiko Winter-Hauskleidung (Ver. NIKKE Collabo)",
+    "th": "ยูกิโกะ ชุดลำลองฤดูหนาว (Ver. NIKKE Collabo)",
+    "fr": "Yukiko Tenue d'intérieur hivernale (Ver. NIKKE Collabo)"
   },
   {
     "name": "Aigis",
-    "id": "c872"
+    "id": "c872",
+    "ko": "아이기스",
+    "jp": "アイギス",
+    "tw": "埃癸斯",
+    "cn": "埃癸斯",
+    "de": "Aigis",
+    "th": "ไอกิส",
+    "fr": "Aigis"
   },
   {
     "name": "Ingrid",

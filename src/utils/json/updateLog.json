@@ -706,5 +706,13 @@
   {
     "date": "August 13th 2026",
     "update": "Gallery: Added Project Matis gallery. Added Project Matis Album."
+  },
+  {
+    "date": "August 24th 2026",
+    "update": "Live2d: Changed the behavior of the zoom and drag actions. It is now working on mobile through pinches. Thanks to FilipNone on GitHub."
+  },
+  {
+    "date": "August 24th 2026",
+    "update": "Live2d: Added a language option for the search bar. It accept : English ( default ), KR, JP, TW, CN, DE, TH, FR. The rest of the website will stay exclusively english. Due to how I am fetching the character names, this toggle only affect the playable nikkes and their skins. every NPC and events are currently staying exclusively EN because idk how to automatically fetch them in other languages. This in fact mean that, despite having translations for Scarlet or Rapunzel, their NPC sprites are untranslated, so if you aren't using english, you might have issue finding different sprites of the same girl. Sorry in advance. Pull requests are open if you want to add translations in your language. I will accept them without checking much since I can't really verify the accuracy of translations. RIP Rouge Rant"
   }
 ]
