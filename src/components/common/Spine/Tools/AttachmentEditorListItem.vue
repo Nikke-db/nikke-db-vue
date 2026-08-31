@@ -1,5 +1,5 @@
 <template>
-  <n-h4 v-show="shouldApplyToAttachment" style="display: flex; gap: 8px;">
+  <n-h4 ref="itemRef" v-show="shouldApplyToAttachment" :class="{ 'click-selected': isClickHighlighted }" style="display: flex; gap: 8px;">
     <div :style="`width: 8px; display: block; height: 16px; margin-top: 4px; background-color: ${getRgba()}`"/>
     <div>
       <n-icon
@@ -19,7 +19,7 @@
 <script lang="ts" setup>
 
 import type { AttachmentItemInterface } from '@/utils/interfaces/live2d'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useMarket } from '@/stores/market'
 import { EyeFilled } from '@vicons/antd'
 
@@ -29,12 +29,64 @@ const props = defineProps<{
   index: number,
   subIndex: number,
   item: AttachmentItemInterface,
-  searchQuery: string
+  searchQuery: string,
+  previewColor: { r: number, g: number, b: number, a: number },
 }>()
 
 const market = useMarket()
 
 const isAttachmentChecked = ref(false)
+
+// let selectionIntervalId: any = null
+let selectionColorBackup: { r: number; g: number; b: number; a: number } | null = null
+
+const startSelectionCycle = () => {
+  const colorRef = market.live2d.attachments[props.index]?.[props.item.name]?.color
+  if (!colorRef) return
+  if (selectionColorBackup === null) selectionColorBackup = { ...colorRef }
+  let colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
+  if (!colorObj) return
+  colorObj.r = props.previewColor.r
+  colorObj.g = props.previewColor.g
+  colorObj.b = props.previewColor.b
+  colorObj.a = props.previewColor.a
+}
+
+const stopSelectionCycle = (restore = true) => {
+  if (restore && selectionColorBackup) {
+    const colorObj = market.live2d.attachments[props.index]?.[props.item.name]?.color
+    if (colorObj) Object.assign(colorObj, selectionColorBackup)
+  }
+  selectionColorBackup = null
+}
+
+const shouldPreviewSelection = () => {
+  return isAttachmentChecked.value && market.live2d.clickToSelectMode
+}
+
+const syncSelectionCycle = () => {
+  if (shouldPreviewSelection()) {
+    startSelectionCycle()
+  } else {
+    stopSelectionCycle()
+  }
+}
+
+watch(() => props.previewColor, () => {
+  if (shouldPreviewSelection()) startSelectionCycle()
+})
+
+watch(isAttachmentChecked, () => {
+  syncSelectionCycle()
+})
+
+watch(() => market.live2d.clickToSelectMode, () => {
+  syncSelectionCycle()
+})
+
+onUnmounted(() => {
+  stopSelectionCycle()
+})
 
 const shouldApplyToAttachment = computed(() => {
   return props.item.name.includes(props.searchQuery)
@@ -69,7 +121,55 @@ watch(() => market.live2d.selectAttachments, () => {
 
 watch(() => market.live2d.updateAttachments, () => {
   if (isAttachmentChecked.value) {
+    stopSelectionCycle(false)
     emits('updateAttachment', props.item.name, props.index)
+    const colorRef = market.live2d.attachments[props.index]?.[props.item.name]?.color
+    if (!colorRef) return
+    selectionColorBackup = { ...colorRef }
+    if (shouldPreviewSelection()) startSelectionCycle()
+  }
+})
+
+watch(() => market.live2d.hideSelectedLayers, () => {
+  if (isAttachmentChecked.value) {
+    // Stop cycling colors, otherwise the attachment will continue flashing and won't be properly hidden
+    stopSelectionCycle(false)
+    selectionColorBackup = null
+    market.live2d.attachments[props.index][props.item.name].color.a = 0
+    isAttachmentChecked.value = false
+    market.live2d.triggerApplyAttachments()
+  }
+})
+
+watch(() => market.live2d.resetSelectedLayers, () => {
+  if (isAttachmentChecked.value) {
+    stopSelectionCycle(false)
+    selectionColorBackup = null
+    market.live2d.attachments[props.index][props.item.name].color = { r: 1, g: 1, b: 1, a: 1 }
+    isAttachmentChecked.value = false
+    market.live2d.triggerApplyAttachments()
+  }
+})
+
+watch(() => market.live2d.resetAllLayers, () => {
+  selectionColorBackup = null
+  isAttachmentChecked.value = false
+})
+
+const itemRef = ref<any>(null)
+const isClickHighlighted = ref(false)
+
+watch(() => market.live2d.triggerClickedAttachment, async () => {
+  if (
+    market.live2d.clickedAttachmentKey === props.item.name &&
+    market.live2d.clickedAttachmentIndex === props.index
+  ) {
+    isAttachmentChecked.value = !isAttachmentChecked.value
+    isClickHighlighted.value = true
+    await nextTick()
+    const el = itemRef.value?.$el ?? itemRef.value
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setTimeout(() => { isClickHighlighted.value = false }, 1200)
   }
 })
 
@@ -93,5 +193,13 @@ watch(previewing, () => {
 <style lang="less" scoped>
 .n-h4 {
   margin: 0;
+}
+@keyframes clickHighlight {
+  0%   { background-color: rgba(99, 226, 183, 0.35); }
+  100% { background-color: transparent; }
+}
+.click-selected {
+  animation: clickHighlight 1.2s ease-out;
+  border-radius: 4px;
 }
 </style>

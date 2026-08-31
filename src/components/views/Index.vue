@@ -14,6 +14,13 @@
       <n-divider />
 
       <n-alert type="info">
+        history repeats itself <br/>
+        persona gallery when the event is done
+      </n-alert>
+
+      <n-divider />
+
+      <n-alert type="info">
         I have quit the game and pretty much only "play" to do website updates. <br />
         As such I can't really know NPC names anymore. So every NPCs I can't datamine from now on will have their names be "NPC: TBA" in the L2D viewer. <br/>
         Please open github tickets or send me discord messages so I can complete their names. Of course I'll at least need a picture or their c_id. <br/>

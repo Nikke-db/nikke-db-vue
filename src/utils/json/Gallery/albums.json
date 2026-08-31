@@ -199,6 +199,18 @@
     {
       "name": "album_tracingthestars_01",
       "text": "Tracing The Stars"
+    },
+    {
+      "name": "album_arkranger_01",
+      "text": "Ark Ranger"
+    },
+    {
+      "name": "album_wavetoyou_01",
+      "text": "Ark Wave To You"
+    },
+    {
+      "name": "album_projectmatis_01",
+      "text": "Project Matis"
     }
   ]
 }

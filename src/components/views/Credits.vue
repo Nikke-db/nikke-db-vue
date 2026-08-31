@@ -36,11 +36,6 @@ const market = useMarket()
 
 const external: help[] = [
   {
-    name: 'Rhystic1',
-    contribution: 'Story/Roleplaying Generator',
-    tier: 'skyblue2'
-  },
-  {
     name: 'Bingle',
     contribution: 'Fixing favorite assets through Spine Pro.',
     tier: 'skyblue'
@@ -95,6 +90,16 @@ const external: help[] = [
 // forkers: feel free to add yourself here, if you don't I'll do it myself
 const forks: help[] = [
   {
+    name: 'napronap',
+    contribution: 'Layer Editor : multi layer preview mode + previewing through mouse aim & click',
+    tier: 'silver'
+  },
+  {
+    name: 'Rhystic1',
+    contribution: 'Story/Roleplaying Generator',
+    tier: 'skyblue2'
+  },
+  {
     name: 'pzwboy',
     contribution: 'Simplified Chinese 4 pannel comics',
     tier: null
@@ -127,6 +132,11 @@ const forks: help[] = [
   {
     name: 'pin02',
     contribution: 'Anis uncensored Live2D assets.',
+    tier: null
+  },
+  {
+    name: 'FilipNone',
+    contribution: '',
     tier: null
   }
 ]

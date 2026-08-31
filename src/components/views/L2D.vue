@@ -29,4 +29,14 @@ const checkMobile = () => {
 }
 </script>
 
+<style lang="less" scoped>
+@media (max-width: 900px) {
+  .l2dGlobal {
+    height: 100dvh;
+    min-height: 100dvh;
+    position: relative;
+  }
+}
+</style>
+
 <style lang="less" scoped></style>

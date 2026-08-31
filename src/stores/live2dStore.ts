@@ -4,6 +4,7 @@ import { type AttachmentInterface, type live2d_interface } from '@/utils/interfa
 import l2d from '@/utils/json/l2d.json'
 import { theme } from '@/utils/enum/globalParams'
 import { resolveCanonicalBackgroundFilename, type BackgroundLoadResult } from '@/utils/backgroundUtils'
+import type { LANG } from '@/components/common/Spine/CharacterList.vue'
 
 // that shit long as hell
 export const useLive2dStore = defineStore('live2d', () => {
@@ -38,6 +39,25 @@ export const useLive2dStore = defineStore('live2d', () => {
     key: '',
     preview : false // false = stop preview, true = previewing
   })
+  const clickToSelectMode = ref(false)
+  const clickedAttachmentKey = ref('')
+  const clickedAttachmentIndex = ref(-1)
+  const triggerClickedAttachment = ref(0)
+  const fireClickedAttachment = () => {
+    triggerClickedAttachment.value = new Date().getTime()
+  }
+  const hideSelectedLayers = ref(0)
+  const triggerHideSelectedLayers = () => {
+    hideSelectedLayers.value = new Date().getTime()
+  }
+  const resetAllLayers = ref(0)
+  const triggerResetAllLayers = () => {
+    resetAllLayers.value = new Date().getTime()
+  }
+  const resetSelectedLayers = ref(0)
+  const triggerResetSelectedLayers = () => {
+    resetSelectedLayers.value = new Date().getTime()
+  }
 
   const fr = new FileReader()
 
@@ -70,11 +90,20 @@ export const useLive2dStore = defineStore('live2d', () => {
   const currentBackgroundUrl = ref('') as Ref<string>
   const backgroundImageMap = ref(new Map<string, File>()) as Ref<Map<string, File>>
 
-  const filter = () => {
+  const filter = (language: LANG) => {
     const base_array: live2d_interface[] = l2d
     filtered_l2d_Array.value = base_array.sort(
       (a: live2d_interface, b: live2d_interface) => {
-        return a.name.trim().localeCompare(b.name.trim())
+        switch (language) {
+          case 'KR': return (a.ko ?? a.name).trim().localeCompare((b.ko ?? b.name).trim())
+          case 'JP': return (a.jp ?? a.name).trim().localeCompare((b.jp ?? b.name).trim())
+          case 'TW': return (a.tw ?? a.name).trim().localeCompare((b.tw ?? b.name).trim())
+          case 'CN': return (a.cn ?? a.name).trim().localeCompare((b.cn ?? b.name).trim())
+          case 'DE': return (a.de ?? a.name).trim().localeCompare((b.de ?? b.name).trim())
+          case 'TH': return (a.th ?? a.name).trim().localeCompare((b.th ?? b.name).trim())
+          case 'FR': return (a.fr ?? a.name).trim().localeCompare((b.fr ?? b.name).trim())
+          default: return a.name.trim().localeCompare(b.name.trim())
+        }
       }
     )
   }
@@ -119,6 +148,8 @@ export const useLive2dStore = defineStore('live2d', () => {
 
   const getSkinAim = () => {
     switch (current_id.value) {
+      case 'c570':
+        return 'part_0'
       case 'c233':
       case 'c233_01':
       case 'c094_01':
@@ -133,6 +164,8 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c220':
       case 'c220_01':
         return 'weapon_2'
+      case 'c570':
+        return 'part_0'
       case 'c233':
       case 'c233_01':
       case 'c223':
@@ -170,6 +203,8 @@ export const useLive2dStore = defineStore('live2d', () => {
       case 'c270_03':
       case 'c075':
       case 'c018':
+      case 'c281_02':
+      case 'c322':
         return 'acc'
       case 'c015':
       case 'c351':
@@ -440,6 +475,17 @@ export const useLive2dStore = defineStore('live2d', () => {
     layerEditorPreviewObj,
     layerPreviewMode,
     triggerLayerPreviewMode,
+    clickToSelectMode,
+    clickedAttachmentKey,
+    clickedAttachmentIndex,
+    triggerClickedAttachment,
+    fireClickedAttachment,
+    hideSelectedLayers,
+    triggerHideSelectedLayers,
+    resetAllLayers,
+    triggerResetAllLayers,
+    resetSelectedLayers,
+    triggerResetSelectedLayers,
     backgroundImagesEnabled,
     currentBackground,
     currentBackgroundUrl,

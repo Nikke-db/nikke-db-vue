@@ -20,9 +20,7 @@
             <RouterLink :to="{ name: 'layerEditor' }" @click="market.live2d.triggerShowUI()">
               <n-a class="drawer-subtitle">Quick Tutorial</n-a>
             </RouterLink> <br/>
-            Make em bald, make em clothless, you do you and I don't care. <br/>
-            This feature can be laggy on shitty hardware. Beware. I don't care. <br/>
-            Found a layer/attachment that doesn't behave as intended? HMU ASAP.
+            Make em bald, make em clothless, you do you and I don't care.
           </span>
         </template>
 
@@ -34,6 +32,12 @@
 
         <template #footer>
           <div class="drawer-footer">
+
+            <div class="click-select-row">
+              <n-switch v-model:value="market.live2d.clickToSelectMode" size="small"/>
+              <span class="click-select-label">Select and preview multiple layers with mouse & clicks</span>
+            </div>
+
             <n-input type="text" v-model:value="searchQuery" placeholder="Search for an attachment name" clearable/>
 
             <span class="selectionButtons">
@@ -50,7 +54,13 @@
 
             <n-button class="triggerButton" round type="primary" ghost @click="market.live2d.triggerUpdateAttachments()">
               Apply modifications to selected layers
-            </n-button> <br/><br/>
+            </n-button>
+
+            <span class="hide-and-reset-buttons">
+              <n-button round type="warning" ghost @click="market.live2d.triggerHideSelectedLayers()">Hide selected</n-button>
+              <n-button round type="warning" ghost @click="market.live2d.triggerResetSelectedLayers()">Reset selected</n-button>
+              <n-button round type="error" ghost @click="market.live2d.triggerResetAllLayers()">Reset all layers</n-button>
+            </span>
 
             <n-button class="triggerButton" round type="error" ghost @click="fixBrokenAnimation()">
               Fix broken animation
@@ -109,6 +119,7 @@ watch(isDrawerVisible, () => {
   if (isDrawerVisible.value) {
     market.live2d.triggerHideUI()
   } else {
+    market.live2d.clickToSelectMode = false
     market.live2d.triggerShowUI()
   }
 }, { deep: true })
@@ -200,6 +211,10 @@ watch(() => market.live2d.finishedLoading, () => {
   }
 })
 
+watch(() => market.live2d.triggerClickedAttachment, () => {
+  searchQuery.value = ''
+})
+
 // https://github.com/Nikke-db/nikke-db-vue/issues/45
 const fixBrokenAnimation = () => {
   const exportableContent = getExportableContent(market.live2d.current_id, market.live2d.current_pose, market.live2d.attachments)
@@ -212,6 +227,15 @@ const fixBrokenAnimation = () => {
 .triggerButton {
   width: 100%;
   height: 40px;
+}
+.click-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.click-select-label {
+  font-size: small;
 }
 .drawer-subtitle {
   font-size: xx-small;
@@ -240,5 +264,10 @@ const fixBrokenAnimation = () => {
 }
 .n-upload-file-list {
   display: none;
+}
+.hide-and-reset-buttons {
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
 }
 </style>
