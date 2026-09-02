@@ -23,14 +23,16 @@
       :closable="false"
     >
       <n-card title="" :bordered="false" size="huge" id="bgcModalContent">
-        Screenshots are a square, chose the dimension wanted. Default dimension
-        is 3000.<br />
-        Value will be saved to your local storage
+        Screenshots are square. Pick the dimension you want; the default is
+        3000. On high-DPI displays the output is multiplied by the screen
+        scale. Tiled rendering captures any size up to 16384px at full quality
+        with no cropping.<br />
+        The value is saved to your local storage
 
         <n-input-number
           v-model:value="size"
           :min="0"
-          :max="9999"
+          :max="16384"
           :clearable="false"
           :autofocus="false"
           :show-button="false"
