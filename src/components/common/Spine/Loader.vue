@@ -169,6 +169,7 @@ const applyPresentationCanvas = (player: any) => {
     canvas.setAttribute('aria-hidden', 'true')
     renderCanvas.parentElement?.appendChild(canvas)
   }
+  observeVisualiserLayout()
 
   player.__presentationCanvasWrapped = true
   const originalDrawFrame = player.drawFrame.bind(player)
@@ -197,12 +198,22 @@ const getVisualiserCameraFitFactor = () => {
     .map((element) => element.getBoundingClientRect())
     .find((rect) => rect.width > 0 && rect.height > 0)
   const controls = document.querySelector('.spine-player-controls')
-  const topInset = header?.height || 0
+  // The header casts a ~15px box-shadow fade; keep the character clear of it.
+  const headerShadow = 15
+  const topInset = (header?.height || 0) + headerShadow
   const bottomInset = controls?.getBoundingClientRect().height || 0
   const availableHeight = Math.max(1, window.innerHeight - topInset - bottomInset)
 
-  // Leave a small margin around the animated bounds.
-  return (window.innerHeight / availableHeight) * 1.06
+  return window.innerHeight / availableHeight
+}
+
+const getVisualiserRenderScale = () => {
+  const dpr = window.devicePixelRatio || 1
+  const desiredRenderScale = market.live2d.HQassets ? HQ_RENDER_SCALE : LQ_RENDER_SCALE
+  return Math.min(
+    desiredRenderScale,
+    RENDER_CANVAS_MAX_DEVICE_PX / Math.max(window.innerWidth * dpr, window.innerHeight * dpr)
+  )
 }
 
 const getVisualiserCameraScreenOffset = () => {
@@ -212,10 +223,43 @@ const getVisualiserCameraScreenOffset = () => {
     .map((element) => element.getBoundingClientRect())
     .find((rect) => rect.width > 0 && rect.height > 0)
   const controls = document.querySelector('.spine-player-controls')
-  const topInset = header?.height || 0
+  const headerShadow = 15
+  const topInset = (header?.height || 0) + headerShadow
   const bottomInset = controls?.getBoundingClientRect().height || 0
+  const availableHeight = Math.max(1, window.innerHeight - topInset - bottomInset)
 
-  return { x: 0, y: (topInset - bottomInset) / 2 }
+  // position += offset * camera.zoom makes this a render-buffer-pixel value.
+  // HQ and LQ render at different scales, so rescale the HQ-calibrated value.
+  const hqRenderScale = Math.min(
+    HQ_RENDER_SCALE,
+    RENDER_CANVAS_MAX_DEVICE_PX / Math.max(window.innerWidth * (window.devicePixelRatio || 1), window.innerHeight * (window.devicePixelRatio || 1))
+  )
+
+  // Bias downward so the feet reach the timeline, clamped to the viewport
+  // edge so wide aspect ratios never overshoot.
+  const bottomBias = availableHeight * 0.025
+  const maxBias = Math.max(0, window.innerHeight / 2 - bottomInset)
+  const calibrated = Math.min(topInset - bottomInset + bottomBias, maxBias)
+  return { x: 0, y: calibrated * getVisualiserRenderScale() / hqRenderScale }
+}
+
+let visualiserLayoutObserver: ResizeObserver | null = null
+
+const syncVisualiserCamera = () => {
+  if (!spinePlayer) return
+  spinePlayer.__cameraZoomFactor = getVisualiserCameraFitFactor() / zoomLevel
+  spinePlayer.__cameraScreenOffset = getVisualiserCameraScreenOffset()
+}
+
+const observeVisualiserLayout = () => {
+  visualiserLayoutObserver?.disconnect()
+  visualiserLayoutObserver = null
+  if (typeof ResizeObserver === 'undefined' || market.route.name !== 'visualiser') return
+
+  visualiserLayoutObserver = new ResizeObserver(() => syncVisualiserCamera())
+  document.querySelectorAll('.flexbox, .spine-player-controls').forEach((element) => {
+    visualiserLayoutObserver?.observe(element)
+  })
 }
 
 function syncCanvasesToViewport() {
@@ -321,6 +365,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   currentLoadId++
+  visualiserLayoutObserver?.disconnect()
+  visualiserLayoutObserver = null
   document.removeEventListener('visibilitychange', handleDocumentVisibility)
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('mousedown', onMouseDown)
@@ -439,9 +485,10 @@ const moveCameraByScreenDelta = (deltaX: number, deltaY: number) => {
   if (!spinePlayer || !spinePlayer.sceneRenderer?.camera) return
   const camera = spinePlayer.sceneRenderer.camera
   const offset = spinePlayer.__cameraPositionOffset || (spinePlayer.__cameraPositionOffset = { x: 0, y: 0 })
-  // Convert the screen drag into a camera offset.
-  offset.x -= deltaX * camera.zoom
-  offset.y += deltaY * camera.zoom
+  const devicePixelRatio = window.devicePixelRatio || 1
+  // Camera zoom is in device pixels; pointer deltas are CSS pixels.
+  offset.x -= deltaX * devicePixelRatio * camera.zoom
+  offset.y += deltaY * devicePixelRatio * camera.zoom
 }
 
 const onTouchEnd = () => {
@@ -509,6 +556,8 @@ const onWheel = (e: WheelEvent) => {
   if (filterDomEvents(e)) {
     // Prevent page scrolling while zooming.
     if (e.cancelable) e.preventDefault()
+    captureAnchor(e.clientX, e.clientY)
+    cameraZoomAnchorActive = true
     const direction = e.deltaY > 0 ? -1 : 1
     // Do not restart smoothing when the value is clamped.
     const next = clampScale(targetZoom * Math.pow(ZOOM_FACTOR, direction))
@@ -1260,149 +1309,42 @@ watch(() => market.live2d.hideUI, () => {
   } else {
     controls.style.visibility = 'hidden'
   }
+  requestAnimationFrame(syncVisualiserCamera)
 })
 
 const takeScreenshot = () => {
-  if (!canvas) return
-  const dataURL = canvas.toDataURL()
-
-  const link = document.createElement('a')
-
-  link.download = 'NIKKE-DB_' + market.live2d.current_id + '_' + market.live2d.current_pose + '_' +
-                  new Date().getTime().toString().slice(-3) + '.png'
-
-  link.href = dataURL
-
-  link.click()
+  takeCharacterScreenshot()
 }
 
-/**
- * Captures the character at an arbitrary resolution by tiling.
- *
- * The GPU clamps the WebGL drawing buffer (often ~5760px), so a single
- * oversized canvas would crop the character. This renders the character's
- * world bounds as a grid of tiles into the live spine canvas (never larger
- * than the GPU limit) and blits them into one large 2D canvas. More output
- * pixels just mean more tiles, so any requested size is honoured exactly.
- */
-const takeTiledScreenshot = () => {
+const takeCharacterScreenshot = () => {
   const player = spinePlayer
-  if (!canvas || !spineRenderCanvas || !player || !player.sceneRenderer || !player.skeleton) {
-    takeScreenshot()
-    return
-  }
-  const spineCanvasEl = spineRenderCanvas
+  const screenshotSize = Math.max(64, Math.min(16384, parseInt(localStorage.getItem('sc_sz') || '3000', 10) || 3000))
+  const exportSurface = player ? prepareRecordingCanvas(player) : null
+  const source = exportSurface?.canvas || canvas
+  if (!source) return
 
-  const renderer = player.sceneRenderer
-  const camera = renderer.camera
-  if (!camera) {
-    takeScreenshot()
-    return
-  }
-
-  const sc_sz = parseInt(localStorage.getItem('sc_sz') || '3000', 10) || 3000
-  // Keep the output within the browser's typical canvas limit.
-  const MAX_OUTPUT_PX = 16384
-  const outPx = Math.max(64, Math.min(MAX_OUTPUT_PX, sc_sz))
-
-  // Capture the square world region visible through the camera.
-  const worldSize = camera.zoom * camera.viewportWidth || 1
-  const worldCenterX = camera.position.x ?? 0
-  const worldCenterY = camera.position.y ?? 0
-  const worldHalf = worldSize / 2
-
-  // Keep each WebGL tile below the device limit.
-  const tilePx = Math.max(256, Math.min(2048, Math.floor(measureBufferLimit(2048) / 2)))
-  const tiles = Math.max(1, Math.ceil(outPx / tilePx))
-  const tileWorld = worldSize / tiles
-
-  // Restore the live camera and canvas after capture.
-  const savedZoom = camera.zoom
-  const savedPosX = camera.position.x
-  const savedPosY = camera.position.y
-  const savedVw = camera.viewportWidth
-  const savedVh = camera.viewportHeight
-  const savedStyleHeight = spineCanvasEl.style.height
-  const savedStyleWidth = spineCanvasEl.style.width
-  const savedWidth = spineCanvasEl.width
-  const savedHeight = spineCanvasEl.height
-
+  const aspect = source.width / source.height || 1
+  const outputWidth = aspect >= 1 ? screenshotSize : Math.max(1, Math.round(screenshotSize * aspect))
+  const outputHeight = aspect >= 1 ? Math.max(1, Math.round(screenshotSize / aspect)) : screenshotSize
   const output = document.createElement('canvas')
-  output.width = outPx
-  output.height = outPx
-  const ctx = output.getContext('2d')
-  if (!ctx) {
-    takeScreenshot()
-    return
-  }
-
-  const restore = () => {
-    camera.zoom = savedZoom
-    camera.position.x = savedPosX
-    camera.position.y = savedPosY
-    camera.setViewport(savedVw, savedVh)
-    camera.update()
-
-    spineCanvasEl.width = savedWidth
-    spineCanvasEl.height = savedHeight
-    spineCanvasEl.style.height = savedStyleHeight
-    spineCanvasEl.style.width = savedStyleWidth
-  }
+  output.width = outputWidth
+  output.height = outputHeight
+  const context = output.getContext('2d')
 
   try {
-    camera.zoom = 1
-    for (let ty = 0; ty < tiles; ty++) {
-      for (let tx = 0; tx < tiles; tx++) {
-        // Map each output tile to its world-space centre.
-        const cx = worldCenterX - worldHalf + tileWorld * (tx + 0.5)
-        const cy = worldCenterY - worldHalf + tileWorld * (ty + 0.5)
-
-        camera.setViewport(tileWorld, tileWorld)
-        camera.position.x = cx
-        camera.position.y = cy
-        camera.update()
-
-        // Render one GPU-safe tile at a time.
-        spineCanvasEl.width = tilePx
-        spineCanvasEl.height = tilePx
-        spineCanvasEl.style.width = tilePx + 'px'
-        spineCanvasEl.style.height = tilePx + 'px'
-
-        const gl = player.context?.gl
-        if (!gl) throw new Error('no GL context')
-        gl.viewport(0, 0, tilePx, tilePx)
-        gl.clearColor(player.bg.r, player.bg.g, player.bg.b, player.bg.a)
-        gl.clear(gl.COLOR_BUFFER_BIT)
-
-        renderer.begin()
-        renderer.drawSkeleton(player.skeleton, player.config.premultipliedAlpha)
-        renderer.end()
-
-        // Flip the vertical tile order for the 2D canvas.
-        const dstX = Math.round(tx * outPx / tiles)
-        const dstW = Math.round((tx + 1) * outPx / tiles) - dstX
-        const dstY = Math.round((tiles - ty - 1) * outPx / tiles)
-        const dstH = Math.round((tiles - ty) * outPx / tiles) - dstY
-        ctx.drawImage(spineCanvasEl, 0, 0, tilePx, tilePx, dstX, dstY, dstW, dstH)
-      }
-    }
-
-    restore()
-
-    const dataURL = output.toDataURL()
+    context?.drawImage(source, 0, 0, outputWidth, outputHeight)
     const link = document.createElement('a')
     link.download = 'NIKKE-DB_' + market.live2d.current_id + '_' + market.live2d.current_pose + '_' +
                     new Date().getTime().toString().slice(-3) + '.png'
-    link.href = dataURL
+    link.href = output.toDataURL()
     link.click()
-
-    // Restore the visible frame without restarting the loop.
-    player.drawFrame(false)
-  } catch (e) {
-    restore()
-    console.error('[Loader] Tiled screenshot failed, falling back:', e)
-    takeScreenshot()
+  } finally {
+    exportSurface?.restore()
   }
+}
+
+const takeTiledScreenshot = () => {
+  takeCharacterScreenshot()
 }
 
 // VP9 may be too performance intensive. VP8 or VP9 MUST be explicitly specified for alpha transparency to work.
@@ -1591,16 +1533,7 @@ const loadSpineAfterWatcher = () => {
   }
 }
 
-// The GPU clamps the WebGL drawing buffer to a max dimension (often 4096-16384
-// device px, and on some drivers ~5768). If the canvas is sized beyond that,
-// spine still renders into the requested coordinate space but only the bottom
-// portion is composited, so the head gets cropped while the feet stay anchored.
-// We detect the real limit by probing an offscreen canvas' drawing buffer
-// (gl.drawingBufferWidth), cap the canvas to it, and compensate with a larger
-// transform scale so the on-screen size and sharpness stay the same.
-let maxCanvasDimension = 0
-
-// Bound the live backing store; high-resolution stills use tiled capture.
+// Backing store cap; screenshots render through prepareRecordingCanvas.
 const RENDER_CANVAS_MAX_DEVICE_PX = 4096
 const HQ_RENDER_SCALE = 2.5
 const LQ_RENDER_SCALE = 1.5
@@ -1620,10 +1553,7 @@ let baselineScale = 0.18
  */
 const applyRendering = () => {
   if (checkMobile()) return
-  if (spinePlayer) {
-    spinePlayer.__cameraZoomFactor = getVisualiserCameraFitFactor() / zoomLevel
-    spinePlayer.__cameraScreenOffset = getVisualiserCameraScreenOffset()
-  }
+  syncVisualiserCamera()
 }
 
 /**
@@ -1631,10 +1561,21 @@ const applyRendering = () => {
  * the current buffer, then checks whether the capped live buffer needs resizing.
  */
 const setZoomLevel = (value: number) => {
-  zoomLevel = clampScale(value)
-  if (spinePlayer) {
-    spinePlayer.__cameraZoomFactor = getVisualiserCameraFitFactor() / zoomLevel
+  const nextZoomLevel = clampScale(value)
+  if (cameraZoomAnchorActive && spinePlayer?.sceneRenderer?.camera && zoomLevel !== nextZoomLevel) {
+    const camera = spinePlayer.sceneRenderer.camera
+    const fitFactor = getVisualiserCameraFitFactor()
+    const oldFactor = fitFactor / zoomLevel
+    const nextFactor = fitFactor / nextZoomLevel
+    const currentCameraZoom = camera.zoom
+    const nextCameraZoom = currentCameraZoom * nextFactor / oldFactor
+    const devicePixelRatio = window.devicePixelRatio || 1
+    const offset = spinePlayer.__cameraPositionOffset || (spinePlayer.__cameraPositionOffset = { x: 0, y: 0 })
+    offset.x += (anchorScreenX - window.innerWidth / 2) * devicePixelRatio * (currentCameraZoom - nextCameraZoom)
+    offset.y += (window.innerHeight / 2 - anchorScreenY) * devicePixelRatio * (currentCameraZoom - nextCameraZoom)
   }
+  zoomLevel = nextZoomLevel
+  syncVisualiserCamera()
   transformScale = clampScale(baselineScale)
   if (canvas) {
     canvas.style.transform = 'scale(' + transformScale + ')'
@@ -1644,48 +1585,9 @@ const setZoomLevel = (value: number) => {
   applyRendering()
 }
 
-// Probe the drawing-buffer limit and release the temporary context.
-let bufferLimitProbed = false
-
-const measureBufferLimit = (desiredDevice: number): number => {
-  const probe = Math.max(256, Math.round(desiredDevice))
-  // Re-probe only when a larger size is requested.
-  if (bufferLimitProbed && probe <= maxCanvasDimension) return maxCanvasDimension
-  bufferLimitProbed = true
-
-  let gl: WebGLRenderingContext | WebGL2RenderingContext | null = null
-  try {
-    const tmp = document.createElement('canvas')
-    gl = (tmp.getContext('webgl2') ||
-      tmp.getContext('webgl') ||
-      tmp.getContext('experimental-webgl')) as WebGLRenderingContext | WebGL2RenderingContext | null
-    if (!gl) {
-      maxCanvasDimension = Math.max(maxCanvasDimension, 4096)
-      return maxCanvasDimension
-    }
-    tmp.width = probe
-    tmp.height = probe
-    const w = gl.drawingBufferWidth || 0
-    const h = gl.drawingBufferHeight || 0
-    if (w > 0 && w < probe) {
-      // The driver clamped the requested size.
-      maxCanvasDimension = Math.min(w, h)
-    } else {
-      // This size is supported, so it is a sufficient limit.
-      maxCanvasDimension = probe
-    }
-  } catch (_) {
-    maxCanvasDimension = Math.max(maxCanvasDimension, 4096)
-  } finally {
-    try {
-      gl?.getExtension('WEBGL_lose_context')?.loseContext()
-    } catch (_) { /* ignore */ }
-  }
-  return maxCanvasDimension
-}
-
 const applyDefaultStyle2Canvas = (resetCamera = true) => {
   setTimeout(() => {
+    observeVisualiserLayout()
     spineRenderCanvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
     canvas = document.querySelector('.spine-presentation-canvas') as HTMLCanvasElement
 
@@ -1877,6 +1779,7 @@ let anchorFx = 0.5
 let anchorFy = 0.5
 let anchorScreenX = 0
 let anchorScreenY = 0
+let cameraZoomAnchorActive = false
 
 const clampScale = (value: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, value))
 
@@ -1929,17 +1832,16 @@ const startZoomSmoothing = () => {
 }
 
 const zoomSmoothingStep = () => {
-  // Preserve a drag that happens during smoothing.
-  captureAnchor()
   const diff = targetZoom - zoomLevel
-  if (Math.abs(diff) < 0.0005) {
-    zoomLevel = targetZoom
+  const isComplete = Math.abs(diff) < 0.0005
+  const nextZoomLevel = isComplete ? targetZoom : zoomLevel + diff * ZOOM_SMOOTHING
+  if (isComplete) {
     zoomFrameId = null
   } else {
-    zoomLevel += diff * ZOOM_SMOOTHING
     zoomFrameId = requestAnimationFrame(zoomSmoothingStep)
   }
-  setZoomLevel(zoomLevel)
+  setZoomLevel(nextZoomLevel)
+  if (isComplete) cameraZoomAnchorActive = false
 }
 
 /**
