@@ -13,9 +13,10 @@
 
       <n-divider />
 
-      <n-alert type="info">
-        history repeats itself <br/>
-        persona gallery when the event is done
+      <n-alert type="error">
+        Well, as expected, the new encryption pretty much fucked every single tool & automators I developped to maintain this website, and from what it looks like every other community tool is at a bit of a standby too for now. <br/>
+        I currently cannot physically update nikke db until I updated everything and found new ways to fetch the files I need. I started digging how to do it and it seem doable but very tedious. For now don't expect an update for some time. I also need to work overtime for my job pretty much every day until the 15th so I won't advance on it at a pace I'd like. Let's hope other people will release public tools. <br/>
+        BTW, I saw that one guy that did a paid nikke wallpaper engine project using my own extracted assets from what he wrote on reddit??? I never got contacted about this nor did I agree. I don't mind you guys doing projects while taking my stuff, but why the hell would you make it paid ??
       </n-alert>
 
       <n-divider />
