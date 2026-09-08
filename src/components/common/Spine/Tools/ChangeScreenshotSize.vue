@@ -23,14 +23,14 @@
       :closable="false"
     >
       <n-card title="" :bordered="false" size="huge" id="bgcModalContent">
-        Screenshots are a square, chose the dimension wanted. Default dimension
-        is 3000.<br />
-        Value will be saved to your local storage
+        Screenshots use the character's aspect ratio. Choose the longest side;
+        the default is 3000 pixels. Output can be up to 16384 pixels. The value
+        is saved to your local storage.
 
         <n-input-number
           v-model:value="size"
           :min="0"
-          :max="9999"
+          :max="16384"
           :clearable="false"
           :autofocus="false"
           :show-button="false"
