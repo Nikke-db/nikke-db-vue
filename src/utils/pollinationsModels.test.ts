@@ -2,7 +2,9 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { fetchPollinationsModels } from './llmUtils'
 import { usesPollinationsAutoFallback } from './aiWebSearchUtils'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 test('keeps native search controls when the catalog uses canonical names', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
