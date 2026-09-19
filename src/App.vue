@@ -206,6 +206,10 @@ blockquote.twitter-tweet a:focus {
   width: 60vw !important;
 }
 
+.fullScreenModal {
+  width: 100vw !important;
+}
+
 .coloredSwitch {
   .n-icon {
     color: @main-dark-theme;

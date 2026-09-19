@@ -13,7 +13,7 @@
       v-model:show="isModalOpen"
       preset="dialog"
       title="&nbsp;&nbsp;Choose a language"
-      class="wideModalDialogWidth"
+      :class="!market.globalParams.isMobile ? 'wideModalDialogWidth' : 'fullScreenModal'"
   >
     <n-card title="" :bordered="false" size="huge">
       Language only affect playable Nikkes and their skins. <br/>NPCs, favorites and event scenes are still exclusively in english. <br/> <br/>
@@ -31,6 +31,9 @@ import { h, onMounted, ref, watch } from 'vue'
 import { GB, KR, JP, TW, CN, DE, TH, FR } from 'country-flag-icons/string/3x2'
 import type { LANG } from '@/components/common/Spine/CharacterList.vue'
 import { Cog } from '@vicons/fa'
+import { useMarket } from '@/stores/market'
+
+const market = useMarket()
 
 const selectedLanguage = ref<LANG>()
 const isModalOpen = ref(false)

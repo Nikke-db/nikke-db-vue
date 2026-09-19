@@ -811,8 +811,15 @@
     "fr": "Laplace : Héroïne ultime Héroïne prototype"
   },
   {
-    "name": "Drake",
-    "id": "c104"
+    "name": "Drake: Great Villain",
+    "id": "c104",
+    "ko": "드레이크 : 그레이트 빌런",
+    "jp": "ドレイク：グレイトヴィラン",
+    "tw": "德雷克：終極反派",
+    "cn": "德雷克：终极反派",
+    "de": "Draka: Große Schurkin",
+    "th": "เดรค: มหาวายร้าย",
+    "fr": "Drake : Grande méchante"
   },
   {
     "name": "Maxwell: Ordinary Mechanic",
@@ -1044,6 +1051,17 @@
     "de": "Sugar Drachenbändigerin",
     "th": "ชูการ์ นักเลงลายมังกร",
     "fr": "Sugar Jardin sauvage"
+  },
+  {
+    "id": "c140_03",
+    "name": "Sugar Killer Rabbit",
+    "ko": "슈가 킬러 래빗",
+    "jp": "シュガー キラーラビット",
+    "tw": "舒格 殺手兔女郎",
+    "cn": "舒格 杀手兔女郎",
+    "de": "Sugar Killerhäschen",
+    "th": "ชูการ์ กระต่ายมือปืน",
+    "fr": "Sugar Lapine tueuse"
   },
   {
     "name": "Milk",
@@ -2193,6 +2211,17 @@
     "fr": "Mana"
   },
   {
+    "id": "c290_01",
+    "name": "Mana Drunken Rabbit",
+    "ko": "마나 드렁큰 래빗",
+    "jp": "マナ ドランクンラビット",
+    "tw": "瑪娜 醉酒兔女郎",
+    "cn": "玛娜 醉酒兔女郎",
+    "de": "Mana Beschwipstes Häschen",
+    "th": "มานา กระต่ายขี้เมา",
+    "fr": "Mana Lapine ivre"
+  },
+  {
     "name": "Ether",
     "id": "c291",
     "ko": "에테르",
@@ -2846,6 +2875,28 @@
     "fr": "Quency : Reine de l'évasion Danseuse cycnéenne"
   },
   {
+    "id": "c404",
+    "name": "Guilty: Mighty Bunny",
+    "ko": "길티 : 마이티 바니",
+    "jp": "ギルティ：マイティバニー",
+    "tw": "吉爾提：神力兔女郎",
+    "cn": "吉尔提：神力兔女郎",
+    "de": "Guilty: Mächtiges Häschen",
+    "th": "กิลตี้: กระต่ายจอมพลัง",
+    "fr": "Guilty : Super lapine"
+  },
+  {
+    "id": "c405",
+    "name": "Sin: Swift Bunny",
+    "ko": "신 : 스위프트 바니",
+    "jp": "シン：スウィフトバニー",
+    "tw": "森：疾速兔女郎",
+    "cn": "森：疾速兔女郎",
+    "de": "Sin: Flinkes Häschen",
+    "th": "ซิน: กระต่ายลมกรด",
+    "fr": "Sin : Lapine véloce"
+  },
+  {
     "name": "Flora",
     "id": "c411",
     "ko": "플로라",
@@ -3362,6 +3413,17 @@
     "de": "Kross",
     "th": "ครัสต์",
     "fr": "Crust"
+  },
+  {
+    "id": "c521_01",
+    "name": "Crust Treat Chef",
+    "ko": "크러스트 트릿 셰프",
+    "jp": "クラスト トリートシェフ",
+    "tw": "克勞斯特 搗蛋主廚",
+    "cn": "克劳斯特 捣蛋甜心主厨",
+    "de": "Kross Naschexpertin",
+    "th": "ครัสต์ เชฟของหวาน",
+    "fr": "Crust Cheffe farceuse"
   },
   {
     "name": "Sky",
