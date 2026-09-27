@@ -41,6 +41,487 @@ const spineViewport = {
   padBottom: '0%'
 }
 
+const spineLoader = (retryAttempt = 0) => {
+  if (!market.live2d.current_id) {
+    logDebug('[Loader] No current_id set, skipping load.')
+    return
+  }
+
+  currentLoadId++
+  const thisLoadId = currentLoadId
+  const requestedCharacterId = market.live2d.current_id
+  const requestedPose = market.live2d.current_pose
+
+  const skelUrl = getPathing('skel')
+  const atlasUrl = getPathing('atlas')
+  const requestedSkin = market.live2d.getSkin()
+  const request = new XMLHttpRequest()
+
+  request.responseType = 'arraybuffer'
+  request.timeout = XHR_TIMEOUT_MS
+  request.open('GET', skelUrl, true)
+  request.send()
+  request.ontimeout = () => {
+    if (thisLoadId !== currentLoadId) return
+    handleSpineLoadFailure({
+      loadId: thisLoadId,
+      retryAttempt,
+      requestedCharacterId,
+      requestedPose,
+      requestedSkelUrl: skelUrl,
+      requestedAtlasUrl: atlasUrl,
+      stage: 'skeleton request',
+      message: `XHR timed out after ${XHR_TIMEOUT_MS}ms.`,
+      details: { timedOut: true }
+    })
+  }
+  request.onloadend = () => {
+    if (thisLoadId !== currentLoadId) {
+      logDebug('[Loader] Ignoring stale load request')
+      return
+    }
+
+    if (request.status !== 200 || !request.response) {
+      handleSpineLoadFailure({
+        loadId: thisLoadId,
+        retryAttempt,
+        requestedCharacterId,
+        requestedPose,
+        requestedSkelUrl: skelUrl,
+        requestedAtlasUrl: atlasUrl,
+        stage: 'skeleton request',
+        message: 'Failed to load skel file.',
+        details: {
+          status: request.status,
+          statusText: request.statusText
+        }
+      })
+      return
+    }
+
+    // convert the ArrayBuffer in the response as a DataUrl for rawDataURIs
+    const buffer = request.response
+
+    const frURL = new FileReader()
+    frURL.readAsDataURL(new Blob([buffer]))
+    frURL.onload = () => {
+      const skelURL: string | ArrayBuffer | null = frURL.result
+
+      const uintArray = new Uint8Array(buffer)
+
+      // Take the first 16 bytes
+      const versionBytes = uintArray.slice(0, 16)
+
+      // Extract and decode version string
+      const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
+
+      let usedSpine
+
+      if (/4\.0\.\d+/.test(versionString)) {
+        usedSpine = spine40
+      } else if (/4\.1\.\d+/.test(versionString)) {
+        usedSpine = spine41
+      } else {
+        console.error('Unsupported Spine version:', versionString + ' | defaults to 4.1')
+        usedSpine = spine41
+      }
+
+      // Guard flag + safety timeout: SpinePlayer has no built-in timeout for atlas/texture fetches,
+      // so we force a failure if neither success nor error fires within SPINE_PLAYER_TIMEOUT_MS.
+      let playerSettled = false
+      const playerTimeoutId = window.setTimeout(() => {
+        if (playerSettled || thisLoadId !== currentLoadId) return
+        playerSettled = true
+
+        // CRITICAL: Pass the spineCanvas instance so it gets properly disposed
+        // The SpinePlayer is still alive and trying to load - we must kill it
+        const hungPlayer = spineCanvas
+        handleSpineLoadFailure({
+          loadId: thisLoadId,
+          retryAttempt,
+          requestedCharacterId,
+          requestedPose,
+          requestedSkelUrl: skelUrl,
+          requestedAtlasUrl: atlasUrl,
+          stage: 'asset manager',
+          message: `SpinePlayer timed out after ${SPINE_PLAYER_TIMEOUT_MS}ms (atlas/texture fetch hung).`,
+          player: hungPlayer
+        })
+      }, SPINE_PLAYER_TIMEOUT_MS)
+
+      /*Ensure the container has a definite non-zero size *right before* the
+      SpinePlayer constructor on story-gen. This is the moment the library
+      samples clientWidth/clientHeight/dpr to allocate its internal canvas
+      and WebGL viewport. Without this, on physical iPhones the container
+      can be 0x0 (or offscreen) due to fill-available timing in the
+      n-scrollbar + fixed NikkeChatOverlay + conditional header ancestry,
+      even though the same Loader works for the L2D visualiser route. */
+      if (market.route.name === 'story-gen') {
+        const containerEl = document.getElementById('player-container')
+        if (containerEl) {
+          containerEl.style.height = '100dvh'
+          containerEl.style.minHeight = '100dvh'
+          containerEl.style.width = '100%'
+          containerEl.style.position = containerEl.style.position || 'relative'
+        }
+      }
+
+      const animation = getDefaultAnimation()
+
+      spineCanvas = new usedSpine.SpinePlayer('player-container', {
+        skelUrl: requestedCharacterId,
+        rawDataURIs: {
+          [requestedCharacterId]: skelURL,
+        },
+        atlasUrl,
+        animation: animation,
+        skin: requestedSkin,
+        showControls: market.route.name !== 'story-gen',
+        backgroundColor: '#00000000',
+        alpha: true,
+        premultipliedAlpha: true,
+        mipmaps: requestedPose === 'fb' ? true : false,
+        debug: false,
+        preserveDrawingBuffer: true,
+        viewport: spineViewport,
+        defaultMix: SPINE_DEFAULT_MIX,
+        success: (player: any) => {
+
+          // if no animation the sprite start paused, so trigger it
+          if (animation === '' || animation === null) player.play()
+          // Late arrival after our safety timeout fired — discard this player.
+          if (playerSettled) {
+            logDebug(`[Loader] Ignoring success callback after timeout for ${requestedCharacterId}`)
+            if (!player.disposed) {
+              disposeSpineInstance(player, 'post-timeout success callback')
+            }
+            return
+          }
+          playerSettled = true
+          clearTimeout(playerTimeoutId)
+
+          if (thisLoadId !== currentLoadId || player.disposed) {
+            logDebug(`[Loader] Ignoring stale success callback for ${requestedCharacterId}`)
+            if (!player.disposed) {
+              disposeSpineInstance(player, 'stale success callback')
+            }
+            return
+          }
+
+          spinePlayer = player
+          resetAttachmentColors(player)
+          market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
+          market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
+
+          // fix an annoyance that should only be for the AI page
+          if (market.route.name === 'story-gen') {
+            const currentAnim = market.live2d.current_animation
+            let resolvedAnim = resolveAnimation(currentAnim, market.live2d.animations)
+
+            if (!resolvedAnim) {
+              // Try default animation from config
+              resolvedAnim = resolveAnimation(player.config.animation, market.live2d.animations)
+            }
+
+            if (!resolvedAnim && market.live2d.animations.length > 0) {
+              // Fallback to first available animation
+              resolvedAnim = market.live2d.animations[0]
+              console.warn(`No valid animation found. Falling back to first available: ${resolvedAnim}`)
+            }
+
+            if (resolvedAnim) {
+              logDebug(`[Loader] Setting initial animation to: ${resolvedAnim} (Requested: ${currentAnim})`)
+              market.live2d.current_animation = resolvedAnim
+
+              // Force set animation with a slight delay to ensure player is ready
+              setTimeout(() => {
+                if (thisLoadId !== currentLoadId || player !== getActiveSpinePlayer()) {
+                  return
+                }
+
+                try {
+                  player.animationState.setAnimation(0, resolvedAnim, true)
+                  player.play()
+                } catch (e) {
+                  console.error('[Loader] Failed to set animation in timeout', e)
+                }
+              }, 100)
+            } else {
+              console.error('[Loader] No animations available for this character.')
+            }
+          }
+
+          market.live2d.triggerFinishedLoading()
+          successfullyLoaded()
+        },
+        error: (player: any, message?: string) => {
+          if (playerSettled) {
+            logDebug(`[Loader] Ignoring error callback after timeout for ${requestedCharacterId}`)
+            return
+          }
+          playerSettled = true
+          clearTimeout(playerTimeoutId)
+
+          handleSpineLoadFailure({
+            loadId: thisLoadId,
+            retryAttempt,
+            requestedCharacterId,
+            requestedPose,
+            requestedSkelUrl: skelUrl,
+            requestedAtlasUrl: atlasUrl,
+            stage: 'asset manager',
+            message,
+            player
+          })
+        },
+      })
+      applyStoryGenLowPowerThrottle(spineCanvas)
+      applyDefaultStyle2Canvas()
+    }
+  }
+}
+
+const customSpineLoader = () => {
+  let usedSpine: any
+
+  switch (market.live2d.customSpineVersion) {
+    case 4.0:
+      usedSpine = spine40
+      break
+    case 4.1:
+      usedSpine = spine41
+      break
+    default:
+      break
+  }
+
+  const spineCanvasOptions = {
+    atlasUrl: market.live2d.customAtlas.title,
+    rawDataURIs: {
+      [market.live2d.customSkel.title]: market.live2d.customSkel.URI,
+      [market.live2d.customAtlas.title]: market.live2d.customAtlas.URI
+    },
+    backgroundColor: '#00000000',
+    alpha: true,
+    premultipliedAlpha: market.live2d.customPremultipliedAlpha,
+    mipmaps: market.live2d.current_pose === 'fb' ? true : false,
+    debug: false,
+    preserveDrawingBuffer: true,
+    viewport: spineViewport,
+    defaultMix: SPINE_DEFAULT_MIX,
+    success: (player: any) => {
+      spinePlayer = player
+      resetAttachmentColors(player)
+      market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
+      market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
+
+      const currentAnim = market.live2d.current_animation
+      const hasAnim = market.live2d.animations.includes(currentAnim)
+
+      if (hasAnim) {
+        player.animationState.setAnimation(0, currentAnim, true)
+      } else {
+        market.live2d.current_animation = player.config.animation
+      }
+
+      market.live2d.triggerFinishedLoading()
+      successfullyLoaded()
+      try {
+        if (market.live2d.customDefaultAnimationIdle) {
+          const animationArray = player.animationState.data.skeletonData.animations
+          const idleRegEx = /idle/
+
+          for (let i = 0; i <= animationArray.length; i++) {
+            if (idleRegEx.test(animationArray[i].name)) {
+              player.config.animation = animationArray[i].name
+              break
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Something unexpected happened with custom loader: non-nikke asset ?')
+        console.error(e)
+      }
+      player.play()
+    },
+    error: () => {
+      wrongfullyLoaded()
+    }
+  }
+
+  for (let i = 0; i < market.live2d.customPng.length; i++) {
+    spineCanvasOptions.rawDataURIs[market.live2d.customPng[i].title] = market.live2d.customPng[i].URI
+  }
+  // whether to load json or skel
+  // @ts-ignore
+  spineCanvasOptions[market.live2d.customLoader === 'skel' ? 'skelUrl' : 'jsonUrl'] = market.live2d.customSkel.title
+
+  spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
+  applyStoryGenLowPowerThrottle(spineCanvas)
+}
+
+const getPathing = (extension: string) => {
+  let route =
+      globalParams.PATH_L2D +
+      market.live2d.current_id +
+      '/'
+  let fileSuffix = '_00'
+
+
+  // could be more automated if we set market.live2d.current_pose to '' if we select
+  // "full body" but I'd rather keep fb for future/other functions
+  switch (market.live2d.current_pose) {
+    case 'aim':
+      route += globalParams.PATH_L2D_AIM
+      fileSuffix = '_aim' + fileSuffix
+      break
+    case 'cover':
+      route += globalParams.PATH_L2D_COVER
+      fileSuffix = '_cover' + fileSuffix
+      break
+    default:
+      break
+  }
+
+  const f = market.live2d.f !== '' ? market.live2d.f : market.live2d.current_id + fileSuffix
+  route += f + '.' + extension
+
+  return route
+}
+
+const getDefaultAnimation = () => {
+  if (market.live2d.current_id === 'mbg004_appearance' ) {
+    return 'mbg004_appearance'
+  }
+
+  if (market.live2d.current_id === 'smol_rem' ||
+      market.live2d.current_id === 'smol_ram' ||
+      market.live2d.current_id === 'smol_emilia' ||
+      market.live2d.current_id === 'smol_mast_pirate' ||
+      market.live2d.current_id === 'smol_anchor_pirate' ||
+      market.live2d.current_id === 'smol_sin_pirate') {
+    return 'idle_front'
+  }
+
+  if (['smol_anis', 'smol_prika', 'smol_mint', 'smol_marciana', 'smol_naga', 'smol_tia'].includes(market.live2d.current_id)) {
+    return 'pose_idle'
+  }
+
+  // persona event
+  if ([ 'ce009_char_01', 'ce009_char_02', 'ce009_char_03', 'ce009_enemy_ade', 'ce009_enemy_delta', 'ce009_enemy_miranda',
+    'ce009_enemy_phantom', 'ce009_enemy_poli', 'ce009_enemy_quency', 'ce009_skill_01', 'ce009_skill_02'].includes(market.live2d.current_id)) {
+    return 'down_idle'
+  }
+
+  if (market.live2d.current_id === 'ce009_skill_03') {
+    return ''
+  }
+
+  // mass manufactured rapi
+  if (market.live2d.current_id === 'c994') return 'idle_02'
+
+  if (market.live2d.current_id.includes('favorite')) return 'idle_merged'
+
+  switch (market.live2d.current_pose) {
+    case 'aim':
+      return 'aim_idle'
+    case 'cover':
+      return 'cover_idle'
+    default:
+      return 'idle'
+  }
+}
+
+const successfullyLoaded = () => {
+  market.load.endLoad()
+  market.message
+      .getMessage()
+      .success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
+
+  checkIfAssetCanYap()
+}
+
+const wrongfullyLoaded = () => {
+  market.load.errorLoad()
+  market.message
+      .getMessage()
+      .error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
+}
+
+watch(() => market.globalParams.isMobile, (e) => {
+  if (e) {
+    canvas && setCanvasStyleMobile()
+  } else {
+    applyDefaultStyle2Canvas()
+    centerCanvas()
+  }
+})
+
+watch(() => market.route.name, () => {
+  applyDefaultStyle2Canvas()
+})
+
+watch(() => market.live2d.HQassets, () => {
+  applyDefaultStyle2Canvas()
+})
+
+watch(() => market.live2d.current_id, () => {
+  loadSpineAfterWatcher()
+})
+
+watch(() => market.live2d.current_pose, () => {
+  loadSpineAfterWatcher()
+})
+
+watch(() => market.live2d.resetPlacement, () => {
+  applyDefaultStyle2Canvas()
+})
+
+watch(() => market.live2d.screenshot, () => {
+  if (!checkMobile()) {
+    const sc_sz = localStorage.getItem('sc_sz')
+    const old_sc_sz = canvas ? canvas.style.height : '0'
+    canvas && (canvas.style.height = sc_sz + 'px')
+
+    setTimeout(() => {
+      takeScreenshot()
+      canvas && (canvas.style.height = old_sc_sz)
+    }, 250)
+  } else {
+    takeScreenshot()
+  }
+})
+
+watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    exportAnimationFrames(newVal)
+  }
+})
+
+watch(() => market.live2d.customLoad, () => {
+  if (spineCanvas) {
+    disposeSpineInstance(spineCanvas, 'spineCanvas for customLoad')
+  } else {
+    clearSpineReferences()
+    forceRemovePlayerDom()
+  }
+  market.load.beginLoad()
+  customSpineLoader()
+  applyDefaultStyle2Canvas()
+})
+
+watch(() => market.live2d.hideUI, () => {
+  const controls = document.querySelector('.spine-player-controls') as HTMLElement
+  if (!controls) return
+  // On story-gen route, controls should always be hidden
+  // On other routes (like L2D), controls visibility depends on hideUI state
+  if (market.live2d.hideUI === false && market.route.name !== 'story-gen') {
+    controls.style.visibility = 'visible'
+  } else {
+    controls.style.visibility = 'hidden'
+  }
+})
+
 const isStoryGenLowPowerEnabled = () => {
   if (typeof document === 'undefined') return false
 
@@ -578,469 +1059,6 @@ watch(() => market.live2d.current_animation, (newAnim) => {
     } catch (e) {
       console.error('Error setting animation:', e)
     }
-  }
-})
-
-const spineLoader = (retryAttempt = 0) => {
-  if (!market.live2d.current_id) {
-    logDebug('[Loader] No current_id set, skipping load.')
-    return
-  }
-
-  currentLoadId++
-  const thisLoadId = currentLoadId
-  const requestedCharacterId = market.live2d.current_id
-  const requestedPose = market.live2d.current_pose
-
-  const skelUrl = getPathing('skel')
-  const atlasUrl = getPathing('atlas')
-  const requestedSkin = market.live2d.getSkin()
-  const request = new XMLHttpRequest()
-
-  request.responseType = 'arraybuffer'
-  request.timeout = XHR_TIMEOUT_MS
-  request.open('GET', skelUrl, true)
-  request.send()
-  request.ontimeout = () => {
-    if (thisLoadId !== currentLoadId) return
-    handleSpineLoadFailure({
-      loadId: thisLoadId,
-      retryAttempt,
-      requestedCharacterId,
-      requestedPose,
-      requestedSkelUrl: skelUrl,
-      requestedAtlasUrl: atlasUrl,
-      stage: 'skeleton request',
-      message: `XHR timed out after ${XHR_TIMEOUT_MS}ms.`,
-      details: { timedOut: true }
-    })
-  }
-  request.onloadend = () => {
-    if (thisLoadId !== currentLoadId) {
-      logDebug('[Loader] Ignoring stale load request')
-      return
-    }
-
-    if (request.status !== 200 || !request.response) {
-      handleSpineLoadFailure({
-        loadId: thisLoadId,
-        retryAttempt,
-        requestedCharacterId,
-        requestedPose,
-        requestedSkelUrl: skelUrl,
-        requestedAtlasUrl: atlasUrl,
-        stage: 'skeleton request',
-        message: 'Failed to load skel file.',
-        details: {
-          status: request.status,
-          statusText: request.statusText
-        }
-      })
-      return
-    }
-
-    // convert the ArrayBuffer in the response as a DataUrl for rawDataURIs
-    const buffer = request.response
-    
-    const frURL = new FileReader()
-    frURL.readAsDataURL(new Blob([buffer]))
-    frURL.onload = () => {
-      const skelURL: string | ArrayBuffer | null = frURL.result
-
-      const uintArray = new Uint8Array(buffer)
-
-      // Take the first 16 bytes
-      const versionBytes = uintArray.slice(0, 16)
-
-      // Extract and decode version string
-      const versionString = new TextDecoder().decode(versionBytes).replace(/\0/g, '')
-
-      let usedSpine
-
-      if (/4\.0\.\d+/.test(versionString)) {
-        usedSpine = spine40
-      } else if (/4\.1\.\d+/.test(versionString)) {
-        usedSpine = spine41
-      } else {
-        console.error('Unsupported Spine version:', versionString + ' | defaults to 4.1')
-        usedSpine = spine41
-      }
-
-      // Guard flag + safety timeout: SpinePlayer has no built-in timeout for atlas/texture fetches,
-      // so we force a failure if neither success nor error fires within SPINE_PLAYER_TIMEOUT_MS.
-      let playerSettled = false
-      const playerTimeoutId = window.setTimeout(() => {
-        if (playerSettled || thisLoadId !== currentLoadId) return
-        playerSettled = true
-        
-        // CRITICAL: Pass the spineCanvas instance so it gets properly disposed
-        // The SpinePlayer is still alive and trying to load - we must kill it
-        const hungPlayer = spineCanvas
-        handleSpineLoadFailure({
-          loadId: thisLoadId,
-          retryAttempt,
-          requestedCharacterId,
-          requestedPose,
-          requestedSkelUrl: skelUrl,
-          requestedAtlasUrl: atlasUrl,
-          stage: 'asset manager',
-          message: `SpinePlayer timed out after ${SPINE_PLAYER_TIMEOUT_MS}ms (atlas/texture fetch hung).`,
-          player: hungPlayer
-        })
-      }, SPINE_PLAYER_TIMEOUT_MS)
-
-      /*Ensure the container has a definite non-zero size *right before* the
-      SpinePlayer constructor on story-gen. This is the moment the library
-      samples clientWidth/clientHeight/dpr to allocate its internal canvas
-      and WebGL viewport. Without this, on physical iPhones the container
-      can be 0x0 (or offscreen) due to fill-available timing in the
-      n-scrollbar + fixed NikkeChatOverlay + conditional header ancestry,
-      even though the same Loader works for the L2D visualiser route. */
-      if (market.route.name === 'story-gen') {
-        const containerEl = document.getElementById('player-container')
-        if (containerEl) {
-          containerEl.style.height = '100dvh'
-          containerEl.style.minHeight = '100dvh'
-          containerEl.style.width = '100%'
-          containerEl.style.position = containerEl.style.position || 'relative'
-        }
-      }
-      spineCanvas = new usedSpine.SpinePlayer('player-container', {
-        skelUrl: requestedCharacterId,
-        rawDataURIs: {
-          [requestedCharacterId]: skelURL,
-        },
-        atlasUrl,
-        animation: getDefaultAnimation(),
-        skin: requestedSkin,
-        showControls: market.route.name !== 'story-gen',
-        backgroundColor: '#00000000',
-        alpha: true,
-        premultipliedAlpha: true,
-        mipmaps: requestedPose === 'fb' ? true : false,
-        debug: false,
-        preserveDrawingBuffer: true,
-        viewport: spineViewport,
-        defaultMix: SPINE_DEFAULT_MIX,
-        success: (player: any) => {
-          // Late arrival after our safety timeout fired — discard this player.
-          if (playerSettled) {
-            logDebug(`[Loader] Ignoring success callback after timeout for ${requestedCharacterId}`)
-            if (!player.disposed) {
-              disposeSpineInstance(player, 'post-timeout success callback')
-            }
-            return
-          }
-          playerSettled = true
-          clearTimeout(playerTimeoutId)
-
-          if (thisLoadId !== currentLoadId || player.disposed) {
-            logDebug(`[Loader] Ignoring stale success callback for ${requestedCharacterId}`)
-            if (!player.disposed) {
-              disposeSpineInstance(player, 'stale success callback')
-            }
-            return
-          }
-
-          spinePlayer = player
-          resetAttachmentColors(player)
-          market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
-          market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
-
-          const currentAnim = market.live2d.current_animation
-          let resolvedAnim = resolveAnimation(currentAnim, market.live2d.animations)
-
-          if (!resolvedAnim) {
-            // Try default animation from config
-            resolvedAnim = resolveAnimation(player.config.animation, market.live2d.animations)
-          }
-
-          if (!resolvedAnim && market.live2d.animations.length > 0) {
-            // Fallback to first available animation
-            resolvedAnim = market.live2d.animations[0]
-            console.warn(`No valid animation found. Falling back to first available: ${resolvedAnim}`)
-          }
-
-          if (resolvedAnim) {
-            logDebug(`[Loader] Setting initial animation to: ${resolvedAnim} (Requested: ${currentAnim})`)
-            market.live2d.current_animation = resolvedAnim
-
-            // Force set animation with a slight delay to ensure player is ready
-            setTimeout(() => {
-              if (thisLoadId !== currentLoadId || player !== getActiveSpinePlayer()) {
-                return
-              }
-
-              try {
-                player.animationState.setAnimation(0, resolvedAnim, true)
-                player.play()
-              } catch (e) {
-                console.error('[Loader] Failed to set animation in timeout', e)
-              }
-            }, 100)
-          } else {
-            console.error('[Loader] No animations available for this character.')
-          }
-
-          market.live2d.triggerFinishedLoading()
-          successfullyLoaded()
-        },
-        error: (player: any, message?: string) => {
-          if (playerSettled) {
-            logDebug(`[Loader] Ignoring error callback after timeout for ${requestedCharacterId}`)
-            return
-          }
-          playerSettled = true
-          clearTimeout(playerTimeoutId)
-
-          handleSpineLoadFailure({
-            loadId: thisLoadId,
-            retryAttempt,
-            requestedCharacterId,
-            requestedPose,
-            requestedSkelUrl: skelUrl,
-            requestedAtlasUrl: atlasUrl,
-            stage: 'asset manager',
-            message,
-            player
-          })
-        },
-      })
-      applyStoryGenLowPowerThrottle(spineCanvas)
-      applyDefaultStyle2Canvas()
-    }
-  }
-}
-
-
-const customSpineLoader = () => {
-  let usedSpine: any
-
-  switch (market.live2d.customSpineVersion) {
-    case 4.0:
-      usedSpine = spine40
-      break
-    case 4.1:
-      usedSpine = spine41
-      break
-    default:
-      break
-  }
-
-  const spineCanvasOptions = {
-    atlasUrl: market.live2d.customAtlas.title,
-    rawDataURIs: {
-      [market.live2d.customSkel.title]: market.live2d.customSkel.URI,
-      [market.live2d.customAtlas.title]: market.live2d.customAtlas.URI
-    },
-    backgroundColor: '#00000000',
-    alpha: true,
-    premultipliedAlpha: market.live2d.customPremultipliedAlpha,
-    mipmaps: market.live2d.current_pose === 'fb' ? true : false,
-    debug: false,
-    preserveDrawingBuffer: true,
-    viewport: spineViewport,
-    defaultMix: SPINE_DEFAULT_MIX,
-    success: (player: any) => {
-      spinePlayer = player
-      resetAttachmentColors(player)
-      market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
-      market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
-
-      const currentAnim = market.live2d.current_animation
-      const hasAnim = market.live2d.animations.includes(currentAnim)
-
-      if (hasAnim) {
-        player.animationState.setAnimation(0, currentAnim, true)
-      } else {
-        market.live2d.current_animation = player.config.animation
-      }
-
-      market.live2d.triggerFinishedLoading()
-      successfullyLoaded()
-      try {
-        if (market.live2d.customDefaultAnimationIdle) {
-          const animationArray = player.animationState.data.skeletonData.animations
-          const idleRegEx = /idle/
-
-          for (let i = 0; i <= animationArray.length; i++) {
-            if (idleRegEx.test(animationArray[i].name)) {
-              player.config.animation = animationArray[i].name
-              break
-            }
-          }
-        } 
-      } catch (e) {
-        console.error('Something unexpected happened with custom loader: non-nikke asset ?')
-        console.error(e)
-      }
-      player.play()
-    },
-    error: () => {
-      wrongfullyLoaded()
-    }
-  }
-
-  for (let i = 0; i < market.live2d.customPng.length; i++) {
-    spineCanvasOptions.rawDataURIs[market.live2d.customPng[i].title] = market.live2d.customPng[i].URI
-  }
-  // whether to load json or skel
-  // @ts-ignore
-  spineCanvasOptions[market.live2d.customLoader === 'skel' ? 'skelUrl' : 'jsonUrl'] = market.live2d.customSkel.title
-
-  spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
-  applyStoryGenLowPowerThrottle(spineCanvas)
-}
-
-const getPathing = (extension: string) => {
-  let route =
-    globalParams.PATH_L2D +
-    market.live2d.current_id +
-    '/'
-  let fileSuffix = '_00'
-
-
-  // could be more automated if we set market.live2d.current_pose to '' if we select
-  // "full body" but I'd rather keep fb for future/other functions
-  switch (market.live2d.current_pose) {
-    case 'aim':
-      route += globalParams.PATH_L2D_AIM
-      fileSuffix = '_aim' + fileSuffix
-      break
-    case 'cover':
-      route += globalParams.PATH_L2D_COVER
-      fileSuffix = '_cover' + fileSuffix
-      break
-    default:
-      break
-  }
-
-  const f = market.live2d.f !== '' ? market.live2d.f : market.live2d.current_id + fileSuffix
-  route += f + '.' + extension
-
-  return route
-}
-
-const getDefaultAnimation = () => {
-  if (market.live2d.current_id === 'mbg004_appearance' ) {
-    return 'mbg004_appearance'
-  }
-
-  if (market.live2d.current_id === 'smol_rem' ||
-      market.live2d.current_id === 'smol_ram' ||
-      market.live2d.current_id === 'smol_emilia' ||
-      market.live2d.current_id === 'smol_mast_pirate' ||
-      market.live2d.current_id === 'smol_anchor_pirate' ||
-      market.live2d.current_id === 'smol_sin_pirate') {
-    return 'idle_front'
-  }
-
-  if (['smol_anis', 'smol_prika', 'smol_mint', 'smol_marciana', 'smol_naga', 'smol_tia'].includes(market.live2d.current_id)) {
-    return 'pose_idle'
-  }
-
-  // mass manufactured rapi
-  if (market.live2d.current_id === 'c994') return 'idle_02'
-
-  if (market.live2d.current_id.includes('favorite')) return 'idle_merged'
-
-  switch (market.live2d.current_pose) {
-    case 'aim':
-      return 'aim_idle'
-    case 'cover':
-      return 'cover_idle'
-    default:
-      return 'idle'
-  }
-}
-
-const successfullyLoaded = () => {
-  market.load.endLoad()
-  market.message
-    .getMessage()
-    .success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
-
-  checkIfAssetCanYap()
-}
-
-const wrongfullyLoaded = () => {
-  market.load.errorLoad()
-  market.message
-    .getMessage()
-    .error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
-}
-
-watch(() => market.globalParams.isMobile, (e) => {
-  if (e) {
-    canvas && setCanvasStyleMobile()
-  } else {
-    applyDefaultStyle2Canvas()
-    centerCanvas()
-  }
-})
-
-watch(() => market.route.name, () => {
-  applyDefaultStyle2Canvas()
-})
-
-watch(() => market.live2d.HQassets, () => {
-  applyDefaultStyle2Canvas()
-})
-
-watch(() => market.live2d.current_id, () => {
-  loadSpineAfterWatcher()
-})
-
-watch(() => market.live2d.current_pose, () => {
-  loadSpineAfterWatcher()
-})
-
-watch(() => market.live2d.resetPlacement, () => {
-  applyDefaultStyle2Canvas()
-})
-
-watch(() => market.live2d.screenshot, () => {
-  if (!checkMobile()) {
-    const sc_sz = localStorage.getItem('sc_sz')
-    const old_sc_sz = canvas ? canvas.style.height : '0'
-    canvas && (canvas.style.height = sc_sz + 'px')
-
-    setTimeout(() => {
-      takeScreenshot()
-      canvas && (canvas.style.height = old_sc_sz)
-    }, 250)
-  } else {
-    takeScreenshot()
-  }
-})
-
-watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    exportAnimationFrames(newVal)
-  }
-})
-
-watch(() => market.live2d.customLoad, () => {
-  if (spineCanvas) {
-    disposeSpineInstance(spineCanvas, 'spineCanvas for customLoad')
-  } else {
-    clearSpineReferences()
-    forceRemovePlayerDom()
-  }
-  market.load.beginLoad()
-  customSpineLoader()
-  applyDefaultStyle2Canvas()
-})
-
-watch(() => market.live2d.hideUI, () => {
-  const controls = document.querySelector('.spine-player-controls') as HTMLElement
-  if (!controls) return
-  // On story-gen route, controls should always be hidden
-  // On other routes (like L2D), controls visibility depends on hideUI state
-  if (market.live2d.hideUI === false && market.route.name !== 'story-gen') {
-    controls.style.visibility = 'visible'
-  } else {
-    controls.style.visibility = 'hidden'
   }
 })
 

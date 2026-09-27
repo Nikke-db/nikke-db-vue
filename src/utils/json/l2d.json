@@ -5464,6 +5464,16 @@
     "f": "EventScene_projectmatis_02"
   },
   {
+    "name": "Great Villain Union",
+    "id": "greatvillainunion",
+    "f": "EventScene_greatvillainunion_01"
+  },
+  {
+    "name": "Coin Rush Showdown",
+    "id": "coinrushshowdown",
+    "f": "EventScene_coinrushshowdown_02"
+  },
+  {
     "name": "Smol Ade",
     "id": "smol_ade"
   },
@@ -5568,6 +5578,66 @@
     "name": "Smol Tia TTS",
     "id": "smol_tia",
     "f": "tts_c451_03"
+  },
+  {
+    "name": "Smol Queen (Makoto)",
+    "id": "ce009_char_01",
+    "f": "ce009_char_01"
+  },
+  {
+    "name": "Smol Yukiko",
+    "id": "ce009_char_02",
+    "f": "ce009_char_02"
+  },
+  {
+    "name": "Smol Aigis",
+    "id": "ce009_char_03",
+    "f": "ce009_char_03"
+  },
+  {
+    "name": "Smol Ade",
+    "id": "ce009_enemy_ade",
+    "f": "ce009_enemy_ade"
+  },
+  {
+    "name": "Smol Delta",
+    "id": "ce009_enemy_delta",
+    "f": "ce009_enemy_delta"
+  },
+  {
+    "name": "Smol Miranda",
+    "id": "ce009_enemy_miranda",
+    "f": "ce009_enemy_miranda"
+  },
+  {
+    "name": "Smol Phantom",
+    "id": "ce009_enemy_phantom",
+    "f": "ce009_enemy_phantom"
+  },
+  {
+    "name": "Smol Poli",
+    "id": "ce009_enemy_poli",
+    "f": "ce009_enemy_poli"
+  },
+  {
+    "name": "Smol Quency",
+    "id": "ce009_enemy_quency",
+    "f": "ce009_enemy_quency"
+  },
+  {
+    "name": "Smol Johanna",
+    "id": "ce009_skill_01",
+    "f": "ce009_skill_01"
+  },
+  {
+    "name": "Smol Amaterasu",
+    "id": "ce009_skill_02",
+    "f": "ce009_skill_02"
+  },
+  {
+    "name": "Smol Athena",
+    "id": "ce009_skill_03",
+    "f": "ce009_skill_03"
   },
   {
     "name": "AZX Service Time 1",
