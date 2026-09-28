@@ -54,6 +54,10 @@ const RATE_LIMIT_MS = parseInt(process.env.RATE_LIMIT_MS) || 2000
 
 const PROFILES_BASE_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfiles.json')
 const PROFILES_VARIANTS_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfilesVariants.json')
+const L2D_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'l2d.json')
+const FILTERED_IDS_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'filteredCharacterIds.json')
+const SKIN_OVERRIDES_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'skinOverrides.json')
+const COLORS_URL = 'https://nkas.pages.dev/nk_data/colors.json'
 
 function getArgValue(flag) {
   const idx = process.argv.indexOf(flag)
@@ -121,7 +125,9 @@ let POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY
 let POLLINATIONS_MODEL = null
 let OPENROUTER_MODEL_SELECTED = false
 
-if (!GEMINI_API_KEY && !OPENROUTER_API_KEY && !POLLINATIONS_API_KEY) {
+const isDirectRun = require.main === module
+
+if (isDirectRun && !GEMINI_API_KEY && !OPENROUTER_API_KEY && !POLLINATIONS_API_KEY) {
   console.error('Error: GEMINI_API_KEY, OPENROUTER_API_KEY, or POLLINATIONS_API_KEY environment variable is required')
   console.error('Set one with:')
   console.error('  export GEMINI_API_KEY=your_gemini_key_here')
@@ -1570,14 +1576,14 @@ async function createNewEntry() {
     relationships: textData?.relationships || {}
   }
 
-  // Preserve any existing non-extracted fields (e.g. id, color) if overwriting
-  if (charName in profiles) {
-    const existing = profiles[charName]
-    if (existing.id) newProfile.id = existing.id
-    if (existing.color) newProfile.color = existing.color
+  const attached = sortAndAttachProfileEntry(profiles, charName, newProfile, await loadProfileIdentitySources(filePath, !(charName in profiles)))
+  profiles = attached.profiles
+  if (attached.omittedId) {
+    console.warn(`  No id match for "${attached.omittedId}". id omitted.`)
   }
-
-  profiles[charName] = newProfile
+  if (attached.omittedColor) {
+    console.warn(`  No color match for "${attached.omittedColor}". color omitted.`)
+  }
 
   // Save
   fs.writeFileSync(filePath, JSON.stringify(profiles, null, 2))
@@ -1585,7 +1591,7 @@ async function createNewEntry() {
   console.log('')
   console.log('='.repeat(60))
   console.log(`Created: ${charName}`)
-  Object.entries(newProfile).forEach(([k, v]) => {
+  Object.entries(profiles[charName]).forEach(([k, v]) => {
     const display = typeof v === 'object' ? JSON.stringify(v) : v
     console.log(`  ${k}: ${display ? display.substring(0, 80) : '(empty)'}${display && display.length > 80 ? '...' : ''}`)
   })
@@ -2220,14 +2226,227 @@ function emitJsonResult() {
   console.log(`\n__JSON_RESULT__\n${JSON.stringify(result)}`)
 }
 
-main()
-  .then(() => {
-    emitJsonResult()
-  })
-  .catch((e) => {
-    console.error('Fatal error:', e)
-    if (CLI_JSON_OUTPUT) {
-      console.log(`\n__JSON_RESULT__\n${JSON.stringify({ status: 'error', error: e.message })}`)
+function normalizeCharacterName(name) {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s*:\s*/g, ': ')
+    .replace(/\s+/g, ' ')
+}
+
+function characterNameForms(name) {
+  const exact = normalizeCharacterName(name)
+  const spaced = exact.replace(/:\s/g, ' ').replace(/\s+/g, ' ')
+
+  return { exact, spaced }
+}
+
+function rowsNamed(name, rows, readName) {
+  const { exact, spaced } = characterNameForms(name)
+  const named = []
+
+  for (const row of rows) {
+    const value = readName(row)
+    if (typeof value !== 'string' || !value) continue
+    named.push({ row, form: characterNameForms(value) })
+  }
+
+  const exactHits = named.filter((item) => item.form.exact === exact)
+  if (exactHits.length) return exactHits.map((item) => item.row)
+  if (spaced === exact) return []
+
+  return named.filter((item) => item.form.exact === spaced || item.form.spaced === spaced).map((item) => item.row)
+}
+
+function readStoredIds(name, bags) {
+  const { exact } = characterNameForms(name)
+  const requested = String(name)
+  let exactKeyId = null
+  const normalizedIds = []
+
+  for (const bag of bags) {
+    if (!bag || typeof bag !== 'object' || Array.isArray(bag)) continue
+    for (const key of Object.keys(bag)) {
+      const record = bag[key]
+      const id = record && record.id
+      if (typeof id !== 'string' || !id) continue
+      if (key === requested) exactKeyId = id
+      else if (characterNameForms(key).exact === exact) normalizedIds.push(id)
     }
-    process.exit(1)
-  })
+  }
+
+  if (exactKeyId) return [exactKeyId]
+
+  return [...new Set(normalizedIds)]
+}
+
+function chooseIdPool(matches, sources) {
+  const overrides = new Set((sources.skinOverrideIds || []).map(String))
+  const filtered = new Set((sources.filteredIds || []).map(String))
+  let pool = matches.filter((row) => typeof row.id === 'string' && row.id && !overrides.has(row.id))
+  const canonical = pool.filter((row) => !row.id.includes('_'))
+  if (canonical.length) pool = canonical
+  const open = pool.filter((row) => !filtered.has(row.id))
+  if (open.length) pool = open
+
+  return pool
+}
+
+function resolveCharacterId(name, sources, profiles) {
+  const l2d = Array.isArray(sources.l2d) ? sources.l2d : []
+  const matches = rowsNamed(name, l2d, (row) => row && row.name)
+  const storedIds = readStoredIds(name, [profiles, sources.existingProfiles])
+
+  if (matches.length === 1 && typeof matches[0].id === 'string' && matches[0].id) {
+    return matches[0].id
+  }
+
+  if (matches.length > 1) {
+    const pool = chooseIdPool(matches, sources)
+    const storedInPool = storedIds.find((id) => pool.some((row) => row.id === id))
+    if (storedInPool) return storedInPool
+    if (pool.length) {
+      const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id, 'en'))
+
+      return sorted[0].id
+    }
+  }
+
+  if (storedIds.length === 1) return storedIds[0]
+  if (storedIds.length > 1) {
+    const sorted = [...storedIds].sort((a, b) => a.localeCompare(b, 'en'))
+
+    return sorted[0]
+  }
+  if (characterNameForms(name).exact === 'commander') return 'commander'
+
+  return null
+}
+
+function resolveCharacterColor(name, colors) {
+  if (!colors || typeof colors !== 'object' || Array.isArray(colors)) return null
+  const entries = Object.keys(colors).map((key) => ({ name: key, color: colors[key] }))
+  const hits = rowsNamed(name, entries, (row) => row.name).filter((row) => typeof row.color === 'string' && row.color)
+  if (!hits.length) return null
+  const exactKey = hits.find((row) => row.name === String(name))
+  if (exactKey) return exactKey.color
+
+  return hits[0].color
+}
+
+function sortProfileKeys(profiles) {
+  const sorted = {}
+  const keys = Object.keys(profiles).sort((a, b) => a.localeCompare(b, 'en'))
+  for (const key of keys) {
+    sorted[key] = profiles[key]
+  }
+
+  return sorted
+}
+
+function sortAndAttachProfileEntry(profiles, charName, entry, sources = {}) {
+  const isNew = !Object.prototype.hasOwnProperty.call(profiles, charName)
+  const record = entry && typeof entry === 'object' ? { ...entry } : {}
+  let omittedId = null
+  let omittedColor = null
+
+  if (isNew) {
+    const id = resolveCharacterId(charName, sources, profiles)
+    if (typeof id === 'string' && id) {
+      record.id = id
+    } else {
+      omittedId = charName
+    }
+
+    const color = resolveCharacterColor(charName, sources.colors)
+    if (typeof color === 'string' && color) {
+      record.color = color
+    } else {
+      omittedColor = charName
+    }
+  } else {
+    const existing = profiles[charName]
+    if (existing && typeof existing === 'object') {
+      if (record.id === undefined && existing.id) record.id = existing.id
+      if (record.color === undefined && existing.color) record.color = existing.color
+    }
+  }
+
+  const merged = { ...profiles, [charName]: record }
+
+  return {
+    profiles: isNew ? sortProfileKeys(merged) : merged,
+    omittedId,
+    omittedColor
+  }
+}
+
+async function fetchCharacterColors() {
+  const response = await fetch(COLORS_URL)
+  if (!response.ok) {
+    throw new Error(`colors request failed: ${response.status}`)
+  }
+  const data = await response.json()
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('colors payload was not an object')
+  }
+
+  return data
+}
+
+async function loadProfileIdentitySources(filePath, isNew) {
+  const otherPath = filePath === PROFILES_BASE_PATH ? PROFILES_VARIANTS_PATH : PROFILES_BASE_PATH
+  let existingProfiles = {}
+  let colors = {}
+  let l2d = []
+  let filteredIds = []
+  let skinOverrideIds = []
+
+  try {
+    const other = JSON.parse(fs.readFileSync(otherPath, 'utf8'))
+    if (other && typeof other === 'object' && !Array.isArray(other)) existingProfiles = other
+  } catch (e) {
+    existingProfiles = {}
+  }
+
+  if (isNew) {
+    try {
+      colors = await fetchCharacterColors()
+    } catch (e) {
+      console.warn(`  Color list unavailable (${e.message}).`)
+    }
+  }
+
+  try {
+    const l2dData = JSON.parse(fs.readFileSync(L2D_PATH, 'utf8'))
+    if (Array.isArray(l2dData)) l2d = l2dData
+    const filtered = JSON.parse(fs.readFileSync(FILTERED_IDS_PATH, 'utf8'))
+    if (Array.isArray(filtered.filteredIds)) filteredIds = filtered.filteredIds
+    const overrides = JSON.parse(fs.readFileSync(SKIN_OVERRIDES_PATH, 'utf8'))
+    if (overrides.overrides && typeof overrides.overrides === 'object') {
+      skinOverrideIds = Object.keys(overrides.overrides)
+    }
+  } catch (e) {
+    console.warn(`  Character id sources unavailable (${e.message}).`)
+  }
+
+  return { l2d, colors, existingProfiles, filteredIds, skinOverrideIds }
+}
+
+if (isDirectRun) {
+  main()
+    .then(() => {
+      emitJsonResult()
+    })
+    .catch((e) => {
+      console.error('Fatal error:', e)
+      if (CLI_JSON_OUTPUT) {
+        console.log(`\n__JSON_RESULT__\n${JSON.stringify({ status: 'error', error: e.message })}`)
+      }
+      process.exit(1)
+    })
+}
+
+module.exports = {
+  sortAndAttachProfileEntry
+}
