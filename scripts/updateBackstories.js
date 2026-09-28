@@ -23,7 +23,7 @@
  *   --target-file <name>  Target JSON file for create mode: base (default) or variants
  *   --update-scope <name> Scope for update mode: single (requires --char-name) or all (default)
  *   --provider <name>     API provider: gemini, openrouter, or pollinations
- *   --openrouter-model    OpenRouter model: x-ai/grok-4.3 (default), z-ai/glm-5.2, or deepseek/deepseek-v4.1-flash
+ *   --openrouter-model    OpenRouter model id. Listed choices: x-ai/grok-4.3 (default), z-ai/glm-5.2, deepseek/deepseek-v4.1-flash. Any other id is accepted.
  *   --pollinations-model  Pollinations model: grok (default), grok-large, or claude-fast
  *   --force               Skip overwrite confirmation in create mode
  *   --json-output         Print machine-readable JSON result on the last line
@@ -50,6 +50,21 @@ const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
 let OPENROUTER_MODEL = 'x-ai/grok-4.3'
 const OPENROUTER_MODELS = ['x-ai/grok-4.3', 'z-ai/glm-5.2', 'deepseek/deepseek-v4.1-flash']
 const POLLINATIONS_MODELS = ['grok', 'grok-large', 'claude-fast']
+const OPENROUTER_MODEL_CAPABILITIES = {
+  'x-ai/grok-4.3': 'image',
+  'z-ai/glm-5.2': 'text',
+  'deepseek/deepseek-v4.1-flash': 'image'
+}
+const POLLINATIONS_MODEL_CAPABILITIES = {
+  grok: 'image',
+  'grok-large': 'image',
+  'claude-fast': 'image'
+}
+const GEMINI_MODEL_CAPABILITY = 'image'
+const VISION_MODEL_CHOICES = {
+  openrouter: ['deepseek/deepseek-v4.1-flash', 'x-ai/grok-4.3'],
+  pollinations: ['grok', 'grok-large', 'claude-fast']
+}
 const RATE_LIMIT_MS = parseInt(process.env.RATE_LIMIT_MS) || 2000
 
 const PROFILES_BASE_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfiles.json')
@@ -91,7 +106,7 @@ function applyShard(characters) {
 const args = process.argv.slice(2)
 const SKIP_EXISTING = !args.includes('--no-skip-existing')
 const SKIP_PREVIEW = args.includes('--skip-preview')
-const NON_INTERACTIVE = args.includes('--non-interactive') || !process.stdin.isTTY
+let NON_INTERACTIVE = args.includes('--non-interactive') || !process.stdin.isTTY
 const CLI_MODE = getArgValue('--mode')
 const CLI_CHAR_NAME = getArgValue('--char-name')
 const CLI_TARGET_FILE = getArgValue('--target-file')
@@ -124,6 +139,9 @@ let OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 let POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY
 let POLLINATIONS_MODEL = null
 let OPENROUTER_MODEL_SELECTED = false
+let visualModelDecision = null
+let promptInput = null
+let promptOutput = null
 
 const isDirectRun = require.main === module
 
@@ -270,6 +288,149 @@ const WIKI_NAME_MAPPINGS_VARIANTS = {}
 
 // Utility: Delay function for rate limiting
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+function ask(question) {
+  const rl = readline.createInterface({
+    input: promptInput || process.stdin,
+    output: promptOutput || process.stdout
+  })
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close()
+      resolve(String(answer || '').trim())
+    })
+  })
+}
+
+function getModelCapability() {
+  if (API_PROVIDER === 'gemini') return GEMINI_MODEL_CAPABILITY
+  if (API_PROVIDER === 'pollinations') {
+    return POLLINATIONS_MODEL_CAPABILITIES[POLLINATIONS_MODEL] || 'text'
+  }
+  if (API_PROVIDER === 'openrouter') {
+    return OPENROUTER_MODEL_CAPABILITIES[OPENROUTER_MODEL] || 'text'
+  }
+
+  return 'text'
+}
+
+function visionModelChoices() {
+  if (API_PROVIDER === 'openrouter') return VISION_MODEL_CHOICES.openrouter
+  if (API_PROVIDER === 'pollinations') return VISION_MODEL_CHOICES.pollinations
+
+  return []
+}
+
+async function promptVisionModelId() {
+  const choices = visionModelChoices()
+  console.log('\nWhich model should run the visual analysis?')
+  choices.forEach((id, index) => {
+    const note = id === 'deepseek/deepseek-v4.1-flash' ? ' (example)' : ''
+    console.log(`${index + 1}) ${id}${note}`)
+  })
+  const typeIndex = choices.length + 1
+  console.log(`${typeIndex}) Type a model id`)
+
+  const answer = await ask(`\nEnter choice (1-${typeIndex}): `)
+  const picked = parseInt(answer, 10)
+  if (picked >= 1 && picked <= choices.length) {
+    return choices[picked - 1]
+  }
+  if (answer === String(typeIndex)) {
+    const customId = await ask('Enter model id: ')
+    if (!customId) {
+      console.log('No model id provided.')
+
+      return null
+    }
+
+    return customId
+  }
+
+  console.log('No model selected.')
+
+  return null
+}
+
+// A text model waits for yes or no. Yes retries only the visual section.
+async function prepareVisualModel() {
+  if (visualModelDecision) return visualModelDecision
+
+  if (getModelCapability() === 'image') {
+    visualModelDecision = { skip: false, modelId: null }
+
+    return visualModelDecision
+  }
+
+  console.log(`Selected model cannot take image input (${getProviderLogLabel()}).`)
+
+  if (NON_INTERACTIVE) {
+    console.log('Skipping visual analysis.')
+    visualModelDecision = { skip: true, modelId: null }
+
+    return visualModelDecision
+  }
+
+  const answer = await ask('Switch to a model that can take images? (y/N): ')
+  if (answer !== 'y' && answer !== 'yes') {
+    console.log('Skipping visual analysis.')
+    visualModelDecision = { skip: true, modelId: null }
+
+    return visualModelDecision
+  }
+
+  const modelId = await promptVisionModelId()
+  if (!modelId) {
+    visualModelDecision = { skip: true, modelId: null }
+
+    return visualModelDecision
+  }
+
+  visualModelDecision = { skip: false, modelId }
+
+  return visualModelDecision
+}
+
+function applyVisualModel(modelId) {
+  if (!modelId) {
+    return () => {}
+  }
+  if (API_PROVIDER === 'openrouter') {
+    const previous = OPENROUTER_MODEL
+    OPENROUTER_MODEL = modelId
+
+    return () => {
+      OPENROUTER_MODEL = previous
+    }
+  }
+  if (API_PROVIDER === 'pollinations') {
+    const previous = POLLINATIONS_MODEL
+    POLLINATIONS_MODEL = modelId
+
+    return () => {
+      POLLINATIONS_MODEL = previous
+    }
+  }
+
+  return () => {}
+}
+
+async function extractVisualData(characterName, imageUrl) {
+  const decision = await prepareVisualModel()
+  if (decision.skip) {
+    return { skipped: true, data: null }
+  }
+
+  const restore = applyVisualModel(decision.modelId)
+  try {
+    const data = await extractData(characterName, null, imageUrl, 'visual')
+
+    return { skipped: false, data }
+  } finally {
+    restore()
+  }
+}
 
 // ANSI color codes for terminal output
 const ANSI_GREEN = '\x1b[32m'
@@ -453,32 +614,81 @@ async function fetchImageAsBase64(imageUrl) {
   }
 }
 
+// Drop one trailing path segment. "Character/Variant" becomes "Character".
+function dropTrailingWikiSegment(pageName) {
+  const slash = pageName.lastIndexOf('/')
+  if (slash <= 0) return null
+
+  return pageName.slice(0, slash)
+}
+
+function isMissingWikiPage(data) {
+  if (!data || data.error) return true
+  if (data.parse?.wikitext?.['*'] === undefined || data.parse?.wikitext?.['*'] === null) return true
+
+  return false
+}
+
+async function requestWikiPage(pageName) {
+  const url = `${WIKI_PROXY_URL}?page=${encodeURIComponent(pageName)}`
+  const response = await fetch(url)
+
+  return response.json()
+}
+
+// Create mode may retry a missing page once, one level above.
+async function fetchWikiPageContent(pageName, options = {}) {
+  const pages = [pageName]
+  if (options.retryParent) {
+    const parent = dropTrailingWikiSegment(pageName)
+    if (parent) pages.push(parent)
+  }
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i]
+    let data
+    try {
+      data = await requestWikiPage(page)
+    } catch (e) {
+      console.error(`  Error fetching wiki page ${page}:`, e.message)
+
+      return null
+    }
+
+    if (isMissingWikiPage(data)) {
+      const info = data?.error?.info || data?.error || 'missing'
+      if (i === 0 && pages.length > 1) {
+        console.warn(`  Wiki page not found: ${page} (${typeof info === 'string' ? info : 'missing'}). Retrying ${pages[1]}`)
+        continue
+      }
+      console.warn(`  Wiki page not found: ${page}`)
+
+      return null
+    }
+
+    const wikitext = data.parse.wikitext['*']
+    if (!wikitext) {
+      console.warn(`  No content found for ${page}`)
+
+      return null
+    }
+
+    if (i > 0) {
+      console.log(`  Using parent wiki page ${page}`)
+    }
+
+    return cleanWikiContent(wikitext)
+  }
+
+  return null
+}
+
 async function fetchWikiContent(characterName) {
   const wikiSearchName = getWikiPageName(characterName)
   const wikiName = wikiSearchName.replace(/ /g, '_')
   const pageName = wikiName + '/Story'
-  const url = `${WIKI_PROXY_URL}?page=${encodeURIComponent(pageName)}`
 
-  try {
-    const response = await fetch(url)
-    const data = await response.json()
-
-    if (data.error) {
-      console.warn(`  Wiki page not found for ${characterName}:`, data.error)
-      return null
-    }
-
-    const wikitext = data.parse?.wikitext?.['*']
-    if (!wikitext) {
-      console.warn(`  No content found for ${characterName}`)
-      return null
-    }
-
-    return cleanWikiContent(wikitext)
-  } catch (e) {
-    console.error(`  Error fetching wiki for ${characterName}:`, e.message)
-    return null
-  }
+  return fetchWikiPageContent(pageName, { retryParent: MODE === 'create' })
 }
 
 // Check if a field is empty (for skip logic)
@@ -1259,52 +1469,55 @@ async function selectPollinationsModel() {
   console.log(`Selected Pollinations model: ${POLLINATIONS_MODEL}\n`)
 }
 
+// Menu choice or typed id. Chat requests read OPENROUTER_MODEL.
+async function promptOpenRouterModelChoice() {
+  console.log('\nWhich OpenRouter model would you like to use?')
+  OPENROUTER_MODELS.forEach((id, index) => {
+    const label = index === 0 ? `${id} (current default)` : id
+    console.log(`${index + 1}) ${label}`)
+  })
+  const customIndex = OPENROUTER_MODELS.length + 1
+  console.log(`${customIndex}) Type a custom model id`)
+
+  const answer = await ask(`\nEnter choice (1-${customIndex}): `)
+
+  if (answer === String(customIndex)) {
+    const customId = await ask('Enter OpenRouter model id: ')
+    if (!customId) {
+      console.error('Error: No OpenRouter model id provided.')
+      process.exit(1)
+    }
+    OPENROUTER_MODEL = customId
+  } else {
+    const picked = parseInt(answer, 10)
+    OPENROUTER_MODEL = OPENROUTER_MODELS[picked - 1] || OPENROUTER_MODELS[0]
+  }
+
+  console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL}\n`)
+}
+
 // Select OpenRouter model
 async function selectOpenRouterModel() {
   OPENROUTER_MODEL_SELECTED = true
   if (CLI_OPENROUTER_MODEL) {
-    const validModels = OPENROUTER_MODELS
-    if (!validModels.includes(CLI_OPENROUTER_MODEL)) {
-      console.error(`Error: Invalid --openrouter-model "${CLI_OPENROUTER_MODEL}". Must be: ${validModels.join(', ')}`)
+    const modelId = CLI_OPENROUTER_MODEL.trim()
+    if (!modelId) {
+      console.error('Error: --openrouter-model requires a model id')
       process.exit(1)
     }
-    OPENROUTER_MODEL = CLI_OPENROUTER_MODEL
+    OPENROUTER_MODEL = modelId
     console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL}\n`)
+
     return
   }
 
   if (NON_INTERACTIVE) {
     console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL} (default for non-interactive)\n`)
+
     return
   }
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  })
-
-  console.log('\nWhich OpenRouter model would you like to use?')
-  console.log('1) x-ai/grok-4.3 (current default)')
-  console.log('2) z-ai/glm-5.2')
-  console.log('3) deepseek/deepseek-v4.1-flash')
-
-  const answer = await new Promise((resolve) => {
-    rl.question('\nEnter choice (1, 2, or 3): ', (input) => {
-      resolve(input.trim())
-    })
-  })
-
-  rl.close()
-
-  if (answer === '2') {
-    OPENROUTER_MODEL = 'z-ai/glm-5.2'
-  } else if (answer === '3') {
-    OPENROUTER_MODEL = 'deepseek/deepseek-v4.1-flash'
-  } else {
-    OPENROUTER_MODEL = 'x-ai/grok-4.3'
-  }
-
-  console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL}\n`)
+  await promptOpenRouterModelChoice()
 }
 
 // Select API provider
@@ -1547,21 +1760,28 @@ async function createNewEntry() {
   }
 
   // --- Visual pass (appearance, defaultSkin, defaultWeapon) ---
-  console.log('  Fetching image URL...')
-  const imageUrl = await fetchImageUrl(charName)
-
   let visualData = null
-  if (!imageUrl) {
-    console.log('  ✗ No image URL found. Visual fields will be empty.')
+  const visualDecision = await prepareVisualModel()
+  if (visualDecision.skip) {
+    console.log('  Visual fields will be empty.')
   } else {
-    console.log(`  Image URL: ${imageUrl}`)
-    console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${getProviderLogLabel()}...`)
-    visualData = await extractData(charName, null, imageUrl, 'visual')
-    if (visualData) {
-      const fields = Object.keys(visualData).join(', ')
-      console.log(`  ✓ Visual data extracted (${fields})`)
+    console.log('  Fetching image URL...')
+    const imageUrl = await fetchImageUrl(charName)
+
+    if (!imageUrl) {
+      console.log('  ✗ No image URL found. Visual fields will be empty.')
     } else {
-      console.log('  ✗ Visual extraction failed. Visual fields will be empty.')
+      const visualLabel = visualDecision.modelId ? `${getProviderDisplayName()} (${visualDecision.modelId})` : getProviderLogLabel()
+      console.log(`  Image URL: ${imageUrl}`)
+      console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${visualLabel}...`)
+      const visualResult = await extractVisualData(charName, imageUrl)
+      visualData = visualResult.data
+      if (visualData) {
+        const fields = Object.keys(visualData).join(', ')
+        console.log(`  ✓ Visual data extracted (${fields})`)
+      } else {
+        console.log('  ✗ Visual extraction failed. Visual fields will be empty.')
+      }
     }
   }
 
@@ -1649,8 +1869,17 @@ async function processProfilesFile(filePath, fileLabel) {
 
     let wikiContent = null
     let imageUrl = null
+    let visualDecision = null
 
     if (MODE === 'visual') {
+      visualDecision = await prepareVisualModel()
+      if (visualDecision.skip) {
+        console.log('  Skipping visual analysis')
+        skippedCount++
+        console.log('')
+        continue
+      }
+
       // Visual mode: fetch direct image URL from wiki API
       console.log('  Fetching image URL...')
       imageUrl = await fetchImageUrl(charName)
@@ -1685,8 +1914,16 @@ async function processProfilesFile(filePath, fileLabel) {
     } else {
       extractFields = 'personality, speech_style, backstory, relationships'
     }
-    console.log(`  Extracting ${extractFields} with ${getProviderLogLabel()}...`)
-    const data = await extractData(charName, wikiContent, imageUrl)
+    let data
+    if (MODE === 'visual') {
+      const visualLabel = visualDecision.modelId ? `${getProviderDisplayName()} (${visualDecision.modelId})` : getProviderLogLabel()
+      console.log(`  Extracting ${extractFields} with ${visualLabel}...`)
+      const visualResult = await extractVisualData(charName, imageUrl)
+      data = visualResult.data
+    } else {
+      console.log(`  Extracting ${extractFields} with ${getProviderLogLabel()}...`)
+      data = await extractData(charName, wikiContent, imageUrl)
+    }
 
     if (data && applyData(profile, data)) {
       const updatedFields = []
@@ -2448,5 +2685,33 @@ if (isDirectRun) {
 }
 
 module.exports = {
+  dropTrailingWikiSegment,
+  fetchWikiPageContent,
+  fetchWikiContent,
+  prepareVisualModel,
+  extractVisualData,
+  extractData,
+  promptOpenRouterModelChoice,
+  getModelCapability,
+  getOpenRouterModel: () => OPENROUTER_MODEL,
+  setMode: (mode) => {
+    MODE = mode
+  },
+  setApiProvider: (provider) => {
+    API_PROVIDER = provider
+  },
+  setOpenRouterModel: (modelId) => {
+    OPENROUTER_MODEL = modelId
+  },
+  setNonInteractive: (value) => {
+    NON_INTERACTIVE = value
+  },
+  setPromptIO: (input, output) => {
+    promptInput = input
+    promptOutput = output
+  },
+  resetVisualModelDecision: () => {
+    visualModelDecision = null
+  },
   sortAndAttachProfileEntry
 }
