@@ -886,7 +886,8 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
       }
     ],
     temperature: 0.3,
-    max_tokens: 4096
+    max_tokens: 16384,
+    reasoning: { effort: 'low' }
   }
 
   try {
@@ -970,7 +971,8 @@ async function extractDataPollinations(characterName, wikiContent, imageUrl = nu
       }
     ],
     temperature: 0.3,
-    max_tokens: 4096
+    max_tokens: 16384,
+    reasoning_effort: 'low'
   }
 
   try {
