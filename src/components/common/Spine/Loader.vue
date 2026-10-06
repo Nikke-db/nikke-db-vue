@@ -435,8 +435,8 @@ const getDefaultAnimation = () => {
 const successfullyLoaded = () => {
   market.load.endLoad()
   market.message
-      .getMessage()
-      .success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
+    .getMessage()
+    .success(messagesEnum.MESSAGE_ASSET_LOADED, market.message.short_message)
 
   checkIfAssetCanYap()
 }
@@ -444,8 +444,8 @@ const successfullyLoaded = () => {
 const wrongfullyLoaded = () => {
   market.load.errorLoad()
   market.message
-      .getMessage()
-      .error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
+    .getMessage()
+    .error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
 }
 
 watch(() => market.globalParams.isMobile, (e) => {
@@ -1066,14 +1066,35 @@ const takeScreenshot = () => {
   if (!canvas) return
   const dataURL = canvas.toDataURL()
 
+  // data:/blob: downloads from a detached anchor are unreliable on mobile
+  // browsers (iOS Safari shows the download prompt but saves nothing, #89).
+  // Convert to a blob URL, attach the anchor to the DOM before the click and
+  // release the URL afterwards.
+  const blob = dataUrlToBlob(dataURL)
+  const url = URL.createObjectURL(blob)
+
   const link = document.createElement('a')
 
   link.download = 'NIKKE-DB_' + market.live2d.current_id + '_' + market.live2d.current_pose + '_' +
                   new Date().getTime().toString().slice(-3) + '.png'
 
-  link.href = dataURL
+  link.href = url
 
+  document.body.appendChild(link)
   link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
+}
+
+const dataUrlToBlob = (dataURL: string): Blob => {
+  const [header, base64] = dataURL.split(',')
+  const mime = header.match(/^data:(.*?)(;|$)/)?.[1] || 'image/png'
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return new Blob([bytes], { type: mime })
 }
 
 // VP9 may be too performance intensive. VP8 or VP9 MUST be explicitly specified for alpha transparency to work.
@@ -1283,9 +1304,16 @@ const filterDomEvents = (event: any) => {
   const spinePlayer = document.querySelector('.spine-player')
   const playerContainer = document.querySelector('#player-container')
 
+  // The player's own controls (timeline scrubber, buttons, popups) are nested
+  // inside .spine-player; interacting with them must not pan the canvas or
+  // swallow the touch events of the sliders (#81).
+  if (target?.closest('.spine-player-controls')) {
+    return false
+  }
+
   // Only change behaviour in story-gen route
   const allowContainerHit = market.route.name === 'story-gen'
-  
+
   if (
     target === canvas ||
     target === spinePlayer ||
