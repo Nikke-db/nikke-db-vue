@@ -4549,7 +4549,14 @@
   },
   {
     "name": "Mustang (CN)",
-    "id": "c902_01"
+    "id": "c902_01",
+    "ko": "머스탱 (CN)",
+    "jp": "マスタング (CN)",
+    "tw": "馬士丁 (CN)",
+    "cn": "马士丁 (CN)",
+    "de": "Mustang (CN)",
+    "th": "มัสแตง (CN)",
+    "fr": "Mustang (CN)"
   },
   {
     "name": "Andersen",
@@ -4564,7 +4571,14 @@
   },
   {
     "name": "Andersen Soaked",
-    "id": "c903_01"
+    "id": "c903_01",
+    "ko": "엔더슨",
+    "jp": "アンダーソン",
+    "tw": "安德森",
+    "cn": "安德森",
+    "de": "Andersen",
+    "th": "แอนเดอร์เซน",
+    "fr": "Andersen"
   },
   {
     "name": "Enikk",
@@ -4601,7 +4615,14 @@
   },
   {
     "name": "Shifty_old",
-    "id": "c907_01"
+    "id": "c907_01",
+    "ko": "시프티 old",
+    "jp": "シフティー old",
+    "tw": "謝芙蒂 old",
+    "cn": "谢芙蒂 old",
+    "de": "Shifty old",
+    "th": "ชิฟตี้ old",
+    "fr": "Futée old"
   },
   {
     "id": "c908",
@@ -4962,7 +4983,13 @@
   {
     "name": "Mecha Shifty",
     "id": "c993",
-    "cn": "机甲谢芙蒂"
+    "cn": "机甲谢芙蒂",
+    "ko": "메카 시프티",
+    "jp": "メカシフティー",
+    "tw": "機甲謝芙蒂",
+    "de": "Mecha-Shifty",
+    "th": "เมกะชิฟตี้",
+    "fr": "Mecha Futée"
   },
   {
     "name": "Rapi",
@@ -5137,7 +5164,14 @@
   },
   {
     "name": "Mustang",
-    "id": "c9022"
+    "id": "c9022",
+    "ko": "머스탱",
+    "jp": "マスタング",
+    "tw": "馬士丁",
+    "cn": "马士丁",
+    "de": "Mustang",
+    "th": "มัสแตง",
+    "fr": "Mustang"
   },
   {
     "name": "Hanson",
@@ -5176,7 +5210,14 @@
   },
   {
     "name": "Syuen",
-    "id": "c9031"
+    "id": "c9031",
+    "ko": "슈엔",
+    "jp": "シュエン",
+    "tw": "舒恩",
+    "cn": "舒恩",
+    "de": "Syuen",
+    "th": "ซูเอิน",
+    "fr": "Syuen"
   },
   {
     "name": "Jien",
