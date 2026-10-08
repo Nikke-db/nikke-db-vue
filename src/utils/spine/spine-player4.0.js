@@ -14838,6 +14838,7 @@ ${e.message}`,
               : viewport.height / this.canvas.height
           renderer.camera.position.x = viewport.x + viewport.width / 2
           renderer.camera.position.y = viewport.y + viewport.height / 2
+          this.__cameraBaseZoom = renderer.camera.zoom
           if (typeof this.__cameraZoomFactor === 'number' && isFinite(this.__cameraZoomFactor) && this.__cameraZoomFactor > 0) {
             renderer.camera.zoom *= this.__cameraZoomFactor
           }
@@ -14948,6 +14949,7 @@ ${e.message}`,
           this.loadingScreen.draw(loading)
         }
         if (loading && config.loading) config.loading(this, delta)
+        this.__renderFrameVersion = (this.__renderFrameVersion || 0) + 1
       } catch (e) {
         this.showError(
           `Error: Unable to render skeleton.

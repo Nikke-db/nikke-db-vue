@@ -8,20 +8,13 @@
       <n-p>Last Update: {{ updates[updates.length-1].date }}</n-p>
 
       <n-alert type="info" class="ytb">
-        <iframe class="ytb-iframe" src="https://www.youtube.com/embed/NtvbDGnRT-g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <iframe class="ytb-iframe" src="https://www.youtube.com/embed/h5eR27Gle1U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </n-alert>
 
       <n-divider />
 
       <n-alert type="info">
-        history repeats itself <br/>
-        persona gallery when the event is done
-      </n-alert>
-
-      <n-divider />
-
-      <n-alert type="info">
-        I have quit the game and pretty much only "play" to do website updates. <br />
+        I have quit the game and pretty much only "play" to do website updates. <br/>
         As such I can't really know NPC names anymore. So every NPCs I can't datamine from now on will have their names be "NPC: TBA" in the L2D viewer. <br/>
         Please open github tickets or send me discord messages so I can complete their names. Of course I'll at least need a picture or their c_id. <br/>
         I will still try to delay galleries just to avoid getting some cease and desist or copyrights.

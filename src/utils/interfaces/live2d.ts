@@ -1,8 +1,15 @@
 export interface live2d_interface {
-  name: string
+  name: string // english
   id: string
   tl?: string
-  f?: string
+  f?: string,
+  ko?: string,
+  jp?: string,
+  tw?: string,
+  cn?: string,
+  de?: string,
+  th?: string,
+  fr?: string
 }
 
 export interface AttachmentItemColorInterface {

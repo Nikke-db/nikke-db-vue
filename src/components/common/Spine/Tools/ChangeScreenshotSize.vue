@@ -24,12 +24,12 @@
     >
       <n-card title="" :bordered="false" size="huge" id="bgcModalContent">
         Screenshots use the character's aspect ratio. Choose the longest side;
-        the default is 3000 pixels. Output can be up to 16384 pixels. The value
-        is saved to your local storage.
+        the default is 3000 pixels. Output can be up to 16384 pixels, subject
+        to your browser's memory limits. The value is saved to your local storage.
 
         <n-input-number
           v-model:value="size"
-          :min="0"
+          :min="64"
           :max="16384"
           :clearable="false"
           :autofocus="false"
@@ -57,10 +57,10 @@ onMounted(() => {
     localStorage.setItem('sc_sz', '3000')
   }
 
-  size.value = parseInt(localStorage.getItem('sc_sz')!)
+  size.value = Math.max(64, Math.min(16384, parseInt(localStorage.getItem('sc_sz')!) || 3000))
 })
 
-const size = ref(0)
+const size = ref(3000)
 const market = useMarket()
 const scSzModal = ref(false)
 
@@ -77,6 +77,7 @@ const confirmScSzModal = () => {
     return false
   } else {
     market.message.getMessage().success(messagesEnum.MESSAGE_LOCALSTORAGE_SAVED)
+    size.value = Math.max(64, Math.min(16384, Math.round(size.value) || 3000))
     localStorage.setItem('sc_sz', size.value.toString())
     return true
   }
@@ -84,7 +85,7 @@ const confirmScSzModal = () => {
 
 const cancelScSzModal = () => {
   market.message.getMessage().warning(messagesEnum.MESSAGE_CANCELLED)
-  size.value = parseInt(localStorage.getItem('sc_sz')!)
+  size.value = Math.max(64, Math.min(16384, parseInt(localStorage.getItem('sc_sz')!) || 3000))
 }
 </script>
 

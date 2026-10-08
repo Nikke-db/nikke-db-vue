@@ -231,6 +231,9 @@ import bsideidol from '@/utils/json/Gallery/bsideidol.json'
 import arkranger from '@/utils/json/Gallery/arkranger.json'
 import wavetoyou from '@/utils/json/Gallery/wavetoyou.json'
 import projectmatis from '@/utils/json/Gallery/projectmatis.json'
+import personaonfrontline from '@/utils/json/Gallery/personaonfrontline.json'
+import greatvillainunion from '@/utils/json/Gallery/greatvillainunion.json'
+import coinrushshowdown from '@/utils/json/Gallery/coinrushshowdown.json'
 
 
 const market = useMarket()
@@ -323,7 +326,10 @@ const buttonListEvents = [
   { data: bsideidol },
   { data: arkranger },
   { data: wavetoyou },
-  { data: projectmatis }
+  { data: projectmatis },
+  { data: personaonfrontline },
+  { data: greatvillainunion },
+  { data: coinrushshowdown }
 ] as buttonInterface[]
 
 const buttonListOther = [
