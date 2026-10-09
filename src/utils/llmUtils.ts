@@ -2,6 +2,7 @@
 // These functions handle higher token limits for summarization tasks
 
 import { AIError, logDebug } from '@/utils/chatUtils'
+import { POLLINATIONS_NATIVE_SEARCH_MODELS } from '@/utils/aiWebSearchUtils'
 import { callGeminiSummarization } from '@/utils/geminiUtils'
 import { callPollinationsSummarization } from '@/utils/pollinationsUtils'
 import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MESSAGES_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, OPENCODE_GO_ANTHROPIC_MODELS, modelsWithoutCacheControlSupport, buildStoryResponseSchema } from '@/utils/providerConfigUtils'
@@ -357,11 +358,11 @@ export const fetchPollinationsModels = async (apiKey?: string) => {
     return models
       .filter((m: any) => {
         const hiddenModels = ['qwen-coder', 'chickytutor', 'midijourney', 'openai-audio']
-        return !hiddenModels.includes(m.name)
+        return ![m.name, ...(m.aliases || [])].some((name: string) => hiddenModels.includes(name))
       })
       .map((m: any) => ({
         label: m.name,
-        value: m.name
+        value: m.aliases?.find((alias: string) => POLLINATIONS_NATIVE_SEARCH_MODELS.includes(alias)) || m.name
       }))
       .sort((a: any, b: any) => a.label.localeCompare(b.label))
   } catch (error) {
