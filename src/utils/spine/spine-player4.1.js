@@ -15040,6 +15040,18 @@ var spine41 = (() => {
               : viewport.height / this.canvas.height
           renderer.camera.position.x = viewport.x + viewport.width / 2
           renderer.camera.position.y = viewport.y + viewport.height / 2
+          this.__cameraBaseZoom = renderer.camera.zoom
+          if (typeof this.__cameraZoomFactor === 'number' && isFinite(this.__cameraZoomFactor) && this.__cameraZoomFactor > 0) {
+            renderer.camera.zoom *= this.__cameraZoomFactor
+          }
+          if (this.__cameraPositionOffset) {
+            renderer.camera.position.x += this.__cameraPositionOffset.x || 0
+            renderer.camera.position.y += this.__cameraPositionOffset.y || 0
+          }
+          if (this.__cameraScreenOffset) {
+            renderer.camera.position.x += (this.__cameraScreenOffset.x || 0) * renderer.camera.zoom
+            renderer.camera.position.y += (this.__cameraScreenOffset.y || 0) * renderer.camera.zoom
+          }
           let gl = this.context.gl
           gl.clearColor(bg.r, bg.g, bg.b, bg.a)
           gl.clear(gl.COLOR_BUFFER_BIT)
@@ -15139,6 +15151,7 @@ var spine41 = (() => {
           this.loadingScreen.draw(loading)
         }
         if (loading && config.loading) config.loading(this, delta)
+        this.__renderFrameVersion = (this.__renderFrameVersion || 0) + 1
       } catch (e) {
         this.showError(
           `Error: Unable to render skeleton.

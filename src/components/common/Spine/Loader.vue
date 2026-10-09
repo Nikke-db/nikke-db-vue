@@ -4,10 +4,14 @@
     :class="checkMobile() ? 'mobile' : 'computer'"
     :style="{ visibility: market.live2d.isVisible ? 'visible' : 'hidden', opacity: market.live2d.isVisible ? 1 : 0 }"
   ></div>
+  <div v-if="market.live2d.isExportingAnimation || isCapturingScreenshot" class="export-overlay" role="status" aria-live="polite">
+    <span class="export-spinner" aria-hidden="true"></span>
+    <span>{{ isCapturingScreenshot ? 'Rendering high-resolution PNG...' : 'Exporting animation...' }}</span>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch, onUnmounted } from 'vue'
+import { onMounted, watch, onUnmounted, ref } from 'vue'
 import { useMarket } from '@/stores/market'
 
 // @ts-ignore
@@ -18,6 +22,9 @@ import spine41 from '@/utils/spine/spine-player4.1'
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
 import { animationMappings } from '@/utils/animationMappings'
+import { getCameraScreenScale, getPresentationSize } from '@/utils/spine/camera'
+import { renderTiledScreenshot, renderTiledPngScreenshot } from '@/utils/spine/screenshot'
+import { recordCanvasAnimation } from '@/utils/spine/recording'
 
 // Helper for debug logging
 const logDebug = (...args: any[]) => {
@@ -25,10 +32,13 @@ const logDebug = (...args: any[]) => {
     console.log(...args)
   }
 }
-
 let canvas: HTMLCanvasElement | null = null
+let spineRenderCanvas: HTMLCanvasElement | null = null
 let spineCanvas: any = null
 let currentLoadId = 0 // Track active load requests
+let recordingAbortController: AbortController | null = null
+let screenshotAbortController: AbortController | null = null
+const isCapturingScreenshot = ref(false)
 const market = useMarket()
 const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
 const STORY_GEN_LOW_POWER_FRAME_MS = 1000 / 30
@@ -165,16 +175,13 @@ const spineLoader = (retryAttempt = 0) => {
           containerEl.style.position = containerEl.style.position || 'relative'
         }
       }
-
-      const animation = getDefaultAnimation()
-
       spineCanvas = new usedSpine.SpinePlayer('player-container', {
         skelUrl: requestedCharacterId,
         rawDataURIs: {
           [requestedCharacterId]: skelURL,
         },
         atlasUrl,
-        animation: animation,
+        animation: getDefaultAnimation(),
         skin: requestedSkin,
         showControls: market.route.name !== 'story-gen',
         backgroundColor: '#00000000',
@@ -186,9 +193,6 @@ const spineLoader = (retryAttempt = 0) => {
         viewport: spineViewport,
         defaultMix: SPINE_DEFAULT_MIX,
         success: (player: any) => {
-
-          // if no animation the sprite start paused, so trigger it
-          if (animation === '' || animation === null) player.play()
           // Late arrival after our safety timeout fired — discard this player.
           if (playerSettled) {
             logDebug(`[Loader] Ignoring success callback after timeout for ${requestedCharacterId}`)
@@ -213,42 +217,39 @@ const spineLoader = (retryAttempt = 0) => {
           market.live2d.attachments = player.animationState.data.skeletonData.defaultSkin.attachments
           market.live2d.animations = player.animationState.data.skeletonData.animations.map((a: any) => a.name)
 
-          // fix an annoyance that should only be for the AI page
-          if (market.route.name === 'story-gen') {
-            const currentAnim = market.live2d.current_animation
-            let resolvedAnim = resolveAnimation(currentAnim, market.live2d.animations)
+          const currentAnim = market.live2d.current_animation
+          let resolvedAnim = resolveAnimation(currentAnim, market.live2d.animations)
 
-            if (!resolvedAnim) {
-              // Try default animation from config
-              resolvedAnim = resolveAnimation(player.config.animation, market.live2d.animations)
-            }
+          if (!resolvedAnim) {
+            // Try default animation from config
+            resolvedAnim = resolveAnimation(player.config.animation, market.live2d.animations)
+          }
 
-            if (!resolvedAnim && market.live2d.animations.length > 0) {
-              // Fallback to first available animation
-              resolvedAnim = market.live2d.animations[0]
-              console.warn(`No valid animation found. Falling back to first available: ${resolvedAnim}`)
-            }
+          if (!resolvedAnim && market.live2d.animations.length > 0) {
+            // Fallback to first available animation
+            resolvedAnim = market.live2d.animations[0]
+            console.warn(`No valid animation found. Falling back to first available: ${resolvedAnim}`)
+          }
 
-            if (resolvedAnim) {
-              logDebug(`[Loader] Setting initial animation to: ${resolvedAnim} (Requested: ${currentAnim})`)
-              market.live2d.current_animation = resolvedAnim
+          if (resolvedAnim) {
+            logDebug(`[Loader] Setting initial animation to: ${resolvedAnim} (Requested: ${currentAnim})`)
+            market.live2d.current_animation = resolvedAnim
 
-              // Force set animation with a slight delay to ensure player is ready
-              setTimeout(() => {
-                if (thisLoadId !== currentLoadId || player !== getActiveSpinePlayer()) {
-                  return
-                }
+            // Force set animation with a slight delay to ensure player is ready
+            setTimeout(() => {
+              if (thisLoadId !== currentLoadId || player !== getActiveSpinePlayer()) {
+                return
+              }
 
-                try {
-                  player.animationState.setAnimation(0, resolvedAnim, true)
-                  player.play()
-                } catch (e) {
-                  console.error('[Loader] Failed to set animation in timeout', e)
-                }
-              }, 100)
-            } else {
-              console.error('[Loader] No animations available for this character.')
-            }
+              try {
+                player.animationState.setAnimation(0, resolvedAnim, true)
+                player.play()
+              } catch (e) {
+                console.error('[Loader] Failed to set animation in timeout', e)
+              }
+            }, 100)
+          } else {
+            console.error('[Loader] No animations available for this character.')
           }
 
           market.live2d.triggerFinishedLoading()
@@ -276,10 +277,14 @@ const spineLoader = (retryAttempt = 0) => {
         },
       })
       applyStoryGenLowPowerThrottle(spineCanvas)
+      applyRenderFpsLimiter(spineCanvas)
+      applyVisibilityGating(spineCanvas)
+      applyPresentationCanvas(spineCanvas)
       applyDefaultStyle2Canvas()
     }
   }
 }
+
 
 const customSpineLoader = () => {
   let usedSpine: any
@@ -358,13 +363,16 @@ const customSpineLoader = () => {
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
   applyStoryGenLowPowerThrottle(spineCanvas)
+  applyRenderFpsLimiter(spineCanvas)
+  applyVisibilityGating(spineCanvas)
+  applyPresentationCanvas(spineCanvas)
 }
 
 const getPathing = (extension: string) => {
   let route =
-      globalParams.PATH_L2D +
-      market.live2d.current_id +
-      '/'
+    globalParams.PATH_L2D +
+    market.live2d.current_id +
+    '/'
   let fileSuffix = '_00'
 
 
@@ -407,15 +415,12 @@ const getDefaultAnimation = () => {
     return 'pose_idle'
   }
 
-  // persona event
-  if ([ 'ce009_char_01', 'ce009_char_02', 'ce009_char_03', 'ce009_enemy_ade', 'ce009_enemy_delta', 'ce009_enemy_miranda',
+  if (['ce009_char_01', 'ce009_char_02', 'ce009_char_03', 'ce009_enemy_ade', 'ce009_enemy_delta', 'ce009_enemy_miranda',
     'ce009_enemy_phantom', 'ce009_enemy_poli', 'ce009_enemy_quency', 'ce009_skill_01', 'ce009_skill_02'].includes(market.live2d.current_id)) {
     return 'down_idle'
   }
 
-  if (market.live2d.current_id === 'ce009_skill_03') {
-    return ''
-  }
+  if (market.live2d.current_id === 'ce009_skill_03') return ''
 
   // mass manufactured rapi
   if (market.live2d.current_id === 'c994') return 'idle_02'
@@ -449,6 +454,7 @@ const wrongfullyLoaded = () => {
 }
 
 watch(() => market.globalParams.isMobile, (e) => {
+  if (market.live2d.isExportingAnimation || isCapturingScreenshot.value) return
   if (e) {
     canvas && setCanvasStyleMobile()
   } else {
@@ -478,18 +484,7 @@ watch(() => market.live2d.resetPlacement, () => {
 })
 
 watch(() => market.live2d.screenshot, () => {
-  if (!checkMobile()) {
-    const sc_sz = localStorage.getItem('sc_sz')
-    const old_sc_sz = canvas ? canvas.style.height : '0'
-    canvas && (canvas.style.height = sc_sz + 'px')
-
-    setTimeout(() => {
-      takeScreenshot()
-      canvas && (canvas.style.height = old_sc_sz)
-    }, 250)
-  } else {
-    takeScreenshot()
-  }
+  takeCharacterScreenshot()
 })
 
 watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
@@ -520,7 +515,253 @@ watch(() => market.live2d.hideUI, () => {
   } else {
     controls.style.visibility = 'hidden'
   }
+  requestAnimationFrame(syncVisualiserCamera)
 })
+
+// Limit render FPS through the player's existing drawFrame API.
+const RENDER_FPS_MIN = 1
+const RENDER_FPS_MAX = 1024
+const RENDER_FPS_DEFAULT = 60
+let renderFps = RENDER_FPS_DEFAULT
+
+const setRenderFps = (fps: number) => {
+  const clamped = Math.max(RENDER_FPS_MIN, Math.min(RENDER_FPS_MAX, Math.round(fps) || RENDER_FPS_DEFAULT))
+  renderFps = clamped
+  if (spineCanvas && typeof spineCanvas.drawFrame === 'function') {
+    applyRenderFpsLimiter(spineCanvas)
+  }
+}
+
+const getRenderFps = () => renderFps
+
+if (typeof window !== 'undefined') {
+  ;(window as any).__spineSetRenderFps = setRenderFps
+  ;(window as any).__spineGetRenderFps = getRenderFps
+}
+
+const applyRenderFpsLimiter = (player: any) => {
+  if (!player || typeof player.drawFrame !== 'function' || player.__renderFpsWrapped) {
+    return
+  }
+
+  const originalDrawFrame = player.drawFrame.bind(player)
+  let lastFrameAt = 0
+
+  player.drawFrame = (requestNextFrame = true) => {
+    if (!requestNextFrame) {
+      return originalDrawFrame(requestNextFrame)
+    }
+
+    if (player.error || player.disposed) return
+
+    const fps = market.live2d.isExportingAnimation ? Math.max(RECORDING_FRAME_RATE, renderFps) : renderFps
+    const frameMs = 1000 / fps
+    const now = performance.now()
+    if (lastFrameAt !== 0 && now - lastFrameAt < frameMs) {
+      if (!player.stopRequestAnimationFrame) {
+        requestAnimationFrame(() => player.drawFrame())
+      }
+      return
+    }
+
+    lastFrameAt = now
+    return originalDrawFrame(requestNextFrame)
+  }
+
+  player.__renderFpsWrapped = true
+}
+
+// Pause rendering while hidden, except during video capture.
+
+let isRenderLoopHidden = false
+
+const shouldRenderLoopBeHidden = () => {
+  if (typeof document === 'undefined') return false
+  if (market.live2d.isExportingAnimation) return false
+  return market.live2d.isVisible === false || document.hidden === true
+}
+
+// Keep rendering until the skeleton finishes loading.
+const canGateRenderLoop = (player: any) => !!player.skeleton
+
+const resumeRenderLoop = () => {
+  isRenderLoopHidden = false
+  // Clear stopRequestAnimationFrame before restarting the render loop.
+  if (spinePlayer && typeof spinePlayer.drawFrame === 'function' && !spinePlayer.disposed && !spinePlayer.error) {
+    spinePlayer.stopRequestAnimationFrame = false
+    spinePlayer.drawFrame()
+  }
+}
+
+const checkHiddenRenderLoop = () => {
+  const player = spinePlayer
+  if (!player || player.disposed || player.error) return
+  if (shouldRenderLoopBeHidden() && canGateRenderLoop(player)) {
+    isRenderLoopHidden = true
+    player.stopRequestAnimationFrame = true
+    return
+  }
+  if (isRenderLoopHidden) {
+    resumeRenderLoop()
+  }
+}
+
+const applyVisibilityGating = (player: any) => {
+  if (!player || typeof player.drawFrame !== 'function' || player.__visibilityGated) return
+  player.__visibilityGated = true
+
+  const originalDrawFrame = player.drawFrame.bind(player)
+
+  player.drawFrame = (requestNextFrame = true) => {
+    // Single-frame renders also run while the player is hidden.
+    if (!requestNextFrame) {
+      return originalDrawFrame(requestNextFrame)
+    }
+    if (shouldRenderLoopBeHidden() && canGateRenderLoop(player)) {
+      isRenderLoopHidden = true
+      player.stopRequestAnimationFrame = true
+      return
+    }
+    return originalDrawFrame(requestNextFrame)
+  }
+}
+
+// Render into a capped WebGL buffer, then copy frames to the viewport canvas.
+const applyPresentationCanvas = (player: any) => {
+  if (!player || typeof player.drawFrame !== 'function' || player.__presentationCanvasWrapped) return
+  const renderCanvas = player.dom?.querySelector('.spine-player-canvas') as HTMLCanvasElement | null
+  if (!renderCanvas) return
+
+  spineRenderCanvas = renderCanvas
+  player.__cameraZoomFactor = getVisualiserCameraFitFactor()
+  player.__cameraPositionOffset = { x: 0, y: 0 }
+  player.__cameraScreenOffset = getVisualiserCameraScreenOffset()
+  canvas = player.dom.querySelector('.spine-presentation-canvas') as HTMLCanvasElement | null
+  if (!canvas) {
+    canvas = document.createElement('canvas')
+    canvas.className = 'spine-presentation-canvas'
+    canvas.setAttribute('aria-hidden', 'true')
+    renderCanvas.parentElement?.appendChild(canvas)
+  }
+  observeVisualiserLayout()
+
+  player.__presentationCanvasWrapped = true
+  const originalDrawFrame = player.drawFrame.bind(player)
+  let lastPresentedFrame = -1
+  player.drawFrame = (requestNextFrame = true) => {
+    if (isCapturingScreenshot.value) {
+      if (requestNextFrame && !player.disposed && !player.error && !player.stopRequestAnimationFrame) {
+        requestAnimationFrame(() => player.drawFrame(true))
+      }
+      return
+    }
+    const result = originalDrawFrame(requestNextFrame)
+    const frameVersion = player.__renderFrameVersion || 0
+    if (!player.error && !market.live2d.isExportingAnimation && frameVersion !== lastPresentedFrame && canvas && spineRenderCanvas && spineRenderCanvas.width && spineRenderCanvas.height) {
+      const dpr = window.devicePixelRatio || 1
+      const { width: presentationWidth, height: presentationHeight } = getPresentationSize(window.innerWidth, window.innerHeight, dpr, getRenderCanvasLimit())
+      if (canvas.width !== presentationWidth || canvas.height !== presentationHeight) {
+        canvas.width = presentationWidth
+        canvas.height = presentationHeight
+      }
+      const context = canvas.getContext('2d')
+      context?.clearRect(0, 0, canvas.width, canvas.height)
+      context?.drawImage(spineRenderCanvas, 0, 0, canvas.width, canvas.height)
+      lastPresentedFrame = frameVersion
+    }
+    return result
+  }
+}
+
+const getVisualiserCameraFitFactor = () => {
+  if (market.route.name !== 'visualiser') return 1
+
+  const header = [...document.querySelectorAll('.flexbox')]
+    .map((element) => element.getBoundingClientRect())
+    .find((rect) => rect.width > 0 && rect.height > 0)
+  const controls = document.querySelector('.spine-player-controls')
+  // Leave room for the header's roughly 15px box-shadow fade.
+  const headerShadow = header ? 15 : 0
+  const topInset = (header?.height || 0) + headerShadow
+  const bottomInset = controls && getComputedStyle(controls).visibility !== 'hidden' ? controls.getBoundingClientRect().height : 0
+  const availableHeight = Math.max(1, window.innerHeight - topInset - bottomInset)
+
+  return window.innerHeight / availableHeight
+}
+
+const getVisualiserRenderScale = () => {
+  const dpr = window.devicePixelRatio || 1
+  const desiredRenderScale = market.live2d.HQassets ? HQ_RENDER_SCALE : LQ_RENDER_SCALE
+  return Math.min(
+    desiredRenderScale,
+    getRenderCanvasLimit() / Math.max(window.innerWidth * dpr, window.innerHeight * dpr)
+  )
+}
+
+const getVisualiserCameraScreenOffset = () => {
+  if (market.route.name !== 'visualiser') return { x: 0, y: 0 }
+
+  const header = [...document.querySelectorAll('.flexbox')]
+    .map((element) => element.getBoundingClientRect())
+    .find((rect) => rect.width > 0 && rect.height > 0)
+  const controls = document.querySelector('.spine-player-controls')
+  const headerShadow = header ? 15 : 0
+  const topInset = (header?.height || 0) + headerShadow
+  const bottomInset = controls && getComputedStyle(controls).visibility !== 'hidden' ? controls.getBoundingClientRect().height : 0
+  // Convert CSS layout offsets to backing-buffer pixels.
+  return { x: 0, y: (topInset - bottomInset) / 2 * getVisualiserRenderScale() * (window.devicePixelRatio || 1) }
+}
+
+let visualiserLayoutObserver: ResizeObserver | null = null
+
+const syncVisualiserCamera = () => {
+  if (!spinePlayer || market.live2d.isExportingAnimation || isCapturingScreenshot.value) return
+  spinePlayer.__cameraZoomFactor = getVisualiserCameraFitFactor() / zoomLevel
+  spinePlayer.__cameraScreenOffset = getVisualiserCameraScreenOffset()
+}
+
+const observeVisualiserLayout = () => {
+  visualiserLayoutObserver?.disconnect()
+  visualiserLayoutObserver = null
+  if (typeof ResizeObserver === 'undefined' || market.route.name !== 'visualiser') return
+
+  visualiserLayoutObserver = new ResizeObserver(() => syncVisualiserCamera())
+  document.querySelectorAll('.flexbox, .spine-player-controls').forEach((element) => {
+    visualiserLayoutObserver?.observe(element)
+  })
+}
+
+function syncCanvasesToViewport() {
+  if (!canvas || !spineRenderCanvas || checkMobile() || market.live2d.isExportingAnimation || isCapturingScreenshot.value) return
+
+  const dpr = window.devicePixelRatio || 1
+  const viewportWidth = Math.max(1, window.innerWidth)
+  const viewportHeight = Math.max(1, window.innerHeight)
+  const desiredRenderScale = market.live2d.HQassets ? HQ_RENDER_SCALE : LQ_RENDER_SCALE
+  const renderScale = Math.min(
+    desiredRenderScale,
+    getRenderCanvasLimit() / Math.max(viewportWidth * dpr, viewportHeight * dpr)
+  )
+
+  spineRenderCanvas.style.width = viewportWidth * renderScale + 'px'
+  spineRenderCanvas.style.height = viewportHeight * renderScale + 'px'
+  canvas.style.width = viewportWidth + 'px'
+  canvas.style.height = viewportHeight + 'px'
+  canvas.style.left = '0px'
+  canvas.style.top = '0px'
+  canvas.style.margin = '0'
+
+  const { width: presentationWidth, height: presentationHeight } = getPresentationSize(viewportWidth, viewportHeight, dpr, getRenderCanvasLimit())
+  if (canvas.width !== presentationWidth || canvas.height !== presentationHeight) {
+    canvas.width = presentationWidth
+    canvas.height = presentationHeight
+  }
+}
+
+watch(() => market.live2d.isVisible, () => { checkHiddenRenderLoop() })
+watch(() => market.live2d.isExportingAnimation, () => { checkHiddenRenderLoop() })
+
+const handleDocumentVisibility = () => { checkHiddenRenderLoop() }
 
 const isStoryGenLowPowerEnabled = () => {
   if (typeof document === 'undefined') return false
@@ -579,6 +820,7 @@ onMounted(() => {
     }
   }
   spineLoader()
+  document.addEventListener('visibilitychange', handleDocumentVisibility)
   window.addEventListener('resize', handleResize)
   document.addEventListener('mousedown', onMouseDown)
   document.addEventListener('touchstart', onTouchStart, { passive: false })
@@ -591,6 +833,15 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  currentLoadId++
+  screenshotAbortController?.abort()
+  screenshotAbortController = null
+  isCapturingScreenshot.value = false
+  recordingAbortController?.abort()
+  recordingAbortController = null
+  visualiserLayoutObserver?.disconnect()
+  visualiserLayoutObserver = null
+  document.removeEventListener('visibilitychange', handleDocumentVisibility)
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('mousedown', onMouseDown)
   document.removeEventListener('touchstart', onTouchStart)
@@ -604,11 +855,21 @@ onUnmounted(() => {
     cancelAnimationFrame(zoomFrameId)
     zoomFrameId = null
   }
+  if (spineCanvas) {
+    disposeSpineInstance(spineCanvas, 'spineCanvas on unmount')
+  } else {
+    clearSpineReferences()
+    forceRemovePlayerDom()
+  }
 })
 
 const handleResize = () => {
+  if (market.live2d.isExportingAnimation || isCapturingScreenshot.value) return
+  if (canvas && spineRenderCanvas && !checkMobile()) {
+    syncCanvasesToViewport()
+  }
   if (canvas) {
-    applyDefaultStyle2Canvas()
+    applyDefaultStyle2Canvas(false)
   }
 }
 
@@ -627,7 +888,7 @@ const onMouseDown = (e: MouseEvent) => {
 }
 
 let initialDistance = 0
-let initialScale = 0.5
+let initialZoom = 1
 
 const handlePinch = (e: TouchEvent) => {
   if (!filterDomEvents(e) || e.touches.length !== 2 || initialDistance === 0) return
@@ -640,47 +901,44 @@ const handlePinch = (e: TouchEvent) => {
   )
 
   const scaleFactor = currentDistance / initialDistance
-  const newScale = clampScale(initialScale * scaleFactor)
-  if (newScale === transformScale) return
+  const newScale = clampScale(initialZoom * scaleFactor)
+  if (newScale === zoomLevel) return
 
-  // Anchor the zoom at the midpoint of the two fingers so the character stays
-  // under the fingers instead of flying off-screen (the original pinch bug).
-  const midX = (touch1.clientX + touch2.clientX) / 2
-  const midY = (touch1.clientY + touch2.clientY) / 2
-  captureAnchor(midX, midY)
-  transformScale = newScale
-  targetScale = newScale
-  applyScaleWithAnchor(transformScale)
+  captureAnchor((touch1.clientX + touch2.clientX) / 2, (touch1.clientY + touch2.clientY) / 2)
+  cameraZoomAnchorActive = true
+  setZoomLevel(newScale)
+  cameraZoomAnchorActive = false
 
-  // Prevent page zoom during pinch
+  // Prevent page zoom during a pinch.
   if (e.cancelable) e.preventDefault()
 }
 
 const onTouchStart = (e: TouchEvent) => {
   if (!filterDomEvents(e)) return
 
-  // Tell the browser we own this gesture before it can start panning/zooming the page.
+  // Prevent the browser from taking over the gesture.
   if (e.cancelable) e.preventDefault()
 
-  // Handle pinch gesture start
+  // Record the initial pinch distance.
   if (e.touches.length === 2) {
     const touch1 = e.touches[0]
     const touch2 = e.touches[1]
     initialDistance = Math.sqrt(
-      Math.pow(touch2.clientX - touch1.clientX, 2) + 
+      Math.pow(touch2.clientX - touch1.clientX, 2) +
       Math.pow(touch2.clientY - touch1.clientY, 2)
     )
-    initialScale = transformScale
+    initialZoom = zoomLevel
     move = false
-    // Stop any in-flight wheel zoom smoothing so pinch takes over cleanly
+    // Let pinch input take over from wheel smoothing.
     if (zoomFrameId !== null) {
       cancelAnimationFrame(zoomFrameId)
       zoomFrameId = null
     }
+    cameraZoomAnchorActive = false
     return
   }
-  
-  // Only start dragging if it's a single touch (not pinch)
+
+  // A single touch starts a drag.
   if (e.touches.length === 1) {
     oldX = e.touches[0].clientX
     oldY = e.touches[0].clientY
@@ -697,6 +955,16 @@ const onMouseUp = () => {
   oldY = 0
   move = false
   isCanvasMouseDown = false
+}
+
+const moveCameraByScreenDelta = (deltaX: number, deltaY: number) => {
+  if (!spinePlayer || !spinePlayer.sceneRenderer?.camera || !canvas) return
+  const camera = spinePlayer.sceneRenderer.camera
+  const offset = spinePlayer.__cameraPositionOffset || (spinePlayer.__cameraPositionOffset = { x: 0, y: 0 })
+  const scale = getCameraScreenScale(camera, canvas.getBoundingClientRect())
+  const zoom = spinePlayer.__cameraBaseZoom ? spinePlayer.__cameraBaseZoom * (spinePlayer.__cameraZoomFactor || 1) : camera.zoom
+  offset.x -= deltaX * scale.x * zoom
+  offset.y += deltaY * scale.y * zoom
 }
 
 const onTouchEnd = () => {
@@ -724,17 +992,9 @@ const onMouseMove = (e: MouseEvent) => {
       if (dx * dx + dy * dy > 25) didDrag = true
     }
 
-    const cs = getComputedStyle(canvas)
-    const stylel = parseFloat(canvas.style.left) || parseFloat(cs.left) || 0
-    const stylet = parseFloat(canvas.style.top) || parseFloat(cs.top) || 0
-
-    if (newX !== oldX) {
-      canvas.style.left = stylel + (newX - oldX) + 'px'
-    }
-
-    if (newY !== oldY) {
-      canvas.style.top = stylet + (newY - oldY) + 'px'
-    }
+    const deltaX = newX - oldX
+    const deltaY = newY - oldY
+    moveCameraByScreenDelta(deltaX, deltaY)
 
     oldX = newX
     oldY = newY
@@ -759,17 +1019,9 @@ const onTouchMove = (e: TouchEvent) => {
     const newX = e.touches[0].clientX
     const newY = e.touches[0].clientY
 
-    const cs = getComputedStyle(canvas)
-    const stylel = parseFloat(canvas.style.left) || parseFloat(cs.left) || 0
-    const stylet = parseFloat(canvas.style.top) || parseFloat(cs.top) || 0
-
-    if (newX !== oldX) {
-      canvas.style.left = stylel + (newX - oldX) + 'px'
-    }
-
-    if (newY !== oldY) {
-      canvas.style.top = stylet + (newY - oldY) + 'px'
-    }
+    const deltaX = newX - oldX
+    const deltaY = newY - oldY
+    moveCameraByScreenDelta(deltaX, deltaY)
 
     oldX = newX
     oldY = newY
@@ -778,8 +1030,15 @@ const onTouchMove = (e: TouchEvent) => {
 
 const onWheel = (e: WheelEvent) => {
   if (filterDomEvents(e)) {
+    // Prevent page scrolling while zooming.
+    if (e.cancelable) e.preventDefault()
+    captureAnchor(e.clientX, e.clientY)
+    cameraZoomAnchorActive = true
     const direction = e.deltaY > 0 ? -1 : 1
-    targetScale = clampScale(targetScale * Math.pow(ZOOM_FACTOR, direction))
+    // Do not restart smoothing when the value is clamped.
+    const next = clampScale(targetZoom * Math.pow(ZOOM_FACTOR, direction))
+    if (next === targetZoom) return
+    targetZoom = next
     startZoomSmoothing()
   }
 }
@@ -813,14 +1072,24 @@ const forceRemovePlayerDom = () => {
 
   const canvases = container.querySelectorAll('.spine-player-canvas')
   canvases.forEach((c) => c.remove())
+  const presentationCanvases = container.querySelectorAll('.spine-presentation-canvas')
+  presentationCanvases.forEach((c) => c.remove())
 
   const controls = container.querySelectorAll('.spine-player-controls')
   controls.forEach((c) => c.remove())
 
   canvas = null
+  spineRenderCanvas = null
 }
 
 const disposeSpineInstance = (player: any, context: string) => {
+  if (player === spinePlayer || player === spineCanvas) {
+    screenshotAbortController?.abort()
+    screenshotAbortController = null
+    isCapturingScreenshot.value = false
+    recordingAbortController?.abort()
+    recordingAbortController = null
+  }
   if (!player) return
 
   try {
@@ -1062,39 +1331,62 @@ watch(() => market.live2d.current_animation, (newAnim) => {
   }
 })
 
-const takeScreenshot = () => {
-  if (!canvas) return
-  const dataURL = canvas.toDataURL()
-
-  // data:/blob: downloads from a detached anchor are unreliable on mobile
-  // browsers (iOS Safari shows the download prompt but saves nothing, #89).
-  // Convert to a blob URL, attach the anchor to the DOM before the click and
-  // release the URL afterwards.
-  const blob = dataUrlToBlob(dataURL)
-  const url = URL.createObjectURL(blob)
-
-  const link = document.createElement('a')
-
-  link.download = 'NIKKE-DB_' + market.live2d.current_id + '_' + market.live2d.current_pose + '_' +
-                  new Date().getTime().toString().slice(-3) + '.png'
-
-  link.href = url
-
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 10000)
-}
-
-const dataUrlToBlob = (dataURL: string): Blob => {
-  const [header, base64] = dataURL.split(',')
-  const mime = header.match(/^data:(.*?)(;|$)/)?.[1] || 'image/png'
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
+const takeCharacterScreenshot = async () => {
+  if (screenshotAbortController || market.live2d.isExportingAnimation || !canvas) return
+  const controller = new AbortController()
+  screenshotAbortController = controller
+  isCapturingScreenshot.value = true
+  const screenshotSize = Math.max(64, Math.min(16384, parseInt(localStorage.getItem('sc_sz') || '3000', 10) || 3000))
+  const filename = `NIKKE-DB_${market.live2d.current_id}_${market.live2d.current_pose}_${Date.now().toString().slice(-3)}.png`
+  let output: HTMLCanvasElement | undefined
+  const fail = (error: unknown) => {
+    console.error('Screenshot export failed:', error)
+    market.message?.getMessage().error(messagesEnum.MESSAGE_ERROR, market.message.long_message)
   }
-  return new Blob([bytes], { type: mime })
+  try {
+    let blob: Blob | null
+    if (screenshotSize > 4096 && spinePlayer?.skeleton && spineRenderCanvas) {
+      // Stream pixel bands to avoid allocating the full output bitmap.
+      blob = await renderTiledPngScreenshot(spinePlayer, spineRenderCanvas, screenshotSize, controller.signal)
+    } else {
+      if (spinePlayer?.skeleton && spineRenderCanvas) {
+        output = renderTiledScreenshot(spinePlayer, spineRenderCanvas, screenshotSize)
+      } else {
+        if (screenshotSize > 4096) throw new Error('The Spine player is not ready for a screenshot')
+        const aspect = canvas.width / canvas.height || 1
+        output = document.createElement('canvas')
+        output.width = aspect >= 1 ? screenshotSize : Math.max(1, Math.round(screenshotSize * aspect))
+        output.height = aspect >= 1 ? Math.max(1, Math.round(screenshotSize / aspect)) : screenshotSize
+        const context = output.getContext('2d')
+        if (!context) throw new Error('Screenshot canvas is unavailable')
+        context.drawImage(canvas, 0, 0, output.width, output.height)
+      }
+      const exportCanvas = output
+      blob = await new Promise<Blob | null>((resolve) => exportCanvas.toBlob(resolve, 'image/png'))
+    }
+    if (controller.signal.aborted) return
+    if (!blob) throw new Error('The browser could not encode this screenshot size')
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = url
+    try {
+      document.body.appendChild(link)
+      link.click()
+    } finally {
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    }
+  } catch (error) {
+    if (!controller.signal.aborted) fail(error)
+  } finally {
+    if (output) output.width = output.height = 0
+    if (screenshotAbortController === controller) {
+      screenshotAbortController = null
+      isCapturingScreenshot.value = false
+      if (spinePlayer && !spinePlayer.disposed) applyDefaultStyle2Canvas(false)
+    }
+  }
 }
 
 // VP9 may be too performance intensive. VP8 or VP9 MUST be explicitly specified for alpha transparency to work.
@@ -1103,101 +1395,176 @@ const RECORDING_BITRATE = 12000000
 const RECORDING_FRAME_RATE = 30
 const RECORDING_TIME_SLICE = 10
 
-async function startRecording(spinePlayer: any, currentAnimation: string, timestamp: number) {
-  return new Promise<void>((resolve, reject) => {
-    const chunks: BlobPart[] | undefined = [] // Store recorded media chunks (Blobs)
-    const stream = canvas ? canvas.captureStream(RECORDING_FRAME_RATE) : new MediaStream() // Grab our canvas MediaStream
-    const rec = new MediaRecorder(stream, { mimeType: RECORDING_MIME_TYPE, videoBitsPerSecond: RECORDING_BITRATE }) // Initialize the MediaRecorder
+const prepareRecordingCanvas = (player: any) => {
+  const source = spineRenderCanvas
+  const presentation = canvas
+  const viewport = player.currentViewport
+  if (!source || !viewport?.width || !viewport?.height) return null
 
-    rec.onerror = (e) => reject(e) // Reject the promise on error
-
-    rec.ondataavailable = (e) => {
-      chunks.push(e.data)
+  const saved = {
+    width: source.width,
+    height: source.height,
+    styleWidth: source.style.width,
+    styleHeight: source.style.height,
+    presentationVisibility: presentation?.style.visibility || '',
+    zoomFactor: player.__cameraZoomFactor,
+    positionOffset: player.__cameraPositionOffset,
+    screenOffset: player.__cameraScreenOffset
+  }
+  const requestedSize = parseInt(localStorage.getItem('sc_sz') || '3000', 10) || 3000
+  const maxDimension = Math.max(2, Math.min(getRenderCanvasLimit(), Math.max(64, requestedSize)))
+  const scale = maxDimension / Math.max(viewport.width, viewport.height)
+  const width = Math.max(2, Math.floor(viewport.width * scale / 2) * 2)
+  const height = Math.max(2, Math.floor(viewport.height * scale / 2) * 2)
+  const dpr = window.devicePixelRatio || 1
+  let restored = false
+  const restore = () => {
+    if (restored) return
+    restored = true
+    try {
+      source.width = saved.width
+      source.height = saved.height
+      source.style.width = saved.styleWidth
+      source.style.height = saved.styleHeight
+      player.__cameraZoomFactor = saved.zoomFactor
+      player.__cameraPositionOffset = saved.positionOffset
+      player.__cameraScreenOffset = saved.screenOffset
+    } finally {
+      if (presentation) presentation.style.visibility = saved.presentationVisibility
     }
+    if (!player.disposed && !player.error) player.drawFrame(false)
+  }
+  try {
+    player.__cameraZoomFactor = 1
+    player.__cameraPositionOffset = { x: 0, y: 0 }
+    player.__cameraScreenOffset = { x: 0, y: 0 }
+    if (presentation) presentation.style.visibility = 'hidden'
+    source.style.width = width / dpr + 'px'
+    source.style.height = height / dpr + 'px'
+    source.width = width
+    source.height = height
+    player.drawFrame(false)
+    return { canvas: source, restore }
+  } catch (error) {
+    restore()
+    throw error
+  }
+}
 
-    // Only when the recorder stops, construct a complete Blob from all the chunks
-    rec.onstop = async () => {
-      spinePlayer.pause()
-
-      const blob: BlobPart = new Blob(chunks, { type: 'video/webm' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.download = 'animation_frames_' + timestamp + '.webm'
-      link.href = url
-      link.click()
-      URL.revokeObjectURL(url) // Clean up
-      resolve()
-    }
-
-    rec.onresume = () => {
-    }
-
-
-    rec.onstart = () => {
-      spinePlayer.play()
-      requestAnimationFrame(checkCondition)
-    }
-
-    // This is important, the timeslice has to be low or the lag is high and the loop won't look right.
-    rec.start(RECORDING_TIME_SLICE)
-
-    function checkCondition() {
-      if (spinePlayer.animationState.tracks && spinePlayer.animationState.tracks[0] && spinePlayer.animationState.tracks[0].animationLast !== -1 && spinePlayer.animationState.tracks[0].animationLast === spinePlayer.animationState.tracks[0].animationEnd) {
-        rec.stop()
-      } else {
-        requestAnimationFrame(checkCondition)
+async function startRecording(player: any, timestamp: number, signal: AbortSignal) {
+  const blob = await recordCanvasAnimation({
+    prepare: () => {
+      const surface = prepareRecordingCanvas(player)
+      if (!surface) throw new Error('Recording canvas is unavailable.')
+      return {
+        canvas: surface.canvas,
+        restore: () => {
+          try {
+            if (!player.disposed && !player.error) player.pause()
+          } finally {
+            surface.restore()
+          }
+        }
       }
-    }
+    },
+    signal,
+    frameRate: RECORDING_FRAME_RATE,
+    timeSlice: RECORDING_TIME_SLICE,
+    mimeType: RECORDING_MIME_TYPE,
+    videoBitsPerSecond: RECORDING_BITRATE,
+    player
   })
+  if (signal.aborted || player.disposed || player.error) return
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.download = 'animation_frames_' + timestamp + '.webm'
+  link.href = url
+  try {
+    document.body.appendChild(link)
+    link.click()
+  } finally {
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000)
+  }
 }
 
 async function exportAnimationFrames(timestamp: number) {
-  if (spineCanvas && spinePlayer) {
-    if (market.live2d.exportAnimationColoredBackground) {
-      let bgColor = document.body.style.backgroundColor.replace('rgb(', '').replace(')', '').split(',')
-      spinePlayer.bg.r = parseInt(bgColor[0].trim()) / 255
-      spinePlayer.bg.g = parseInt(bgColor[1].trim()) / 255
-      spinePlayer.bg.b = parseInt(bgColor[2].trim()) / 255
-      spinePlayer.bg.a = 100
-    }
-    const currentAnimation = spineCanvas.config.animation
-    spinePlayer.playerControls.style.visibility = 'hidden'
-    spinePlayer.animationState.data.defaultMix = 0
-    spinePlayer.animationState.setAnimation(0, currentAnimation)
-    spinePlayer.setAnimation(currentAnimation, false)
-    spinePlayer.animationState.data.defaultMix = SPINE_DEFAULT_MIX
-    spinePlayer.pause()
-
-    market.message
-      .getMessage()
-      .success(messagesEnum.MESSAGE_EXPORT_ANIMATION, market.message.short_message)
-
-    market.live2d.isExportingAnimation = true
-    startRecording(spinePlayer, currentAnimation, timestamp).then(() => {
-      market.message
-        .getMessage()
-        .success(messagesEnum.MESSAGE_EXPORT_ANIMATION_SUCCESS, market.message.short_message)
-    }).catch((err: any) => {
-      market.message
-        .getMessage()
-        .error(messagesEnum.MESSAGE_EXPORT_ANIMATION_FAILED, market.message.short_message)
-      console.error(err)
-    }).finally(() => {
-      market.live2d.isExportingAnimation = false
-      spinePlayer.animationState.data.defaultMix = SPINE_DEFAULT_MIX
-      spinePlayer.play()
-      spinePlayer.setAnimation(currentAnimation, true)
-      spinePlayer.playerControls.style.visibility = 'visible'
-      spinePlayer.bg.r = 0
-      spinePlayer.bg.g = 0
-      spinePlayer.bg.b = 0
-      spinePlayer.bg.a = 0
-    })
-  } else {
+  if (recordingAbortController || market.live2d.isExportingAnimation || isCapturingScreenshot.value) return
+  const player = spinePlayer
+  if (!spineCanvas || !player || player.disposed || player.error) {
     market.message
       .getMessage()
       .error(messagesEnum.MESSAGE_EXPORT_ANIMATION_FAILED, market.message.short_message)
     console.error('spineCanvas is not properly initialized or accessible.')
+    return
+  }
+  const currentAnimation = spineCanvas.config.animation
+  const controller = new AbortController()
+  recordingAbortController = controller
+  const saved = {
+    background: { ...player.bg },
+    controlsVisibility: player.playerControls.style.visibility,
+    defaultMix: player.animationState.data.defaultMix,
+    paused: player.paused
+  }
+  let finished = false
+  const restore = () => {
+    if (finished) return
+    finished = true
+    controller.signal.removeEventListener('abort', restore)
+    if (recordingAbortController === controller) {
+      recordingAbortController = null
+      market.live2d.isExportingAnimation = false
+    }
+    Object.assign(player.bg, saved.background)
+    player.playerControls.style.visibility = saved.controlsVisibility
+    if (!player.disposed && !player.error) {
+      player.animationState.data.defaultMix = saved.defaultMix
+      if (!controller.signal.aborted) {
+        player.setAnimation(currentAnimation, true)
+        if (saved.paused) player.pause()
+        else player.play()
+        if (player === spinePlayer) applyDefaultStyle2Canvas(false)
+      }
+    }
+  }
+  controller.signal.addEventListener('abort', restore, { once: true })
+  market.live2d.isExportingAnimation = true
+  try {
+    if (market.live2d.exportAnimationColoredBackground) {
+      const bgColor = getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g)
+      if (bgColor && bgColor.length >= 3) {
+        player.bg.r = Number(bgColor[0]) / 255
+        player.bg.g = Number(bgColor[1]) / 255
+        player.bg.b = Number(bgColor[2]) / 255
+        player.bg.a = bgColor.length > 3 ? Number(bgColor[3]) : 1
+      }
+    }
+    player.playerControls.style.visibility = 'hidden'
+    player.animationState.data.defaultMix = 0
+    player.animationState.setAnimation(0, currentAnimation, false)
+    player.setAnimation(currentAnimation, false)
+    player.animationState.data.defaultMix = saved.defaultMix
+    player.pause()
+
+    market.message
+      .getMessage()
+      .success(messagesEnum.MESSAGE_EXPORT_ANIMATION, market.message.short_message)
+    await startRecording(player, timestamp, controller.signal)
+    if (!controller.signal.aborted && !player.disposed && !player.error) {
+      market.message
+        .getMessage()
+        .success(messagesEnum.MESSAGE_EXPORT_ANIMATION_SUCCESS, market.message.short_message)
+    }
+  } catch (err) {
+    if (!controller.signal.aborted) {
+      market.message
+        .getMessage()
+        .error(messagesEnum.MESSAGE_EXPORT_ANIMATION_FAILED, market.message.short_message)
+      console.error(err)
+    }
+  } finally {
+    restore()
   }
 }
 
@@ -1216,28 +1583,143 @@ const loadSpineAfterWatcher = () => {
   }
 }
 
-const applyDefaultStyle2Canvas = () => {
+// Cap live buffer dimensions; render screenshots at native resolution in tiles.
+const RENDER_CANVAS_MAX_DEVICE_PX = 4096
+const HQ_RENDER_SCALE = 2.5
+const LQ_RENDER_SCALE = 1.5
+
+const getRenderCanvasLimit = () => {
+  const player = spinePlayer || spineCanvas
+  if (player?.__renderDimensionLimit) return player.__renderDimensionLimit as number
+  const gl = player?.context?.gl
+  if (!gl) return RENDER_CANVAS_MAX_DEVICE_PX
+  const viewport = gl.getParameter(gl.MAX_VIEWPORT_DIMS)
+  const limit = Math.min(RENDER_CANVAS_MAX_DEVICE_PX, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), viewport[0], viewport[1])
+  player.__renderDimensionLimit = Math.max(1, limit)
+  return player.__renderDimensionLimit as number
+}
+
+// Cap the supersampled buffer size and apply zoom through the camera.
+
+let zoomLevel = 1 // current gesture zoom
+let targetZoom = 1 // target gesture zoom for smoothing
+
+// CSS scale set during canvas setup.
+let baselineScale = 0.18
+
+/**
+ * Zoom through Spine's camera while keeping the viewport-sized render buffer fixed.
+ * The camera narrows the visible world region as zoom increases.
+ */
+const applyRendering = () => {
+  if (checkMobile()) return
+  syncVisualiserCamera()
+}
+
+/**
+ * Apply gesture zoom to the camera and keep the pointer anchor in place.
+ */
+const setZoomLevel = (value: number) => {
+  const nextZoomLevel = clampScale(value)
+  if (cameraZoomAnchorActive && spinePlayer?.sceneRenderer?.camera && zoomLevel !== nextZoomLevel) {
+    const camera = spinePlayer.sceneRenderer.camera
+    const fitFactor = getVisualiserCameraFitFactor()
+    const oldFactor = fitFactor / zoomLevel
+    const nextFactor = fitFactor / nextZoomLevel
+    const baseZoom = spinePlayer.__cameraBaseZoom || camera.zoom / oldFactor
+    const currentCameraZoom = baseZoom * oldFactor
+    const nextCameraZoom = baseZoom * nextFactor
+    const rect = canvas?.getBoundingClientRect()
+    if (!rect?.width || !rect.height) return
+    const scale = getCameraScreenScale(camera, rect)
+    const screenOffset = spinePlayer.__cameraScreenOffset || { x: 0, y: 0 }
+    const offset = spinePlayer.__cameraPositionOffset || (spinePlayer.__cameraPositionOffset = { x: 0, y: 0 })
+    offset.x += ((anchorScreenX - rect.left - rect.width / 2) * scale.x + screenOffset.x) * (currentCameraZoom - nextCameraZoom)
+    offset.y += ((rect.top + rect.height / 2 - anchorScreenY) * scale.y + screenOffset.y) * (currentCameraZoom - nextCameraZoom)
+  }
+  zoomLevel = nextZoomLevel
+  syncVisualiserCamera()
+  transformScale = clampScale(baselineScale)
+  if (canvas) {
+    canvas.style.transform = 'scale(' + transformScale + ')'
+    // Restore the canvas anchor after updating camera zoom.
+    applyAnchor()
+  }
+  applyRendering()
+}
+
+const applyDefaultStyle2Canvas = (resetCamera = true) => {
   setTimeout(() => {
-    canvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
+    if (market.live2d.isExportingAnimation || isCapturingScreenshot.value) return
+    observeVisualiserLayout()
+    spineRenderCanvas = document.querySelector('.spine-player-canvas') as HTMLCanvasElement
+    canvas = document.querySelector('.spine-presentation-canvas') as HTMLCanvasElement
 
-    if (!canvas) return
+    if (!canvas || !spineRenderCanvas) {
+      return
+    }
 
-    canvas.width = canvas.height
+    const dpr = window.devicePixelRatio || 1
+    const viewportWidth = Math.max(1, window.innerWidth)
+    const viewportHeight = Math.max(1, window.innerHeight)
+    const desiredRenderScale = market.live2d.HQassets ? HQ_RENDER_SCALE : LQ_RENDER_SCALE
+    const renderScale = Math.min(
+      desiredRenderScale,
+      getRenderCanvasLimit() / Math.max(viewportWidth * dpr, viewportHeight * dpr)
+    )
+    spineRenderCanvas.style.width = viewportWidth * renderScale + 'px'
+    spineRenderCanvas.style.height = viewportHeight * renderScale + 'px'
+    spineRenderCanvas.style.position = 'absolute'
+    spineRenderCanvas.style.left = '-100000px'
+    spineRenderCanvas.style.top = '0px'
+    spineRenderCanvas.style.pointerEvents = 'none'
+    spineRenderCanvas.style.opacity = '0'
+
+    canvas.style.width = viewportWidth + 'px'
+    canvas.style.height = viewportHeight + 'px'
+    canvas.style.position = 'absolute'
+    canvas.style.left = '0px'
+    canvas.style.top = '0px'
+    canvas.style.margin = '0'
 
     // The canvas is the actual touch gesture target; touch-action is NOT inherited.
     canvas.style.touchAction = 'none'
 
     if (checkMobile()) {
       setCanvasStyleMobile()
+      // Reset mobile gesture coordinates for camera-based zoom.
+      if (resetCamera) {
+        zoomLevel = 1
+        targetZoom = 1
+      }
+      if (spinePlayer) {
+        if (resetCamera) {
+          spinePlayer.__cameraPositionOffset = { x: 0, y: 0 }
+        }
+        spinePlayer.__cameraScreenOffset = getVisualiserCameraScreenOffset()
+        spinePlayer.__cameraZoomFactor = getVisualiserCameraFitFactor() / zoomLevel
+      }
+      const cs = getComputedStyle(canvas)
+      const m = cs.transform && cs.transform !== 'none' ? new DOMMatrixReadOnly(cs.transform).a : 1
+      baselineScale = m || 1
     } else {
-      canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
-      canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
-      canvas.style.position = 'absolute'
-      canvas.style.left = '0px'
-      canvas.style.top = '0px'
-      setTransformScale(market.live2d.HQassets ? 0.18 : 0.5)
+      // Fill the desktop viewport and use camera zoom.
+      if (spinePlayer) {
+        if (resetCamera) {
+          spinePlayer.__cameraPositionOffset = { x: 0, y: 0 }
+        }
+        spinePlayer.__cameraScreenOffset = getVisualiserCameraScreenOffset()
+      }
+      baselineScale = 1
+      if (resetCamera) {
+        zoomLevel = 1
+        targetZoom = 1
+        setTransformScale(1)
+      }
       market.globalParams.showMobileHeader()
       centerCanvas()
+      captureAnchor()
+      applyRendering()
     }
   }, 50)
 }
@@ -1268,13 +1750,12 @@ const setCanvasStyleMobile = () => {
   } else {
     // L2D (visualiser) - use production behavior
     // Must be positioned (absolute) or left/top are ignored and drag does nothing.
-    canvas.style.height = '90vh'
-    canvas.style.width = '100%'
+    canvas.style.height = '100vh'
+    canvas.style.width = '100vw'
     canvas.style.position = 'absolute'
     canvas.style.top = '0px'
     canvas.style.left = '0px'
     setTransformScale(1)
-    centerCanvas()
   }
   market.globalParams.hideMobileHeader()
 }
@@ -1300,13 +1781,10 @@ const centerCanvas = () => {
 }
 
 const filterDomEvents = (event: any) => {
+  if (market.live2d.isExportingAnimation || isCapturingScreenshot.value) return false
   const target = event.target as HTMLElement
   const spinePlayer = document.querySelector('.spine-player')
   const playerContainer = document.querySelector('#player-container')
-
-  // The player's own controls (timeline scrubber, buttons, popups) are nested
-  // inside .spine-player; interacting with them must not pan the canvas or
-  // swallow the touch events of the sliders (#81).
   if (target?.closest('.spine-player-controls')) {
     return false
   }
@@ -1351,66 +1829,64 @@ let didDrag = false
  * though I don't see the point as it is already pixelated enough
  */
 
-const MIN_SCALE = 0.05
-const MAX_SCALE = 5
 const ZOOM_FACTOR = 1.15
 const ZOOM_SMOOTHING = 0.15
+const MIN_SCALE = 0.05
+const MAX_SCALE = 10
 
+// CSS scale for the capped canvas buffer.
 let transformScale = 0.5
-let targetScale = 0.5
 let zoomFrameId: number | null = null
-let anchorX = 0
-let anchorY = 0
-let anchorMarginTop = 0
+
+// Store the anchor as fractions of the canvas to preserve it during resize.
+let anchorFx = 0.5
+let anchorFy = 0.5
 let anchorScreenX = 0
 let anchorScreenY = 0
+let cameraZoomAnchorActive = false
 
 const clampScale = (value: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, value))
 
 const setTransformScale = (value: number) => {
   transformScale = clampScale(value)
-  targetScale = transformScale
   if (canvas) canvas.style.transform = 'scale(' + transformScale + ')'
 }
 
-// Capture the canvas-local point currently under the anchor screen position
-// (the mouse cursor while dragging, otherwise the screen center) so that
-// zooming keeps that point fixed on screen even after the canvas is dragged.
+/**
+ * Store the content point under `anchorScreen` as fractions of the CSS box.
+ * getBoundingClientRect() includes the current transform and margins.
+ */
 const captureAnchor = (screenX?: number, screenY?: number) => {
   if (!canvas) return
-  const style = getComputedStyle(canvas)
-  const left = parseFloat(style.left) || 0
-  const top = parseFloat(style.top) || 0
-  const marginTop = parseFloat(style.marginTop) || 0
+  const rect = canvas.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+  // Anchor to the pointer during a drag or to the canvas center otherwise.
+  if (screenX !== undefined || (move && oldX !== undefined)) {
+    anchorScreenX = screenX !== undefined ? screenX : oldX!
+    anchorScreenY = screenY !== undefined ? screenY : oldY!
+    anchorFx = (anchorScreenX - rect.left) / rect.width
+    anchorFy = (anchorScreenY - rect.top) / rect.height
+  } else {
+    anchorFx = 0.5
+    anchorFy = 0.5
+    anchorScreenX = rect.left + rect.width / 2
+    anchorScreenY = rect.top + rect.height / 2
+  }
+}
+
+/**
+ * Keep the anchored content fraction at anchorScreenX/Y with `transformScale`
+ * applied around the canvas center.
+ */
+const applyAnchor = () => {
+  if (!canvas) return
   const width = canvas.offsetWidth
   const height = canvas.offsetHeight
   if (!width || !height) return
-  const sw = window.innerWidth
-  const sh = window.innerHeight
-  // While dragging, anchor to the mouse/finger cursor; otherwise to the screen
-  // center. Pinch passes an explicit midpoint so the zoom stays under the fingers.
-  anchorScreenX = screenX !== undefined ? screenX : (move && oldX !== undefined ? oldX : sw / 2)
-  anchorScreenY = screenY !== undefined ? screenY : (move && oldY !== undefined ? oldY : sh / 2)
-  const visualLeft = left
-  const visualTop = top + marginTop
-  anchorX = width / 2 + (anchorScreenX - visualLeft - width / 2) / transformScale
-  anchorY = height / 2 + (anchorScreenY - visualTop - height / 2) / transformScale
-  anchorMarginTop = marginTop
-}
-
-const applyScaleWithAnchor = (scale: number) => {
-  if (!canvas) return
-  const width = canvas.offsetWidth
-  const height = canvas.offsetHeight
-  if (!width || !height) {
-    canvas.style.transform = 'scale(' + scale + ')'
-    return
-  }
-  const newVisualLeft = anchorScreenX - width / 2 - (anchorX - width / 2) * scale
-  const newVisualTop = anchorScreenY - height / 2 - (anchorY - height / 2) * scale
-  canvas.style.left = newVisualLeft + 'px'
-  canvas.style.top = (newVisualTop - anchorMarginTop) + 'px'
-  canvas.style.transform = 'scale(' + scale + ')'
+  const marginTop = parseFloat(getComputedStyle(canvas).marginTop) || 0
+  const s = transformScale
+  canvas.style.left = (anchorScreenX - s * anchorFx * width - (1 - s) * width / 2) + 'px'
+  canvas.style.top = (anchorScreenY - marginTop - s * anchorFy * height - (1 - s) * height / 2) + 'px'
 }
 
 const startZoomSmoothing = () => {
@@ -1419,18 +1895,16 @@ const startZoomSmoothing = () => {
 }
 
 const zoomSmoothingStep = () => {
-  // Re-capture the anchor each frame so that any drag performed while the
-  // zoom animation is running is preserved instead of being overwritten.
-  captureAnchor()
-  const diff = targetScale - transformScale
-  if (Math.abs(diff) < 0.0005) {
-    transformScale = targetScale
+  const diff = targetZoom - zoomLevel
+  const isComplete = Math.abs(diff) < 0.0005
+  const nextZoomLevel = isComplete ? targetZoom : zoomLevel + diff * ZOOM_SMOOTHING
+  if (isComplete) {
     zoomFrameId = null
   } else {
-    transformScale += diff * ZOOM_SMOOTHING
     zoomFrameId = requestAnimationFrame(zoomSmoothingStep)
   }
-  applyScaleWithAnchor(transformScale)
+  setZoomLevel(nextZoomLevel)
+  if (isComplete) cameraZoomAnchorActive = false
 }
 
 /**
@@ -1889,5 +2363,35 @@ const handleCanvasClick = (screenX: number, screenY: number) => {
 .computer {
   height: 100vh;
   margin-top: -100px
+}
+
+.export-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  font-size: 16px;
+  pointer-events: all;
+}
+
+.export-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: export-spin 0.8s linear infinite;
+}
+
+@keyframes export-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
