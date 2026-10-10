@@ -14,23 +14,6 @@
       <n-divider />
 
       <n-alert type="info">
-        I took days off for 3 weeks to play limbus and to rewrite everything for Nikke-DB. The first half about character l2d should be pretty much done.<br/>
-        I will look up to add the galleries and event live2d next week. <br/>
-        Sorry for everyone who have been waiting for the Persona On Frontline gallery. I know it's been some time since the event but I didn't plan for all of this to happen with the game and work. <br/>
-        Rewriting and changing the entire method of accessing the files is extremely time-consuming :(. <br/> <br/>
-
-        <b>The new extraction method is entirely based on programatically guessing for existing files, searching them and extracting them. For instance "I know that a new Rapi skin exists, find it, download it, extract it". This entire process is based on context clues and file name patterns. <br/>
-          This mean that, in case of exceptional cases where a NPC have been added to the game, but does not share some pattern similarities to other NPC & characters, it is literally impossible for me to know of it's existance. I don't play the game so I wouldn't know such a NPC exist. <br/>
-          As such, once again, I'd like you guys to not hesitate and come forward to me with information so I can find and dig manually instead of letting the tools do their routine work.
-        </b>
-
-        <br/><br/>
-        I'd like to reiterate that I will not help datamining for your own use. I based my tools on scripts that are easily findable in certain forums and spent time re-adapting to fit my own programming eco system and preferences. It's really hard to explain how to do it now and it might just be better for you to use the publicly accessible stuff ( I will not tell you where to find it though. risking nikke db to get nuked if I do )
-      </n-alert>
-
-      <n-divider />
-
-      <n-alert type="info">
         I have quit the game and pretty much only "play" to do website updates. <br/>
         As such I can't really know NPC names anymore. So every NPCs I can't datamine from now on will have their names be "NPC: TBA" in the L2D viewer. <br/>
         Please open github tickets or send me discord messages so I can complete their names. Of course I'll at least need a picture or their c_id. <br/>
