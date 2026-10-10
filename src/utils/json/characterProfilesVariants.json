@@ -282,10 +282,14 @@
     "appearance": "purple eyes, long dark hair with green highlights, bunny ears",
     "defaultSkin": "white bunny leotard, green bow tie, white thigh-high boots, white gloves",
     "defaultWeapon": "large white mechanical arms with green energy blades",
-    "personality": "",
-    "speech_style": "",
-    "backstory": "",
-    "relationships": {},
+    "personality": "Quiet and demure at first glance, with a soft voice and a habit of talking to herself, but extremely dangerous due to overwhelming physical strength she struggles to control. She values loyalty and trust above almost everything and despises even small lies, which can set her off. Bound or restrained she whines, guilt-trips, and seeks physical contact (especially hugs and hand-holding). Freed or on the battlefield she becomes far more intense and violent. After rehabilitation she wants to be productive, make friends, and stay close to the person who trusted her; she remains docile and affectionate around him, though some ambiguity remains about how fully her more destructive impulses are suppressed.",
+    "speech_style": "Soft, quiet, and often plaintive or self-directed when restrained or around the Commander. She guilt-trips about her bonds (“Didn’t you say you trusted me? So why won’t you untie me?”), bargains for contact (“If I stay put, you’ll hold my hand, right?”), and asks permission or reassurance (“Think you’ll be able to handle me even in this outfit?”). On the field or when free she grows louder and more aggressive. Post-rehabilitation she stays gentle and slightly awkward with him, mixing curiosity about her new outfit with ongoing requests to have the restraints removed.",
+    "backstory": "A Missilis Nikke of the Real Kindness squad (criminals held in the Rehabilitation Center). Her strength far exceeds most Nikkes; she was incarcerated as inmate 13-0803 after heavily damaging over 40 allied Nikkes in two weeks with her bare hands. Handling advisories warn never to remove her restraints. She blamed the Missilis scientists who experimented on her and the people she hurt, insisting she was innocent and that previous counselors failed her. During counseling the Commander proved trust by returning after she broke his arm, releasing her restraints, and holding her hand; the physical contact and consistent belief allowed her to learn control. She was successfully rehabilitated and released, later joining the Outpost. The Mighty Bunny form is a high-tech exoskeleton bunny-girl suit that further boosts her already overwhelming strength; she still becomes entirely docile in front of the person who helped rehabilitate her. She takes part in events that call for raw physical power.",
+    "relationships": {
+      "Commander (Protagonist)": "The counselor who rehabilitated her through trust and hand-holding. She is deeply attached, seeks his physical contact and approval, and remains docile around him even in the Mighty Bunny suit.",
+      "Sin": "Squadmate and leader of Real Kindness. Fellow rehabilitated criminal.",
+      "Quency": "Squadmate in Real Kindness."
+    },
     "id": "c404",
     "color": "#45993a"
   },
@@ -399,7 +403,9 @@
     "personality": "Described as Missilis Industry's best researcher, this variant is portrayed as highly intelligent and analytically sharp, with enhanced firepower and the ability to calculate all variables on the battlefield. No explicit personality traits or behavioral details are provided beyond this combat-focused, intellectual demeanor.",
     "speech_style": "",
     "backstory": "Maxwell: Ordinary Mechanic is described as Missilis Industry's best researcher who has returned with enhanced firepower and even sharper intelligence, capable of calculating all variables on the battlefield. In the Gluttony chapter of the main story, Matis (the squad she belongs to) debuted with a new modification to assist the Commando Unit once more. This variant represents an upgraded version of the base Maxwell character with improved combat and analytical capabilities.",
-    "relationships": {},
+    "relationships": {
+      "Annihilio": "Maxwell and Matis are deployed to intercept Annihilio and the Heretics and Raptures accompanying her when she threatens the Ark with biochemical weapons."
+    },
     "id": "c105",
     "color": "#2edbdb"
   },
@@ -627,10 +633,14 @@
     "appearance": "purple hair, high ponytail, visor, mask, rabbit ears",
     "defaultSkin": "black and purple bodysuit, cutouts, thigh-high boots, roller skates",
     "defaultWeapon": "mechanical wing-like blades, purple accents",
-    "personality": "",
-    "speech_style": "",
-    "backstory": "",
-    "relationships": {},
+    "personality": "The most manipulative member of Real Kindness. She enjoys power over others and being the center of attention, and will turn people into her servants with words alone. Even with the converter that suppresses her mind-control voice she remains a silver-tongued minefield, using a personal “point system,” subtle mind games, coy deflection, and favors to get what she wants. She has a long record of aiding and abetting serious crimes (murders, arsons, assaults, smuggling, fraud) by making others act for her. After rehabilitation her lust for control lessens as she forms genuine (if still watchful) friendships, though her true motives stay somewhat ambiguous and she still occasionally tries to get the converter removed. In the Swift Bunny suit she leans into an anti-hero role, combining her linguistic skill with new high-speed mobility.",
+    "speech_style": "Playful, coy, and manipulative. She pleads, bargains, and teases (“Can’t you take this off, even for just a moment? We can keep it between us.”), invents or invokes a point system to reward or punish cooperation, crows about closeness, deflects uncomfortable questions by changing the subject, and giggles when she has someone wrapped around her finger. She stays silver-tongued and persuasive even with the mask distorting her voice. In the bunny suit she adds light, teasing lines about her appearance and speed (“Having trouble deciding where to look, Counselor?”).",
+    "backstory": "Leader of the Real Kindness squad of criminal Nikkes held in the Rehabilitation Center. She possesses the ability to mind-control people (humans as well as Nikkes) with her words—distinct from simple hypnotic command—and used it to turn others into slaves, incite riots and anarchy, and abet dozens of crimes. Multiple counselors were subverted and nearly freed her before being stopped. She wears a converter mask that modulates and distorts her voice to suppress the hypnotic effect, yet her ordinary verbal skill remains dangerous. During counseling she ran a point system, extracted favors, and nearly turned the process into a game until the Commander forced an ultimatum: genuine cooperation or permanent solitary. She chose release, joined the Outpost, and later received further development in the Coin Rush Showdown event around learning to use words for bonds rather than control. The Swift Bunny form is a high-tech ultra-lightweight bunny-girl suit that adds ultra-high-speed movement to her linguistic skills; she participates in the related event as an anti-hero.",
+    "relationships": {
+      "Commander (Protagonist)": "The counselor she tried to manipulate with points and favors. He ultimately rehabilitated her via an ultimatum; she remains attached, teasing, and occasionally still tries to get the converter removed around him.",
+      "Guilty": "Squadmate in Real Kindness. Fellow rehabilitated criminal; they later support each other in events such as Coin Rush Showdown.",
+      "Quency": "Squadmate in Real Kindness."
+    },
     "id": "c405",
     "color": "#7632db"
   },
