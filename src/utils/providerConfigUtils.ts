@@ -30,6 +30,34 @@ export const OPENCODE_GO_ANTHROPIC_MODELS = new Set([
   'qwen3.6-plus'
 ])
 
+const OPENCODE_GO_SESSION_STORAGE_KEY = 'nikke_opencode_go_session'
+const OPENCODE_GO_CLIENT_ID = 'nikke-db-story-gen'
+
+export const getOpenCodeGoSessionId = (): string => {
+  let id = sessionStorage.getItem(OPENCODE_GO_SESSION_STORAGE_KEY)
+  if (!id) {
+    id = crypto.randomUUID()
+    sessionStorage.setItem(OPENCODE_GO_SESSION_STORAGE_KEY, id)
+  }
+
+  return id
+}
+
+export const rotateOpenCodeGoSessionId = (): string => {
+  const id = crypto.randomUUID()
+  sessionStorage.setItem(OPENCODE_GO_SESSION_STORAGE_KEY, id)
+
+  return id
+}
+
+export const buildOpenCodeGoHeaders = (base: Record<string, string> = {}): Record<string, string> => {
+  return {
+    ...base,
+    'x-opencode-session': getOpenCodeGoSessionId(),
+    'x-opencode-client': OPENCODE_GO_CLIENT_ID
+  }
+}
+
 export const tokenUsageOptions = [
   { label: 'Low (10 turns)', value: 'low' },
   { label: 'Medium (30 turns)', value: 'medium' },
@@ -74,62 +102,101 @@ export const getReasoningEffortOptions = (provider: string): { label: string; va
   return options
 }
 
+const nullableSchema = (schema: Record<string, any>) => {
+  return { anyOf: [schema, { type: 'null' }] }
+}
+
+const strictObject = (properties: Record<string, any>) => {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties,
+    required: Object.keys(properties)
+  }
+}
+
+const stringMapSchema = {
+  type: 'object',
+  properties: {},
+  required: [] as string[],
+  additionalProperties: { type: 'string' }
+}
+
+const openMapSchema = (valueSchema: Record<string, any>) => {
+  return {
+    type: 'object',
+    properties: {},
+    required: [] as string[],
+    additionalProperties: valueSchema
+  }
+}
+
+const memoryProfileSchema = strictObject({
+  personality: nullableSchema({ type: 'string' }),
+  speech_style: nullableSchema({ type: 'string' }),
+  backstory: nullableSchema({ type: 'string' }),
+  relationships: stringMapSchema
+})
+
+const progressionProfileSchema = strictObject({
+  personality: nullableSchema({ type: 'string' }),
+  backstory: nullableSchema({ type: 'string' }),
+  relationships: stringMapSchema
+})
+
+const backgroundObjectSchema = strictObject({
+  key: { type: 'string' },
+  variant: nullableSchema({ type: 'string' })
+})
+
 // Structured output schema builder (used by ChatInterface for OpenRouter/Pollinations JSON schema mode)
-export const buildStoryResponseSchema = (isGameMode: boolean) => ({
-  type: 'json_schema',
-  json_schema: {
-    name: 'StoryResponse',
-    schema: {
-      type: 'object',
-      properties: {
-        actions: {
-          type: 'array',
-          minItems: 1,
-          items: {
-            type: 'object',
-            properties: {
-              needs_search: { type: 'array', items: { type: 'string' } },
-              memory: { type: 'object' },
-              characterProgression: { type: 'object' },
-              text: { type: 'string' },
-              character: { type: 'string' },
-              animation: { type: 'string' },
-              background: {
-                anyOf: [
-                  { type: 'string' },
-                  {
-                    type: 'object',
-                    properties: {
-                      key: { type: 'string' },
-                      variant: { type: 'string' }
-                    },
-                    required: ['key'],
-                    additionalProperties: false
-                  }
-                ]
-              },
-              speaking: { type: 'boolean' },
-              duration: { type: 'number' }
-            },
-            required: ['text', 'character', 'speaking', 'animation']
-          }
-        },
-        // Game Mode ONLY: choices returned at top-level, then we attach them to the last action.
-        choices: isGameMode
-          ? {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' },
-                type: { type: 'string', enum: ['dialogue', 'action'] }
-              },
-              required: ['text', 'type']
-            }
-          }
-          : undefined
-      },
-      required: isGameMode ? ['actions', 'choices'] : ['actions']
+export const buildStoryResponseSchema = (isGameMode: boolean, includeAnimReason = false) => {
+  const actionProperties: Record<string, any> = {
+    needs_search: { type: 'array', items: { type: 'string' } },
+    memory: openMapSchema(memoryProfileSchema),
+    characterProgression: openMapSchema(progressionProfileSchema),
+    text: { type: 'string' },
+    character: { type: 'string' },
+    animation: { type: 'string' }
+  }
+
+  if (includeAnimReason) {
+    actionProperties.anim_reason = { type: 'string' }
+  }
+
+  actionProperties.background = {
+    anyOf: [{ type: 'string' }, backgroundObjectSchema, { type: 'null' }]
+  }
+  actionProperties.speaking = { type: 'boolean' }
+  actionProperties.duration = nullableSchema({ type: 'number' })
+
+  const properties: Record<string, any> = {
+    actions: {
+      type: 'array',
+      minItems: 1,
+      items: strictObject(actionProperties)
     }
   }
-})
+
+  if (isGameMode) {
+    properties.choices = {
+      type: 'array',
+      items: strictObject({
+        text: { type: 'string' },
+        type: { type: 'string', enum: ['dialogue', 'action'] }
+      })
+    }
+  }
+
+  return {
+    type: 'json_schema',
+    json_schema: {
+      name: 'StoryResponse',
+      schema: {
+        type: 'object',
+        properties,
+        required: Object.keys(properties)
+      }
+    }
+  }
+}

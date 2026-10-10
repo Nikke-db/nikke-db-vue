@@ -2,6 +2,7 @@
 // Extracted from ChatInterface.vue — reads localStorage and returns validated plain values.
 
 import { tokenUsageOptions, providerOptions } from '@/utils/llmUtils'
+import { GEMINI_DEFAULT_MODEL } from '@/utils/geminiUtils'
 
 // --- Shared localStorage keys ---
 
@@ -10,6 +11,9 @@ export const MOBILE_OPTIMIZATIONS_STORAGE_KEY = 'nikke_story_gen_mobile_optimiza
 
 /** localStorage key for persisting the previous state before mobile optimizations was enabled. */
 export const MOBILE_OPTIMIZATIONS_PREV_KEY = 'nikke_story_gen_mobile_optimizations_prev'
+
+/** localStorage key for the story-gen Debug Mode toggle (dev builds only). */
+export const DEBUG_MODE_STORAGE_KEY = 'nikke_debug_mode'
 
 // --- Types ---
 
@@ -36,6 +40,7 @@ export interface StoredSettings {
   playerCharacterName?: string
   backgroundImagesEnabled?: boolean
   mobileOptimizations?: boolean
+  debugMode?: boolean
 }
 
 /**
@@ -156,6 +161,13 @@ export function loadSettingsFromStorage(): StoredSettings {
     result.mobileOptimizations = savedMobileOptimizations === 'true'
   }
 
+  if (import.meta.env.DEV) {
+    const savedDebugMode = localStorage.getItem(DEBUG_MODE_STORAGE_KEY)
+    if (savedDebugMode !== null) {
+      result.debugMode = savedDebugMode === 'true'
+    }
+  }
+
   return result
 }
 
@@ -170,8 +182,8 @@ export function validateSavedModel(savedProvider: string, savedModel: string | u
 
   // Fallback to default
   let fallback: string | undefined
-  if (savedProvider === 'gemini') fallback = 'gemini-3.5-flash'
-  else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && firstDynamicModel) fallback = firstDynamicModel
+  if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go' || savedProvider === 'gemini') && firstDynamicModel) fallback = firstDynamicModel
+  else if (savedProvider === 'gemini') fallback = GEMINI_DEFAULT_MODEL
 
   const warning = savedModel ? `Saved model '${savedModel}' is invalid or unavailable. Using default.` : undefined
 

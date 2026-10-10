@@ -23,6 +23,7 @@
  *   --target-file <name>  Target JSON file for create mode: base (default) or variants
  *   --update-scope <name> Scope for update mode: single (requires --char-name) or all (default)
  *   --provider <name>     API provider: gemini, openrouter, or pollinations
+ *   --openrouter-model    OpenRouter model id. Listed choices: x-ai/grok-4.3 (default), z-ai/glm-5.2, deepseek/deepseek-v4.1-flash. Any other id is accepted.
  *   --pollinations-model  Pollinations model: grok (default), grok-large, or claude-fast
  *   --force               Skip overwrite confirmation in create mode
  *   --json-output         Print machine-readable JSON result on the last line
@@ -46,12 +47,32 @@ const WIKI_PROXY_URL = 'https://nikke-wiki-proxy.rhysticone.workers.dev'
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent'
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const POLLINATIONS_API_URL = 'https://gen.pollinations.ai/v1/chat/completions'
-const OPENROUTER_MODEL = 'x-ai/grok-4.3'
+let OPENROUTER_MODEL = 'x-ai/grok-4.3'
+const OPENROUTER_MODELS = ['x-ai/grok-4.3', 'z-ai/glm-5.2', 'deepseek/deepseek-v4.1-flash']
 const POLLINATIONS_MODELS = ['grok', 'grok-large', 'claude-fast']
+const OPENROUTER_MODEL_CAPABILITIES = {
+  'x-ai/grok-4.3': 'image',
+  'z-ai/glm-5.2': 'text',
+  'deepseek/deepseek-v4.1-flash': 'image'
+}
+const POLLINATIONS_MODEL_CAPABILITIES = {
+  grok: 'image',
+  'grok-large': 'image',
+  'claude-fast': 'image'
+}
+const GEMINI_MODEL_CAPABILITY = 'image'
+const VISION_MODEL_CHOICES = {
+  openrouter: ['deepseek/deepseek-v4.1-flash', 'x-ai/grok-4.3'],
+  pollinations: ['grok', 'grok-large', 'claude-fast']
+}
 const RATE_LIMIT_MS = parseInt(process.env.RATE_LIMIT_MS) || 2000
 
 const PROFILES_BASE_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfiles.json')
 const PROFILES_VARIANTS_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'characterProfilesVariants.json')
+const L2D_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'l2d.json')
+const FILTERED_IDS_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'filteredCharacterIds.json')
+const SKIN_OVERRIDES_PATH = path.join(__dirname, '..', 'src', 'utils', 'json', 'skinOverrides.json')
+const COLORS_URL = 'https://nkas.pages.dev/nk_data/colors.json'
 
 function getArgValue(flag) {
   const idx = process.argv.indexOf(flag)
@@ -85,12 +106,13 @@ function applyShard(characters) {
 const args = process.argv.slice(2)
 const SKIP_EXISTING = !args.includes('--no-skip-existing')
 const SKIP_PREVIEW = args.includes('--skip-preview')
-const NON_INTERACTIVE = args.includes('--non-interactive') || !process.stdin.isTTY
+let NON_INTERACTIVE = args.includes('--non-interactive') || !process.stdin.isTTY
 const CLI_MODE = getArgValue('--mode')
 const CLI_CHAR_NAME = getArgValue('--char-name')
 const CLI_TARGET_FILE = getArgValue('--target-file')
 const CLI_UPDATE_SCOPE = getArgValue('--update-scope')
 const CLI_PROVIDER = getArgValue('--provider')
+const CLI_OPENROUTER_MODEL = getArgValue('--openrouter-model')
 const CLI_POLLINATIONS_MODEL = getArgValue('--pollinations-model')
 const CLI_FORCE = args.includes('--force')
 const CLI_JSON_OUTPUT = args.includes('--json-output')
@@ -116,8 +138,14 @@ let GEMINI_API_KEY = process.env.GEMINI_API_KEY
 let OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 let POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY
 let POLLINATIONS_MODEL = null
+let OPENROUTER_MODEL_SELECTED = false
+let visualModelDecision = null
+let promptInput = null
+let promptOutput = null
 
-if (!GEMINI_API_KEY && !OPENROUTER_API_KEY && !POLLINATIONS_API_KEY) {
+const isDirectRun = require.main === module
+
+if (isDirectRun && !GEMINI_API_KEY && !OPENROUTER_API_KEY && !POLLINATIONS_API_KEY) {
   console.error('Error: GEMINI_API_KEY, OPENROUTER_API_KEY, or POLLINATIONS_API_KEY environment variable is required')
   console.error('Set one with:')
   console.error('  export GEMINI_API_KEY=your_gemini_key_here')
@@ -138,6 +166,9 @@ function getProviderDisplayName() {
 function getProviderLogLabel() {
   if (API_PROVIDER === 'pollinations' && POLLINATIONS_MODEL) {
     return `${getProviderDisplayName()} (${POLLINATIONS_MODEL})`
+  }
+  if (API_PROVIDER === 'openrouter') {
+    return `${getProviderDisplayName()} (${OPENROUTER_MODEL})`
   }
   return getProviderDisplayName()
 }
@@ -257,6 +288,149 @@ const WIKI_NAME_MAPPINGS_VARIANTS = {}
 
 // Utility: Delay function for rate limiting
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+function ask(question) {
+  const rl = readline.createInterface({
+    input: promptInput || process.stdin,
+    output: promptOutput || process.stdout
+  })
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close()
+      resolve(String(answer || '').trim())
+    })
+  })
+}
+
+function getModelCapability() {
+  if (API_PROVIDER === 'gemini') return GEMINI_MODEL_CAPABILITY
+  if (API_PROVIDER === 'pollinations') {
+    return POLLINATIONS_MODEL_CAPABILITIES[POLLINATIONS_MODEL] || 'text'
+  }
+  if (API_PROVIDER === 'openrouter') {
+    return OPENROUTER_MODEL_CAPABILITIES[OPENROUTER_MODEL] || 'text'
+  }
+
+  return 'text'
+}
+
+function visionModelChoices() {
+  if (API_PROVIDER === 'openrouter') return VISION_MODEL_CHOICES.openrouter
+  if (API_PROVIDER === 'pollinations') return VISION_MODEL_CHOICES.pollinations
+
+  return []
+}
+
+async function promptVisionModelId() {
+  const choices = visionModelChoices()
+  console.log('\nWhich model should run the visual analysis?')
+  choices.forEach((id, index) => {
+    const note = id === 'deepseek/deepseek-v4.1-flash' ? ' (example)' : ''
+    console.log(`${index + 1}) ${id}${note}`)
+  })
+  const typeIndex = choices.length + 1
+  console.log(`${typeIndex}) Type a model id`)
+
+  const answer = await ask(`\nEnter choice (1-${typeIndex}): `)
+  const picked = parseInt(answer, 10)
+  if (picked >= 1 && picked <= choices.length) {
+    return choices[picked - 1]
+  }
+  if (answer === String(typeIndex)) {
+    const customId = await ask('Enter model id: ')
+    if (!customId) {
+      console.log('No model id provided.')
+
+      return null
+    }
+
+    return customId
+  }
+
+  console.log('No model selected.')
+
+  return null
+}
+
+// A text model waits for yes or no. Yes retries only the visual section.
+async function prepareVisualModel() {
+  if (visualModelDecision) return visualModelDecision
+
+  if (getModelCapability() === 'image') {
+    visualModelDecision = { skip: false, modelId: null }
+
+    return visualModelDecision
+  }
+
+  console.log(`Selected model cannot take image input (${getProviderLogLabel()}).`)
+
+  if (NON_INTERACTIVE) {
+    console.log('Skipping visual analysis.')
+    visualModelDecision = { skip: true, modelId: null }
+
+    return visualModelDecision
+  }
+
+  const answer = await ask('Switch to a model that can take images? (y/N): ')
+  if (answer !== 'y' && answer !== 'yes') {
+    console.log('Skipping visual analysis.')
+    visualModelDecision = { skip: true, modelId: null }
+
+    return visualModelDecision
+  }
+
+  const modelId = await promptVisionModelId()
+  if (!modelId) {
+    visualModelDecision = { skip: true, modelId: null }
+
+    return visualModelDecision
+  }
+
+  visualModelDecision = { skip: false, modelId }
+
+  return visualModelDecision
+}
+
+function applyVisualModel(modelId) {
+  if (!modelId) {
+    return () => {}
+  }
+  if (API_PROVIDER === 'openrouter') {
+    const previous = OPENROUTER_MODEL
+    OPENROUTER_MODEL = modelId
+
+    return () => {
+      OPENROUTER_MODEL = previous
+    }
+  }
+  if (API_PROVIDER === 'pollinations') {
+    const previous = POLLINATIONS_MODEL
+    POLLINATIONS_MODEL = modelId
+
+    return () => {
+      POLLINATIONS_MODEL = previous
+    }
+  }
+
+  return () => {}
+}
+
+async function extractVisualData(characterName, imageUrl) {
+  const decision = await prepareVisualModel()
+  if (decision.skip) {
+    return { skipped: true, data: null }
+  }
+
+  const restore = applyVisualModel(decision.modelId)
+  try {
+    const data = await extractData(characterName, null, imageUrl, 'visual')
+
+    return { skipped: false, data }
+  } finally {
+    restore()
+  }
+}
 
 // ANSI color codes for terminal output
 const ANSI_GREEN = '\x1b[32m'
@@ -440,32 +614,81 @@ async function fetchImageAsBase64(imageUrl) {
   }
 }
 
+// Drop one trailing path segment. "Character/Variant" becomes "Character".
+function dropTrailingWikiSegment(pageName) {
+  const slash = pageName.lastIndexOf('/')
+  if (slash <= 0) return null
+
+  return pageName.slice(0, slash)
+}
+
+function isMissingWikiPage(data) {
+  if (!data || data.error) return true
+  if (data.parse?.wikitext?.['*'] === undefined || data.parse?.wikitext?.['*'] === null) return true
+
+  return false
+}
+
+async function requestWikiPage(pageName) {
+  const url = `${WIKI_PROXY_URL}?page=${encodeURIComponent(pageName)}`
+  const response = await fetch(url)
+
+  return response.json()
+}
+
+// Create mode may retry a missing page once, one level above.
+async function fetchWikiPageContent(pageName, options = {}) {
+  const pages = [pageName]
+  if (options.retryParent) {
+    const parent = dropTrailingWikiSegment(pageName)
+    if (parent) pages.push(parent)
+  }
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i]
+    let data
+    try {
+      data = await requestWikiPage(page)
+    } catch (e) {
+      console.error(`  Error fetching wiki page ${page}:`, e.message)
+
+      return null
+    }
+
+    if (isMissingWikiPage(data)) {
+      const info = data?.error?.info || data?.error || 'missing'
+      if (i === 0 && pages.length > 1) {
+        console.warn(`  Wiki page not found: ${page} (${typeof info === 'string' ? info : 'missing'}). Retrying ${pages[1]}`)
+        continue
+      }
+      console.warn(`  Wiki page not found: ${page}`)
+
+      return null
+    }
+
+    const wikitext = data.parse.wikitext['*']
+    if (!wikitext) {
+      console.warn(`  No content found for ${page}`)
+
+      return null
+    }
+
+    if (i > 0) {
+      console.log(`  Using parent wiki page ${page}`)
+    }
+
+    return cleanWikiContent(wikitext)
+  }
+
+  return null
+}
+
 async function fetchWikiContent(characterName) {
   const wikiSearchName = getWikiPageName(characterName)
   const wikiName = wikiSearchName.replace(/ /g, '_')
   const pageName = wikiName + '/Story'
-  const url = `${WIKI_PROXY_URL}?page=${encodeURIComponent(pageName)}`
 
-  try {
-    const response = await fetch(url)
-    const data = await response.json()
-
-    if (data.error) {
-      console.warn(`  Wiki page not found for ${characterName}:`, data.error)
-      return null
-    }
-
-    const wikitext = data.parse?.wikitext?.['*']
-    if (!wikitext) {
-      console.warn(`  No content found for ${characterName}`)
-      return null
-    }
-
-    return cleanWikiContent(wikitext)
-  } catch (e) {
-    console.error(`  Error fetching wiki for ${characterName}:`, e.message)
-    return null
-  }
+  return fetchWikiPageContent(pageName, { retryParent: MODE === 'create' })
 }
 
 // Check if a field is empty (for skip logic)
@@ -663,7 +886,8 @@ async function extractDataOpenRouter(characterName, wikiContent, imageUrl = null
       }
     ],
     temperature: 0.3,
-    max_tokens: 4096
+    max_tokens: 16384,
+    reasoning: { effort: 'low' }
   }
 
   try {
@@ -747,7 +971,8 @@ async function extractDataPollinations(characterName, wikiContent, imageUrl = nu
       }
     ],
     temperature: 0.3,
-    max_tokens: 4096
+    max_tokens: 16384,
+    reasoning_effort: 'low'
   }
 
   try {
@@ -1246,6 +1471,57 @@ async function selectPollinationsModel() {
   console.log(`Selected Pollinations model: ${POLLINATIONS_MODEL}\n`)
 }
 
+// Menu choice or typed id. Chat requests read OPENROUTER_MODEL.
+async function promptOpenRouterModelChoice() {
+  console.log('\nWhich OpenRouter model would you like to use?')
+  OPENROUTER_MODELS.forEach((id, index) => {
+    const label = index === 0 ? `${id} (current default)` : id
+    console.log(`${index + 1}) ${label}`)
+  })
+  const customIndex = OPENROUTER_MODELS.length + 1
+  console.log(`${customIndex}) Type a custom model id`)
+
+  const answer = await ask(`\nEnter choice (1-${customIndex}): `)
+
+  if (answer === String(customIndex)) {
+    const customId = await ask('Enter OpenRouter model id: ')
+    if (!customId) {
+      console.error('Error: No OpenRouter model id provided.')
+      process.exit(1)
+    }
+    OPENROUTER_MODEL = customId
+  } else {
+    const picked = parseInt(answer, 10)
+    OPENROUTER_MODEL = OPENROUTER_MODELS[picked - 1] || OPENROUTER_MODELS[0]
+  }
+
+  console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL}\n`)
+}
+
+// Select OpenRouter model
+async function selectOpenRouterModel() {
+  OPENROUTER_MODEL_SELECTED = true
+  if (CLI_OPENROUTER_MODEL) {
+    const modelId = CLI_OPENROUTER_MODEL.trim()
+    if (!modelId) {
+      console.error('Error: --openrouter-model requires a model id')
+      process.exit(1)
+    }
+    OPENROUTER_MODEL = modelId
+    console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL}\n`)
+
+    return
+  }
+
+  if (NON_INTERACTIVE) {
+    console.log(`Selected OpenRouter model: ${OPENROUTER_MODEL} (default for non-interactive)\n`)
+
+    return
+  }
+
+  await promptOpenRouterModelChoice()
+}
+
 // Select API provider
 async function selectProvider() {
   const availableProviders = []
@@ -1261,7 +1537,7 @@ async function selectProvider() {
   if (OPENROUTER_API_KEY) {
     availableProviders.push({
       key: 'openrouter',
-      label: 'OpenRouter (x-ai/grok-4.1-fast)',
+      label: `OpenRouter (${OPENROUTER_MODEL})`,
       envVar: 'OPENROUTER_API_KEY'
     })
   }
@@ -1285,6 +1561,9 @@ async function selectProvider() {
     }
     API_PROVIDER = CLI_PROVIDER
     console.log(`Using ${getProviderDisplayName()} API (--provider flag)`)
+    if (API_PROVIDER === 'openrouter' && !OPENROUTER_MODEL_SELECTED) {
+      await selectOpenRouterModel()
+    }
     if (API_PROVIDER === 'pollinations') {
       await selectPollinationsModel()
     }
@@ -1296,6 +1575,10 @@ async function selectProvider() {
     const selectedProvider = availableProviders[0]
     API_PROVIDER = selectedProvider.key
     console.log(`Using ${getProviderDisplayName()} API (only ${selectedProvider.envVar} found)`)
+
+    if (API_PROVIDER === 'openrouter' && !OPENROUTER_MODEL_SELECTED) {
+      await selectOpenRouterModel()
+    }
 
     if (API_PROVIDER === 'pollinations') {
       await selectPollinationsModel()
@@ -1337,6 +1620,11 @@ async function selectProvider() {
   if (API_PROVIDER === 'pollinations') {
     console.log('Selected: Pollinations')
     await selectPollinationsModel()
+  } else if (API_PROVIDER === 'openrouter') {
+    console.log(`Selected: ${getProviderDisplayName()}`)
+    if (!OPENROUTER_MODEL_SELECTED) {
+      await selectOpenRouterModel()
+    }
   } else {
     console.log(`Selected: ${getProviderDisplayName()}\n`)
   }
@@ -1474,21 +1762,28 @@ async function createNewEntry() {
   }
 
   // --- Visual pass (appearance, defaultSkin, defaultWeapon) ---
-  console.log('  Fetching image URL...')
-  const imageUrl = await fetchImageUrl(charName)
-
   let visualData = null
-  if (!imageUrl) {
-    console.log('  ✗ No image URL found. Visual fields will be empty.')
+  const visualDecision = await prepareVisualModel()
+  if (visualDecision.skip) {
+    console.log('  Visual fields will be empty.')
   } else {
-    console.log(`  Image URL: ${imageUrl}`)
-    console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${getProviderLogLabel()}...`)
-    visualData = await extractData(charName, null, imageUrl, 'visual')
-    if (visualData) {
-      const fields = Object.keys(visualData).join(', ')
-      console.log(`  ✓ Visual data extracted (${fields})`)
+    console.log('  Fetching image URL...')
+    const imageUrl = await fetchImageUrl(charName)
+
+    if (!imageUrl) {
+      console.log('  ✗ No image URL found. Visual fields will be empty.')
     } else {
-      console.log('  ✗ Visual extraction failed. Visual fields will be empty.')
+      const visualLabel = visualDecision.modelId ? `${getProviderDisplayName()} (${visualDecision.modelId})` : getProviderLogLabel()
+      console.log(`  Image URL: ${imageUrl}`)
+      console.log(`  Extracting appearance, defaultSkin, defaultWeapon with ${visualLabel}...`)
+      const visualResult = await extractVisualData(charName, imageUrl)
+      visualData = visualResult.data
+      if (visualData) {
+        const fields = Object.keys(visualData).join(', ')
+        console.log(`  ✓ Visual data extracted (${fields})`)
+      } else {
+        console.log('  ✗ Visual extraction failed. Visual fields will be empty.')
+      }
     }
   }
 
@@ -1503,14 +1798,14 @@ async function createNewEntry() {
     relationships: textData?.relationships || {}
   }
 
-  // Preserve any existing non-extracted fields (e.g. id, color) if overwriting
-  if (charName in profiles) {
-    const existing = profiles[charName]
-    if (existing.id) newProfile.id = existing.id
-    if (existing.color) newProfile.color = existing.color
+  const attached = sortAndAttachProfileEntry(profiles, charName, newProfile, await loadProfileIdentitySources(filePath, !(charName in profiles)))
+  profiles = attached.profiles
+  if (attached.omittedId) {
+    console.warn(`  No id match for "${attached.omittedId}". id omitted.`)
   }
-
-  profiles[charName] = newProfile
+  if (attached.omittedColor) {
+    console.warn(`  No color match for "${attached.omittedColor}". color omitted.`)
+  }
 
   // Save
   fs.writeFileSync(filePath, JSON.stringify(profiles, null, 2))
@@ -1518,7 +1813,7 @@ async function createNewEntry() {
   console.log('')
   console.log('='.repeat(60))
   console.log(`Created: ${charName}`)
-  Object.entries(newProfile).forEach(([k, v]) => {
+  Object.entries(profiles[charName]).forEach(([k, v]) => {
     const display = typeof v === 'object' ? JSON.stringify(v) : v
     console.log(`  ${k}: ${display ? display.substring(0, 80) : '(empty)'}${display && display.length > 80 ? '...' : ''}`)
   })
@@ -1576,8 +1871,17 @@ async function processProfilesFile(filePath, fileLabel) {
 
     let wikiContent = null
     let imageUrl = null
+    let visualDecision = null
 
     if (MODE === 'visual') {
+      visualDecision = await prepareVisualModel()
+      if (visualDecision.skip) {
+        console.log('  Skipping visual analysis')
+        skippedCount++
+        console.log('')
+        continue
+      }
+
       // Visual mode: fetch direct image URL from wiki API
       console.log('  Fetching image URL...')
       imageUrl = await fetchImageUrl(charName)
@@ -1612,8 +1916,16 @@ async function processProfilesFile(filePath, fileLabel) {
     } else {
       extractFields = 'personality, speech_style, backstory, relationships'
     }
-    console.log(`  Extracting ${extractFields} with ${getProviderLogLabel()}...`)
-    const data = await extractData(charName, wikiContent, imageUrl)
+    let data
+    if (MODE === 'visual') {
+      const visualLabel = visualDecision.modelId ? `${getProviderDisplayName()} (${visualDecision.modelId})` : getProviderLogLabel()
+      console.log(`  Extracting ${extractFields} with ${visualLabel}...`)
+      const visualResult = await extractVisualData(charName, imageUrl)
+      data = visualResult.data
+    } else {
+      console.log(`  Extracting ${extractFields} with ${getProviderLogLabel()}...`)
+      data = await extractData(charName, wikiContent, imageUrl)
+    }
 
     if (data && applyData(profile, data)) {
       const updatedFields = []
@@ -2004,6 +2316,11 @@ async function processBackstoryUpdates() {
 }
 
 async function main() {
+  // If an OpenRouter key is present, ask for the model right away
+  if (OPENROUTER_API_KEY) {
+    await selectOpenRouterModel()
+  }
+
   await selectMode()
 
   // Create mode: gather character name and target file before selecting provider
@@ -2140,6 +2457,7 @@ function emitJsonResult() {
     status: 'ok',
     mode: MODE || CLI_MODE,
     provider: API_PROVIDER,
+    openrouterModel: API_PROVIDER === 'openrouter' ? OPENROUTER_MODEL : null,
     pollinationsModel: POLLINATIONS_MODEL || null,
     shard: CLI_SHARD ? { index: CLI_SHARD.index + 1, total: CLI_SHARD.total } : null,
     stats: FINAL_STATS || {}
@@ -2147,14 +2465,255 @@ function emitJsonResult() {
   console.log(`\n__JSON_RESULT__\n${JSON.stringify(result)}`)
 }
 
-main()
-  .then(() => {
-    emitJsonResult()
-  })
-  .catch((e) => {
-    console.error('Fatal error:', e)
-    if (CLI_JSON_OUTPUT) {
-      console.log(`\n__JSON_RESULT__\n${JSON.stringify({ status: 'error', error: e.message })}`)
+function normalizeCharacterName(name) {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s*:\s*/g, ': ')
+    .replace(/\s+/g, ' ')
+}
+
+function characterNameForms(name) {
+  const exact = normalizeCharacterName(name)
+  const spaced = exact.replace(/:\s/g, ' ').replace(/\s+/g, ' ')
+
+  return { exact, spaced }
+}
+
+function rowsNamed(name, rows, readName) {
+  const { exact, spaced } = characterNameForms(name)
+  const named = []
+
+  for (const row of rows) {
+    const value = readName(row)
+    if (typeof value !== 'string' || !value) continue
+    named.push({ row, form: characterNameForms(value) })
+  }
+
+  const exactHits = named.filter((item) => item.form.exact === exact)
+  if (exactHits.length) return exactHits.map((item) => item.row)
+  if (spaced === exact) return []
+
+  return named.filter((item) => item.form.exact === spaced || item.form.spaced === spaced).map((item) => item.row)
+}
+
+function readStoredIds(name, bags) {
+  const { exact } = characterNameForms(name)
+  const requested = String(name)
+  let exactKeyId = null
+  const normalizedIds = []
+
+  for (const bag of bags) {
+    if (!bag || typeof bag !== 'object' || Array.isArray(bag)) continue
+    for (const key of Object.keys(bag)) {
+      const record = bag[key]
+      const id = record && record.id
+      if (typeof id !== 'string' || !id) continue
+      if (key === requested) exactKeyId = id
+      else if (characterNameForms(key).exact === exact) normalizedIds.push(id)
     }
-    process.exit(1)
-  })
+  }
+
+  if (exactKeyId) return [exactKeyId]
+
+  return [...new Set(normalizedIds)]
+}
+
+function chooseIdPool(matches, sources) {
+  const overrides = new Set((sources.skinOverrideIds || []).map(String))
+  const filtered = new Set((sources.filteredIds || []).map(String))
+  let pool = matches.filter((row) => typeof row.id === 'string' && row.id && !overrides.has(row.id))
+  const canonical = pool.filter((row) => !row.id.includes('_'))
+  if (canonical.length) pool = canonical
+  const open = pool.filter((row) => !filtered.has(row.id))
+  if (open.length) pool = open
+
+  return pool
+}
+
+function resolveCharacterId(name, sources, profiles) {
+  const l2d = Array.isArray(sources.l2d) ? sources.l2d : []
+  const matches = rowsNamed(name, l2d, (row) => row && row.name)
+  const storedIds = readStoredIds(name, [profiles, sources.existingProfiles])
+
+  if (matches.length === 1 && typeof matches[0].id === 'string' && matches[0].id) {
+    return matches[0].id
+  }
+
+  if (matches.length > 1) {
+    const pool = chooseIdPool(matches, sources)
+    const storedInPool = storedIds.find((id) => pool.some((row) => row.id === id))
+    if (storedInPool) return storedInPool
+    if (pool.length) {
+      const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id, 'en'))
+
+      return sorted[0].id
+    }
+  }
+
+  if (storedIds.length === 1) return storedIds[0]
+  if (storedIds.length > 1) {
+    const sorted = [...storedIds].sort((a, b) => a.localeCompare(b, 'en'))
+
+    return sorted[0]
+  }
+  if (characterNameForms(name).exact === 'commander') return 'commander'
+
+  return null
+}
+
+function resolveCharacterColor(name, colors) {
+  if (!colors || typeof colors !== 'object' || Array.isArray(colors)) return null
+  const entries = Object.keys(colors).map((key) => ({ name: key, color: colors[key] }))
+  const hits = rowsNamed(name, entries, (row) => row.name).filter((row) => typeof row.color === 'string' && row.color)
+  if (!hits.length) return null
+  const exactKey = hits.find((row) => row.name === String(name))
+  if (exactKey) return exactKey.color
+
+  return hits[0].color
+}
+
+function sortProfileKeys(profiles) {
+  const sorted = {}
+  const keys = Object.keys(profiles).sort((a, b) => a.localeCompare(b, 'en'))
+  for (const key of keys) {
+    sorted[key] = profiles[key]
+  }
+
+  return sorted
+}
+
+function sortAndAttachProfileEntry(profiles, charName, entry, sources = {}) {
+  const isNew = !Object.prototype.hasOwnProperty.call(profiles, charName)
+  const record = entry && typeof entry === 'object' ? { ...entry } : {}
+  let omittedId = null
+  let omittedColor = null
+
+  if (isNew) {
+    const id = resolveCharacterId(charName, sources, profiles)
+    if (typeof id === 'string' && id) {
+      record.id = id
+    } else {
+      omittedId = charName
+    }
+
+    const color = resolveCharacterColor(charName, sources.colors)
+    if (typeof color === 'string' && color) {
+      record.color = color
+    } else {
+      omittedColor = charName
+    }
+  } else {
+    const existing = profiles[charName]
+    if (existing && typeof existing === 'object') {
+      if (record.id === undefined && existing.id) record.id = existing.id
+      if (record.color === undefined && existing.color) record.color = existing.color
+    }
+  }
+
+  const merged = { ...profiles, [charName]: record }
+
+  return {
+    profiles: isNew ? sortProfileKeys(merged) : merged,
+    omittedId,
+    omittedColor
+  }
+}
+
+async function fetchCharacterColors() {
+  const response = await fetch(COLORS_URL)
+  if (!response.ok) {
+    throw new Error(`colors request failed: ${response.status}`)
+  }
+  const data = await response.json()
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('colors payload was not an object')
+  }
+
+  return data
+}
+
+async function loadProfileIdentitySources(filePath, isNew) {
+  const otherPath = filePath === PROFILES_BASE_PATH ? PROFILES_VARIANTS_PATH : PROFILES_BASE_PATH
+  let existingProfiles = {}
+  let colors = {}
+  let l2d = []
+  let filteredIds = []
+  let skinOverrideIds = []
+
+  try {
+    const other = JSON.parse(fs.readFileSync(otherPath, 'utf8'))
+    if (other && typeof other === 'object' && !Array.isArray(other)) existingProfiles = other
+  } catch (e) {
+    existingProfiles = {}
+  }
+
+  if (isNew) {
+    try {
+      colors = await fetchCharacterColors()
+    } catch (e) {
+      console.warn(`  Color list unavailable (${e.message}).`)
+    }
+  }
+
+  try {
+    const l2dData = JSON.parse(fs.readFileSync(L2D_PATH, 'utf8'))
+    if (Array.isArray(l2dData)) l2d = l2dData
+    const filtered = JSON.parse(fs.readFileSync(FILTERED_IDS_PATH, 'utf8'))
+    if (Array.isArray(filtered.filteredIds)) filteredIds = filtered.filteredIds
+    const overrides = JSON.parse(fs.readFileSync(SKIN_OVERRIDES_PATH, 'utf8'))
+    if (overrides.overrides && typeof overrides.overrides === 'object') {
+      skinOverrideIds = Object.keys(overrides.overrides)
+    }
+  } catch (e) {
+    console.warn(`  Character id sources unavailable (${e.message}).`)
+  }
+
+  return { l2d, colors, existingProfiles, filteredIds, skinOverrideIds }
+}
+
+if (isDirectRun) {
+  main()
+    .then(() => {
+      emitJsonResult()
+    })
+    .catch((e) => {
+      console.error('Fatal error:', e)
+      if (CLI_JSON_OUTPUT) {
+        console.log(`\n__JSON_RESULT__\n${JSON.stringify({ status: 'error', error: e.message })}`)
+      }
+      process.exit(1)
+    })
+}
+
+module.exports = {
+  dropTrailingWikiSegment,
+  fetchWikiPageContent,
+  fetchWikiContent,
+  prepareVisualModel,
+  extractVisualData,
+  extractData,
+  promptOpenRouterModelChoice,
+  getModelCapability,
+  getOpenRouterModel: () => OPENROUTER_MODEL,
+  setMode: (mode) => {
+    MODE = mode
+  },
+  setApiProvider: (provider) => {
+    API_PROVIDER = provider
+  },
+  setOpenRouterModel: (modelId) => {
+    OPENROUTER_MODEL = modelId
+  },
+  setNonInteractive: (value) => {
+    NON_INTERACTIVE = value
+  },
+  setPromptIO: (input, output) => {
+    promptInput = input
+    promptOutput = output
+  },
+  resetVisualModelDecision: () => {
+    visualModelDecision = null
+  },
+  sortAndAttachProfileEntry
+}

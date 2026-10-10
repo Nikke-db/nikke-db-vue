@@ -5194,22 +5194,22 @@
     "id": "c9028"
   },
   {
-    "name": "Laplace",
+    "name": "Laplace (Human)",
     "id": "c9029",
-    "ko": "라플라스",
-    "jp": "ラプラス",
-    "tw": "拉普拉斯",
-    "cn": "拉普拉斯",
-    "de": "Laplace",
-    "th": "ลาปลาซ",
-    "fr": "Laplace"
+    "ko": "라플라스 (인간)",
+    "jp": "ラプラス（人間）",
+    "tw": "拉普拉斯（人類）",
+    "cn": "拉普拉斯（人类）",
+    "de": "Laplace (Mensch)",
+    "th": "ลาปลาซ (มนุษย์)",
+    "fr": "Laplace (Humaine)"
   },
   {
     "name": "Enme",
     "id": "c9030"
   },
   {
-    "name": "Syuen",
+    "name": "Syuen (Young)",
     "id": "c9031",
     "ko": "슈엔",
     "jp": "シュエン",

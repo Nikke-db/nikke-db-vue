@@ -540,6 +540,24 @@
 
           <h4 class="settings-section-header accent-green">AI Settings</h4>
           <n-divider />
+          <n-form-item v-if="isDev">
+            <template #label>
+              Debug Mode
+              <n-popover trigger="hover" placement="bottom" style="max-width: 300px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Developer-only. When enabled:<br /><br />
+                  If Reasoning Effort is not None, the model's thinking is logged to the console separately from the Raw AI Response.<br /><br />
+                  The JSON contract includes <code>anim_reason</code> immediately after <code>animation</code>, so the model explains why it chose that animation.
+                </div>
+              </n-popover>
+            </template>
+            <n-switch v-model:value="debugModeEnabled" />
+          </n-form-item>
           <n-form-item v-if="showAdvancedSettings">
             <template #label>
               Low-Context Mode <span style="font-size: smaller">(Not Recommended)</span>
@@ -964,7 +982,7 @@ import backgroundImagesList from '@/utils/json/backgroundImages.json'
 import loadingMessages from '@/utils/json/loadingMessages.json'
 import prompts from '@/utils/json/prompts.json'
 import { marked } from 'marked'
-import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, generateSystemPrompt as generateSystemPromptUtil } from '@/utils/chatUtils'
+import { sanitizeActions, parseFallback, parseAIResponse, isWholeWordPresent, formatChoiceAsUserTurn, filterEchoedUserChoiceDialogueInGameMode, stripChoicesWhenNotGameMode, ensureGameModeChoicesFallback, calculateYapDuration, replayMessage as replayMessageUtil, getHonorific, createTypewriterController, getEffectiveCharacterProfiles, logDebug, generateSystemPrompt as generateSystemPromptUtil, injectAnimReasonIntoJsonTemplate } from '@/utils/chatUtils'
 import { executeAiTurn } from '@/utils/chatRetryUtils'
 import { dispatchToProvider, buildFirstTurnHonorificsReminder, injectFirstTurnReminder, type ProviderCallFunctions } from '@/utils/chatAiCaller'
 import { useStoryReminders } from '@/composables/useStoryReminders'
@@ -973,7 +991,7 @@ import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { formatBackgroundFolderLoadFeedback, resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch, checkForSearchRequest as checkForSearchRequestUtil } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization } from '@/utils/llmUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, fetchGeminiModels, GEMINI_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL_OPTIONS, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization, rotateOpenCodeGoSessionId } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
@@ -984,7 +1002,8 @@ import { getAnimationOverrides, resolveAnimationOverride, validateAnimationOverr
 import { buildSessionExportData, downloadSessionFile, reconstructChatHistory, validateSessionSettings, adjustLastSummarizedIndex, validatePlayerCharacterState, resolveProviderModelsForSessionRestore, applyValidatedSessionSettings } from '@/utils/sessionUtils'
 import StoryGuideModal from '@/components/common/StoryGenerator/StoryGuideModal.vue'
 import NikkeChatOverlay from '@/components/common/StoryGenerator/NikkeChatOverlay.vue'
-import { loadSettingsFromStorage, validateSavedModel, MOBILE_OPTIMIZATIONS_STORAGE_KEY, MOBILE_OPTIMIZATIONS_PREV_KEY } from '@/utils/settingsUtils'
+import { loadSettingsFromStorage, validateSavedModel, MOBILE_OPTIMIZATIONS_STORAGE_KEY, MOBILE_OPTIMIZATIONS_PREV_KEY, DEBUG_MODE_STORAGE_KEY } from '@/utils/settingsUtils'
+import { consumeModelReasoning, resetModelReasoning } from '@/utils/aiReasoningUtils'
 
 const market = useMarket()
 
@@ -1031,6 +1050,7 @@ watch(selectedPlayerCharacterName, (name) => {
 
 const reasoningEffortOptions = computed(() => getReasoningEffortOptions(apiProvider.value))
 const enableContextCaching = ref(true)
+const debugModeEnabled = ref(import.meta.env.DEV && localStorage.getItem(DEBUG_MODE_STORAGE_KEY) === 'true')
 const playbackMode = ref('manual')
 const godModeEnabled = ref(localStorage.getItem('nikke_god_mode_enabled') === 'true')
 const realisticModeEnabled = ref(localStorage.getItem('nikke_realistic_mode_enabled') === 'true')
@@ -1423,9 +1443,11 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const openRouterModels = ref<any[]>([])
 const pollinationsModels = ref<any[]>([])
 const openCodeGoModels = ref<any[]>([])
+const geminiModels = ref<any[]>([])
 const isRestoring = ref(false)
 const needsJsonReminder = ref(false)
 const isDev = import.meta.env.DEV
+const isDebugModeActive = computed(() => isDev && debugModeEnabled.value)
 
 const {
   showRemindersDropdown,
@@ -1460,14 +1482,7 @@ const setRandomLoadingMessage = () => {
 
 const modelOptions = computed(() => {
   if (apiProvider.value === 'gemini') {
-    return [
-      { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
-      { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
-      { label: 'Gemini 3.1 Flash-Lite', value: 'gemini-3.1-flash-lite' },
-      { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
-      { label: 'Gemini 3 Flash', value: 'gemini-3-flash-preview' },
-      { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro-preview' }
-    ]
+    return geminiModels.value
   } else if (apiProvider.value === 'openrouter') {
     return openRouterModels.value
   } else if (apiProvider.value === 'opencode-go') {
@@ -1520,6 +1535,16 @@ const refreshOpenCodeGoModels = async () => {
   const validModels = openCodeGoModels.value.map((m) => m.value)
   if (!model.value || !validModels.includes(model.value)) {
     model.value = openCodeGoModels.value[0]?.value || ''
+  }
+}
+
+const refreshGeminiModels = async () => {
+  const fetchedModels = await fetchGeminiModels(apiKey.value.trim())
+  geminiModels.value = fetchedModels.length > 0 ? fetchedModels : GEMINI_FALLBACK_MODEL_OPTIONS
+
+  const validModels = geminiModels.value.map((m) => m.value)
+  if (!model.value || !validModels.includes(model.value)) {
+    model.value = validModels.includes(GEMINI_DEFAULT_MODEL) ? GEMINI_DEFAULT_MODEL : (geminiModels.value[0]?.value || '')
   }
 }
 
@@ -1883,6 +1908,8 @@ watch(apiKey, async (newVal) => {
     await refreshPollinationsModels()
   } else if (apiProvider.value === 'opencode-go') {
     await refreshOpenCodeGoModels()
+  } else if (apiProvider.value === 'gemini') {
+    await refreshGeminiModels()
   }
 })
 
@@ -1924,6 +1951,10 @@ watch(tokenUsage, (newVal) => {
 
 watch(enableContextCaching, (newVal) => {
   localStorage.setItem('nikke_enable_context_caching', String(newVal))
+})
+
+watch(debugModeEnabled, (val) => {
+  if (import.meta.env.DEV) localStorage.setItem(DEBUG_MODE_STORAGE_KEY, String(val))
 })
 
 watch(lowContextMode, (val) => {
@@ -2072,7 +2103,8 @@ watch(apiProvider, async (newVal) => {
 
   // Reset model when provider changes
   if (apiProvider.value === 'gemini') {
-    model.value = 'gemini-3.5-flash'
+    model.value = ''
+    await refreshGeminiModels()
   } else if (apiProvider.value === 'opencode-go') {
     model.value = ''
     await refreshOpenCodeGoModels()
@@ -2124,6 +2156,7 @@ const initializeSettings = async () => {
   if (stored.chatterboxEndpoint !== undefined) chatterboxEndpoint.value = stored.chatterboxEndpoint
   if (stored.tokenUsage !== undefined) tokenUsage.value = stored.tokenUsage
   if (stored.enableContextCaching !== undefined) enableContextCaching.value = stored.enableContextCaching
+  if (isDev && stored.debugMode !== undefined) debugModeEnabled.value = stored.debugMode
   if (stored.autoCompactSummaries !== undefined) autoCompactSummaries.value = stored.autoCompactSummaries
   if (stored.autoCompactFrequency !== undefined) autoCompactFrequency.value = stored.autoCompactFrequency
   if (stored.playerCharacterUseCustom !== undefined) useCustomPlayerCharacter.value = stored.playerCharacterUseCustom
@@ -2147,6 +2180,7 @@ const initializeSettings = async () => {
       {
         refreshOpenCodeGoModels,
         refreshPollinationsModels,
+        refreshGeminiModels,
         fetchOpenRouterModels: async () => await fetchOpenRouterModels()
       },
       {
@@ -2167,12 +2201,21 @@ const initializeSettings = async () => {
         },
         set pollinationsModels(value) {
           pollinationsModels.value = value
+        },
+        get geminiModels() {
+          return geminiModels.value
+        },
+        set geminiModels(value) {
+          geminiModels.value = value
         }
       }
     )
 
     if ((stored.apiProvider !== 'pollinations' && stored.apiProvider !== 'opencode-go') || validModels.length > 0) {
-      const fallbackModel = stored.apiProvider === 'openrouter' ? openRouterModels.value[0]?.value : openCodeGoModels.value[0]?.value
+      let fallbackModel: string | undefined
+      if (stored.apiProvider === 'openrouter') fallbackModel = openRouterModels.value[0]?.value
+      else if (stored.apiProvider === 'opencode-go') fallbackModel = openCodeGoModels.value[0]?.value
+      else if (stored.apiProvider === 'gemini') fallbackModel = geminiModels.value[0]?.value
       const { model: validModel, warning } = validateSavedModel(stored.apiProvider, stored.model, validModels, fallbackModel)
       if (validModel) model.value = validModel
       if (warning) console.warn(warning)
@@ -2189,6 +2232,8 @@ const initializeSettings = async () => {
     }
   } else if (apiProvider.value === 'pollinations' && pollinationsModels.value.length === 0) {
     await refreshPollinationsModels()
+  } else if (apiProvider.value === 'gemini' && geminiModels.value.length === 0) {
+    await refreshGeminiModels()
   }
 
   if (mobileOptimizations.value) {
@@ -2429,6 +2474,7 @@ const handleFileUpload = (event: Event) => {
             {
               refreshOpenCodeGoModels,
               refreshPollinationsModels,
+              refreshGeminiModels,
               fetchOpenRouterModels: async () => await fetchOpenRouterModels()
             },
             {
@@ -2449,6 +2495,12 @@ const handleFileUpload = (event: Event) => {
               },
               set pollinationsModels(value) {
                 pollinationsModels.value = value
+              },
+              get geminiModels() {
+                return geminiModels.value
+              },
+              set geminiModels(value) {
+                geminiModels.value = value
               }
             }
           )
@@ -2677,7 +2729,8 @@ const continueStory = async () => {
 const getUserReminders = (): string => {
   const { text, togglesToClear } = getUserRemindersFromComposable(mode.value, prompts.reminders as Record<string, string>, {
     playerCharacterName: activePlayerCharacterName.value,
-    customPlayerCharacterActive: isCustomPlayerCharacterActive.value
+    customPlayerCharacterActive: isCustomPlayerCharacterActive.value,
+    debugMode: isDebugModeActive.value
   })
 
   const toggleMap: Record<string, Ref<boolean>> = {
@@ -2770,12 +2823,15 @@ const getProviderCalls = (): ProviderCallFunctions => ({
 })
 
 const buildPromptAndDispatch = async (isRetry: boolean, enableWebSearch: boolean, logTag: string): Promise<string> => {
+  resetModelReasoning()
   const isFirstTurn = chatHistory.value.filter((m) => m.role === 'user').length <= 1
   const systemPrompt = generateSystemPrompt(enableWebSearch)
   let retryInstruction = isRetry ? prompts.reminders.retry : ''
 
   if (needsJsonReminder.value) {
-    retryInstruction += prompts.reminders.json
+    retryInstruction += isDebugModeActive.value
+      ? injectAnimReasonIntoJsonTemplate(prompts.reminders.json)
+      : prompts.reminders.json
     needsJsonReminder.value = false
   }
 
@@ -2914,7 +2970,8 @@ const generateSystemPrompt = (enableWebSearch: boolean) => {
     customPlayerCharacterActive: isCustomPlayerCharacterActive.value,
     backgroundImagesEnabled: isBgReady,
     backgroundImageMap: isBgReady ? market.live2d.backgroundImageMap : undefined,
-    currentBackgroundFilename: isBgReady ? market.live2d.currentBackground : undefined
+    currentBackgroundFilename: isBgReady ? market.live2d.currentBackground : undefined,
+    debugMode: isDebugModeActive.value
   })
 }
 
@@ -2929,6 +2986,8 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     searchUrl,
     prompts,
     reasoningEffort: reasoningEffort.value,
+    includeAnimReason: isDebugModeActive.value,
+    includeReasoning: isDebugModeActive.value && reasoningEffort.value !== 'none',
     signal: activeAbortController?.signal
   })
 }
@@ -2940,6 +2999,7 @@ const callGemini = async (messages: any[], enableWebSearch: boolean = false) => 
     allowWebSearchFallback: allowWebSearchFallback.value,
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
+    includeReasoning: isDebugModeActive.value && reasoningEffort.value !== 'none',
     signal: activeAbortController?.signal
   })
 }
@@ -2953,6 +3013,8 @@ const callPollinations = async (messages: any[], enableWebSearch: boolean = fals
     enableWebSearch,
     reasoningEffort: reasoningEffort.value,
     enableContextCaching: enableContextCaching.value,
+    includeAnimReason: isDebugModeActive.value,
+    includeReasoning: isDebugModeActive.value && reasoningEffort.value !== 'none',
     signal: activeAbortController?.signal
   })
 }
@@ -2964,6 +3026,8 @@ const callOpenCodeGo = async (messages: any[]) => {
     modeIsGame: mode.value === 'game',
     reasoningEffort: reasoningEffort.value,
     enableContextCaching: enableContextCaching.value,
+    includeAnimReason: isDebugModeActive.value,
+    includeReasoning: isDebugModeActive.value && reasoningEffort.value !== 'none',
     signal: activeAbortController?.signal
   })
 }
@@ -2974,6 +3038,8 @@ const callLocal = async (messages: any[]) => {
     localUrl: localUrl.value,
     modeIsGame: mode.value === 'game',
     reasoningEffort: reasoningEffort.value,
+    includeAnimReason: isDebugModeActive.value,
+    includeReasoning: isDebugModeActive.value && reasoningEffort.value !== 'none',
     signal: activeAbortController?.signal
   })
 }
@@ -3033,6 +3099,10 @@ const replayMessage = async (msg: any, index: number) => {
 
 const processAIResponse = async (responseStr: string, depth: number = 0, autoRetryAttempted: boolean = false) => {
   loadingStatus.value = 'Processing response...'
+  const thinking = consumeModelReasoning()
+  if (thinking && isDebugModeActive.value && reasoningEffort.value !== 'none') {
+    logDebug('AI Thinking:', thinking)
+  }
   logDebug('Raw AI Response:', responseStr)
 
   // Check for empty or too-short responses (model sometimes returns nothing)
@@ -3627,6 +3697,7 @@ const executeAction = async (data: any) => {
   await new Promise((r) => setTimeout(r, 100))
 
   if (data.debug_info) logDebug('[AI Debug Info]:', data.debug_info)
+  if (data.anim_reason) logDebug('[AI anim_reason]:', data.anim_reason)
 
   if (data.characterProfile || data.characterProfiles) {
     const legacyData = data.characterProfile || data.characterProfiles
@@ -3722,6 +3793,7 @@ const resetSession = () => {
 
   if (confirmed) {
     clearGameChoiceState()
+    rotateOpenCodeGoSessionId()
 
     // Resetting the story should not keep the previous visual scene pinned to the
     // page background, so clear any active blob URL even if the pack stays loaded.

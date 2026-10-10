@@ -43,7 +43,7 @@ export const buildUserReminders = (
   toggles: ReminderToggleState,
   mode: string,
   reminders: Record<string, string>,
-  opts?: { playerCharacterName?: string; customPlayerCharacterActive?: boolean }
+  opts?: { playerCharacterName?: string; customPlayerCharacterActive?: boolean; debugMode?: boolean }
 ): { text: string; togglesToClear: (keyof ReminderToggleState)[] } => {
   let text = ''
   const togglesToClear: (keyof ReminderToggleState)[] = []
@@ -54,6 +54,9 @@ export const buildUserReminders = (
       jsonReminder = reminders.emptyActionsReminderGame
     } else {
       jsonReminder = mode === 'game' ? reminders.invalidJsonReminderGame : reminders.invalidJsonReminder
+    }
+    if (opts?.debugMode) {
+      jsonReminder = injectAnimReasonIntoJsonTemplate(jsonReminder)
     }
     text += '\n\n' + jsonReminder
     if (!toggles.invalidJsonPersist) togglesToClear.push('invalidJson')
@@ -1395,7 +1398,16 @@ export const replayMessage = async (msg: any, index: number, ctx: ReplayContext)
   }
 }
 
-// ── System prompt generation ──────────────────────────────────────────
+/**
+ * Inserts `anim_reason` immediately after each `"animation"` field in JSON-template prompt text.
+ */
+export const injectAnimReasonIntoJsonTemplate = (text: string): string => {
+  if (!text || text.includes('"anim_reason"')) return text
+
+  const field = (prompts.systemPrompt as any).debugAnimReason as string
+
+  return text.replace(/("animation"\s*:\s*"[^"]*",)/g, `$1\n    ${field}`)
+}
 
 export type SystemPromptParams = {
   enableWebSearch: boolean
@@ -1414,6 +1426,7 @@ export type SystemPromptParams = {
   backgroundImagesEnabled?: boolean
   backgroundImageMap?: Map<string, File>
   currentBackgroundFilename?: string
+  debugMode?: boolean
 }
 
 /**
@@ -1614,6 +1627,17 @@ export const generateSystemPrompt = (params: SystemPromptParams): string => {
     && params.backgroundImageMap
     && params.backgroundImageMap.size > 0
 
+  const debugMode = !!params.debugMode
+  let jsonStructure = mode === 'game'
+    ? (prompts.systemPrompt as any).jsonStructureGame
+    : (prompts.systemPrompt as any).jsonStructureBase
+  if (debugMode) {
+    jsonStructure = injectAnimReasonIntoJsonTemplate(jsonStructure)
+  }
+  const debugAnimReasonInstruction = debugMode
+    ? `\n  ${(prompts.systemPrompt as any).debugAnimReasonInstruction}\n`
+    : ''
+
   let backgroundSection = ''
   if (isBackgroundEnabled) {
     const availableFilenames = [...params.backgroundImageMap!.keys()].sort()
@@ -1657,7 +1681,8 @@ ${(prompts.systemPrompt as any).backgroundImages.schemaAddition}
 
   ${criticalErrors}
 
-  ${mode === 'game' ? (prompts.systemPrompt as any).jsonStructureGame : (prompts.systemPrompt as any).jsonStructureBase}
+  ${jsonStructure}
+  ${debugAnimReasonInstruction}
 
   ${prompts.systemPrompt.knownProfiles}
   ${knownCharacterNames.length > 0 ? JSON.stringify(getFilteredProfilesForAI(), null, 2) : prompts.systemPrompt.noProfilesMessage}

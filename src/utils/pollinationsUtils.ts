@@ -2,6 +2,7 @@
 import { AIError, logDebug } from '@/utils/chatUtils'
 import { modelsWithoutJsonSupport, modelsWithoutCacheControlSupport, modelsRequiringStreamForHighTokens } from './providerConfigUtils'
 import { buildStoryResponseSchema } from '@/utils/providerConfigUtils'
+import { captureModelReasoning, takeOpenAiMessageContent } from '@/utils/aiReasoningUtils'
 
 const buildPollinationsMessages = (messages: any[], model: string, enableContextCaching?: boolean) => {
   const shouldAddCacheControl = !!enableContextCaching && !modelsWithoutCacheControlSupport.value.has(model)
@@ -43,7 +44,7 @@ const handleCacheControlRetry = async (status: number, errorData: any, shouldAdd
   return { retryResponse }
 }
 
-const parsePollinationsStreamResponse = async (response: Response) => {
+const parsePollinationsStreamResponse = async (response: Response, includeReasoning = false) => {
   if (!response.body) {
     throw new Error('Pollinations API Error: Missing response body for stream')
   }
@@ -52,6 +53,7 @@ const parsePollinationsStreamResponse = async (response: Response) => {
   const decoder = new TextDecoder('utf-8')
   let buffer = ''
   let content = ''
+  let reasoning = ''
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -77,10 +79,21 @@ const parsePollinationsStreamResponse = async (response: Response) => {
         } else if (typeof message === 'string') {
           content += message
         }
+
+        if (includeReasoning) {
+          const deltaReasoning = parsed?.choices?.[0]?.delta?.reasoning ?? parsed?.choices?.[0]?.delta?.reasoning_content
+          const messageReasoning = parsed?.choices?.[0]?.message?.reasoning ?? parsed?.choices?.[0]?.message?.reasoning_content
+          if (typeof deltaReasoning === 'string') reasoning += deltaReasoning
+          else if (typeof messageReasoning === 'string') reasoning += messageReasoning
+        }
       } catch (error) {
         console.warn('Pollinations stream chunk parse error:', error)
       }
     }
+  }
+
+  if (includeReasoning) {
+    captureModelReasoning(reasoning)
   }
 
   return content
@@ -217,15 +230,17 @@ export const callPollinations = async (
     enableWebSearch?: boolean
     reasoningEffort?: string
     enableContextCaching?: boolean
+    includeAnimReason?: boolean
+    includeReasoning?: boolean
     signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching, signal } = opts
+  const { model, apiKey, modeIsGame, reasoningEffort, enableContextCaching, includeAnimReason = false, includeReasoning = false, signal } = opts
   const pollinationsApiKey = getRequiredPollinationsApiKey(apiKey)
 
   if (modelsWithoutJsonSupport.value.has(model)) {
     logDebug(`Model ${model} known to not support json_schema, using text fallback...`)
-    return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching, signal })
+    return callPollinationsWithoutJson(messages, { model, apiKey, reasoningEffort, enableContextCaching, includeReasoning, signal })
   }
 
   const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
@@ -234,7 +249,7 @@ export const callPollinations = async (
     model: model,
     messages: processedMessages,
     max_tokens: 16384,
-    response_format: buildStoryResponseSchema(modeIsGame),
+    response_format: buildStoryResponseSchema(modeIsGame, includeAnimReason),
     private: true
   }
 
@@ -284,24 +299,25 @@ export const callPollinations = async (
         const retryErrorData = await retryResponse.json().catch(() => ({}))
         throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
-      return await parsePollinationsStreamResponse(retryResponse)
+      return await parsePollinationsStreamResponse(retryResponse, includeReasoning)
     }
 
     const cacheRetry = await handleCacheControlRetry(response.status, errorData, shouldAddCacheControl, model, messages, requestBody, url, headers, signal)
     if (cacheRetry) {
       if (cacheRetry.retryResponse) {
         if (requestBody.stream) {
-          return await parsePollinationsStreamResponse(cacheRetry.retryResponse)
+          return await parsePollinationsStreamResponse(cacheRetry.retryResponse, includeReasoning)
         }
         const retryData = await cacheRetry.retryResponse.json()
-        return retryData.choices[0].message.content
+
+        return takeOpenAiMessageContent(retryData, includeReasoning)
       }
       // Retry failed — check if this model also doesn't support json_schema
       if (cacheRetry.retryErrorData?.error?.message?.includes('response_format') || cacheRetry.retryErrorData?.error?.message?.includes('json_schema') || cacheRetry.retryErrorData?.error?.message?.includes('controlled generation')) {
         console.warn(`Model ${model} also does not support json_schema response format, remembering and retrying without it...`)
         modelsWithoutJsonSupport.value.add(model)
         sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
-        return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
+        return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, includeReasoning, signal })
       }
       throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
@@ -310,22 +326,23 @@ export const callPollinations = async (
       console.warn(`Model ${model} does not support json_schema response format, remembering and retrying without it...`)
       modelsWithoutJsonSupport.value.add(model)
       sessionStorage.setItem('modelsWithoutJsonSupport', JSON.stringify([...modelsWithoutJsonSupport.value]))
-      return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, signal })
+      return callPollinationsWithoutJson(messages, { model, apiKey, enableContextCaching, includeReasoning, signal })
     }
 
     throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   if (requestBody.stream) {
-    return await parsePollinationsStreamResponse(response)
+    return await parsePollinationsStreamResponse(response, includeReasoning)
   }
 
   const data = await response.json()
-  return data.choices[0].message.content
+
+  return takeOpenAiMessageContent(data, includeReasoning)
 }
 
-export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
-  const { model, apiKey, reasoningEffort, enableContextCaching, signal } = opts
+export const callPollinationsWithoutJson = async (messages: any[], opts: { model: string; apiKey?: string; reasoningEffort?: string; enableContextCaching?: boolean; includeReasoning?: boolean; signal?: AbortSignal }) => {
+  const { model, apiKey, reasoningEffort, enableContextCaching, includeReasoning = false, signal } = opts
   const pollinationsApiKey = getRequiredPollinationsApiKey(apiKey)
 
   const { processedMessages, shouldAddCacheControl } = buildPollinationsMessages(messages, model, enableContextCaching)
@@ -380,16 +397,17 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
         const retryErrorData = await retryResponse.json().catch(() => ({}))
         throw new AIError(retryErrorData?.error?.code ?? retryResponse.status, retryErrorData?.error?.message ?? retryResponse.statusText ?? 'Unknown error')
       }
-      return await parsePollinationsStreamResponse(retryResponse)
+      return await parsePollinationsStreamResponse(retryResponse, includeReasoning)
     }
     const cacheRetry = await handleCacheControlRetry(response.status, errorData, shouldAddCacheControl, model, messages, requestBody, url, headers, signal)
     if (cacheRetry) {
       if (cacheRetry.retryResponse) {
         if (requestBody.stream) {
-          return await parsePollinationsStreamResponse(cacheRetry.retryResponse)
+          return await parsePollinationsStreamResponse(cacheRetry.retryResponse, includeReasoning)
         }
         const retryData = await cacheRetry.retryResponse.json()
-        return retryData.choices[0].message.content
+
+        return takeOpenAiMessageContent(retryData, includeReasoning)
       }
       throw new AIError(cacheRetry.retryErrorData?.error?.code ?? 'UNKNOWN', cacheRetry.retryErrorData?.error?.message ?? 'Unknown error')
     }
@@ -397,9 +415,10 @@ export const callPollinationsWithoutJson = async (messages: any[], opts: { model
   }
 
   if (requestBody.stream) {
-    return await parsePollinationsStreamResponse(response)
+    return await parsePollinationsStreamResponse(response, includeReasoning)
   }
 
   const data = await response.json()
-  return data.choices[0].message.content
+
+  return takeOpenAiMessageContent(data, includeReasoning)
 }

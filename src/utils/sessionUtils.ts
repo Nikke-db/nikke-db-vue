@@ -2,6 +2,7 @@
 // Extracted from ChatInterface.vue to keep serialization logic testable and reusable.
 
 import { tokenUsageOptions, providerOptions } from '@/utils/llmUtils'
+import { GEMINI_DEFAULT_MODEL } from '@/utils/geminiUtils'
 import { type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 // --- Types ---
@@ -233,6 +234,7 @@ export interface ValidatedSessionSettings {
 export type SessionRestoreProviders = {
   refreshOpenCodeGoModels: () => Promise<void>
   refreshPollinationsModels: () => Promise<void>
+  refreshGeminiModels: () => Promise<void>
   fetchOpenRouterModels: () => Promise<Array<{ value: string }>>
 }
 
@@ -240,6 +242,7 @@ export type SessionRestoreModelState = {
   openRouterModels: Array<{ value: string }>
   openCodeGoModels: Array<{ value: string }>
   pollinationsModels: Array<{ value: string }>
+  geminiModels: Array<{ value: string }>
 }
 
 export async function resolveProviderModelsForSessionRestore(
@@ -263,7 +266,8 @@ export async function resolveProviderModelsForSessionRestore(
   }
 
   if (provider === 'gemini') {
-    return ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview']
+    await deps.refreshGeminiModels()
+    return state.geminiModels.map((m) => m.value)
   }
 
   return []
@@ -398,7 +402,7 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
       result.model = savedModel
     } else {
       // Fallback to default
-      if (savedProvider === 'gemini') result.model = 'gemini-3.5-flash'
+      if (savedProvider === 'gemini') result.model = validModels[0] ?? GEMINI_DEFAULT_MODEL
       else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && validModels.length > 0) result.model = validModels[0]
 
       if (savedModel) {
