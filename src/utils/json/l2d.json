@@ -400,6 +400,17 @@
     "fr": "Mica : Camarade des neiges"
   },
   {
+    "id": "c063",
+    "name": "Belorta: Pumpkin Witch",
+    "ko": "벨로타 : 펌킨 위치",
+    "jp": "ベロータ：パンプキンウィッチ",
+    "tw": "貝洛塔：南瓜女巫",
+    "cn": "贝洛塔：南瓜女巫",
+    "de": "Belorta: Kürbishexe",
+    "th": "เบลอร์ต้า: แม่มดมนตร์ฟักทอง",
+    "fr": "Bella : Sorcière citrouille"
+  },
+  {
     "name": "Brid",
     "id": "c070",
     "ko": "브리드",
@@ -3305,6 +3316,17 @@
     "fr": "Cendrillon Ma beauté"
   },
   {
+    "id": "c511_03",
+    "name": "Cinderella Glass Curtsy",
+    "ko": "신데렐라 글라스 커트시",
+    "jp": "シンデレラ グラスカーテシー",
+    "tw": "灰姑娘 水晶女僕",
+    "cn": "灰姑娘 水晶女仆",
+    "de": "Aschenputtel Gläserner Knicks",
+    "th": "ซินเดอเรลล่า เมดแก้วกิริยา",
+    "fr": "Cendrillon Révérence délicate"
+  },
+  {
     "name": "Little Mermaid",
     "id": "c513",
     "ko": "리틀 머메이드",
@@ -3638,6 +3660,17 @@
     "de": "Label",
     "th": "เลเบิล",
     "fr": "Label"
+  },
+  {
+    "id": "c582_01",
+    "name": "Label Occultist",
+    "ko": "레이블 오컬티스트",
+    "jp": "レーベル オカルティスト",
+    "tw": "蕾貝兒 神祕學者",
+    "cn": "蕾贝儿 神秘学者",
+    "de": "Label Okkultismus",
+    "th": "เลเบิล แม่หมอมือใหม่",
+    "fr": "Label Occultiste"
   },
   {
     "name": "Arcana: Fortune Mate",
@@ -5252,6 +5285,10 @@
     "id": "c9040"
   },
   {
+    "name": "NPC TBA",
+    "id": "c9042"
+  },
+  {
     "name": "Blue Water Island",
     "id": "bluewaterisland"
   },
@@ -5605,6 +5642,11 @@
     "name": "Coin Rush Showdown",
     "id": "coinrushshowdown",
     "f": "EventScene_coinrushshowdown_02"
+  },
+  {
+    "name": "Little Witch Trick",
+    "id": "littlewitchtrick",
+    "f": "EventScene_littlewitchtrick_01"
   },
   {
     "name": "Smol Ade",

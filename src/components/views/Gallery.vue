@@ -234,6 +234,7 @@ import projectmatis from '@/utils/json/Gallery/projectmatis.json'
 import personaonfrontline from '@/utils/json/Gallery/personaonfrontline.json'
 import greatvillainunion from '@/utils/json/Gallery/greatvillainunion.json'
 import coinrushshowdown from '@/utils/json/Gallery/coinrushshowdown.json'
+import littlewitchtrick from '@/utils/json/Gallery/littlewitchtrick.json'
 
 
 const market = useMarket()
@@ -329,7 +330,8 @@ const buttonListEvents = [
   { data: projectmatis },
   { data: personaonfrontline },
   { data: greatvillainunion },
-  { data: coinrushshowdown }
+  { data: coinrushshowdown },
+  { data: littlewitchtrick }
 ] as buttonInterface[]
 
 const buttonListOther = [
