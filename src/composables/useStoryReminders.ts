@@ -47,7 +47,7 @@ export function useStoryReminders() {
     }
   })
 
-  const getUserReminders = (mode: string, reminders: Record<string, string>, opts?: { playerCharacterName?: string; customPlayerCharacterActive?: boolean }) => {
+  const getUserReminders = (mode: string, reminders: Record<string, string>, opts?: { playerCharacterName?: string; customPlayerCharacterActive?: boolean; debugMode?: boolean }) => {
     const toggles: ReminderToggleState = {
       invalidJson: invalidJsonToggle.value,
       invalidJsonPersist: invalidJsonPersist.value,

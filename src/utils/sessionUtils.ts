@@ -2,6 +2,8 @@
 // Extracted from ChatInterface.vue to keep serialization logic testable and reusable.
 
 import { tokenUsageOptions, providerOptions } from '@/utils/llmUtils'
+import { GEMINI_DEFAULT_MODEL } from '@/utils/geminiUtils'
+import { normalizeOpenRouterSpeed, type OpenRouterSpeed } from '@/utils/providerConfigUtils'
 import { type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 // --- Types ---
@@ -30,6 +32,7 @@ export interface SessionSettings {
   enableContextCaching: boolean
   allowWebSearchFallback: boolean
   reasoningEffort: string
+  openRouterSpeed: OpenRouterSpeed
   autoCompactSummaries: boolean
   autoCompactFrequency: number
 }
@@ -80,6 +83,7 @@ export interface BuildSessionExportParams {
   enableContextCaching: boolean
   allowWebSearchFallback: boolean
   reasoningEffort: string
+  openRouterSpeed: OpenRouterSpeed
   autoCompactSummaries: boolean
   autoCompactFrequency: number
 }
@@ -149,6 +153,7 @@ export function buildSessionExportData(params: BuildSessionExportParams): Sessio
       enableContextCaching: params.enableContextCaching,
       allowWebSearchFallback: params.allowWebSearchFallback,
       reasoningEffort: params.reasoningEffort,
+      openRouterSpeed: params.openRouterSpeed,
       autoCompactSummaries: params.autoCompactSummaries,
       autoCompactFrequency: params.autoCompactFrequency
     }
@@ -219,6 +224,7 @@ export interface ValidatedSessionSettings {
   enableContextCaching?: boolean
   allowWebSearchFallback?: boolean
   reasoningEffort?: string
+  openRouterSpeed?: OpenRouterSpeed
   autoCompactSummaries?: boolean
   autoCompactFrequency?: number
   apiProvider?: string
@@ -233,6 +239,7 @@ export interface ValidatedSessionSettings {
 export type SessionRestoreProviders = {
   refreshOpenCodeGoModels: () => Promise<void>
   refreshPollinationsModels: () => Promise<void>
+  refreshGeminiModels: () => Promise<void>
   fetchOpenRouterModels: () => Promise<Array<{ value: string }>>
 }
 
@@ -240,6 +247,7 @@ export type SessionRestoreModelState = {
   openRouterModels: Array<{ value: string }>
   openCodeGoModels: Array<{ value: string }>
   pollinationsModels: Array<{ value: string }>
+  geminiModels: Array<{ value: string }>
 }
 
 export async function resolveProviderModelsForSessionRestore(
@@ -263,7 +271,8 @@ export async function resolveProviderModelsForSessionRestore(
   }
 
   if (provider === 'gemini') {
-    return ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview']
+    await deps.refreshGeminiModels()
+    return state.geminiModels.map((m) => m.value)
   }
 
   return []
@@ -282,6 +291,7 @@ export type ApplyValidatedSessionSettingsParams = {
   enableContextCaching: { value: boolean }
   allowWebSearchFallback: { value: boolean }
   reasoningEffort: { value: string }
+  openRouterSpeed: { value: OpenRouterSpeed }
   autoCompactSummaries: { value: boolean }
   autoCompactFrequency: { value: number }
   apiProvider: { value: string }
@@ -302,6 +312,7 @@ export function applyValidatedSessionSettings(params: ApplyValidatedSessionSetti
   if (validated.enableContextCaching !== undefined) params.enableContextCaching.value = validated.enableContextCaching
   if (validated.allowWebSearchFallback !== undefined) params.allowWebSearchFallback.value = validated.allowWebSearchFallback
   if (validated.reasoningEffort !== undefined) params.reasoningEffort.value = validated.reasoningEffort
+  if (validated.openRouterSpeed !== undefined) params.openRouterSpeed.value = validated.openRouterSpeed
   if (validated.autoCompactSummaries !== undefined) params.autoCompactSummaries.value = validated.autoCompactSummaries
   if (validated.autoCompactFrequency !== undefined) params.autoCompactFrequency.value = validated.autoCompactFrequency
   if (validated.apiProvider !== undefined) params.apiProvider.value = validated.apiProvider
@@ -376,6 +387,7 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
   if (settings.reasoningEffort) {
     result.reasoningEffort = settings.reasoningEffort
   }
+  result.openRouterSpeed = normalizeOpenRouterSpeed(settings.openRouterSpeed)
   if (typeof settings.autoCompactSummaries === 'boolean') {
     result.autoCompactSummaries = settings.autoCompactSummaries
   }
@@ -398,7 +410,7 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
       result.model = savedModel
     } else {
       // Fallback to default
-      if (savedProvider === 'gemini') result.model = 'gemini-3.5-flash'
+      if (savedProvider === 'gemini') result.model = validModels[0] ?? GEMINI_DEFAULT_MODEL
       else if ((savedProvider === 'openrouter' || savedProvider === 'opencode-go') && validModels.length > 0) result.model = validModels[0]
 
       if (savedModel) {
