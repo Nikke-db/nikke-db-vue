@@ -536,6 +536,24 @@
             </template>
             <n-select v-model:value="reasoningEffort" :options="reasoningEffortOptions" />
           </n-form-item>
+          <n-form-item v-if="showAdvancedSettings && apiProvider === 'openrouter'">
+            <template #label>
+              Model Speed
+              <n-popover trigger="hover" placement="bottom" style="max-width: 360px">
+                <template #trigger>
+                  <n-icon size="16" style="vertical-align: text-bottom; margin-left: 4px; cursor: help; color: #888">
+                    <Help />
+                  </n-icon>
+                </template>
+                <div>
+                  Model Speed picks an OpenRouter service tier. Default uses the model's normal price and speed and sends no tier.<br /><br />
+                  Slow requests flex, which costs less and can be slower or less available. Fast requests priority, which costs more.<br /><br />
+                  If the model has no such tier, the choice is ignored and the request runs like Default.
+                </div>
+              </n-popover>
+            </template>
+            <n-select v-model:value="openRouterSpeed" :options="modelSpeedOptions" />
+          </n-form-item>
           <n-divider />
 
           <h4 class="settings-section-header accent-green">AI Settings</h4>
@@ -991,7 +1009,7 @@ import { normalizeAiActionCharacterData } from '@/utils/aiActionNormalization'
 import { formatBackgroundFolderLoadFeedback, resolveAiBackgroundSelection } from '@/utils/storyBackgroundUtils'
 import { ttsEnabled, ttsEndpoint, ttsProvider, gptSovitsEndpoint, gptSovitsBasePath, chatterboxEndpoint, ttsProviderOptions, playTTS } from '@/utils/ttsUtils'
 import { allowWebSearchFallback, usesWikiFetch, usesPollinationsAutoFallback, webSearchFallbackHelpText, searchForCharacters, searchForCharactersWithNativeSearch, searchForCharactersViaWikiFetch, checkForSearchRequest as checkForSearchRequestUtil } from '@/utils/aiWebSearchUtils'
-import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, fetchGeminiModels, GEMINI_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL_OPTIONS, formatAnimationsForContext, getReasoningEffortOptions, handleTumblingWindowSummarization, rotateOpenCodeGoSessionId } from '@/utils/llmUtils'
+import { callOpenRouter as callOpenRouterImpl, callGemini as callGeminiImpl, callPollinations as callPollinationsImpl, callOpenCodeGo as callOpenCodeGoImpl, enrichActionsWithAnimations, callLocal as callLocalImpl, summarizeChunk as summarizeChunkImpl, compactSummary as compactSummaryImpl, getFilteredAnimations, providerOptions, tokenUsageOptions, fetchOpenRouterModels, fetchPollinationsModels, fetchOpenCodeGoModels, fetchGeminiModels, GEMINI_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL_OPTIONS, formatAnimationsForContext, getReasoningEffortOptions, openRouterSpeedOptions, normalizeOpenRouterSpeed, resolveOpenRouterTierSupport, handleTumblingWindowSummarization, rotateOpenCodeGoSessionId, type OpenRouterSpeed, type OpenRouterTierSupport } from '@/utils/llmUtils'
 import { captureSpineCanvasPlacement, restoreSpineCanvasPlacement } from '@/utils/spineUtils'
 import { isInteractiveOverlayTarget, isSpineCanvasAtPoint, getEventPoint } from '@/utils/overlayUtils'
 import { initChatLayout, createDragHandlers, createResizeHandlers, createViewportHandlers } from '@/utils/windowUtils'
@@ -1031,11 +1049,17 @@ const model = ref('')
 const mode = ref('game')
 const tokenUsage = ref('medium')
 const reasoningEffort = ref(localStorage.getItem('nikke_reasoning_effort') || 'default')
+const openRouterSpeed = ref<OpenRouterSpeed>(normalizeOpenRouterSpeed(localStorage.getItem('nikke_openrouter_speed')))
+const openRouterTierSupport = ref<OpenRouterTierSupport | null>(null)
 const useCustomPlayerCharacter = ref(false)
 const selectedPlayerCharacterName = ref('')
 
 watch(reasoningEffort, (val) => {
   localStorage.setItem('nikke_reasoning_effort', val)
+})
+
+watch(openRouterSpeed, (val) => {
+  localStorage.setItem('nikke_openrouter_speed', val)
 })
 
 watch(useCustomPlayerCharacter, (enabled) => {
@@ -1049,6 +1073,58 @@ watch(selectedPlayerCharacterName, (name) => {
 })
 
 const reasoningEffortOptions = computed(() => getReasoningEffortOptions(apiProvider.value))
+const modelSpeedOptions = computed(() => {
+  const support = openRouterTierSupport.value
+  if (!support || support.status !== 'known') {
+
+    return openRouterSpeedOptions
+  }
+
+  return openRouterSpeedOptions.map((option) => {
+    if (option.value === 'slow' && !support.flex) {
+
+      return { ...option, disabled: true }
+    }
+    if (option.value === 'fast' && !support.priority) {
+
+      return { ...option, disabled: true }
+    }
+
+    return option
+  })
+})
+
+watch([apiProvider, model], async ([provider, modelId]) => {
+  if (provider !== 'openrouter' || !modelId) {
+    openRouterTierSupport.value = null
+
+    return
+  }
+
+  const requestedModelId = modelId
+  openRouterTierSupport.value = null
+  const support = await resolveOpenRouterTierSupport(requestedModelId)
+  if (apiProvider.value !== 'openrouter' || model.value !== requestedModelId) {
+
+    return
+  }
+
+  openRouterTierSupport.value = support
+}, { immediate: true })
+
+watch([openRouterSpeed, openRouterTierSupport], () => {
+  const support = openRouterTierSupport.value
+  if (!support || support.status !== 'known') {
+
+    return
+  }
+  if (openRouterSpeed.value === 'slow' && !support.flex) {
+    openRouterSpeed.value = 'default'
+  }
+  if (openRouterSpeed.value === 'fast' && !support.priority) {
+    openRouterSpeed.value = 'default'
+  }
+})
 const enableContextCaching = ref(true)
 const debugModeEnabled = ref(import.meta.env.DEV && localStorage.getItem(DEBUG_MODE_STORAGE_KEY) === 'true')
 const playbackMode = ref('manual')
@@ -1232,7 +1308,10 @@ const availableRosterOptions = computed(() => {
 // Settings
 const showAdvancedSettings = ref(true)
 watch(showAdvancedSettings, (val) => {
-  if (!val) reasoningEffort.value = 'default'
+  if (!val) {
+    reasoningEffort.value = 'default'
+    openRouterSpeed.value = 'default'
+  }
 })
 
 const lowContextMode = ref(false)
@@ -2370,6 +2449,7 @@ const saveSession = () => {
     enableContextCaching: enableContextCaching.value,
     allowWebSearchFallback: allowWebSearchFallback.value,
     reasoningEffort: reasoningEffort.value,
+    openRouterSpeed: openRouterSpeed.value,
     autoCompactSummaries: autoCompactSummaries.value,
     autoCompactFrequency: autoCompactFrequency.value
   })
@@ -2519,6 +2599,7 @@ const handleFileUpload = (event: Event) => {
             enableContextCaching,
             allowWebSearchFallback,
             reasoningEffort,
+            openRouterSpeed,
             autoCompactSummaries,
             autoCompactFrequency,
             apiProvider,
@@ -2986,6 +3067,7 @@ const callOpenRouter = async (messages: any[], searchUrl?: string, enableWebSear
     searchUrl,
     prompts,
     reasoningEffort: reasoningEffort.value,
+    openRouterSpeed: openRouterSpeed.value,
     includeAnimReason: isDebugModeActive.value,
     includeReasoning: isDebugModeActive.value && reasoningEffort.value !== 'none',
     signal: activeAbortController?.signal
@@ -3166,7 +3248,8 @@ const processAIResponse = async (responseStr: string, depth: number = 0, autoRet
           localUrl: localUrl.value,
           rawResponseText: responseStr,
           characterAnimations: animationCache.value,
-          signal: activeAbortController?.signal
+          signal: activeAbortController?.signal,
+          openRouterSpeed: openRouterSpeed.value
         })
       } catch (e) {
         console.warn('[processAIResponse] Animation enrichment (fallback) failed; using existing animations', e)
@@ -3850,6 +3933,7 @@ const summarizeChunk = async (messages: { role: string; content: string }[]): Pr
       prompts,
       enableContextCaching: enableContextCaching.value,
       reasoningEffort: reasoningEffort.value,
+      openRouterSpeed: openRouterSpeed.value,
       signal: activeAbortController?.signal,
       existingSummary: storySummary.value
     })
@@ -3886,6 +3970,7 @@ const performCompaction = async (): Promise<boolean> => {
       prompts,
       enableContextCaching: enableContextCaching.value,
       reasoningEffort: reasoningEffort.value,
+      openRouterSpeed: openRouterSpeed.value,
       signal: activeAbortController?.signal
     })
 

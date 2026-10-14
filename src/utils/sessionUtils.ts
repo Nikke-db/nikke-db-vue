@@ -3,6 +3,7 @@
 
 import { tokenUsageOptions, providerOptions } from '@/utils/llmUtils'
 import { GEMINI_DEFAULT_MODEL } from '@/utils/geminiUtils'
+import { normalizeOpenRouterSpeed, type OpenRouterSpeed } from '@/utils/providerConfigUtils'
 import { type StoryCharacterEntry } from '@/utils/storyCharacterUtils'
 
 // --- Types ---
@@ -31,6 +32,7 @@ export interface SessionSettings {
   enableContextCaching: boolean
   allowWebSearchFallback: boolean
   reasoningEffort: string
+  openRouterSpeed: OpenRouterSpeed
   autoCompactSummaries: boolean
   autoCompactFrequency: number
 }
@@ -81,6 +83,7 @@ export interface BuildSessionExportParams {
   enableContextCaching: boolean
   allowWebSearchFallback: boolean
   reasoningEffort: string
+  openRouterSpeed: OpenRouterSpeed
   autoCompactSummaries: boolean
   autoCompactFrequency: number
 }
@@ -150,6 +153,7 @@ export function buildSessionExportData(params: BuildSessionExportParams): Sessio
       enableContextCaching: params.enableContextCaching,
       allowWebSearchFallback: params.allowWebSearchFallback,
       reasoningEffort: params.reasoningEffort,
+      openRouterSpeed: params.openRouterSpeed,
       autoCompactSummaries: params.autoCompactSummaries,
       autoCompactFrequency: params.autoCompactFrequency
     }
@@ -220,6 +224,7 @@ export interface ValidatedSessionSettings {
   enableContextCaching?: boolean
   allowWebSearchFallback?: boolean
   reasoningEffort?: string
+  openRouterSpeed?: OpenRouterSpeed
   autoCompactSummaries?: boolean
   autoCompactFrequency?: number
   apiProvider?: string
@@ -286,6 +291,7 @@ export type ApplyValidatedSessionSettingsParams = {
   enableContextCaching: { value: boolean }
   allowWebSearchFallback: { value: boolean }
   reasoningEffort: { value: string }
+  openRouterSpeed: { value: OpenRouterSpeed }
   autoCompactSummaries: { value: boolean }
   autoCompactFrequency: { value: number }
   apiProvider: { value: string }
@@ -306,6 +312,7 @@ export function applyValidatedSessionSettings(params: ApplyValidatedSessionSetti
   if (validated.enableContextCaching !== undefined) params.enableContextCaching.value = validated.enableContextCaching
   if (validated.allowWebSearchFallback !== undefined) params.allowWebSearchFallback.value = validated.allowWebSearchFallback
   if (validated.reasoningEffort !== undefined) params.reasoningEffort.value = validated.reasoningEffort
+  if (validated.openRouterSpeed !== undefined) params.openRouterSpeed.value = validated.openRouterSpeed
   if (validated.autoCompactSummaries !== undefined) params.autoCompactSummaries.value = validated.autoCompactSummaries
   if (validated.autoCompactFrequency !== undefined) params.autoCompactFrequency.value = validated.autoCompactFrequency
   if (validated.apiProvider !== undefined) params.apiProvider.value = validated.apiProvider
@@ -380,6 +387,7 @@ export function validateSessionSettings(settings: any, validModels: string[]): V
   if (settings.reasoningEffort) {
     result.reasoningEffort = settings.reasoningEffort
   }
+  result.openRouterSpeed = normalizeOpenRouterSpeed(settings.openRouterSpeed)
   if (typeof settings.autoCompactSummaries === 'boolean') {
     result.autoCompactSummaries = settings.autoCompactSummaries
   }

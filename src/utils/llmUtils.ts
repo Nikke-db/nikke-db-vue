@@ -4,11 +4,11 @@
 import { AIError, logDebug } from '@/utils/chatUtils'
 import { callGeminiSummarization } from '@/utils/geminiUtils'
 import { callPollinationsSummarization } from '@/utils/pollinationsUtils'
-import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MESSAGES_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, OPENCODE_GO_ANTHROPIC_MODELS, modelsWithoutCacheControlSupport, buildStoryResponseSchema, buildOpenCodeGoHeaders } from '@/utils/providerConfigUtils'
+import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MESSAGES_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, OPENCODE_GO_ANTHROPIC_MODELS, modelsWithoutCacheControlSupport, buildStoryResponseSchema, buildOpenCodeGoHeaders, normalizeOpenRouterSpeed, type OpenRouterSpeed } from '@/utils/providerConfigUtils'
 import { captureModelReasoning, extractAnthropicTextAndReasoning, takeOpenAiMessageContent } from '@/utils/aiReasoningUtils'
 
 // Re-exports from extracted modules
-export { modelsWithoutJsonSupport, modelsRequiringStreamForHighTokens, modelsWithoutCacheControlSupport, modelsWithoutReasoningSupport, providerOptions, tokenUsageOptions, getReasoningEffortOptions, buildStoryResponseSchema, rotateOpenCodeGoSessionId } from '@/utils/providerConfigUtils'
+export { modelsWithoutJsonSupport, modelsRequiringStreamForHighTokens, modelsWithoutCacheControlSupport, modelsWithoutReasoningSupport, providerOptions, tokenUsageOptions, getReasoningEffortOptions, openRouterSpeedOptions, normalizeOpenRouterSpeed, buildStoryResponseSchema, rotateOpenCodeGoSessionId, type OpenRouterSpeed } from '@/utils/providerConfigUtils'
 export { callPollinationsSummarization, callPollinations, callPollinationsWithoutJson } from '@/utils/pollinationsUtils'
 export { getFilteredAnimations, enrichActionsWithAnimations, formatAnimationsForContext } from '@/utils/animationEnrichmentUtils'
 export { handleTumblingWindowSummarization, type TumblingWindowState, type TumblingWindowCallbacks, type TumblingWindowResult } from '@/utils/tumblingWindowUtils'
@@ -342,6 +342,192 @@ const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string;
   return await parseOpenAiCompatibleTextResponse(result.response, includeReasoning)
 }
 
+// --- OpenRouter service tier ---
+
+export type OpenRouterTierSupport =
+  | { status: 'known'; flex: boolean; priority: boolean }
+  | { status: 'unavailable' }
+
+const openRouterFetchedModelRecords = new Map<string, any>()
+const openRouterTierSupportCache = new Map<string, OpenRouterTierSupport>()
+const openRouterTierSupportInflight = new Map<string, Promise<OpenRouterTierSupport>>()
+
+const endpointTagStrings = (entries: any[]): string[] => {
+  const tags: string[] = []
+
+  for (const entry of entries) {
+    if (typeof entry === 'string') {
+      tags.push(entry)
+      continue
+    }
+    if (typeof entry?.tag === 'string') {
+      tags.push(entry.tag)
+    }
+  }
+
+  return tags
+}
+
+const carriedEndpointTags = (model: any): string[] | null => {
+  if (!model || typeof model !== 'object') {
+
+    return null
+  }
+  if (Array.isArray(model.endpoints)) {
+
+    return endpointTagStrings(model.endpoints)
+  }
+  if (Array.isArray(model.tags)) {
+
+    return endpointTagStrings(model.tags)
+  }
+
+  return null
+}
+
+// Tier tags end in /flex, /priority, or /fast. :nitro and :floor are routing shortcuts, not service tiers.
+const supportFromEndpointTags = (tags: string[]) => {
+  let flex = false
+  let priority = false
+
+  for (const tag of tags) {
+    if (tag.endsWith('/flex')) flex = true
+    if (tag.endsWith('/priority') || tag.endsWith('/fast')) priority = true
+  }
+
+  return { flex, priority }
+}
+
+const knownTierSupport = (tags: string[]): OpenRouterTierSupport => {
+  return {
+    status: 'known',
+    ...supportFromEndpointTags(tags)
+  }
+}
+
+const rememberOpenRouterModelList = (models: any[]) => {
+  for (const modelRecord of models) {
+    if (typeof modelRecord?.id !== 'string') continue
+    openRouterFetchedModelRecords.set(modelRecord.id, modelRecord)
+    const carried = carriedEndpointTags(modelRecord)
+    if (!carried) continue
+    openRouterTierSupportCache.set(modelRecord.id, knownTierSupport(carried))
+  }
+}
+
+const loadOpenRouterTierSupport = async (modelId: string): Promise<OpenRouterTierSupport> => {
+  const carried = carriedEndpointTags(openRouterFetchedModelRecords.get(modelId))
+  if (carried) {
+
+    return knownTierSupport(carried)
+  }
+
+  try {
+    const response = await fetch(`https://openrouter.ai/api/v1/models/${modelId}/endpoints`)
+    if (!response.ok) {
+
+      return { status: 'unavailable' }
+    }
+
+    const payload = await response.json()
+    const endpoints = Array.isArray(payload?.data?.endpoints) ? payload.data.endpoints : Array.isArray(payload?.endpoints) ? payload.endpoints : null
+    if (!endpoints) {
+
+      return { status: 'unavailable' }
+    }
+
+    return knownTierSupport(endpointTagStrings(endpoints))
+  } catch {
+
+    return { status: 'unavailable' }
+  }
+}
+
+export const resolveOpenRouterTierSupport = async (modelId: string): Promise<OpenRouterTierSupport> => {
+  if (!modelId) {
+
+    return { status: 'unavailable' }
+  }
+
+  const cached = openRouterTierSupportCache.get(modelId)
+  if (cached) {
+
+    return cached
+  }
+
+  const pending = openRouterTierSupportInflight.get(modelId)
+  if (pending) {
+
+    return pending
+  }
+
+  const request = loadOpenRouterTierSupport(modelId)
+  openRouterTierSupportInflight.set(modelId, request)
+
+  try {
+    const support = await request
+    openRouterTierSupportCache.set(modelId, support)
+
+    return support
+  } finally {
+    openRouterTierSupportInflight.delete(modelId)
+  }
+}
+
+const OPENROUTER_SPEED_SERVICE_TIER: Record<OpenRouterSpeed, 'flex' | 'priority' | undefined> = {
+  default: undefined,
+  slow: 'flex',
+  fast: 'priority'
+}
+
+const applyOpenRouterServiceTier = (requestBody: any, speed: OpenRouterSpeed | undefined, tierSupport: OpenRouterTierSupport) => {
+  const tier = OPENROUTER_SPEED_SERVICE_TIER[normalizeOpenRouterSpeed(speed)]
+  if (!tier || tierSupport.status !== 'known') {
+
+    return
+  }
+
+  const supported = tier === 'flex' ? tierSupport.flex : tierSupport.priority
+  if (!supported) {
+
+    return
+  }
+
+  requestBody.service_tier = tier
+}
+
+const buildOpenRouterChatRequestBody = async (opts: {
+  model: string
+  messages: any[]
+  maxTokens: number
+  reasoningEffort?: string
+  reasoningExclude?: boolean
+  responseFormat?: any
+  provider?: any
+  plugins?: any[]
+  openRouterSpeed?: OpenRouterSpeed
+}) => {
+  const tierSupport = await resolveOpenRouterTierSupport(opts.model)
+  const requestBody: any = {
+    model: opts.model,
+    messages: opts.messages,
+    max_tokens: opts.maxTokens
+  }
+
+  if (opts.responseFormat) requestBody.response_format = opts.responseFormat
+  if (opts.provider) requestBody.provider = opts.provider
+  if (opts.reasoningEffort && opts.reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: opts.reasoningEffort,
+      exclude: opts.reasoningExclude ?? false
+    }
+  }
+  if (opts.plugins && opts.plugins.length > 0) requestBody.plugins = opts.plugins
+  applyOpenRouterServiceTier(requestBody, opts.openRouterSpeed, tierSupport)
+
+  return requestBody
+}
+
 // --- Model fetching ---
 
 export const fetchOpenRouterModels = async () => {
@@ -349,6 +535,7 @@ export const fetchOpenRouterModels = async () => {
     const response = await fetch('https://openrouter.ai/api/v1/models')
     const data = await response.json()
     const models = data.data
+    if (Array.isArray(models)) rememberOpenRouterModelList(models)
 
     return models
       .map((m: any) => {
@@ -450,12 +637,13 @@ export const fetchOpenCodeGoModels = async (apiKey?: string) => {
 
 // --- Provider-specific summarization ---
 
-export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal) => {
-  const requestBody: any = {
-    model: model,
-    messages: messages,
-    max_tokens: 16384
-  }
+export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal, openRouterSpeed?: OpenRouterSpeed) => {
+  const requestBody = await buildOpenRouterChatRequestBody({
+    model,
+    messages,
+    maxTokens: 16384,
+    openRouterSpeed
+  })
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -744,12 +932,13 @@ export const callOpenRouter = async (
     searchUrl?: string
     prompts: any
     reasoningEffort?: string
+    openRouterSpeed?: OpenRouterSpeed
     includeAnimReason?: boolean
     includeReasoning?: boolean
     signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, enableContextCaching, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, includeAnimReason = false, includeReasoning = false, signal } = opts
+  const { model, apiKey, enableContextCaching, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, openRouterSpeed, includeAnimReason = false, includeReasoning = false, signal } = opts
 
   let processedMessages = messages
 
@@ -802,23 +991,15 @@ export const callOpenRouter = async (
   }
 
   const callWithoutJsonFormat = async () => {
-    const requestBody: any = {
-      model: model,
+    const requestBody = await buildOpenRouterChatRequestBody({
+      model,
       messages: messagesWithEnforcement,
-      max_tokens: 16384
-    }
-
-    if (reasoningEffort && reasoningEffort !== 'default') {
-      requestBody.reasoning = {
-        effort: reasoningEffort,
-        exclude: !includeReasoning
-      }
-    }
-
-    const webPlugin = buildWebPlugin()
-    if (webPlugin) {
-      requestBody.plugins = webPlugin
-    }
+      maxTokens: 16384,
+      reasoningEffort,
+      reasoningExclude: !includeReasoning,
+      plugins: buildWebPlugin(),
+      openRouterSpeed
+    })
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -862,28 +1043,19 @@ export const callOpenRouter = async (
   }
 
   const responseSchema = buildStoryResponseSchema(modeIsGame, includeAnimReason)
-
-  const requestBody: any = {
-    model: model,
-    messages: processedMessages,
-    max_tokens: 16384,
-    response_format: responseSchema,
-    provider: { require_parameters: true }
-  }
-
-  if (reasoningEffort && reasoningEffort !== 'default') {
-    requestBody.reasoning = {
-      effort: reasoningEffort,
-      exclude: !includeReasoning
-    }
-  }
-
-  let plugins: any[] = []
   const webPlugin = buildWebPlugin()
-  if (webPlugin) plugins = [...webPlugin]
-  plugins.push({ id: 'response-healing' })
-
-  if (plugins.length > 0) requestBody.plugins = plugins
+  const plugins = webPlugin ? [...webPlugin, { id: 'response-healing' }] : [{ id: 'response-healing' }]
+  const requestBody = await buildOpenRouterChatRequestBody({
+    model,
+    messages: processedMessages,
+    maxTokens: 16384,
+    reasoningEffort,
+    reasoningExclude: !includeReasoning,
+    responseFormat: responseSchema,
+    provider: { require_parameters: true },
+    plugins,
+    openRouterSpeed
+  })
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -940,6 +1112,7 @@ export const summarizeChunk = async (
     prompts: any
     enableContextCaching?: boolean
     reasoningEffort?: string
+    openRouterSpeed?: OpenRouterSpeed
     signal?: AbortSignal
     existingSummary?: string
   }
@@ -967,7 +1140,7 @@ export const summarizeChunk = async (
   } else if (opts.apiProvider === 'opencode-go') {
     summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, enableContextCaching: opts.enableContextCaching, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
-    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal, opts.openRouterSpeed)
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
@@ -991,6 +1164,7 @@ export const compactSummary = async (
     prompts: any
     enableContextCaching?: boolean
     reasoningEffort?: string
+    openRouterSpeed?: OpenRouterSpeed
     signal?: AbortSignal
   }
 ) => {
@@ -1008,7 +1182,7 @@ export const compactSummary = async (
   } else if (opts.apiProvider === 'opencode-go') {
     summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, enableContextCaching: opts.enableContextCaching, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
-    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal, opts.openRouterSpeed)
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {

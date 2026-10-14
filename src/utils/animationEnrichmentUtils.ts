@@ -7,6 +7,7 @@ import l2d from '@/utils/json/l2d.json'
 import { callGemini } from '@/utils/geminiUtils'
 import { callOpenCodeGo } from '@/utils/llmUtils'
 import { callOpenRouter } from '@/utils/llmUtils'
+import type { OpenRouterSpeed } from '@/utils/providerConfigUtils'
 import { callPollinations } from '@/utils/pollinationsUtils'
 import { callLocal } from '@/utils/llmUtils'
 
@@ -35,11 +36,12 @@ export const enrichActionsWithAnimations = async (
     rawResponseText?: string
     characterAnimations?: Record<string, string[]>
     signal?: AbortSignal
+    openRouterSpeed?: OpenRouterSpeed
   }
 ): Promise<any[]> => {
   logDebug('Enriching actions with animations...')
 
-  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal } = opts
+  const { apiProvider, apiKey, model, currentCharacterId, filteredAnimations, animationEnrichmentPrompt, preserveExistingAnimations = true, localUrl, rawResponseText, characterAnimations, signal, openRouterSpeed } = opts
 
   // Get unique characters present in the scene
   const charactersInScene = Array.from(new Set(actions.map((a) => a.character).filter((c) => c && c !== 'none')))
@@ -109,7 +111,8 @@ export const enrichActionsWithAnimations = async (
         allowWebSearchFallback: false,
         modeIsGame: false,
         prompts: {} as any, // Not needed for this call
-        signal
+        signal,
+        openRouterSpeed
       })
     } else if (apiProvider === 'pollinations') {
       response = await callPollinations(messages, {

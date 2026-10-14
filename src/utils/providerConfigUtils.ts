@@ -102,6 +102,23 @@ export const getReasoningEffortOptions = (provider: string): { label: string; va
   return options
 }
 
+export type OpenRouterSpeed = 'default' | 'slow' | 'fast'
+
+export const openRouterSpeedOptions: { label: string; value: OpenRouterSpeed }[] = [
+  { label: 'Default', value: 'default' },
+  { label: 'Slow', value: 'slow' },
+  { label: 'Fast', value: 'fast' }
+]
+
+export const normalizeOpenRouterSpeed = (value: unknown): OpenRouterSpeed => {
+  if (value === 'slow' || value === 'fast') {
+
+    return value
+  }
+
+  return 'default'
+}
+
 const nullableSchema = (schema: Record<string, any>) => {
   return { anyOf: [schema, { type: 'null' }] }
 }
