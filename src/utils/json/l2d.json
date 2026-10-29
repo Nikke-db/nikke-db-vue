@@ -191,6 +191,42 @@
     "fr": "Neon : Œil bionique"
   },
   {
+    "id": "c018_01",
+    "name": "Neon: Vision Eye Dear Grace",
+    "ko": "네온 : 비전 아이 디어 그레이스",
+    "jp": "ネオン：ビジョン・アイ ディアグレイス",
+    "tw": "尼恩：透視之眼 敬愛的公主",
+    "cn": "尼恩：透视之眼 亲爱的公主",
+    "de": "Neon: Vision Eye Teure Gnade",
+    "th": "นีออน: เนตรวิชั่น องค์หญิงสุดที่รัก",
+    "fr": "Neon : Œil bionique Grâce précieuse",
+    "es": "undefined Dear Grace"
+  },
+  {
+    "id": "c019",
+    "name": "Marian: Queen",
+    "ko": "마리안 : 퀸",
+    "jp": "マリアン：クイーン",
+    "tw": "瑪麗安：女王",
+    "cn": "玛丽安：女王",
+    "de": "Marian: Königin",
+    "th": "แมเรียน: ราชินี",
+    "fr": "Marian : Reine",
+    "es": "Marian: Queen"
+  },
+  {
+    "id": "c019_01",
+    "name": "Marian: Queen Last Affection",
+    "ko": "마리안 : 퀸 라스트 어펙션",
+    "jp": "マリアン：クイーン ラスト・アフェクション",
+    "tw": "瑪麗安：女王 最後的愛戀",
+    "cn": "玛丽安：女王 最后的爱恋",
+    "de": "Marian: Königin Letzte Zuneigung",
+    "th": "แมเรียน: ราชินี รักครั้งสุดท้าย",
+    "fr": "Marian : Reine Ultime affection",
+    "es": "Marian: Queen Last Affection"
+  },
+  {
     "name": "Delta",
     "id": "c020",
     "ko": "델타",
@@ -1713,6 +1749,18 @@
     "fr": "Nayuta Wu Wei"
   },
   {
+    "id": "c223_02",
+    "name": "Nayuta Trivisa",
+    "ko": "나유타 삼독",
+    "jp": "ナユタ 三毒",
+    "tw": "娜由塔 三毒",
+    "cn": "娜由塔 三毒",
+    "de": "Nayuta Trivisa",
+    "th": "นายูตะ ตริวิษ",
+    "fr": "Nayuta Trinité",
+    "es": "undefined Trivisa"
+  },
+  {
     "name": "Snow White: Innocent Days",
     "id": "c224",
     "ko": "스노우 화이트 : 이노센트 데이즈",
@@ -3172,12 +3220,40 @@
     "fr": "Blanche-Neige : Armes lourdes"
   },
   {
-    "name": "Scarlet",
-    "id": "c472"
+    "id": "c471_01",
+    "name": "Snow White: Heavy Arms Lacrimosa",
+    "ko": "스노우 화이트 : 헤비암즈 라크리모사",
+    "jp": "スノーホワイト：ヘビーアームズ ラクリモーサ",
+    "tw": "白雪公主：重型武裝 垂淚之日",
+    "cn": "白雪公主：重型武装 垂泪之日",
+    "de": "Schneewittchen: Schwere Arme Lacrimosa",
+    "th": "สโนว์ไวท์: เฮฟวี่อาร์มส์ หลั่งน้ำตาลารัก",
+    "fr": "Blanche-Neige : Armes lourdes Lacrimosa",
+    "es": "undefined Lacrimosa"
   },
   {
-    "name": "Rapunzel",
-    "id": "c473"
+    "id": "c472",
+    "name": "Scarlet: Goddeath",
+    "ko": "홍련 : 신살",
+    "jp": "紅蓮：神殺",
+    "tw": "紅蓮：弒神",
+    "cn": "红莲：弑神",
+    "de": "Scarlet: Himmlische Scharfrichterin",
+    "th": "สการ์เล็ต: ก็อดเดธ",
+    "fr": "Scarlette : Régicide",
+    "es": "Scarlet: Goddeath"
+  },
+  {
+    "id": "c473",
+    "name": "Rapunzel: Sanctuary",
+    "ko": "라푼젤 : 생츄어리",
+    "jp": "ラプンツェル：サンクチュアリ",
+    "tw": "長髮公主：聖域",
+    "cn": "长发公主：圣域",
+    "de": "Rapunzel: Heiligtum",
+    "th": "ราพันเซล: แซงก์ชัวรี",
+    "fr": "Doucette : Sanctuaire",
+    "es": "Rapunzel: Sanctuary"
   },
   {
     "name": "Liveryn",

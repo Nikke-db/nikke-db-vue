@@ -14,6 +14,13 @@
       <n-divider />
 
       <n-alert type="info">
+        Anniversary gallery when the event is over, main story this weekend or early next week, and npc l2d when event is over cuz idk who is part 1, 2 or 3. <br/>
+        Also I wanted to add the spanish language but there's literally no difference in the Nikke names except for ark ranger black, compared to english names, so maybe in a while if they do a big translation.
+      </n-alert>
+
+      <n-divider />
+
+      <n-alert type="info">
         I have quit the game and pretty much only "play" to do website updates. <br/>
         As such I can't really know NPC names anymore. So every NPCs I can't datamine from now on will have their names be "NPC: TBA" in the L2D viewer. <br/>
         Please open github tickets or send me discord messages so I can complete their names. Of course I'll at least need a picture or their c_id. <br/>
