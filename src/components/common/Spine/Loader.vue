@@ -33,6 +33,49 @@ const market = useMarket()
 const STORY_GEN_LOW_POWER_DATASET_KEY = 'storyGenLowPower'
 const STORY_GEN_LOW_POWER_FRAME_MS = 1000 / 30
 
+type StoryGenRenderPhase = 'playing' | 'occluded'
+
+const storyGenRenderGate = market.route.name === 'story-gen'
+let storyGenRenderPhase: StoryGenRenderPhase = 'playing'
+let cancelStoryGenFrameWake: (() => void) | null = null
+
+const readStoryGenRenderPhase = (): StoryGenRenderPhase => {
+  if (typeof document === 'undefined') return 'playing'
+  if (document.visibilityState === 'hidden' || !document.hasFocus()) return 'occluded'
+
+  return 'playing'
+}
+
+storyGenRenderPhase = storyGenRenderGate ? readStoryGenRenderPhase() : 'playing'
+
+const syncStoryGenRenderPhase = () => {
+  if (!storyGenRenderGate) return
+  const next = readStoryGenRenderPhase()
+  if (next === storyGenRenderPhase) return
+  const previous = storyGenRenderPhase
+  storyGenRenderPhase = next
+  const player = spineCanvas
+  if (!player || player.disposed) return
+  if (next === 'occluded') {
+    cancelStoryGenFrameWake?.()
+    player.stopRendering()
+
+    return
+  }
+  if (previous === 'occluded') {
+    player.stopRequestAnimationFrame = false
+    player.drawFrame()
+  }
+}
+
+const holdStoryGenRenderPhase = (player: any) => {
+  if (!storyGenRenderGate || !player || player.disposed) return
+  storyGenRenderPhase = readStoryGenRenderPhase()
+  if (storyGenRenderPhase !== 'occluded') return
+  cancelStoryGenFrameWake?.()
+  player.stopRendering()
+}
+
 // http://esotericsoftware.com/spine-player#Viewports
 const spineViewport = {
   padLeft: '0%',
@@ -276,6 +319,7 @@ const spineLoader = (retryAttempt = 0) => {
         },
       })
       applyStoryGenLowPowerThrottle(spineCanvas)
+      holdStoryGenRenderPhase(spineCanvas)
       applyDefaultStyle2Canvas()
     }
   }
@@ -358,6 +402,7 @@ const customSpineLoader = () => {
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
   applyStoryGenLowPowerThrottle(spineCanvas)
+  holdStoryGenRenderPhase(spineCanvas)
 }
 
 const getPathing = (extension: string) => {
@@ -531,33 +576,84 @@ const isStoryGenLowPowerEnabled = () => {
 }
 
 const applyStoryGenLowPowerThrottle = (player: any) => {
-  if (market.route.name !== 'story-gen' || !player || typeof player.drawFrame !== 'function' || player.__storyGenLowPowerWrapped) {
+  if (!storyGenRenderGate || !player || typeof player.drawFrame !== 'function' || player.__storyGenLowPowerWrapped) {
     return
   }
 
+  cancelStoryGenFrameWake?.()
+
   const originalDrawFrame = player.drawFrame.bind(player)
   let lastFrameAt = 0
+  let pendingWake: number | null = null
+  let rafId: number | null = null
+  let epoch = 0
+
+  const cancelPendingWake = () => {
+    epoch += 1
+    lastFrameAt = 0
+    if (pendingWake !== null) {
+      window.clearTimeout(pendingWake)
+      pendingWake = null
+    }
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId)
+      rafId = null
+    }
+  }
+
+  const scheduleNext = () => {
+    if (rafId !== null || player.stopRequestAnimationFrame) return
+    const scheduledEpoch = epoch
+    rafId = requestAnimationFrame(() => {
+      rafId = null
+      if (scheduledEpoch !== epoch) return
+      player.drawFrame()
+    })
+  }
+
+  const scheduleDrawAfter = (delayMs: number) => {
+    if (pendingWake !== null || player.stopRequestAnimationFrame) return
+    const scheduledEpoch = epoch
+    pendingWake = window.setTimeout(() => {
+      pendingWake = null
+      if (scheduledEpoch !== epoch) return
+      if (player.disposed || player.error || player.stopRequestAnimationFrame) return
+      scheduleNext()
+    }, delayMs)
+  }
 
   player.drawFrame = (requestNextFrame = true) => {
-    if (!requestNextFrame || !isStoryGenLowPowerEnabled()) {
-      return originalDrawFrame(requestNextFrame)
-    }
+    if (player.stopRequestAnimationFrame || player.disposed || player.error) return
+    if (!requestNextFrame) {
+      originalDrawFrame(false)
 
-    if (player.error || player.disposed) return
+      return
+    }
+    if (!isStoryGenLowPowerEnabled()) {
+      if (pendingWake !== null) {
+        window.clearTimeout(pendingWake)
+        pendingWake = null
+      }
+      originalDrawFrame(false)
+      scheduleNext()
+
+      return
+    }
 
     const now = performance.now()
     if (lastFrameAt !== 0 && now - lastFrameAt < STORY_GEN_LOW_POWER_FRAME_MS) {
-      if (!player.stopRequestAnimationFrame) {
-        requestAnimationFrame(() => player.drawFrame())
-      }
+      scheduleDrawAfter(STORY_GEN_LOW_POWER_FRAME_MS - (now - lastFrameAt))
+
       return
     }
 
     lastFrameAt = now
-    return originalDrawFrame(requestNextFrame)
+    originalDrawFrame(false)
+    scheduleDrawAfter(STORY_GEN_LOW_POWER_FRAME_MS)
   }
 
   player.__storyGenLowPowerWrapped = true
+  cancelStoryGenFrameWake = cancelPendingWake
 }
 
 onMounted(() => {
@@ -579,6 +675,11 @@ onMounted(() => {
     }
   }
   spineLoader()
+  if (storyGenRenderGate) {
+    document.addEventListener('visibilitychange', syncStoryGenRenderPhase)
+    window.addEventListener('blur', syncStoryGenRenderPhase)
+    window.addEventListener('focus', syncStoryGenRenderPhase)
+  }
   window.addEventListener('resize', handleResize)
   document.addEventListener('mousedown', onMouseDown)
   document.addEventListener('touchstart', onTouchStart, { passive: false })
@@ -591,6 +692,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  if (storyGenRenderGate) {
+    document.removeEventListener('visibilitychange', syncStoryGenRenderPhase)
+    window.removeEventListener('blur', syncStoryGenRenderPhase)
+    window.removeEventListener('focus', syncStoryGenRenderPhase)
+    cancelStoryGenFrameWake?.()
+  }
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('mousedown', onMouseDown)
   document.removeEventListener('touchstart', onTouchStart)

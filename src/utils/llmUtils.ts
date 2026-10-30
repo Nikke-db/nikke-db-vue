@@ -4,14 +4,15 @@
 import { AIError, logDebug } from '@/utils/chatUtils'
 import { callGeminiSummarization } from '@/utils/geminiUtils'
 import { callPollinationsSummarization } from '@/utils/pollinationsUtils'
-import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MESSAGES_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, OPENCODE_GO_ANTHROPIC_MODELS, modelsWithoutCacheControlSupport, buildStoryResponseSchema } from '@/utils/providerConfigUtils'
+import { modelsWithoutJsonSupport, modelsWithoutReasoningSupport, OPENCODE_GO_CHAT_COMPLETIONS_URL, OPENCODE_GO_MESSAGES_URL, OPENCODE_GO_MODELS_URL, OPENCODE_GO_EXCLUDED_MODEL_IDS, OPENCODE_GO_ANTHROPIC_MODELS, modelsWithoutCacheControlSupport, buildStoryResponseSchema, buildOpenCodeGoHeaders, normalizeOpenRouterSpeed, type OpenRouterSpeed } from '@/utils/providerConfigUtils'
+import { captureModelReasoning, extractAnthropicTextAndReasoning, takeOpenAiMessageContent } from '@/utils/aiReasoningUtils'
 
 // Re-exports from extracted modules
-export { modelsWithoutJsonSupport, modelsRequiringStreamForHighTokens, modelsWithoutCacheControlSupport, modelsWithoutReasoningSupport, providerOptions, tokenUsageOptions, getReasoningEffortOptions, buildStoryResponseSchema } from '@/utils/providerConfigUtils'
+export { modelsWithoutJsonSupport, modelsRequiringStreamForHighTokens, modelsWithoutCacheControlSupport, modelsWithoutReasoningSupport, providerOptions, tokenUsageOptions, getReasoningEffortOptions, openRouterSpeedOptions, normalizeOpenRouterSpeed, buildStoryResponseSchema, rotateOpenCodeGoSessionId, type OpenRouterSpeed } from '@/utils/providerConfigUtils'
 export { callPollinationsSummarization, callPollinations, callPollinationsWithoutJson } from '@/utils/pollinationsUtils'
 export { getFilteredAnimations, enrichActionsWithAnimations, formatAnimationsForContext } from '@/utils/animationEnrichmentUtils'
 export { handleTumblingWindowSummarization, type TumblingWindowState, type TumblingWindowCallbacks, type TumblingWindowResult } from '@/utils/tumblingWindowUtils'
-export { callGemini, callGeminiSummarization } from '@/utils/geminiUtils'
+export { callGemini, callGeminiSummarization, fetchGeminiModels, GEMINI_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL_OPTIONS } from '@/utils/geminiUtils'
 
 // --- Internal helpers for OpenAI-compatible APIs ---
 
@@ -23,8 +24,9 @@ const buildOpenAiCompatibleRequestBody = (opts: {
   reasoningEffort?: string
   includeJsonSchema?: boolean
   reasoningExclude?: boolean
+  includeAnimReason?: boolean
 }) => {
-  const { messages, maxTokens, model, modeIsGame = false, reasoningEffort, includeJsonSchema = false, reasoningExclude = false } = opts
+  const { messages, maxTokens, model, modeIsGame = false, reasoningEffort, includeJsonSchema = false, reasoningExclude = false, includeAnimReason = false } = opts
   const requestBody: any = {
     messages,
     max_tokens: maxTokens
@@ -32,13 +34,61 @@ const buildOpenAiCompatibleRequestBody = (opts: {
 
   if (model) requestBody.model = model
   if (includeJsonSchema) {
-    requestBody.response_format = buildStoryResponseSchema(modeIsGame)
+    requestBody.response_format = buildStoryResponseSchema(modeIsGame, includeAnimReason)
   }
   if (reasoningEffort && reasoningEffort !== 'default') {
     requestBody.reasoning = {
       effort: reasoningEffort,
       exclude: reasoningExclude
     }
+  }
+
+  return requestBody
+}
+
+// GLM-5.3 and GLM-5.3-Flash accept reasoning_effort (low | high | max), not an OpenRouter reasoning object.
+// Neither model can disable thinking. The None dropdown value is sent as low.
+// https://docs.z.ai/guides/llm/glm-5.3
+// https://docs.z.ai/guides/capabilities/thinking
+const OPENCODE_GO_GLM_5_3_MODELS = new Set(['glm-5.3', 'glm-5.3-flash'])
+
+const toGlm53ReasoningEffort = (effort: string) => {
+  switch (effort) {
+    case 'none':
+    case 'minimal':
+    case 'low':
+      return 'low'
+    case 'medium':
+    case 'high':
+      return 'high'
+    case 'xhigh':
+    case 'max':
+      return 'max'
+    default:
+      return effort
+  }
+}
+
+const buildOpenCodeGoChatRequestBody = (opts: {
+  messages: any[]
+  maxTokens: number
+  model?: string
+  modeIsGame?: boolean
+  reasoningEffort?: string
+  includeJsonSchema?: boolean
+  reasoningExclude?: boolean
+  includeAnimReason?: boolean
+}) => {
+  const requestBody = buildOpenAiCompatibleRequestBody(opts)
+
+  if (!opts.model || !OPENCODE_GO_GLM_5_3_MODELS.has(opts.model) || !requestBody.reasoning) {
+    return requestBody
+  }
+
+  const effort = requestBody.reasoning.effort
+  delete requestBody.reasoning
+  if (typeof effort === 'string' && effort && effort !== 'default') {
+    requestBody.reasoning_effort = toGlm53ReasoningEffort(effort)
   }
 
   return requestBody
@@ -56,14 +106,15 @@ const getOpenAiCompatibleHeaders = (apiKey?: string) => {
   return headers
 }
 
-const parseOpenAiCompatibleTextResponse = async (response: Response) => {
+const parseOpenAiCompatibleTextResponse = async (response: Response, includeReasoning = false) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
-  return data.choices[0].message.content
+
+  return takeOpenAiMessageContent(data, includeReasoning)
 }
 
 const sendOpenAiCompatibleRequest = async (url: string, opts: { requestBody: any; apiKey?: string; signal?: AbortSignal }) => {
@@ -139,36 +190,28 @@ const buildAnthropicRequestBody = (opts: {
   return { requestBody, shouldAddCacheControl }
 }
 
-const parseAnthropicTextResponse = async (response: Response) => {
+const parseAnthropicTextResponse = async (response: Response, includeReasoning = false) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     throw new AIError(errorData?.error?.code ?? response.status, errorData?.error?.message ?? response.statusText ?? 'Unknown error')
   }
 
   const data = await response.json()
-  if (data.content && Array.isArray(data.content) && data.content.length > 0) {
-    return data.content[0].text
+  const { content, reasoning } = extractAnthropicTextAndReasoning(data)
+  if (includeReasoning) {
+    captureModelReasoning(reasoning)
+  }
+  if (content) {
+    return content
   }
   throw new AIError('PARSE_ERROR', 'Unexpected Anthropic response format')
 }
 
-const sendAnthropicCompatibleRequest = async (url: string, opts: { requestBody: any; apiKey: string; signal?: AbortSignal }) => {
-  return await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': opts.apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify(opts.requestBody),
-    signal: opts.signal
-  })
-}
-
 const sendOpenCodeGoRequest = async (requestBody: any, apiKey: string, signal?: AbortSignal) => {
-  const response = await sendOpenAiCompatibleRequest(OPENCODE_GO_CHAT_COMPLETIONS_URL, {
-    requestBody,
-    apiKey,
+  const response = await fetch(OPENCODE_GO_CHAT_COMPLETIONS_URL, {
+    method: 'POST',
+    headers: buildOpenCodeGoHeaders(getOpenAiCompatibleHeaders(apiKey)),
+    body: JSON.stringify(requestBody),
     signal
   })
 
@@ -187,9 +230,14 @@ const sendOpenCodeGoRequest = async (requestBody: any, apiKey: string, signal?: 
 }
 
 const sendOpenCodeGoAnthropicRequest = async (requestBody: any, apiKey: string, signal?: AbortSignal) => {
-  const response = await sendAnthropicCompatibleRequest(OPENCODE_GO_MESSAGES_URL, {
-    requestBody,
-    apiKey,
+  const response = await fetch(OPENCODE_GO_MESSAGES_URL, {
+    method: 'POST',
+    headers: buildOpenCodeGoHeaders({
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    }),
+    body: JSON.stringify(requestBody),
     signal
   })
 
@@ -217,8 +265,8 @@ const isCacheControlError = (errorData: any) => {
   return msg.toLowerCase().includes('cache_control') || msg.toLowerCase().includes('cache control')
 }
 
-const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string; apiKey: string; maxTokens: number; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
-  const { messages, model, apiKey, maxTokens, signal, enableContextCaching = false } = opts
+const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string; apiKey: string; maxTokens: number; reasoningEffort?: string; enableContextCaching?: boolean; includeReasoning?: boolean; signal?: AbortSignal }) => {
+  const { messages, model, apiKey, maxTokens, signal, enableContextCaching = false, includeReasoning = false } = opts
   let { reasoningEffort } = opts
 
   if (reasoningEffort && reasoningEffort !== 'default' && modelsWithoutReasoningSupport.value.has(model)) {
@@ -239,7 +287,7 @@ const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string;
         if (!retryResult.response.ok) {
           throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
         }
-        return await parseAnthropicTextResponse(retryResult.response)
+        return await parseAnthropicTextResponse(retryResult.response, includeReasoning)
       }
 
       if (result.response.status === 400 && isReasoningParameterError(result.errorData)) {
@@ -251,16 +299,16 @@ const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string;
         if (!retryResult.response.ok) {
           throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
         }
-        return await parseAnthropicTextResponse(retryResult.response)
+        return await parseAnthropicTextResponse(retryResult.response, includeReasoning)
       }
 
       throw new AIError(result.errorData?.error?.code ?? result.response.status, result.errorData?.error?.message ?? result.response.statusText ?? 'Unknown error')
     }
 
-    return await parseAnthropicTextResponse(result.response)
+    return await parseAnthropicTextResponse(result.response, includeReasoning)
   }
 
-  const requestBody = buildOpenAiCompatibleRequestBody({
+  const requestBody = buildOpenCodeGoChatRequestBody({
     messages,
     maxTokens,
     model,
@@ -274,7 +322,7 @@ const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string;
       console.warn(`Model ${model} rejected reasoning settings, remembering and retrying without reasoning...`)
       modelsWithoutReasoningSupport.value.add(model)
       sessionStorage.setItem('modelsWithoutReasoningSupport', JSON.stringify([...modelsWithoutReasoningSupport.value]))
-      const retryRequestBody = buildOpenAiCompatibleRequestBody({
+      const retryRequestBody = buildOpenCodeGoChatRequestBody({
         messages,
         maxTokens,
         model
@@ -285,13 +333,199 @@ const callOpenCodeGoTextRequest = async (opts: { messages: any[]; model: string;
         throw new AIError(retryResult.errorData?.error?.code ?? retryResult.response.status, retryResult.errorData?.error?.message ?? retryResult.response.statusText ?? 'Unknown error')
       }
 
-      return await parseOpenAiCompatibleTextResponse(retryResult.response)
+      return await parseOpenAiCompatibleTextResponse(retryResult.response, includeReasoning)
     }
 
     throw new AIError(result.errorData?.error?.code ?? result.response.status, result.errorData?.error?.message ?? result.response.statusText ?? 'Unknown error')
   }
 
-  return await parseOpenAiCompatibleTextResponse(result.response)
+  return await parseOpenAiCompatibleTextResponse(result.response, includeReasoning)
+}
+
+// --- OpenRouter service tier ---
+
+export type OpenRouterTierSupport =
+  | { status: 'known'; flex: boolean; priority: boolean }
+  | { status: 'unavailable' }
+
+const openRouterFetchedModelRecords = new Map<string, any>()
+const openRouterTierSupportCache = new Map<string, OpenRouterTierSupport>()
+const openRouterTierSupportInflight = new Map<string, Promise<OpenRouterTierSupport>>()
+
+const endpointTagStrings = (entries: any[]): string[] => {
+  const tags: string[] = []
+
+  for (const entry of entries) {
+    if (typeof entry === 'string') {
+      tags.push(entry)
+      continue
+    }
+    if (typeof entry?.tag === 'string') {
+      tags.push(entry.tag)
+    }
+  }
+
+  return tags
+}
+
+const carriedEndpointTags = (model: any): string[] | null => {
+  if (!model || typeof model !== 'object') {
+
+    return null
+  }
+  if (Array.isArray(model.endpoints)) {
+
+    return endpointTagStrings(model.endpoints)
+  }
+  if (Array.isArray(model.tags)) {
+
+    return endpointTagStrings(model.tags)
+  }
+
+  return null
+}
+
+// Tier tags end in /flex, /priority, or /fast. :nitro and :floor are routing shortcuts, not service tiers.
+const supportFromEndpointTags = (tags: string[]) => {
+  let flex = false
+  let priority = false
+
+  for (const tag of tags) {
+    if (tag.endsWith('/flex')) flex = true
+    if (tag.endsWith('/priority') || tag.endsWith('/fast')) priority = true
+  }
+
+  return { flex, priority }
+}
+
+const knownTierSupport = (tags: string[]): OpenRouterTierSupport => {
+  return {
+    status: 'known',
+    ...supportFromEndpointTags(tags)
+  }
+}
+
+const rememberOpenRouterModelList = (models: any[]) => {
+  for (const modelRecord of models) {
+    if (typeof modelRecord?.id !== 'string') continue
+    openRouterFetchedModelRecords.set(modelRecord.id, modelRecord)
+    const carried = carriedEndpointTags(modelRecord)
+    if (!carried) continue
+    openRouterTierSupportCache.set(modelRecord.id, knownTierSupport(carried))
+  }
+}
+
+const loadOpenRouterTierSupport = async (modelId: string): Promise<OpenRouterTierSupport> => {
+  const carried = carriedEndpointTags(openRouterFetchedModelRecords.get(modelId))
+  if (carried) {
+
+    return knownTierSupport(carried)
+  }
+
+  try {
+    const response = await fetch(`https://openrouter.ai/api/v1/models/${modelId}/endpoints`)
+    if (!response.ok) {
+
+      return { status: 'unavailable' }
+    }
+
+    const payload = await response.json()
+    const endpoints = Array.isArray(payload?.data?.endpoints) ? payload.data.endpoints : Array.isArray(payload?.endpoints) ? payload.endpoints : null
+    if (!endpoints) {
+
+      return { status: 'unavailable' }
+    }
+
+    return knownTierSupport(endpointTagStrings(endpoints))
+  } catch {
+
+    return { status: 'unavailable' }
+  }
+}
+
+export const resolveOpenRouterTierSupport = async (modelId: string): Promise<OpenRouterTierSupport> => {
+  if (!modelId) {
+
+    return { status: 'unavailable' }
+  }
+
+  const cached = openRouterTierSupportCache.get(modelId)
+  if (cached) {
+
+    return cached
+  }
+
+  const pending = openRouterTierSupportInflight.get(modelId)
+  if (pending) {
+
+    return pending
+  }
+
+  const request = loadOpenRouterTierSupport(modelId)
+  openRouterTierSupportInflight.set(modelId, request)
+
+  try {
+    const support = await request
+    openRouterTierSupportCache.set(modelId, support)
+
+    return support
+  } finally {
+    openRouterTierSupportInflight.delete(modelId)
+  }
+}
+
+const OPENROUTER_SPEED_SERVICE_TIER: Record<OpenRouterSpeed, 'flex' | 'priority' | undefined> = {
+  default: undefined,
+  slow: 'flex',
+  fast: 'priority'
+}
+
+const applyOpenRouterServiceTier = (requestBody: any, speed: OpenRouterSpeed | undefined, tierSupport: OpenRouterTierSupport) => {
+  const tier = OPENROUTER_SPEED_SERVICE_TIER[normalizeOpenRouterSpeed(speed)]
+  if (!tier || tierSupport.status !== 'known') {
+
+    return
+  }
+
+  const supported = tier === 'flex' ? tierSupport.flex : tierSupport.priority
+  if (!supported) {
+
+    return
+  }
+
+  requestBody.service_tier = tier
+}
+
+const buildOpenRouterChatRequestBody = async (opts: {
+  model: string
+  messages: any[]
+  maxTokens: number
+  reasoningEffort?: string
+  reasoningExclude?: boolean
+  responseFormat?: any
+  provider?: any
+  plugins?: any[]
+  openRouterSpeed?: OpenRouterSpeed
+}) => {
+  const tierSupport = await resolveOpenRouterTierSupport(opts.model)
+  const requestBody: any = {
+    model: opts.model,
+    messages: opts.messages,
+    max_tokens: opts.maxTokens
+  }
+
+  if (opts.responseFormat) requestBody.response_format = opts.responseFormat
+  if (opts.provider) requestBody.provider = opts.provider
+  if (opts.reasoningEffort && opts.reasoningEffort !== 'default') {
+    requestBody.reasoning = {
+      effort: opts.reasoningEffort,
+      exclude: opts.reasoningExclude ?? false
+    }
+  }
+  if (opts.plugins && opts.plugins.length > 0) requestBody.plugins = opts.plugins
+  applyOpenRouterServiceTier(requestBody, opts.openRouterSpeed, tierSupport)
+
+  return requestBody
 }
 
 // --- Model fetching ---
@@ -301,6 +535,7 @@ export const fetchOpenRouterModels = async () => {
     const response = await fetch('https://openrouter.ai/api/v1/models')
     const data = await response.json()
     const models = data.data
+    if (Array.isArray(models)) rememberOpenRouterModelList(models)
 
     return models
       .map((m: any) => {
@@ -377,7 +612,7 @@ export const fetchOpenCodeGoModels = async (apiKey?: string) => {
       headers['Authorization'] = `Bearer ${apiKey.trim()}`
     }
 
-    const response = await fetch(OPENCODE_GO_MODELS_URL, { headers })
+    const response = await fetch(OPENCODE_GO_MODELS_URL, { headers: buildOpenCodeGoHeaders(headers) })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
@@ -402,12 +637,13 @@ export const fetchOpenCodeGoModels = async (apiKey?: string) => {
 
 // --- Provider-specific summarization ---
 
-export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal) => {
-  const requestBody: any = {
-    model: model,
-    messages: messages,
-    max_tokens: 16384
-  }
+export const callOpenRouterSummarization = async (messages: any[], apiKey: string, model: string, signal?: AbortSignal, openRouterSpeed?: OpenRouterSpeed) => {
+  const requestBody = await buildOpenRouterChatRequestBody({
+    model,
+    messages,
+    maxTokens: 16384,
+    openRouterSpeed
+  })
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -498,10 +734,12 @@ export const callLocal = async (
     localUrl: string
     modeIsGame: boolean
     reasoningEffort?: string
+    includeAnimReason?: boolean
+    includeReasoning?: boolean
     signal?: AbortSignal
   }
 ) => {
-  const { model, maxTokens = 16384, apiKey, localUrl, modeIsGame, reasoningEffort, signal } = opts
+  const { model, maxTokens = 16384, apiKey, localUrl, modeIsGame, reasoningEffort, includeAnimReason = false, includeReasoning = false, signal } = opts
 
   let endpoint = localUrl.replace(/\/$/, '')
   if (!endpoint.endsWith('/chat/completions')) {
@@ -522,7 +760,7 @@ export const callLocal = async (
       signal
     })
 
-    return await parseOpenAiCompatibleTextResponse(response)
+    return await parseOpenAiCompatibleTextResponse(response, includeReasoning)
   }
 
   if (model && modelsWithoutJsonSupport.value.has(model)) {
@@ -536,7 +774,8 @@ export const callLocal = async (
     model,
     modeIsGame,
     reasoningEffort,
-    includeJsonSchema: true
+    includeJsonSchema: true,
+    includeAnimReason
   })
 
   const response = await sendOpenAiCompatibleRequest(endpoint, {
@@ -562,7 +801,8 @@ export const callLocal = async (
   }
 
   const data = await response.json()
-  return data.choices[0].message.content
+
+  return takeOpenAiMessageContent(data, includeReasoning)
 }
 
 export const callOpenCodeGoSummarization = async (messages: any[], opts: { model: string; apiKey: string; maxTokens?: number; reasoningEffort?: string; enableContextCaching?: boolean; signal?: AbortSignal }) => {
@@ -588,10 +828,12 @@ export const callOpenCodeGo = async (
     maxTokens?: number
     reasoningEffort?: string
     enableContextCaching?: boolean
+    includeAnimReason?: boolean
+    includeReasoning?: boolean
     signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, modeIsGame, maxTokens = 16384, signal, enableContextCaching = false } = opts
+  const { model, apiKey, modeIsGame, maxTokens = 16384, signal, enableContextCaching = false, includeAnimReason = false, includeReasoning = false } = opts
   let { reasoningEffort } = opts
 
   if (reasoningEffort && reasoningEffort !== 'default' && modelsWithoutReasoningSupport.value.has(model)) {
@@ -606,6 +848,7 @@ export const callOpenCodeGo = async (
       maxTokens,
       reasoningEffort,
       enableContextCaching,
+      includeReasoning,
       signal
     })
   }
@@ -619,13 +862,14 @@ export const callOpenCodeGo = async (
     return callWithoutJsonFormat()
   }
 
-  const requestBody = buildOpenAiCompatibleRequestBody({
+  const requestBody = buildOpenCodeGoChatRequestBody({
     messages,
     maxTokens,
     model,
     modeIsGame,
     reasoningEffort,
-    includeJsonSchema: true
+    includeJsonSchema: true,
+    includeAnimReason
   })
 
   const result = await sendOpenCodeGoRequest(requestBody, apiKey, signal)
@@ -642,12 +886,13 @@ export const callOpenCodeGo = async (
       console.warn(`Model ${model} rejected reasoning settings, remembering and retrying without reasoning...`)
       modelsWithoutReasoningSupport.value.add(model)
       sessionStorage.setItem('modelsWithoutReasoningSupport', JSON.stringify([...modelsWithoutReasoningSupport.value]))
-      const retryRequestBody = buildOpenAiCompatibleRequestBody({
+      const retryRequestBody = buildOpenCodeGoChatRequestBody({
         messages,
         maxTokens,
         model,
         modeIsGame,
-        includeJsonSchema: true
+        includeJsonSchema: true,
+        includeAnimReason
       })
       const retryResult = await sendOpenCodeGoRequest(retryRequestBody, apiKey, signal)
 
@@ -663,14 +908,16 @@ export const callOpenCodeGo = async (
       }
 
       const retryData = await retryResult.response.json()
-      return retryData.choices[0].message.content
+
+      return takeOpenAiMessageContent(retryData, includeReasoning)
     }
 
     throw new AIError(result.errorData?.error?.code ?? result.response.status, result.errorData?.error?.message ?? result.response.statusText ?? 'Unknown error')
   }
 
   const data = await result.response.json()
-  return data.choices[0].message.content
+
+  return takeOpenAiMessageContent(data, includeReasoning)
 }
 
 export const callOpenRouter = async (
@@ -685,10 +932,13 @@ export const callOpenRouter = async (
     searchUrl?: string
     prompts: any
     reasoningEffort?: string
+    openRouterSpeed?: OpenRouterSpeed
+    includeAnimReason?: boolean
+    includeReasoning?: boolean
     signal?: AbortSignal
   }
 ) => {
-  const { model, apiKey, enableContextCaching, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, signal } = opts
+  const { model, apiKey, enableContextCaching, allowWebSearchFallback, modeIsGame, enableWebSearch = false, prompts, reasoningEffort, openRouterSpeed, includeAnimReason = false, includeReasoning = false, signal } = opts
 
   let processedMessages = messages
 
@@ -729,7 +979,10 @@ export const callOpenRouter = async (
     }
   }
 
-  const messagesWithEnforcement = [...processedMessages, { role: 'user', content: prompts.reminders.jsonEnforcement }]
+  const jsonEnforcement = includeAnimReason && prompts.systemPrompt?.debugAnimReasonInstruction
+    ? `${prompts.reminders.jsonEnforcement}\n${prompts.systemPrompt.debugAnimReasonInstruction}`
+    : prompts.reminders.jsonEnforcement
+  const messagesWithEnforcement = [...processedMessages, { role: 'user', content: jsonEnforcement }]
 
   const buildWebPlugin = () => {
     if (!enableWebSearch) return undefined
@@ -738,23 +991,15 @@ export const callOpenRouter = async (
   }
 
   const callWithoutJsonFormat = async () => {
-    const requestBody: any = {
-      model: model,
+    const requestBody = await buildOpenRouterChatRequestBody({
+      model,
       messages: messagesWithEnforcement,
-      max_tokens: 16384
-    }
-
-    if (reasoningEffort && reasoningEffort !== 'default') {
-      requestBody.reasoning = {
-        effort: reasoningEffort,
-        exclude: true
-      }
-    }
-
-    const webPlugin = buildWebPlugin()
-    if (webPlugin) {
-      requestBody.plugins = webPlugin
-    }
+      maxTokens: 16384,
+      reasoningEffort,
+      reasoningExclude: !includeReasoning,
+      plugins: buildWebPlugin(),
+      openRouterSpeed
+    })
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -788,7 +1033,8 @@ export const callOpenRouter = async (
     }
 
     const data = await response.json()
-    return data.choices[0].message.content
+
+    return takeOpenAiMessageContent(data, includeReasoning)
   }
 
   if (modelsWithoutJsonSupport.value.has(model)) {
@@ -796,29 +1042,20 @@ export const callOpenRouter = async (
     return callWithoutJsonFormat()
   }
 
-  const responseSchema = buildStoryResponseSchema(modeIsGame)
-
-  const requestBody: any = {
-    model: model,
-    messages: processedMessages,
-    max_tokens: 16384,
-    response_format: responseSchema,
-    provider: { require_parameters: true }
-  }
-
-  if (reasoningEffort && reasoningEffort !== 'default') {
-    requestBody.reasoning = {
-      effort: reasoningEffort,
-      exclude: true
-    }
-  }
-
-  let plugins: any[] = []
+  const responseSchema = buildStoryResponseSchema(modeIsGame, includeAnimReason)
   const webPlugin = buildWebPlugin()
-  if (webPlugin) plugins = [...webPlugin]
-  plugins.push({ id: 'response-healing' })
-
-  if (plugins.length > 0) requestBody.plugins = plugins
+  const plugins = webPlugin ? [...webPlugin, { id: 'response-healing' }] : [{ id: 'response-healing' }]
+  const requestBody = await buildOpenRouterChatRequestBody({
+    model,
+    messages: processedMessages,
+    maxTokens: 16384,
+    reasoningEffort,
+    reasoningExclude: !includeReasoning,
+    responseFormat: responseSchema,
+    provider: { require_parameters: true },
+    plugins,
+    openRouterSpeed
+  })
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -860,7 +1097,7 @@ export const callOpenRouter = async (
 
   const data = await response.json()
 
-  return data.choices[0].message.content
+  return takeOpenAiMessageContent(data, includeReasoning)
 }
 
 // --- Summarization orchestration ---
@@ -875,6 +1112,7 @@ export const summarizeChunk = async (
     prompts: any
     enableContextCaching?: boolean
     reasoningEffort?: string
+    openRouterSpeed?: OpenRouterSpeed
     signal?: AbortSignal
     existingSummary?: string
   }
@@ -902,7 +1140,7 @@ export const summarizeChunk = async (
   } else if (opts.apiProvider === 'opencode-go') {
     summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, enableContextCaching: opts.enableContextCaching, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
-    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal, opts.openRouterSpeed)
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
@@ -926,6 +1164,7 @@ export const compactSummary = async (
     prompts: any
     enableContextCaching?: boolean
     reasoningEffort?: string
+    openRouterSpeed?: OpenRouterSpeed
     signal?: AbortSignal
   }
 ) => {
@@ -943,7 +1182,7 @@ export const compactSummary = async (
   } else if (opts.apiProvider === 'opencode-go') {
     summary = await callOpenCodeGoSummarization(msgs, { model: opts.model, apiKey: opts.apiKey, reasoningEffort: opts.reasoningEffort, enableContextCaching: opts.enableContextCaching, signal: opts.signal })
   } else if (opts.apiProvider === 'openrouter') {
-    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal)
+    summary = await callOpenRouterSummarization(msgs, opts.apiKey, opts.model, opts.signal, opts.openRouterSpeed)
   } else if (opts.apiProvider === 'pollinations') {
     summary = await callPollinationsSummarization(msgs, opts.apiKey, opts.model, opts.enableContextCaching, opts.signal)
   } else if (opts.apiProvider === 'local') {
