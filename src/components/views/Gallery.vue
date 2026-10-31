@@ -164,6 +164,7 @@ import story10 from '@/utils/json/Gallery/story10.json'
 import story11 from '@/utils/json/Gallery/story11.json'
 import story12 from '@/utils/json/Gallery/story12.json'
 import story13 from '@/utils/json/Gallery/story13.json'
+import story14 from '@/utils/json/Gallery/story14.json'
 import bbqmaster from '@/utils/json/Gallery/bbqmaster.json'
 import voltroad from '@/utils/json/Gallery/voltroad.json'
 import bluewaterisland from '@/utils/json/Gallery/bluewaterisland.json'
@@ -262,7 +263,8 @@ const buttonListStory = [
   { data: story10 },
   { data: story11 },
   { data: story12 },
-  { data: story13 }
+  { data: story13 },
+  { data: story14 }
 ] as buttonInterface[]
 
 const buttonListSideStory = [

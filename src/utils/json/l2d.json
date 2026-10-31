@@ -1,5 +1,137 @@
 [
   {
+    "name": "777",
+    "id": "777"
+  },
+  {
+    "name": "Absolute",
+    "id": "absolute"
+  },
+  {
+    "name": "ACPU FREEZE",
+    "id": "acpufreeze"
+  },
+  {
+    "name": "Aegis the Diver",
+    "id": "aegisthediver"
+  },
+  {
+    "name": "Alone Survivor",
+    "id": "alonesurvivor"
+  },
+  {
+    "name": "Arcane Archive",
+    "id": "arcanearchive"
+  },
+  {
+    "name": "Ark Guardian",
+    "id": "arkguardian"
+  },
+  {
+    "name": "Ark Ranger",
+    "id": "arkranger",
+    "f": "EventScene_arkranger_03"
+  },
+  {
+    "name": "AZX Service Time 1",
+    "id": "azxservicetime_1",
+    "f": "terminusticket_cutscene_01"
+  },
+  {
+    "name": "AZX Service Time 2",
+    "id": "azxservicetime_2",
+    "f": "terminusticket_cutscene_02"
+  },
+  {
+    "name": "AZX Service Time 3",
+    "id": "azxservicetime_3",
+    "f": "terminusticket_cutscene_03"
+  },
+  {
+    "name": "AZX Service Time 4",
+    "id": "azxservicetime_4",
+    "f": "terminusticket_cutscene_04"
+  },
+  {
+    "name": "AZX Service Time 5",
+    "id": "azxservicetime_5",
+    "f": "terminusticket_cutscene_05"
+  },
+  {
+    "name": "AZX Service Time 6",
+    "id": "azxservicetime_6",
+    "f": "terminusticket_cutscene_06"
+  },
+  {
+    "name": "AZX Service Time 7",
+    "id": "azxservicetime_7",
+    "f": "terminusticket_cutscene_07"
+  },
+  {
+    "name": "AZX Service Time 8",
+    "id": "azxservicetime_8",
+    "f": "terminusticket_cutscene_08"
+  },
+  {
+    "name": "AZX Service Time 9",
+    "id": "azxservicetime_9",
+    "f": "terminusticket_cutscene_09"
+  },
+  {
+    "name": "Boss: Mother Whale",
+    "id": "bba001"
+  },
+  {
+    "name": "Boss: Harvester",
+    "id": "bbg001"
+  },
+  {
+    "name": "Boss: Chatterbox",
+    "id": "bbg002"
+  },
+  {
+    "name": "Boss: Blacksmith",
+    "id": "bbg003"
+  },
+  {
+    "name": "Beauty Full Shot",
+    "id": "beautyfullshot"
+  },
+  {
+    "name": "Bitter Spice",
+    "id": "bitterspice",
+    "f": "EventScene_bitterspice_01"
+  },
+  {
+    "name": "Blank Ticket",
+    "id": "blankticket"
+  },
+  {
+    "name": "Blue Water Island",
+    "id": "bluewaterisland"
+  },
+  {
+    "name": "BOOM's DAY",
+    "id": "boomsday"
+  },
+  {
+    "name": "Boom the Ghost",
+    "id": "boomtheghost"
+  },
+  {
+    "name": "Bow Wow Paradise",
+    "id": "bowwowparadise"
+  },
+  {
+    "name": "Brand New Year",
+    "id": "brandnewyear"
+  },
+  {
+    "name": "B Side Idol",
+    "id": "bsideidol",
+    "f": "EventScene_bsideidol_01"
+  },
+  {
     "name": "Rapi",
     "id": "c010",
     "ko": "라피",
@@ -502,19 +634,8 @@
     "fr": "Diesel"
   },
   {
-    "name": "Diesel Black Sunday",
-    "id": "c072_01",
-    "ko": "디젤 블랙 홀리데이",
-    "jp": "ディーゼル ブラックホリデー",
-    "tw": "迪塞爾 黑色假日",
-    "cn": "迪塞尔 黑色假日",
-    "de": "Diesel Schwarzer Sonntag",
-    "th": "ดีเซล วันอาทิตย์สีดำ",
-    "fr": "Diesel Dimanche noir"
-  },
-  {
     "name": "Diesel Strawberry Flower",
-    "id": "c072_02",
+    "id": "c072_01",
     "ko": "디젤 스트로베리 플라워",
     "jp": "ディーゼル ストロベリーフラワー",
     "tw": "迪塞爾 草莓花朵",
@@ -522,6 +643,17 @@
     "de": "Diesel Erdbeerblüte",
     "th": "ดีเซล สตรอว์เบอร์รีผลิดอก",
     "fr": "Diesel Fleur de fraisier"
+  },
+  {
+    "name": "Diesel Black Sunday",
+    "id": "c072_02",
+    "ko": "디젤 블랙 홀리데이",
+    "jp": "ディーゼル ブラックホリデー",
+    "tw": "迪塞爾 黑色假日",
+    "cn": "迪塞尔 黑色假日",
+    "de": "Diesel Schwarzer Sonntag",
+    "th": "ดีเซล วันอาทิตย์สีดำ",
+    "fr": "Diesel Dimanche noir"
   },
   {
     "name": "Diesel Midnight Strawberry",
@@ -565,7 +697,7 @@
     "cn": "迪塞尔：冬日甜心",
     "de": "Diesel: Winterliche Süßigkeiten",
     "th": "ดีเซล: ฤดูหนาวแสนหวาน",
-    "fr": "Diesel : Douceurs d’hiver"
+    "fr": "Diesel : Douceurs d’hiver"
   },
   {
     "name": "Centi",
@@ -1163,7 +1295,7 @@
     "cn": "米尔克：花漾兔女郎",
     "de": "Milk: Blühendes Häschen",
     "th": "มิลค์: กระต่ายเบ่งบาน",
-    "fr": "Lactée : Lapin florissant"
+    "fr": "Lactée : Lapin florissant"
   },
   {
     "name": "Julia",
@@ -1364,28 +1496,6 @@
     "fr": "Maiden"
   },
   {
-    "name": "Guillotine: Winter Slayer",
-    "id": "c182",
-    "ko": "길로틴 : 윈터 슬레이어",
-    "jp": "ギロチン：ウィンタースレイヤー",
-    "tw": "吉蘿婷：寒冬殺手",
-    "cn": "吉萝婷：寒冬杀手",
-    "de": "Guillotine: Eiskalt",
-    "th": "กิโยติน: ผู้พิชิตเหมันต์",
-    "fr": "Guillotine : Chasseuse d'hiver"
-  },
-  {
-    "name": "Maiden: Ice Rose",
-    "id": "c183",
-    "ko": "메이든 : 아이스 로즈",
-    "jp": "メイデン：アイスローズ",
-    "tw": "梅登：冰玫瑰",
-    "cn": "梅登：冰玫瑰",
-    "de": "Maiden: Eisrose",
-    "th": "เมเดน: ไอซ์โรส",
-    "fr": "Maiden : Rose des glaces"
-  },
-  {
     "name": "Maiden Covert Nurse",
     "id": "c181_01",
     "ko": "메이든 시크릿 너스",
@@ -1406,6 +1516,28 @@
     "de": "Maiden Hitzegefühle",
     "th": "เมเดน ใต้ดวงตะวัน",
     "fr": "Maiden Sous le soleil"
+  },
+  {
+    "name": "Guillotine: Winter Slayer",
+    "id": "c182",
+    "ko": "길로틴 : 윈터 슬레이어",
+    "jp": "ギロチン：ウィンタースレイヤー",
+    "tw": "吉蘿婷：寒冬殺手",
+    "cn": "吉萝婷：寒冬杀手",
+    "de": "Guillotine: Eiskalt",
+    "th": "กิโยติน: ผู้พิชิตเหมันต์",
+    "fr": "Guillotine : Chasseuse d'hiver"
+  },
+  {
+    "name": "Maiden: Ice Rose",
+    "id": "c183",
+    "ko": "메이든 : 아이스 로즈",
+    "jp": "メイデン：アイスローズ",
+    "tw": "梅登：冰玫瑰",
+    "cn": "梅登：冰玫瑰",
+    "de": "Maiden: Eisrose",
+    "th": "เมเดน: ไอซ์โรส",
+    "fr": "Maiden : Rose des glaces"
   },
   {
     "name": "Ludmilla",
@@ -1882,17 +2014,6 @@
     "fr": "Dorothy"
   },
   {
-    "name": "Dorothy: Serendipity",
-    "id": "c234",
-    "ko": "도로시 : 세렌디피티",
-    "jp": "ドロシー：セレンディピティ",
-    "tw": "桃樂絲：機緣巧遇",
-    "cn": "桃乐丝：机缘巧遇",
-    "de": "Dorothy: Serendipity",
-    "th": "โดโรธี: พรหมลิขิตดลบันดาล",
-    "fr": "Dorothy : Sérendipité"
-  },
-  {
     "name": "Dorothy Nostalgia",
     "id": "c233_01",
     "ko": "도로시 노스텔지어",
@@ -1917,6 +2038,39 @@
   {
     "name": "Dorothy (CN)",
     "id": "c233_80"
+  },
+  {
+    "name": "Dorothy: Serendipity",
+    "id": "c234",
+    "ko": "도로시 : 세렌디피티",
+    "jp": "ドロシー：セレンディピティ",
+    "tw": "桃樂絲：機緣巧遇",
+    "cn": "桃乐丝：机缘巧遇",
+    "de": "Dorothy: Serendipity",
+    "th": "โดโรธี: พรหมลิขิตดลบันดาล",
+    "fr": "Dorothy : Sérendipité"
+  },
+  {
+    "id": "c235",
+    "name": "Noah",
+    "ko": "노아",
+    "jp": "ノア",
+    "tw": "諾雅",
+    "cn": "诺雅",
+    "de": "Noa",
+    "th": "โนอาห์",
+    "fr": "Noah"
+  },
+  {
+    "id": "c236",
+    "name": "Papillon",
+    "ko": "파피용",
+    "jp": "パピヨン",
+    "tw": "芭比瓏",
+    "cn": "芭比珑",
+    "de": "Papillon",
+    "th": "ปาปิยอง",
+    "fr": "Papillon"
   },
   {
     "name": "Rumani",
@@ -3256,6 +3410,17 @@
     "es": "Rapunzel: Sanctuary"
   },
   {
+    "id": "c474",
+    "name": "Dorothy",
+    "ko": "도로시",
+    "jp": "ドロシー",
+    "tw": "桃樂絲",
+    "cn": "桃乐丝",
+    "de": "Dorothy",
+    "th": "โดโรธี",
+    "fr": "Dorothy"
+  },
+  {
     "name": "Liveryn",
     "id": "c480",
     "ko": "리버린",
@@ -3458,17 +3623,6 @@
     "fr": "Sépulcre"
   },
   {
-    "name": "Cinderella: Crystal Wave",
-    "id": "c515",
-    "ko": "신데렐라 : 크리스탈 웨이브",
-    "jp": "シンデレラ：クリスタルウェーブ",
-    "tw": "灰姑娘：琉璃波光",
-    "cn": "灰姑娘：琉璃波光",
-    "de": "Aschenputtel: Kristallwelle",
-    "th": "ซินเดอเรลล่า: คริสตัลเวฟ",
-    "fr": "Cendrillon : Vague de cristal"
-  },
-  {
     "name": "Grave Beautiful You",
     "id": "c514_01",
     "ko": "그레이브 뷰티풀 유",
@@ -3478,6 +3632,17 @@
     "de": "Grave Wunderschönes Du",
     "th": "เกรฟ เธอผู้งดงาม",
     "fr": "Sépulcre Ta beauté"
+  },
+  {
+    "name": "Cinderella: Crystal Wave",
+    "id": "c515",
+    "ko": "신데렐라 : 크리스탈 웨이브",
+    "jp": "シンデレラ：クリスタルウェーブ",
+    "tw": "灰姑娘：琉璃波光",
+    "cn": "灰姑娘：琉璃波光",
+    "de": "Aschenputtel: Kristallwelle",
+    "th": "ซินเดอเรลล่า: คริสตัลเวฟ",
+    "fr": "Cendrillon : Vague de cristal"
   },
   {
     "name": "Bready",
@@ -3518,7 +3683,7 @@
     "ko": "크러스트 트릿 셰프",
     "jp": "クラスト トリートシェフ",
     "tw": "克勞斯特 搗蛋主廚",
-    "cn": "克劳斯特 捣蛋甜心主厨",
+    "cn": "克劳斯特 捣蛋主厨",
     "de": "Kross Naschexpertin",
     "th": "ครัสต์ เชฟของหวาน",
     "fr": "Crust Cheffe farceuse"
@@ -3842,7 +4007,7 @@
     "cn": "白鹤",
     "de": "Schneekranich",
     "th": "สโนว์เครน",
-    "fr": "Snow Crane"
+    "fr": "Snow Crane"
   },
   {
     "name": "Makima",
@@ -3865,6 +4030,18 @@
     "de": "Makima Ohne Mantel",
     "th": "มาคิมะ ถอดเสื้อโคต",
     "fr": "Makima Sans le manteau"
+  },
+  {
+    "name": "Ying Ning (婴宁) (CN)",
+    "id": "c8004"
+  },
+  {
+    "name": "Hua Pi (画皮) (CN)",
+    "id": "c8005"
+  },
+  {
+    "name": "Ying Ning (婴宁) (CN)",
+    "id": "c8006"
   },
   {
     "name": "Power",
@@ -4558,7 +4735,7 @@
     "fr": "Queen (Makoto)"
   },
   {
-    "name": "Queen (Makoto) Shujin Academy Student Council President",
+    "name": "Queen (Makoto) Shujin Academy Student Council President",
     "id": "c870_01",
     "ko": "퀸(마코토) 슈진고교 학생회장",
     "jp": "クイーン（真） 秀尽学園生徒会長",
@@ -4635,6 +4812,73 @@
     "fr": "Ingrid"
   },
   {
+    "name": "Ghost - Alfred",
+    "id": "c9000"
+  },
+  {
+    "name": "Ghost - Neaty",
+    "id": "c9000_01"
+  },
+  {
+    "name": "Ghost - Sizzly",
+    "id": "c9000_02"
+  },
+  {
+    "name": "Ghost - Fixy",
+    "id": "c9000_03"
+  },
+  {
+    "name": "Ghost - Detaily",
+    "id": "c9000_05"
+  },
+  {
+    "name": "Ghost - Sellsy",
+    "id": "c9000_06"
+  },
+  {
+    "name": "Ghost",
+    "id": "c9000_07"
+  },
+  {
+    "name": "Ghost - Pinne",
+    "id": "c9001"
+  },
+  {
+    "name": "Nora",
+    "id": "c9002"
+  },
+  {
+    "name": "Mrs. Miss",
+    "id": "c9003"
+  },
+  {
+    "name": "Rapture",
+    "id": "c9005"
+  },
+  {
+    "name": "Rapture",
+    "id": "c9005_01"
+  },
+  {
+    "name": "Deipara",
+    "id": "c9006"
+  },
+  {
+    "name": "Nayuta",
+    "id": "c9008"
+  },
+  {
+    "name": "Nihilister",
+    "id": "c9009",
+    "ko": "니힐리스타",
+    "jp": "ニヒリスター",
+    "tw": "尼希利斯塔",
+    "cn": "尼希利斯塔",
+    "de": "Nihilister",
+    "th": "นิฮิลิสเตอร์",
+    "fr": "Nihiliste"
+  },
+  {
     "name": "Syuen",
     "id": "c901",
     "ko": "슈엔",
@@ -4644,6 +4888,38 @@
     "de": "Syuen",
     "th": "ซูเอิน",
     "fr": "Syuen"
+  },
+  {
+    "name": "Jane",
+    "id": "c9010"
+  },
+  {
+    "name": "Rain",
+    "id": "c9011"
+  },
+  {
+    "name": "Mass Produced Heretic",
+    "id": "c9014"
+  },
+  {
+    "name": "Central Government Platoon Leader",
+    "id": "c9015"
+  },
+  {
+    "name": "V.T.C. Priestess",
+    "id": "c9016"
+  },
+  {
+    "name": "Altruia",
+    "id": "c9017"
+  },
+  {
+    "name": "Princess",
+    "id": "c9018"
+  },
+  {
+    "name": "Stall III",
+    "id": "c9019"
   },
   {
     "name": "Mustang",
@@ -4668,6 +4944,89 @@
     "fr": "Mustang (CN)"
   },
   {
+    "name": "Freesia",
+    "id": "c9020"
+  },
+  {
+    "name": "Freesia",
+    "id": "c9020_01"
+  },
+  {
+    "name": "Anis",
+    "id": "c9021",
+    "ko": "아니스",
+    "jp": "アニス",
+    "tw": "阿妮斯",
+    "cn": "阿妮斯",
+    "de": "Anis",
+    "th": "แอนิส",
+    "fr": "Anis"
+  },
+  {
+    "name": "Anis",
+    "id": "c9021_01",
+    "ko": "아니스",
+    "jp": "アニス",
+    "tw": "阿妮斯",
+    "cn": "阿妮斯",
+    "de": "Anis",
+    "th": "แอนิส",
+    "fr": "Anis"
+  },
+  {
+    "name": "Mustang",
+    "id": "c9022",
+    "ko": "머스탱",
+    "jp": "マスタング",
+    "tw": "馬士丁",
+    "cn": "马士丁",
+    "de": "Mustang",
+    "th": "มัสแตง",
+    "fr": "Mustang"
+  },
+  {
+    "name": "Hanson",
+    "id": "c9023"
+  },
+  {
+    "name": "Yoyo",
+    "id": "c9024"
+  },
+  {
+    "name": "Egovista",
+    "id": "c9025"
+  },
+  {
+    "name": "Amy",
+    "id": "c9026"
+  },
+  {
+    "id": "c9027",
+    "name": "Heretic Dorothy",
+    "ko": "HERETIC 도로시",
+    "jp": "HERETIC ドロシー",
+    "tw": "HERETIC 桃樂絲",
+    "cn": "HERETIC 桃乐丝",
+    "de": "HERETIC Dorothy",
+    "th": "HERETIC โดโรธี",
+    "fr": "HERETIC Dorothy"
+  },
+  {
+    "name": "Hope",
+    "id": "c9028"
+  },
+  {
+    "name": "Laplace",
+    "id": "c9029",
+    "ko": "라플라스",
+    "jp": "ラプラス",
+    "tw": "拉普拉斯",
+    "cn": "拉普拉斯",
+    "de": "Laplace",
+    "th": "ลาปลาซ",
+    "fr": "Laplace"
+  },
+  {
     "name": "Andersen",
     "id": "c903",
     "ko": "엔더슨",
@@ -4690,6 +5049,49 @@
     "fr": "Andersen"
   },
   {
+    "name": "Enme",
+    "id": "c9030"
+  },
+  {
+    "name": "Syuen",
+    "id": "c9031",
+    "ko": "슈엔",
+    "jp": "シュエン",
+    "tw": "舒恩",
+    "cn": "舒恩",
+    "de": "Syuen",
+    "th": "ซูเอิน",
+    "fr": "Syuen"
+  },
+  {
+    "name": "Jien",
+    "id": "c9032"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9034"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9035"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9036"
+  },
+  {
+    "name": "Penguin",
+    "id": "c9037"
+  },
+  {
+    "name": "Teddie",
+    "id": "c9038"
+  },
+  {
+    "name": "Morgana",
+    "id": "c9039"
+  },
+  {
     "name": "Enikk",
     "id": "c904",
     "ko": "에닉",
@@ -4699,6 +5101,18 @@
     "de": "Enikk",
     "th": "เอนิค",
     "fr": "Enikk"
+  },
+  {
+    "name": "Morgana",
+    "id": "c9040"
+  },
+  {
+    "id": "c9041",
+    "name": "Doctor Maria"
+  },
+  {
+    "name": "Bernoullia",
+    "id": "c9042"
   },
   {
     "name": "Rian",
@@ -4902,6 +5316,17 @@
   {
     "name": "Commander (GODDESS)",
     "id": "c942"
+  },
+  {
+    "id": "c942_01",
+    "name": "Andersen",
+    "ko": "엔더슨",
+    "jp": "アンダーソン",
+    "tw": "安德森",
+    "cn": "安德森",
+    "de": "Andersen",
+    "th": "แอนเดอร์เซน",
+    "fr": "Andersen"
   },
   {
     "name": "Liliweiss",
@@ -5123,712 +5548,12 @@
     "fr": "Léviathan"
   },
   {
-    "name": "Ying Ning (婴宁) (CN)",
-    "id": "c8004"
-  },
-  {
-    "name": "Hua Pi (画皮) (CN)",
-    "id": "c8005"
-  },
-  {
-    "name": "Ying Ning (婴宁) (CN)",
-    "id": "c8006"
-  },
-  {
     "name": "Only One",
     "id": "c997"
   },
   {
     "name": "Hermin",
     "id": "c998"
-  },
-  {
-    "name": "Ghost - Alfred",
-    "id": "c9000"
-  },
-  {
-    "name": "Ghost - Neaty",
-    "id": "c9000_01"
-  },
-  {
-    "name": "Ghost - Sizzly",
-    "id": "c9000_02"
-  },
-  {
-    "name": "Ghost - Fixy",
-    "id": "c9000_03"
-  },
-  {
-    "name": "Ghost - Detaily",
-    "id": "c9000_05"
-  },
-  {
-    "name": "Ghost - Sellsy",
-    "id": "c9000_06"
-  },
-  {
-    "name": "Ghost",
-    "id": "c9000_07"
-  },
-  {
-    "name": "Ghost - Pinne",
-    "id": "c9001"
-  },
-  {
-    "name": "Nora",
-    "id": "c9002"
-  },
-  {
-    "name": "Mrs. Miss",
-    "id": "c9003"
-  },
-  {
-    "name": "Rapture",
-    "id": "c9005"
-  },
-  {
-    "name": "Rapture",
-    "id": "c9005_01"
-  },
-  {
-    "name": "Deipara",
-    "id": "c9006"
-  },
-  {
-    "name": "Nayuta",
-    "id": "c9008"
-  },
-  {
-    "name": "Nihilister",
-    "id": "c9009",
-    "ko": "니힐리스타",
-    "jp": "ニヒリスター",
-    "tw": "尼希利斯塔",
-    "cn": "尼希利斯塔",
-    "de": "Nihilister",
-    "th": "นิฮิลิสเตอร์",
-    "fr": "Nihiliste"
-  },
-  {
-    "name": "Jane",
-    "id": "c9010"
-  },
-  {
-    "name": "Rain",
-    "id": "c9011"
-  },
-  {
-    "name": "Mass Produced Heretic",
-    "id": "c9014"
-  },
-  {
-    "name": "Central Government Platoon Leader",
-    "id": "c9015"
-  },
-  {
-    "name": "V.T.C. Priestess",
-    "id": "c9016"
-  },
-  {
-    "name": "Altruia",
-    "id": "c9017"
-  },
-  {
-    "name": "Princess",
-    "id": "c9018"
-  },
-  {
-    "name": "Stall III",
-    "id": "c9019"
-  },
-  {
-    "name": "Freesia",
-    "id": "c9020"
-  },
-  {
-    "name": "Freesia",
-    "id": "c9020_01"
-  },
-  {
-    "name": "Anis",
-    "id": "c9021",
-    "ko": "아니스",
-    "jp": "アニス",
-    "tw": "阿妮斯",
-    "cn": "阿妮斯",
-    "de": "Anis",
-    "th": "แอนิส",
-    "fr": "Anis"
-  },
-  {
-    "name": "Anis",
-    "id": "c9021_01",
-    "ko": "아니스",
-    "jp": "アニス",
-    "tw": "阿妮斯",
-    "cn": "阿妮斯",
-    "de": "Anis",
-    "th": "แอนิส",
-    "fr": "Anis"
-  },
-  {
-    "name": "Mustang",
-    "id": "c9022",
-    "ko": "머스탱",
-    "jp": "マスタング",
-    "tw": "馬士丁",
-    "cn": "马士丁",
-    "de": "Mustang",
-    "th": "มัสแตง",
-    "fr": "Mustang"
-  },
-  {
-    "name": "Hanson",
-    "id": "c9023"
-  },
-  {
-    "name": "Yoyo",
-    "id": "c9024"
-  },
-  {
-    "name": "Egovista",
-    "id": "c9025"
-  },
-  {
-    "name": "Amy",
-    "id": "c9026"
-  },
-  {
-    "name": "Hope",
-    "id": "c9028"
-  },
-  {
-    "name": "Laplace",
-    "id": "c9029",
-    "ko": "라플라스",
-    "jp": "ラプラス",
-    "tw": "拉普拉斯",
-    "cn": "拉普拉斯",
-    "de": "Laplace",
-    "th": "ลาปลาซ",
-    "fr": "Laplace"
-  },
-  {
-    "name": "Enme",
-    "id": "c9030"
-  },
-  {
-    "name": "Syuen",
-    "id": "c9031",
-    "ko": "슈엔",
-    "jp": "シュエン",
-    "tw": "舒恩",
-    "cn": "舒恩",
-    "de": "Syuen",
-    "th": "ซูเอิน",
-    "fr": "Syuen"
-  },
-  {
-    "name": "Jien",
-    "id": "c9032"
-  },
-  {
-    "name": "Penguin",
-    "id": "c9034"
-  },
-  {
-    "name": "Penguin",
-    "id": "c9035"
-  },
-  {
-    "name": "Penguin",
-    "id": "c9036"
-  },
-  {
-    "name": "Penguin",
-    "id": "c9037"
-  },
-  {
-    "name": "Teddie",
-    "id": "c9038"
-  },
-  {
-    "name": "Morgana",
-    "id": "c9039"
-  },
-  {
-    "name": "Morgana",
-    "id": "c9040"
-  },
-  {
-    "name": "Bernoullia",
-    "id": "c9042"
-  },
-  {
-    "name": "Blue Water Island",
-    "id": "bluewaterisland"
-  },
-  {
-    "name": "Bow Wow Paradise",
-    "id": "bowwowparadise"
-  },
-  {
-    "name": "White Memory 1",
-    "id": "whitememory1"
-  },
-  {
-    "name": "White Memory 2",
-    "id": "whitememory2"
-  },
-  {
-    "name": "777",
-    "id": "777"
-  },
-  {
-    "name": "Cherry Blossom",
-    "id": "cherryblossom"
-  },
-  {
-    "name": "License to Kill",
-    "id": "ltk"
-  },
-  {
-    "name": "Maid in Valentine",
-    "id": "maidinvalentine"
-  },
-  {
-    "name": "Queen's Order",
-    "id": "queensorder"
-  },
-  {
-    "name": "Nya Nya Paradise",
-    "id": "nyanyaparadise"
-  },
-  {
-    "name": "Golden Ship",
-    "id": "goldenship"
-  },
-  {
-    "name": "Sea You Again",
-    "id": "seayouagain"
-  },
-  {
-    "name": "Outer Automata",
-    "id": "outerautomata"
-  },
-  {
-    "name": "No Caller ID",
-    "id": "nocallerid"
-  },
-  {
-    "name": "School Of Lock",
-    "id": "schooloflock"
-  },
-  {
-    "name": "Dazzling Cupid: Tia",
-    "id": "dazzlingcupid_tia"
-  },
-  {
-    "name": "Dazzling Cupid: Naga",
-    "id": "dazzlingcupid_naga"
-  },
-  {
-    "name": "ACPU FREEZE",
-    "id": "acpufreeze"
-  },
-  {
-    "name": "RED ASH 1",
-    "id": "redash1"
-  },
-  {
-    "name": "RED ASH 2",
-    "id": "redash2"
-  },
-  {
-    "name": "Alone Survivor",
-    "id": "alonesurvivor"
-  },
-  {
-    "name": "Miracle Snow",
-    "id": "miraclesnow"
-  },
-  {
-    "name": "Neverland",
-    "id": "neverland"
-  },
-  {
-    "name": "New Year New Sword",
-    "id": "newyearnewsword"
-  },
-  {
-    "name": "Lion Heart",
-    "id": "lionheart"
-  },
-  {
-    "name": "D Outsider",
-    "id": "doutsider"
-  },
-  {
-    "name": "Dirty Backyard",
-    "id": "dirtybackyard"
-  },
-  {
-    "name": "Perfect Maid",
-    "id": "perfectmaid"
-  },
-  {
-    "name": "BOOM's DAY",
-    "id": "boomsday"
-  },
-  {
-    "name": "Kill The Lord",
-    "id": "killthelord"
-  },
-  {
-    "name": "Re: Cipe For You",
-    "id": "recipeforyou"
-  },
-  {
-    "name": "One More Time",
-    "id": "onemoretime"
-  },
-  {
-    "name": "Brand New Year",
-    "id": "brandnewyear"
-  },
-  {
-    "name": "Last Kingdom",
-    "id": "lastkingdom"
-  },
-  {
-    "name": "D.ARK HERO",
-    "id": "darkhero"
-  },
-  {
-    "name": "High Tech Toy",
-    "id": "hightechtoy"
-  },
-  {
-    "name": "Golden Coin Rush",
-    "id": "goldencoinrush"
-  },
-  {
-    "name": "Claymore",
-    "id": "claymore"
-  },
-  {
-    "name": "Aegis the Diver",
-    "id": "aegisthediver"
-  },
-  {
-    "name": "Beauty Full Shot",
-    "id": "beautyfullshot"
-  },
-  {
-    "name": "Juvenile Days",
-    "id": "juveniledays"
-  },
-  {
-    "name": "Colorless",
-    "id": "colorless"
-  },
-  {
-    "name": "Evangelion",
-    "id": "evangelion"
-  },
-  {
-    "name": "Jinx Player",
-    "id": "jinxplayer"
-  },
-  {
-    "name": "Phantom Thief",
-    "id": "phantomthief"
-  },
-  {
-    "name": "Life Again",
-    "id": "lifeagain"
-  },
-  {
-    "name": "Old Tales",
-    "id": "oldtales"
-  },
-  {
-    "name": "Secret Garden",
-    "id": "secretgarden"
-  },
-  {
-    "name": "Ice Dragon Saga",
-    "id": "icedragonsaga"
-  },
-  {
-    "name": "Footstep Walk Run",
-    "id": "footstepwalkrun"
-  },
-  {
-    "name": "Wisdom Spring",
-    "id": "wisdomspring"
-  },
-  {
-    "name": "Romantic Valentine",
-    "id": "romanticvalentine"
-  },
-  {
-    "name": "Second Quest",
-    "id": "secondquest1"
-  },
-  {
-    "name": "Second Quest",
-    "id": "secondquest2"
-  },
-  {
-    "name": "For Rest",
-    "id": "forrest"
-  },
-  {
-    "name": "New Flavor",
-    "id": "newflavor"
-  },
-  {
-    "name": "True Flavor",
-    "id": "trueflavor"
-  },
-  {
-    "name": "Unbreakable Sphere",
-    "id": "unbreakablesphere"
-  },
-  {
-    "name": "Arcane Archive",
-    "id": "arcanearchive"
-  },
-  {
-    "name": "Lord For Justice",
-    "id": "lordforjustice"
-  },
-  {
-    "name": "Memories Teller 1",
-    "id": "memoriesteller_1"
-  },
-  {
-    "name": "Memories Teller 2",
-    "id": "memoriesteller_2"
-  },
-  {
-    "name": "Over the Horizon",
-    "id": "overthehorizon"
-  },
-  {
-    "name": "Boom the Ghost",
-    "id": "boomtheghost"
-  },
-  {
-    "name": "Absolute",
-    "id": "absolute"
-  },
-  {
-    "name": "Coins In Rush",
-    "id": "coinsinrush"
-  },
-  {
-    "name": "Reborn Evil",
-    "id": "rebornevil"
-  },
-  {
-    "name": "Go! Ninja Thief",
-    "id": "goninjathief"
-  },
-  {
-    "name": "Blank Ticket",
-    "id": "blankticket"
-  },
-  {
-    "name": "Terminus Ticket",
-    "id": "terminusticket",
-    "f": "EventScene_terminusticket_01"
-  },
-  {
-    "name": "Ark Guardian",
-    "id": "arkguardian"
-  },
-  {
-    "name": "Sin Editor",
-    "id": "sineditor",
-    "f": "EventScene_sineditor_01"
-  },
-  {
-    "name": "Fatal Maid",
-    "id": "fatalmaid",
-    "f": "EventScene_fatalmaid_01"
-  },
-  {
-    "name": "Lie Cause Recoil",
-    "id": "liecauserecoil",
-    "f": "EventTitle_ce008_01"
-  },
-  {
-    "name": "Enter Heaven",
-    "id": "enterheaven",
-    "f": "EventScene_enterheaven_01"
-  },
-  {
-    "name": "2x2 LOVE 1",
-    "id": "twoxtwo1",
-    "f": "EventScene_twoxtwolove_01"
-  },
-  {
-    "name": "2x2 LOVE 2",
-    "id": "twoxtwo2",
-    "f": "EventScene_twoxtwolove2_hidden_01_2"
-  },
-  {
-    "name": "Good World",
-    "id": "goodworld",
-    "f": "EventScene_goodworld_01"
-  },
-  {
-    "name": "Star Anis",
-    "id": "staranis",
-    "f": "EventScene_staranis_03"
-  },
-  {
-    "name": "B Side Idol",
-    "id": "bsideidol",
-    "f": "EventScene_bsideidol_01"
-  },
-  {
-    "name": "Bitter Spice",
-    "id": "bitterspice",
-    "f": "EventScene_bitterspice_01"
-  },
-  {
-    "name": "Ark Ranger",
-    "id": "arkranger",
-    "f": "EventScene_arkranger_03"
-  },
-  {
-    "name": "Project Matis",
-    "id": "projectmatis",
-    "f": "EventScene_projectmatis_02"
-  },
-  {
-    "name": "Great Villain Union",
-    "id": "greatvillainunion",
-    "f": "EventScene_greatvillainunion_01"
-  },
-  {
-    "name": "Coin Rush Showdown",
-    "id": "coinrushshowdown",
-    "f": "EventScene_coinrushshowdown_02"
-  },
-  {
-    "name": "Little Witch Trick",
-    "id": "littlewitchtrick",
-    "f": "EventScene_littlewitchtrick_01"
-  },
-  {
-    "name": "Smol Ade",
-    "id": "smol_ade"
-  },
-  {
-    "name": "Smol Anchor",
-    "id": "smol_anchor"
-  },
-  {
-    "name": "Smol Anchor Pirate",
-    "id": "smol_anchor_pirate"
-  },
-  {
-    "name": "Smol Bolt",
-    "id": "smol_bolt"
-  },
-  {
-    "name": "Smol Frima",
-    "id": "smol_frima"
-  },
-  {
-    "name": "Smol Helm",
-    "id": "smol_helm"
-  },
-  {
-    "name": "Smol Liter",
-    "id": "smol_liter"
-  },
-  {
-    "name": "Smol Mary",
-    "id": "smol_mary"
-  },
-  {
-    "name": "Smol Mast",
-    "id": "smol_mast"
-  },
-  {
-    "name": "Smol Mast Pirate",
-    "id": "smol_mast_pirate"
-  },
-  {
-    "name": "Pirate Cafe",
-    "id": "piratecafe"
-  },
-  {
-    "name": "Smol Pepper",
-    "id": "smol_pepper"
-  },
-  {
-    "name": "Smol Maid Privaty",
-    "id": "smol_mpriv"
-  },
-  {
-    "name": "Smol Sin Pirate",
-    "id": "smol_sin_pirate"
-  },
-  {
-    "name": "Smol Rapi",
-    "id": "smol_rapi"
-  },
-  {
-    "name": "Smol Yan",
-    "id": "smol_yan"
-  },
-  {
-    "name": "Smol Rem",
-    "id": "smol_rem"
-  },
-  {
-    "name": "Smol Ram",
-    "id": "smol_ram"
-  },
-  {
-    "name": "Smol Emilia",
-    "id": "smol_emilia"
-  },
-  {
-    "name": "Smol Anis TTS",
-    "id": "smol_anis",
-    "f": "tts_c017_02"
-  },
-  {
-    "name": "Smol Mint TTS",
-    "id": "smol_mint",
-    "f": "tts_c600_00"
-  },
-  {
-    "name": "Smol Prika TTS",
-    "id": "smol_prika",
-    "f": "tts_c601_00"
-  },
-  {
-    "name": "Smol Marciana TTS",
-    "id": "smol_marciana",
-    "f": "tts_c322_00"
-  },
-  {
-    "name": "Smol Naga TTS",
-    "id": "smol_naga",
-    "f": "tts_c450_03"
-  },
-  {
-    "name": "Smol Tia TTS",
-    "id": "smol_tia",
-    "f": "tts_c451_03"
   },
   {
     "name": "Smol Queen (Makoto)",
@@ -5891,65 +5616,45 @@
     "f": "ce009_skill_03"
   },
   {
-    "name": "AZX Service Time 1",
-    "id": "azxservicetime_1",
-    "f": "terminusticket_cutscene_01"
+    "name": "Cherry Blossom",
+    "id": "cherryblossom"
   },
   {
-    "name": "AZX Service Time 2",
-    "id": "azxservicetime_2",
-    "f": "terminusticket_cutscene_02"
+    "name": "Claymore",
+    "id": "claymore"
   },
   {
-    "name": "AZX Service Time 3",
-    "id": "azxservicetime_3",
-    "f": "terminusticket_cutscene_03"
+    "name": "Coin Rush Showdown",
+    "id": "coinrushshowdown",
+    "f": "EventScene_coinrushshowdown_02"
   },
   {
-    "name": "AZX Service Time 4",
-    "id": "azxservicetime_4",
-    "f": "terminusticket_cutscene_04"
+    "name": "Coins In Rush",
+    "id": "coinsinrush"
   },
   {
-    "name": "AZX Service Time 5",
-    "id": "azxservicetime_5",
-    "f": "terminusticket_cutscene_05"
+    "name": "Colorless",
+    "id": "colorless"
   },
   {
-    "name": "AZX Service Time 6",
-    "id": "azxservicetime_6",
-    "f": "terminusticket_cutscene_06"
+    "name": "D.ARK HERO",
+    "id": "darkhero"
   },
   {
-    "name": "AZX Service Time 7",
-    "id": "azxservicetime_7",
-    "f": "terminusticket_cutscene_07"
+    "name": "Dazzling Cupid: Naga",
+    "id": "dazzlingcupid_naga"
   },
   {
-    "name": "AZX Service Time 8",
-    "id": "azxservicetime_8",
-    "f": "terminusticket_cutscene_08"
+    "name": "Dazzling Cupid: Tia",
+    "id": "dazzlingcupid_tia"
   },
   {
-    "name": "AZX Service Time 9",
-    "id": "azxservicetime_9",
-    "f": "terminusticket_cutscene_09"
+    "name": "Dirty Backyard",
+    "id": "dirtybackyard"
   },
   {
-    "name": "Boss: Mother Whale",
-    "id": "bba001"
-  },
-  {
-    "name": "Boss: Harvester",
-    "id": "bbg001"
-  },
-  {
-    "name": "Boss: Chatterbox",
-    "id": "bbg002"
-  },
-  {
-    "name": "Boss: Blacksmith",
-    "id": "bbg003"
+    "name": "D Outsider",
+    "id": "doutsider"
   },
   {
     "name": "Boss: Storm Bringer",
@@ -5976,24 +5681,18 @@
     "id": "ebg002"
   },
   {
-    "name": "Boss: Nihilister",
-    "id": "mba002"
+    "name": "Enter Heaven",
+    "id": "enterheaven",
+    "f": "EventScene_enterheaven_01"
   },
   {
-    "name": "Boss: Alteisen",
-    "id": "mbg001"
+    "name": "Evangelion",
+    "id": "evangelion"
   },
   {
-    "name": "Boss: Grave Digger",
-    "id": "mbg002"
-  },
-  {
-    "name": "Boss: Modernia",
-    "id": "mbg004"
-  },
-  {
-    "name": "Boss: Modernia Intro",
-    "id": "mbg004_appearance"
+    "name": "Fatal Maid",
+    "id": "fatalmaid",
+    "f": "EventScene_fatalmaid_01"
   },
   {
     "name": "Favorite: Poli",
@@ -6046,6 +5745,331 @@
   {
     "name": "Favorite: Bay",
     "id": "favorite_c550"
+  },
+  {
+    "name": "Footstep Walk Run",
+    "id": "footstepwalkrun"
+  },
+  {
+    "name": "For Rest",
+    "id": "forrest"
+  },
+  {
+    "name": "Golden Coin Rush",
+    "id": "goldencoinrush"
+  },
+  {
+    "name": "Golden Ship",
+    "id": "goldenship"
+  },
+  {
+    "name": "Go! Ninja Thief",
+    "id": "goninjathief"
+  },
+  {
+    "name": "Good World",
+    "id": "goodworld",
+    "f": "EventScene_goodworld_01"
+  },
+  {
+    "name": "Great Villain Union",
+    "id": "greatvillainunion",
+    "f": "EventScene_greatvillainunion_01"
+  },
+  {
+    "name": "High Tech Toy",
+    "id": "hightechtoy"
+  },
+  {
+    "name": "Ice Dragon Saga",
+    "id": "icedragonsaga"
+  },
+  {
+    "name": "Jinx Player",
+    "id": "jinxplayer"
+  },
+  {
+    "name": "Juvenile Days",
+    "id": "juveniledays"
+  },
+  {
+    "name": "Kill The Lord",
+    "id": "killthelord"
+  },
+  {
+    "name": "Last Kingdom",
+    "id": "lastkingdom"
+  },
+  {
+    "name": "Lie Cause Recoil",
+    "id": "liecauserecoil",
+    "f": "EventTitle_ce008_01"
+  },
+  {
+    "name": "Life Again",
+    "id": "lifeagain"
+  },
+  {
+    "name": "Lion Heart",
+    "id": "lionheart"
+  },
+  {
+    "name": "Little Witch Trick",
+    "id": "littlewitchtrick",
+    "f": "EventScene_littlewitchtrick_01"
+  },
+  {
+    "name": "Lord For Justice",
+    "id": "lordforjustice"
+  },
+  {
+    "name": "License to Kill",
+    "id": "ltk"
+  },
+  {
+    "name": "Maid in Valentine",
+    "id": "maidinvalentine"
+  },
+  {
+    "name": "Boss: Nihilister",
+    "id": "mba002"
+  },
+  {
+    "name": "Boss: Alteisen",
+    "id": "mbg001"
+  },
+  {
+    "name": "Boss: Grave Digger",
+    "id": "mbg002"
+  },
+  {
+    "name": "Boss: Modernia",
+    "id": "mbg004"
+  },
+  {
+    "name": "Boss: Modernia Intro",
+    "id": "mbg004_appearance"
+  },
+  {
+    "name": "Memories Teller 1",
+    "id": "memoriesteller_1"
+  },
+  {
+    "name": "Memories Teller 2",
+    "id": "memoriesteller_2"
+  },
+  {
+    "name": "Miracle Snow",
+    "id": "miraclesnow"
+  },
+  {
+    "name": "Neverland",
+    "id": "neverland"
+  },
+  {
+    "name": "New Flavor",
+    "id": "newflavor"
+  },
+  {
+    "name": "New Year New Sword",
+    "id": "newyearnewsword"
+  },
+  {
+    "name": "No Caller ID",
+    "id": "nocallerid"
+  },
+  {
+    "name": "Nya Nya Paradise",
+    "id": "nyanyaparadise"
+  },
+  {
+    "name": "Old Tales",
+    "id": "oldtales"
+  },
+  {
+    "name": "One More Time",
+    "id": "onemoretime"
+  },
+  {
+    "name": "Outer Automata",
+    "id": "outerautomata"
+  },
+  {
+    "name": "Over the Horizon",
+    "id": "overthehorizon"
+  },
+  {
+    "name": "Perfect Maid",
+    "id": "perfectmaid"
+  },
+  {
+    "name": "Phantom Thief",
+    "id": "phantomthief"
+  },
+  {
+    "name": "Pirate Cafe",
+    "id": "piratecafe"
+  },
+  {
+    "name": "Project Matis",
+    "id": "projectmatis",
+    "f": "EventScene_projectmatis_02"
+  },
+  {
+    "name": "Queen's Order",
+    "id": "queensorder"
+  },
+  {
+    "name": "Reborn Evil",
+    "id": "rebornevil"
+  },
+  {
+    "name": "Re: Cipe For You",
+    "id": "recipeforyou"
+  },
+  {
+    "name": "RED ASH 1",
+    "id": "redash1"
+  },
+  {
+    "name": "RED ASH 2",
+    "id": "redash2"
+  },
+  {
+    "name": "Romantic Valentine",
+    "id": "romanticvalentine"
+  },
+  {
+    "name": "School Of Lock",
+    "id": "schooloflock"
+  },
+  {
+    "name": "Sea You Again",
+    "id": "seayouagain"
+  },
+  {
+    "name": "Second Quest",
+    "id": "secondquest1"
+  },
+  {
+    "name": "Second Quest",
+    "id": "secondquest2"
+  },
+  {
+    "name": "Secret Garden",
+    "id": "secretgarden"
+  },
+  {
+    "name": "Sin Editor",
+    "id": "sineditor",
+    "f": "EventScene_sineditor_01"
+  },
+  {
+    "name": "Smol Ade",
+    "id": "smol_ade"
+  },
+  {
+    "name": "Smol Anchor",
+    "id": "smol_anchor"
+  },
+  {
+    "name": "Smol Anchor Pirate",
+    "id": "smol_anchor_pirate"
+  },
+  {
+    "name": "Smol Anis TTS",
+    "id": "smol_anis",
+    "f": "tts_c017_02"
+  },
+  {
+    "name": "Smol Bolt",
+    "id": "smol_bolt"
+  },
+  {
+    "name": "Smol Emilia",
+    "id": "smol_emilia"
+  },
+  {
+    "name": "Smol Frima",
+    "id": "smol_frima"
+  },
+  {
+    "name": "Smol Helm",
+    "id": "smol_helm"
+  },
+  {
+    "name": "Smol Liter",
+    "id": "smol_liter"
+  },
+  {
+    "name": "Smol Marciana TTS",
+    "id": "smol_marciana",
+    "f": "tts_c322_00"
+  },
+  {
+    "name": "Smol Mary",
+    "id": "smol_mary"
+  },
+  {
+    "name": "Smol Mast",
+    "id": "smol_mast"
+  },
+  {
+    "name": "Smol Mast Pirate",
+    "id": "smol_mast_pirate"
+  },
+  {
+    "name": "Smol Mint TTS",
+    "id": "smol_mint",
+    "f": "tts_c600_00"
+  },
+  {
+    "name": "Smol Maid Privaty",
+    "id": "smol_mpriv"
+  },
+  {
+    "name": "Smol Naga TTS",
+    "id": "smol_naga",
+    "f": "tts_c450_03"
+  },
+  {
+    "name": "Smol Pepper",
+    "id": "smol_pepper"
+  },
+  {
+    "name": "Smol Prika TTS",
+    "id": "smol_prika",
+    "f": "tts_c601_00"
+  },
+  {
+    "name": "Smol Ram",
+    "id": "smol_ram"
+  },
+  {
+    "name": "Smol Rapi",
+    "id": "smol_rapi"
+  },
+  {
+    "name": "Smol Rem",
+    "id": "smol_rem"
+  },
+  {
+    "name": "Smol Sin Pirate",
+    "id": "smol_sin_pirate"
+  },
+  {
+    "name": "Smol Tia TTS",
+    "id": "smol_tia",
+    "f": "tts_c451_03"
+  },
+  {
+    "name": "Smol Yan",
+    "id": "smol_yan"
+  },
+  {
+    "name": "Star Anis",
+    "id": "staranis",
+    "f": "EventScene_staranis_03"
   },
   {
     "name": "Story 00-01",
@@ -6150,5 +6174,40 @@
   {
     "name": "Story 26-02",
     "id": "story2602"
+  },
+  {
+    "name": "Terminus Ticket",
+    "id": "terminusticket",
+    "f": "EventScene_terminusticket_01"
+  },
+  {
+    "name": "True Flavor",
+    "id": "trueflavor"
+  },
+  {
+    "name": "2x2 LOVE 1",
+    "id": "twoxtwo1",
+    "f": "EventScene_twoxtwolove_01"
+  },
+  {
+    "name": "2x2 LOVE 2",
+    "id": "twoxtwo2",
+    "f": "EventScene_twoxtwolove2_hidden_01_2"
+  },
+  {
+    "name": "Unbreakable Sphere",
+    "id": "unbreakablesphere"
+  },
+  {
+    "name": "White Memory 1",
+    "id": "whitememory1"
+  },
+  {
+    "name": "White Memory 2",
+    "id": "whitememory2"
+  },
+  {
+    "name": "Wisdom Spring",
+    "id": "wisdomspring"
   }
 ]

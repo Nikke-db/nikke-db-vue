@@ -14,8 +14,8 @@
       <n-divider />
 
       <n-alert type="info">
-        Anniversary gallery when the event is over, main story this weekend or early next week, and npc l2d when event is over cuz idk who is part 1, 2 or 3. <br/>
-        Also I wanted to add the spanish language but there's literally no difference in the Nikke names except for ark ranger black, compared to english names, so maybe in a while if they do a big translation.
+        Anniversary gallery when the event is over. <br/>
+        I wanted to add the spanish language but there's literally no difference in the Nikke names except for ark ranger black, compared to english names, so maybe in a while if they do a big translation patch.
       </n-alert>
 
       <n-divider />
