@@ -18,6 +18,7 @@ import spine41 from '@/utils/spine/spine-player4.1'
 import { globalParams, messagesEnum } from '@/utils/enum/globalParams'
 import type { AttachmentItemColorInterface } from '@/utils/interfaces/live2d'
 import { animationMappings } from '@/utils/animationMappings'
+import { boundRenderSize, drawSquareFrame } from '@/utils/spine/renderSize'
 
 // Helper for debug logging
 const logDebug = (...args: any[]) => {
@@ -275,6 +276,7 @@ const spineLoader = (retryAttempt = 0) => {
           })
         },
       })
+      boundRenderSize(spineCanvas)
       applyStoryGenLowPowerThrottle(spineCanvas)
       applyDefaultStyle2Canvas()
     }
@@ -357,6 +359,7 @@ const customSpineLoader = () => {
   spineCanvasOptions[market.live2d.customLoader === 'skel' ? 'skelUrl' : 'jsonUrl'] = market.live2d.customSkel.title
 
   spineCanvas = new usedSpine.SpinePlayer('player-container', spineCanvasOptions)
+  boundRenderSize(spineCanvas)
   applyStoryGenLowPowerThrottle(spineCanvas)
 }
 
@@ -478,18 +481,21 @@ watch(() => market.live2d.resetPlacement, () => {
 })
 
 watch(() => market.live2d.screenshot, () => {
-  if (!checkMobile()) {
-    const sc_sz = localStorage.getItem('sc_sz')
-    const old_sc_sz = canvas ? canvas.style.height : '0'
-    canvas && (canvas.style.height = sc_sz + 'px')
+  const player = getActiveSpinePlayer()
+  const wantedSide = Number(localStorage.getItem('sc_sz'))
 
-    setTimeout(() => {
-      takeScreenshot()
-      canvas && (canvas.style.height = old_sc_sz)
-    }, 250)
-  } else {
-    takeScreenshot()
+  // Desktop screenshots are a square of the size saved in the screenshot options.
+  if (!checkMobile() && player && wantedSide > 0) {
+    const drawnSide = drawSquareFrame(player, wantedSide)
+
+    if (drawnSide < wantedSide) {
+      market.message
+        .getMessage()
+        .warning(messagesEnum.MESSAGE_SCREENSHOT_LIMITED + drawnSide + ' pixels', market.message.long_message)
+    }
   }
+
+  takeScreenshot()
 })
 
 watch(() => market.live2d.exportAnimationTimestamp, (newVal, oldVal) => {
@@ -1230,6 +1236,8 @@ const applyDefaultStyle2Canvas = () => {
     if (checkMobile()) {
       setCanvasStyleMobile()
     } else {
+      // Mobile sets the width to 100%. Desktop needs an auto width to stay square.
+      canvas.style.width = ''
       canvas.style.height = market.live2d.HQassets ? '450vh' : '168vh'
       canvas.style.marginTop = market.live2d.HQassets ? 'calc(-171vh)' : 'calc(-30vh)'
       canvas.style.position = 'absolute'
