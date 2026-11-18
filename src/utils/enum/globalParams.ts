@@ -38,6 +38,7 @@ enum messagesEnum {
   MESSAGE_EXPORT_ANIMATION = "Replaying and exporting animation...",
   MESSAGE_EXPORT_ANIMATION_SUCCESS = "Animation exported successfully",
   MESSAGE_EXPORT_ANIMATION_FAILED = "Animation export failed",
+  MESSAGE_SCREENSHOT_LIMITED = "Your browser limited the screenshot size to ",
 }
 
 enum theme {
